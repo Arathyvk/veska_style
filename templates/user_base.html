@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Veska</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="flex flex-col min-h-screen bg-[#f5f0ec] font-sans text-[#3a2e28]">
+
+  <header class="bg-[#d6cbc7] sticky top-0 z-50 border-b border-black/10 px-6 md:px-12 py-4 flex justify-between items-center">
+    <div class="logo">
+      <a href="{% url 'home' %}">
+        <img class="h-12" src="https://res.cloudinary.com/djet6cpft/image/upload/v1771477431/veskalogo_odwxyf.jpg" alt="Veska Logo">
+      </a>
+    </div>
+    <nav class="hidden md:block">
+      <ul class="flex gap-6 uppercase text-sm font-medium">
+        <span>
+            <p class="h1">{{name}} Welcome </p>
+        </span>
+        <li><a href="{% url 'home' %}" class="hover:text-[#8c5c52]">Home</a></li>
+        <li><a href="#" class="hover:text-[#8c5c52]">Shop</a></li>
+        <li><a href="#" class="hover:text-[#8c5c52]">Contact Us</a></li>
+        <li><a href="#" class="hover:text-[#8c5c52]">About Us</a></li>
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-5">
+      {% if user.is_authenticated %}
+      <div class="relative flex items-center gap-2">
+        <span class="text-sm font-medium">{{ user.username }}</span>
+        <div id="userAvatar"
+          class="w-9 h-9 bg-black text-white rounded-full flex items-center justify-center font-semibold cursor-pointer">
+          {{ user.username|first|upper }}
+        </div>
+        <div id="dropdownMenu"
+          class="absolute right-0 top-11 bg-white min-w-[140px] shadow-lg rounded-lg overflow-hidden hidden">
+          <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm hover:bg-gray-100">Profile</a>
+          <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm hover:bg-gray-100">Logout</a>
+        </div>
+      </div>
+      {% else %}
+      <a href="#" class="text-sm font-medium">Login</a>
+      {% endif %}
+
+      <a href="#" class="text-xl"><i class="far fa-heart"></i></a>
+      <a href="#" class="text-xl"><i class="fas fa-shopping-bag"></i></a>
+    </div>
+  </header>
+
+  <div class="fixed top-0 right-0 p-3 space-y-2 z-50">
+    {% for message in messages %}
+    <div class="bg-{{ message.tags }}-500 text-white rounded shadow p-3 flex justify-between items-center">
+      <div>{{ message }}</div>
+      <button type="button" class="ml-2 text-white hover:text-gray-200" data-bs-dismiss="toast">&times;</button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <main class="flex-1 flex items-center justify-center p-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-[#d6cbc7] text-[#3a2e28] mt-auto">
+    <div class="text-center py-10">
+      <img class="h-16 mx-auto" src="https://res.cloudinary.com/djet6cpft/image/upload/v1771477431/veskalogo_odwxyf.jpg" alt="Veska Logo">
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-6 md:px-12 mb-6">
+      <div>
+        <h4 class="text-xs font-bold tracking-wider mb-4">SUPPORT</h4>
+        <ul class="text-sm space-y-2">
+          <li><a href="#" class="hover:text-[#8c5c52]">Track Your Order</a></li>
+          <li><a href="#" class="hover:text-[#8c5c52]">Shipping & Returns</a></li>
+          <li><a href="#" class="hover:text-[#8c5c52]">Help Center</a></li>
+          <li><a href="#" class="hover:text-[#8c5c52]">Cancellation & Refund</a></li>
+          <li><a href="#" class="hover:text-[#8c5c52]">Raise a Complaint</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold tracking-wider mb-4">ABOUT US</h4>
+        <ul class="text-sm space-y-2">
+          <li><a href="#" class="hover:text-[#8c5c52]">Contact Us</a></li>
+          <li><a href="#" class="hover:text-[#8c5c52]">Privacy Policy</a></li>
+          <li><a href="#" class="hover:text-[#8c5c52]">Terms of Use</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold tracking-wider mb-4">CONTACT</h4>
+        <ul class="text-sm space-y-2">
+          <li>veskaluxury@gmail.com</li>
+          <li>+91 8888888888</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold tracking-wider mb-4">CONNECT WITH US</h4>
+        <div class="flex gap-4 text-xl">
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center text-xs py-4 border-t border-black/10 opacity-70">
+      © 2026 Veska. All Rights Reserved.
+    </div>
+  </footer>
+
+  <script>
+    const avatar = document.getElementById("userAvatar");
+    const menu = document.getElementById("dropdownMenu");
+
+    if (avatar) {
+      avatar.addEventListener("click", function (e) {
+        e.stopPropagation();
+        menu.classList.toggle("hidden");
+      });
+    }
+
+    document.addEventListener("click", function () {
+      if (menu) menu.classList.add("hidden");
+    });
+  </script>
+
+</body>
+
+</html>
