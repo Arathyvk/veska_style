@@ -60,11 +60,6 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
-AUTHENTICATION_BACKENDS = [
-
-'django.contrib.auth.backends.ModelBackend',
-'allauth.account.auth_backends.AuthenticationBackend',
-]
 
 cloudinary.config(
     cloud_name=config('CLOUD_NAME'),
@@ -84,6 +79,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+
+'django.contrib.auth.backends.ModelBackend',
+'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 ROOT_URLCONF = 'veska_fashion.urls'
@@ -128,7 +129,6 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-        'OPTIONS': {'min_length': 6},
 
     },
     {
@@ -140,9 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
-      {
-        'NAME': 'users.validators.StrongPasswordValidator',
-    },
+      
 ]
 
 
@@ -182,3 +180,9 @@ LOGOUT_REDIRECT_URL = 'login'
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+AUTH_USER_MODEL = 'users.User'
+
+
+ACCOUNT_ADAPTER         = 'core.adapters.AccountAdapter'
+SOCIALACCOUNT_ADAPTER   = 'core.adapters.SocialAccountAdapter'

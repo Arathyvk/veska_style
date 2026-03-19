@@ -43,7 +43,7 @@ def login_view(request):
 
     
         try:
-            user_obj = User.objects.get(email=email)
+            User.objects.get(email=email)
         except User.DoesNotExist:
             messages.error(request, f'No account found for "{email}". Please check the email or sign up.')
             return render(request, "login.html")
@@ -56,7 +56,7 @@ def login_view(request):
 
         if not user.is_active:
             messages.error(request, "Your account has been blocked. Please contact support.")
-            return render(request, "login.html")
+            return render(request, "login./html")
 
         request.session.set_expiry(1209600 if request.POST.get("remember") else 0)
 
