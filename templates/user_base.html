@@ -8,7 +8,7 @@
   <title>Login - Veska</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
 
 </head>
@@ -17,10 +17,16 @@
 
   <header class="bg-[#d6cbc7] sticky top-0 z-50 border-b border-black/10 px-6 md:px-12 py-4 flex justify-between items-center">
     <div class="logo">
-      <a href="{% url 'home' %}">
-        <img class="h-12" src="https://res.cloudinary.com/djet6cpft/image/upload/v1771477431/veskalogo_odwxyf.jpg" alt="Veska Logo">
-      </a>
+  <a href="{% url 'home' %}">
+    <div class="w-[150px] h-[65px] rounded-[50%] overflow-hidden flex items-center justify-center"
+         style="background-color: #d6b8b0; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+      <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771477431/veskalogo_odwxyf.jpg"
+           class="h-full w-full object-cover">
     </div>
+  </a>
+</div>
+  </a>
+</div>
     <nav class="hidden md:block">
       <ul class="flex gap-6 uppercase text-sm font-medium">
         <span>
@@ -48,13 +54,12 @@
         </div>
       </div>
       {% else %}
-      <a href="#" class="text-sm font-medium">Login</a>
+      <a href="{% url 'login' %}" class="text-sm font-medium">Login</a>
       {% endif %}
 
-      <a href="#" class="text-xl"><i class="far fa-heart"></i></a>
-      <a href="#" class="text-xl"><i class="fas fa-shopping-bag"></i></a>
+      <a href="#" class="text-xl text-black"><i class="far fa-heart"></i></a>
+      <a href="#" class="text-xl text-black"><i class="fas fa-shopping-bag"></i></a>
     </div>
-  </header>
 
   <div class="fixed top-0 right-0 p-3 space-y-2 z-50">
     {% for message in messages %}
@@ -64,15 +69,24 @@
     </div>
     {% endfor %}
   </div>
+  </header>
 
   <main class="flex-1 flex items-center justify-center p-6">
     {% block content %}{% endblock %}
   </main>
 
   <footer class="bg-[#d6cbc7] text-[#3a2e28] mt-auto">
-    <div class="text-center py-10">
-      <img class="h-16 mx-auto" src="https://res.cloudinary.com/djet6cpft/image/upload/v1771477431/veskalogo_odwxyf.jpg" alt="Veska Logo">
-    </div>
+<div class="flex justify-center pt-10 mb-6">
+  <div class="logo">
+    <a href="{% url 'home' %}">
+      <div class="w-[150px] h-[65px] rounded-[50%] overflow-hidden flex items-center justify-center"
+         style="background-color: #d6b8b0; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+      <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771477431/veskalogo_odwxyf.jpg"
+           class="h-full w-full object-cover">
+      </div>
+    </a>
+  </div>
+</div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-6 md:px-12 mb-6">
       <div>
