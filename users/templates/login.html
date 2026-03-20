@@ -1,3 +1,4 @@
+{% load static %}
 {% load socialaccount %}
 
 <!DOCTYPE html>
@@ -54,7 +55,6 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Brand ── */
     .brand { text-align: center; }
     .brand-name {
       font-family: 'Cormorant Garamond', serif;
@@ -73,7 +73,6 @@
       margin-top: 6px;
     }
 
-    /* ── Card ── */
     .card {
       background: #fff;
       border: 1px solid var(--sand);
@@ -96,7 +95,6 @@
       letter-spacing: 0.03em;
     }
 
-    /* ── Error Banner ── */
     .error-banner {
       display: none;
       margin-top: 22px;
@@ -138,7 +136,6 @@
       font-size: 0.78rem;
     }
 
-    /* ── Form ── */
     form { margin-top: 28px; }
 
     .form-group { margin-bottom: 20px; }
@@ -203,7 +200,6 @@
     }
     .field-hint.visible { display: block; }
 
-    /* ── Form Row ── */
     .form-row {
       display: flex;
       justify-content: space-between;
@@ -229,7 +225,6 @@
     }
     .forgot:hover { color: var(--espresso); }
 
-    /* ── Button ── */
     .btn-login {
       width: 100%;
       height: 48px;
@@ -248,7 +243,6 @@
     .btn-login:hover { background: var(--ink); }
     .btn-login:active { transform: scale(0.98); }
 
-    /* ── Divider ── */
     .divider {
       display: flex;
       align-items: center;
@@ -266,7 +260,6 @@
       background: var(--sand);
     }
 
-    /* ── Google Button ── */
     .social-btns { display: flex; justify-content: center; }
 
     .btn-google {
@@ -295,14 +288,12 @@
     }
     .btn-google:active { transform: scale(0.98); }
 
-    /* Crisp, flat Google "G" mark — matches the card's refined tone */
     .google-icon {
       width: 17px;
       height: 17px;
       flex-shrink: 0;
     }
 
-    /* ── Bottom link ── */
     .bottom-link {
       text-align: center;
       margin-top: 24px;
@@ -388,7 +379,7 @@
         </a>
       </div>
 
-      <div class="bottom-link">Don't have an account? <a href="#">Sign Up</a></div>
+      <div class="bottom-link">Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></div>
 
     </form>
   </div>
@@ -475,7 +466,7 @@
   });
 
   emailInput.addEventListener('input', () => {
-    emailInput.classList.remove('field-error');
+    emailInput.classList.remove('fiBeld-error');
     emailHint.classList.remove('visible');
     banner.classList.remove('visible');
   });
