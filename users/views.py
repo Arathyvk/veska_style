@@ -10,7 +10,6 @@ from .models import User
 from django.core.exceptions import ValidationError
  
 from core.otp import gen_otp, send_otp_email, is_otp_expired, save_otp_to_session, get_otp_from_session, clear_otp_from_session
- 
 
 
 def is_valid_email(email):
@@ -194,3 +193,24 @@ def resend_otp(request):
     save_otp_to_session(request, purpose, otp)
     send_otp_email(email, otp, subject=subject)
     return JsonResponse({"success": True, "message": f"OTP resent to {email}."})
+ 
+
+def forgot_password(request):
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        if not email:
+            messages.error(request, "Please enter your email.")
+        elif not User.objects.filter(email=email).exists():
+            messages.error(request, "No account found with this email.")
+        else:
+            otp = gen_otp()
+            request.session["forgot_email"] = email
+            save_otp_to_session(request, "forgot", otp)
+            send_otp_email(email, otp, subject="Veska — Reset Password OTP")
+            return redirect("verify_forgot_otp")
+
+    return render(request, "forgot_password.html")
+ 

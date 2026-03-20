@@ -250,7 +250,6 @@
   const resendBtn = document.getElementById('resendBtn');
   const submitBtn = document.getElementById('submitBtn');
 
-  // OTP INPUT
   boxes.forEach((box, i) => {
     box.addEventListener('input', () => {
       box.value = box.value.replace(/[^0-9]/g, '');
@@ -290,11 +289,9 @@
 
   boxes[0].focus();
 
-  // TIMER — continues after refresh using sessionStorage
   const KEY      = 'veska_otp_expiry';
-  const DURATION = 2 * 60 * 1000; // 2 minutes
+  const DURATION = 2 * 60 * 1000; 
 
-  // Set expiry only on first load, not on refresh
   if (!sessionStorage.getItem(KEY)) {
     sessionStorage.setItem(KEY, Date.now() + DURATION);
   }
@@ -325,7 +322,6 @@
     }, 500);
   }
 
-  // On page load — show correct remaining time immediately
   const init = getRemaining();
   if (init <= 0) {
     expire();
@@ -334,7 +330,6 @@
     startTimer();
   }
 
-  // RESEND
   resendBtn.addEventListener('click', () => {
     if (!resendBtn.classList.contains('active')) return;
     resendBtn.textContent = 'Sending…';
