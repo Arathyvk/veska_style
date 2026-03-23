@@ -162,7 +162,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/shop/'
+LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
 ACCOUNT_LOGIN_METHODS = {"email"}
@@ -194,8 +194,7 @@ MESSAGE_TAGS = {
     messages.INFO: 'info',
 }
 
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'login'
+
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
@@ -220,3 +219,9 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 1800        
+SESSION_SAVE_EVERY_REQUEST = True  
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False

@@ -3,6 +3,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+import time
 
 OTP_EXPIRY_MINUTES = 2
 
@@ -34,9 +35,10 @@ def is_otp_expired(otp_time_str):
 
 
 def save_otp_to_session(request, purpose, otp):
-    request.session[f"{purpose}_otp"] = otp
-    request.session[f"{purpose}_otp_time"] = timezone.now().isoformat()
-
+    request.session[f"{purpose}_otp"]      = otp
+    request.session[f"{purpose}_otp_time"] = timezone.now().isoformat()    
+    request.session.modified = True   
+    request.session.save()           
 
 def get_otp_from_session(request, purpose):
     return (
