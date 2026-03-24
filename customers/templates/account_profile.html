@@ -171,7 +171,6 @@
     <div class="avatar-wrap">
       <img
         src="{% if user.profile_pic %}{{ user.profile_pic.url }}{% else %}{% static 'images/default_avatar.png' %}{% endif %}"
-        alt="Profile Photo"
         class="avatar-img"
         id="avatarPreview"
       >
@@ -225,7 +224,6 @@
 
       <div class="form-actions">
         <button class="btn-primary" type="submit">Save Changes</button>
-        <button class="btn-secondary" type="reset">Reset</button>
       </div>
     </form>
   </div>
