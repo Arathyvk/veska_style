@@ -212,7 +212,7 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
              {{ user.first_name}}
         </div>
         <div class="dropdown-content" id="dropdownMenu">
-          <a href="#"><i class="fa-regular fa-user" style="margin-right:7px;font-size:12px"></i>Profile</a>
+          <a href="{% url 'account_profile' %}"><i class="fa-regular fa-user" style="margin-right:7px;font-size:12px"></i>Profile</a>
           <a href="{% url 'logout' %}"><i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:7px;font-size:12px"></i>Logout</a>
         </div>
       </div>

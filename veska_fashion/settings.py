@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
 
     'users',
+    'customers',
 
 ]
 
@@ -161,6 +162,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'

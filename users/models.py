@@ -1,8 +1,11 @@
 import uuid
+import base64
+
 
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from cloudinary.models import CloudinaryField
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -54,3 +57,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
     
+
+    def save_cropped_photo(self, base64_data):
+        if not base64_data:
+            return
+        
+        if ',' in base64_data:
+            base64_data = base64_data.split(',')[1]
+        import base64 as b64
+        import cloudinary.uploader
+        image_bytes = b64.b64decode(base64_data)
+        result = cloudinary.uploader.upload(
+            image_bytes,
+            folder="profile_photos",
+            public_id=f"profile_{self.pk}",
+            overwrite=True,
+            crop="fill",
+            width=400,
+            height=400,
+        )
+        self.profile_pic = result['public_id']

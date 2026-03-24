@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path
 from . import views
 
 urlpatterns = [    
@@ -13,6 +13,7 @@ urlpatterns = [
     path("forgot-password/verify/",views.verify_forgot_otp,name="verify_forgot_otp"),
     path('forgot-password/resend/', views.forgot_resend_otp,   name='forgot_resend_otp'),
     path("reset-password/",views.reset_password,name="reset_password"),
+
 
 
 ]
