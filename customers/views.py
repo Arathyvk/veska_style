@@ -4,8 +4,10 @@ import cloudinary.uploader
  
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
+
  
 from .models import Address
 
@@ -130,3 +132,74 @@ def account_address_add(request):
  
     return render(request, "account_address_form.html", {"action": "add", "form_data": {}, "address" : None})
  
+
+@login_required
+@never_cache
+def account_address_edit(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+ 
+    if request.method == "POST":
+        errors        = []
+        full_name     = request.POST.get("full_name",     "").strip()
+        phone         = request.POST.get("phone",         "").strip()
+        address_line1 = request.POST.get("address_line1", "").strip()
+        address_line2 = request.POST.get("address_line2", "").strip()
+        city          = request.POST.get("city",          "").strip()
+        state         = request.POST.get("state",         "").strip()
+        pincode       = request.POST.get("pincode",       "").strip()
+        country       = request.POST.get("country",       "India").strip()
+        address_type  = request.POST.get("address_type",  "home")
+        is_default    = request.POST.get("is_default") == "on"
+ 
+        if not full_name:     errors.append("Full name is required.")
+        if not phone:         errors.append("Phone number is required.")
+        if not address_line1: errors.append("Address line 1 is required.")
+        if not city:          errors.append("City is required.")
+        if not state:         errors.append("State is required.")
+        if not pincode:
+            errors.append("Pincode is required.")
+        elif not re.fullmatch(r"\d{6}", pincode):
+            errors.append("Pincode must be 6 digits.")
+ 
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            return render(request, "account_address_form.html",
+                          {"address": address, "action": "edit"})
+ 
+        address.full_name     = full_name
+        address.phone         = phone
+        address.address_line1 = address_line1
+        address.address_line2 = address_line2
+        address.city          = city
+        address.state         = state
+        address.pincode       = pincode
+        address.country       = country
+        address.is_default    = is_default
+        address.save()
+ 
+        messages.success(request, "Address updated successfully.")
+        return redirect("account_address")
+ 
+    return render(request, "account_address_form.html",
+                  {"address": address, "action": "edit"})
+ 
+
+@login_required
+@require_POST
+def account_address_delete(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+    address.delete()
+    messages.success(request, "Address deleted successfully.")
+    return redirect("account_address")
+ 
+ 
+@login_required
+@require_POST
+def account_address_set_default(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+    address.is_default = True
+    address.save()
+    messages.success(request, "Default address updated.")
+    return redirect("account_address")
+
