@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
     'users',
     'customers',
+    'admin_side',
 
 ]
 
@@ -83,9 +84,8 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-
-'django.contrib.auth.backends.ModelBackend',
-'allauth.account.auth_backends.AuthenticationBackend',
+    'users.backends.EmailBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 ROOT_URLCONF = 'veska_fashion.urls'
@@ -229,3 +229,6 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1800        
 SESSION_SAVE_EVERY_REQUEST = True  
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False

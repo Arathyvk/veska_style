@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Veska Admin — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#1a0f0a;--card:#2a1a13;--card-border:#3d2418;
+      --input-bg:#3a2218;--input-border:#5a3828;
+      --copper:#c8956c;--copper-dark:#a8754c;--copper-light:#ddb08a;
+      --text:#f0e4d8;--muted:#9b7060;--dim:#6a4030;
+      --danger:#e07070;
+    }
+    body{
+      margin:0;font-family:'DM Sans',sans-serif;
+      background:var(--bg);
+      background-image:
+        radial-gradient(ellipse at 50% 0%,rgba(180,100,60,.12) 0%,transparent 60%),
+        radial-gradient(ellipse at 80% 80%,rgba(140,70,40,.08) 0%,transparent 50%);
+      min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px
+    }
+
+    .logo-wrap{text-align:center}
+    .logo-img{width:80px;height:80px;border-radius:50%;object-fit:cover;
+      border:2px solid rgba(200,149,108,.3);
+      box-shadow:0 0 30px rgba(200,149,108,.15)}
+
+    .card{
+      width:100%;max-width:360px;
+      background:var(--card);
+      border:1px solid var(--card-border);
+      border-radius:16px;
+      padding:36px 32px 32px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(200,149,108,.05);
+      animation:fadeUp .4s ease
+    }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+    .card-title{
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.5rem;font-weight:500;
+      color:var(--copper-light);
+      text-align:center;
+      letter-spacing:3px;
+      margin-bottom:28px
+    }
+
+    .error-box{
+      background:rgba(224,112,112,.1);border:1px solid rgba(224,112,112,.3);
+      border-radius:8px;color:var(--danger);font-size:12px;
+      padding:9px 14px;margin-bottom:18px;text-align:center
+    }
+
+    .field{margin-bottom:14px;position:relative}
+    input[type=text],input[type=password]{
+      width:100%;padding:13px 18px;
+      background:var(--input-bg);
+      border:1px solid var(--input-border);
+      border-radius:8px;
+      color:var(--text);
+      font-family:'DM Sans',sans-serif;font-size:13px;
+      outline:none;
+      transition:border-color .2s,box-shadow .2s
+    }
+    input::placeholder{color:var(--muted)}
+    input:focus{
+      border-color:var(--copper);
+      box-shadow:0 0 0 3px rgba(200,149,108,.12)
+    }
+
+    .btn-login{
+      width:100%;margin-top:8px;padding:13px;
+      background:linear-gradient(135deg,var(--copper-light),var(--copper-dark));
+      color:#1a0f0a;
+      border:none;border-radius:8px;
+      font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+      letter-spacing:1.5px;text-transform:uppercase;
+      cursor:pointer;
+      transition:opacity .2s,transform .2s,box-shadow .2s;
+      box-shadow:0 4px 20px rgba(200,149,108,.3)
+    }
+    .btn-login:hover{
+      opacity:.9;transform:translateY(-1px);
+      box-shadow:0 6px 28px rgba(200,149,108,.45)
+    }
+    .btn-login:active{transform:translateY(0)}
+
+    .footer{font-size:11px;color:var(--dim);text-align:center}
+  </style>
+</head>
+<body>
+
+  <div class="logo-wrap">
+    <img class="logo-img"
+      src="https://res.cloudinary.com/djet6cpft/image/upload/v1771477431/veskalogo_odwxyf.jpg"
+      alt="VESKA">
+  </div>
+
+  <div class="card">
+    <h1 class="card-title">Admin Login</h1>
+
+    {% if error %}
+      {% if error.field %}   <div class="error-box">{{ error.field }}</div>{% endif %}
+      {% if error.invalid %} <div class="error-box">{{ error.invalid }}</div>{% endif %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'admin_login' %}">
+      {% csrf_token %}
+
+      <div class="field">
+        <input type="text" name="email"
+            placeholder="Enter your admin email"
+            value="{{ request.POST.email|default:'' }}"
+            required autofocus>
+      </div>
+
+      <div class="field">
+        <input type="password" name="password"
+          placeholder="Password"
+          required>
+      </div>
+
+      <button type="submit" class="btn-login">Login</button>
+    </form>
+  </div>
+
+  <p class="footer">© 2026 Veska. All Rights Reserved.</p>
+
+</body>
+</html>

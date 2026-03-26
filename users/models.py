@@ -5,6 +5,7 @@ import base64
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from cloudinary.models import CloudinaryField
+from django.utils.timezone import now
 
 
 class UserManager(BaseUserManager):
@@ -33,7 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     profile_pic = CloudinaryField("profile_pic", null=True, blank=True)    
     phone_number = models.CharField(max_length=15, null=True, blank=True)
-
+    date_joined = models.DateTimeField(default=now)
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='custom_users',  

@@ -437,9 +437,9 @@
       <div class="topbar-right">
         <div class="admin-badge">
           <div class="admin-avatar">
-            {{ request.user.get_short_name|default:request.user.username|first|upper }}
+            {{ request.user.first_name|default:request.user.email|first|upper }}
           </div>
-          <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+          <span>{{ request.user.first_name|default:request.user.email }}</span>
         </div>
       </div>
     </header>
