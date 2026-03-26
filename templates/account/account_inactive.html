@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Account Blocked — Veska</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#1a0f0a;--card:#2a1a13;--card-border:#3d2418;
+      --copper:#c8956c;--copper-dark:#a8754c;--copper-light:#ddb08a;
+      --text:#f0e4d8;--muted:#9b7060;--dim:#6a4030;
+      --danger:#e07070;
+    }
+    body{
+      font-family:'DM Sans',sans-serif;
+      background:var(--bg);
+      background-image:
+        radial-gradient(ellipse at 50% 0%,rgba(180,100,60,.12) 0%,transparent 60%),
+        radial-gradient(ellipse at 80% 80%,rgba(140,70,40,.08) 0%,transparent 50%);
+      min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+    }
+    .logo-img{
+      width:80px;height:80px;border-radius:50%;object-fit:cover;
+      border:2px solid rgba(200,149,108,.3);
+      box-shadow:0 0 30px rgba(200,149,108,.15);
+    }
+    .card{
+      width:100%;max-width:400px;
+      background:var(--card);
+      border:1px solid var(--card-border);
+      border-radius:16px;
+      padding:40px 36px 36px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+      text-align:center;
+      animation:fadeUp .4s ease;
+    }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+    .icon{
+      width:56px;height:56px;border-radius:50%;
+      background:rgba(224,112,112,.12);
+      border:1px solid rgba(224,112,112,.3);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 20px;
+    }
+    .icon svg{ stroke:var(--danger); }
+
+    .card-title{
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.6rem;font-weight:500;
+      color:var(--copper-light);
+      letter-spacing:2px;
+      margin-bottom:12px;
+    }
+    .card-msg{
+      font-size:13px;color:var(--muted);line-height:1.7;
+      margin-bottom:28px;
+    }
+    .card-msg strong{ color:var(--danger); font-weight:500; }
+
+    .btn-back{
+      display:inline-block;
+      padding:12px 28px;
+      background:linear-gradient(135deg,var(--copper-light),var(--copper-dark));
+      color:#1a0f0a;
+      border-radius:8px;
+      font-size:13px;font-weight:600;
+      letter-spacing:1px;text-transform:uppercase;
+      text-decoration:none;
+      transition:opacity .2s,transform .2s;
+      box-shadow:0 4px 20px rgba(200,149,108,.3);
+    }
+    .btn-back:hover{ opacity:.9; transform:translateY(-1px); }
+
+    .footer{ font-size:11px; color:var(--dim); }
+  </style>
+</head>
+<body>
+
+  <img class="logo-img"
+    src="https://res.cloudinary.com/djet6cpft/image/upload/v1771477431/veskalogo_odwxyf.jpg"
+    alt="VESKA">
+
+  <div class="card">
+    <div class="icon">
+      <svg width="26" height="26" fill="none" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+      </svg>
+    </div>
+
+    <h1 class="card-title">Account Blocked</h1>
+    <p class="card-msg">
+      Your account has been <strong>blocked by the administrator</strong>.<br>
+      You cannot sign in at this time.<br><br>
+      If you believe this is a mistake, please contact our support team.
+    </p>
+
+    <a href="/login/" class="btn-back">Back to Login</a>
+  </div>
+
+  <p class="footer">© 2026 Veska. All Rights Reserved.</p>
+
+</body>
+</html>

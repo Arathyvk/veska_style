@@ -158,23 +158,18 @@
         </td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <a href="#" class="btn btn-outline" style="font-size:15px;padding:5px 12px">Edit</a>
             {% if u.is_active %}
-              <form method="POST" action="#">
+              <form method="POST" action="{% url 'block_user' u.uuid %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger-soft" style="font-size:15px;padding:5px 12px">Block</button>
               </form>
             {% else %}
-              <form method="POST" action="#">
+              <form method="POST" action="{% url 'unblock_user' u.uuid %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-success-soft" style="font-size:15px;padding:5px 12px">Unblock</button>
               </form>
             {% endif %}
-            <form method="POST" action="#"
-                onsubmit="return confirm('Delete {{ u.email }}? This cannot be undone.')">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger-soft" style="font-size:15px;padding:5px 12px">Delete</button>
-            </form>
+           
           </div>
         </td>
       </tr>
