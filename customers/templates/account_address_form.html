@@ -47,9 +47,9 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 0; }
-  .form-row.single { grid-template-columns: 1fr; }
-  .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row         { display: grid; grid-template-columns: 1fr 1fr;     gap: 20px; }
+  .form-row.single  { grid-template-columns: 1fr; }
+  .form-row.triple  { grid-template-columns: 1fr 1fr 1fr; }
 
   .field { margin-bottom: 20px; }
   .field-label {
@@ -57,21 +57,60 @@
     letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--bark); margin-bottom: 7px;
   }
-  .field-label span { color: var(--error-text, #b91c1c); margin-left: 2px; }
+  .field-label span { color: #b91c1c; margin-left: 2px; }
 
-  .field-input, .field-select {
+  .field-input,
+  .field-select {
     width: 100%; height: 44px; padding: 0 13px;
     font-family: 'Jost', sans-serif; font-size: 0.86rem; color: var(--espresso);
     background: var(--cream); border: 1.5px solid var(--sand); border-radius: 3px;
-    outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     -webkit-appearance: none; appearance: none;
+    box-sizing: border-box;
   }
-  .field-input:focus, .field-select:focus {
-    border-color: var(--bark); box-shadow: 0 0 0 3px rgba(122,92,74,0.1); background: #fff;
+  .field-input:focus,
+  .field-select:focus {
+    border-color: var(--bark);
+    box-shadow: 0 0 0 3px rgba(122,92,74,0.1);
+    background: #fff;
   }
-  .field-input.error { border-color: #e07b6a; background: #fdf0ee; }
 
-  .select-wrap { position: relative; }
+  .field-input.is-valid {
+    border-color: #4caf7d;
+    background: #f6fdf9;
+  }
+  .field-input.is-invalid,
+  .field-select.is-invalid {
+    border-color: #d95f4b;
+    background: #fdf2f0;
+    box-shadow: 0 0 0 3px rgba(217,95,75,0.08);
+  }
+
+  .field-error {
+    display: none;          
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem;
+    color: #c0392b;
+    letter-spacing: 0.03em;
+    animation: errIn 0.18s ease;
+  }
+  .field-error.visible { display: flex; }
+  @keyframes errIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .field-error svg {
+    flex-shrink: 0;
+    width: 13px; height: 13px;
+  }
+
+  .select-wrap { position: relative; }  
+  
+
   .select-wrap::after {
     content: ''; position: absolute; right: 13px; top: 50%;
     transform: translateY(-50%);
@@ -80,32 +119,17 @@
   }
   .select-wrap .field-select { padding-right: 32px; cursor: pointer; }
 
-  .type-pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
-  .type-pill input[type="radio"] { display: none; }
-  .type-pill label {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 16px; border-radius: 20px;
-    border: 1.5px solid var(--sand);
-    font-size: 0.72rem; font-weight: 500;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--stone); cursor: pointer;
-    transition: all 0.2s; background: var(--cream);
-  }
-  .type-pill label svg { width: 12px; height: 12px; }
-  .type-pill input[type="radio"]:checked + label {
-    border-color: var(--bark); color: var(--bark);
-    background: rgba(122,92,74,0.06);
-  }
-
   .checkbox-row {
     display: flex; align-items: center; gap: 10px;
     margin-bottom: 24px; padding: 14px 16px;
     background: var(--cream); border: 1px solid var(--sand);
     border-radius: 3px;
   }
-  .checkbox-row input[type="checkbox"] { accent-color: var(--bark); width: 16px; height: 16px; cursor: pointer; }
-  .checkbox-row label { font-size: 0.78rem; color: var(--espresso); cursor: pointer; }
-  .checkbox-row span  { font-size: 0.7rem; color: var(--stone); margin-left: auto; }
+  .checkbox-row input[type="checkbox"] {
+    accent-color: var(--bark); width: 16px; height: 16px; cursor: pointer;
+  }
+  .checkbox-row label  { font-size: 0.78rem; color: var(--espresso); cursor: pointer; }
+  .checkbox-row span   { font-size: 0.7rem;  color: var(--stone);    margin-left: auto; }
 
   .form-actions {
     display: flex; gap: 12px; padding-top: 8px;
@@ -119,7 +143,7 @@
     letter-spacing: 0.18em; text-transform: uppercase;
     cursor: pointer; transition: background 0.2s;
   }
-  .btn-primary:hover { background: var(--ink); }
+  .btn-primary:hover    { background: var(--ink); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .btn-secondary {
@@ -135,8 +159,9 @@
   .btn-secondary:hover { border-color: var(--bark); background: var(--cream); }
 
   @media (max-width: 640px) {
-    .form-row, .form-row.triple { grid-template-columns: 1fr; }
-    .form-card { padding: 28px 20px; }
+    .form-row,
+    .form-row.triple { grid-template-columns: 1fr; }
+    .form-card       { padding: 28px 20px; }
   }
 </style>
 {% endblock %}
@@ -145,7 +170,9 @@
 
 <div class="page-loader" id="pageLoader">
   <div class="loader-spinner"></div>
-  <div class="loader-text">{% if action == 'edit' %}Loading address…{% else %}Preparing form…{% endif %}</div>
+  <div class="loader-text">
+    {% if action == 'edit' %}Loading address…{% else %}Preparing form…{% endif %}
+  </div>
 </div>
 
 <div class="submit-overlay" id="submitOverlay">
@@ -155,12 +182,15 @@
 
 <div class="page-header">
   <div class="page-eyebrow">Account / Addresses</div>
-  <div class="page-title">{% if action == 'edit' %}Edit Address{% else %}Add New Address{% endif %}</div>
+  <div class="page-title">
+    {% if action == 'edit' %}Edit Address{% else %}Add New Address{% endif %}
+  </div>
 </div>
 
 <div class="form-card">
   <form
     method="POST"
+    novalidate
     action="{% if action == 'edit' %}{% url 'account_address_edit' address.pk %}{% else %}{% url 'account_address_add' %}{% endif %}"
     id="addressForm"
   >
@@ -168,67 +198,104 @@
 
     <div class="form-row">
       <div class="field">
-        <label class="field-label">Full Name <span>*</span></label>
-        <input class="field-input" type="text" name="full_name"
-        value="{% if form_data.full_name %}{{ form_data.full_name }}
-       {% elif address %}{{ address.full_name }}
-       {% else %}{% endif %}"
-       
-       placeholder="As on ID" required>
-      </div>
-      <div class="field">
-        <label class="field-label">Phone Number <span>*</span></label>
-        <input class="field-input" type="tel" name="phone"
-       value="{% if form_data.phone %}{{ form_data.phone }}{% elif address %}{{ address.phone }}{% endif %}"
-          placeholder="+91 00000 00000" required>
+        <label class="field-label" for="id_phone">Phone Number <span>*</span></label>
+        <input
+          class="field-input" type="tel" id="id_phone" name="phone"
+          value="{% if form_data.phone %}{{ form_data.phone }}{% elif address %}{{ address.phone }}{% endif %}"
+          placeholder="+91 9876543210"
+          data-rule="phone"
+          data-label="Phone number"
+          autocomplete="tel">
+        <div class="field-error" id="err_phone">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
       </div>
     </div>
 
     <div class="form-row single">
       <div class="field">
-        <label class="field-label">Address Line 1 <span>*</span></label>
-        <input class="field-input" type="text" name="address_line1"
-        value="{% if form_data.address_line1 %}{{ form_data.address_line1 }}{% elif address %}{{ address.address_line1 }}{% endif %}"
-          placeholder="House / Flat / Building no." required>
+        <label class="field-label" for="id_address_line1">Address Line 1 <span>*</span></label>
+        <input
+          class="field-input" type="text" id="id_address_line1" name="address_line1"
+          value="{% if form_data.address_line1 %}{{ form_data.address_line1 }}{% elif address %}{{ address.address_line1 }}{% endif %}"
+          placeholder="House / Flat / Building no."
+          data-rule="required"
+          data-label="Address line 1"
+          autocomplete="address-line1">
+        <div class="field-error" id="err_address_line1">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
       </div>
     </div>
+
     <div class="form-row single">
       <div class="field">
-        <label class="field-label">Address Line 2</label>
-        <input class="field-input" type="text" name="address_line2"
-        value="{% if form_data.address_line2 %}{{ form_data.address_line2 }}{% elif address %}{{ address.address_line2 }}{% endif %}"
-          placeholder="Street, Area, Landmark (optional)">
+        <label class="field-label" for="id_address_line2">Address Line 2</label>
+        <input
+          class="field-input" type="text" id="id_address_line2" name="address_line2"
+          value="{% if form_data.address_line2 %}{{ form_data.address_line2 }}{% elif address %}{{ address.address_line2 }}{% endif %}"
+          placeholder="Street, Area, Landmark (optional)"
+          data-rule="optional"
+          autocomplete="address-line2">
       </div>
     </div>
 
     <div class="form-row triple">
       <div class="field">
-        <label class="field-label">City <span>*</span></label>
-        <input class="field-input" type="text" name="city"
-        value="{% if form_data.city %}{{ form_data.city }}{% elif address %}{{ address.city }}{% endif %}"
-          placeholder="City" required>
+        <label class="field-label" for="id_city">City <span>*</span></label>
+        <input
+          class="field-input" type="text" id="id_city" name="city"
+          value="{% if form_data.city %}{{ form_data.city }}{% elif address %}{{ address.city }}{% endif %}"
+          placeholder="City"
+          data-rule="letters"
+          data-label="City"
+          autocomplete="address-level2">
+        <div class="field-error" id="err_city">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
       </div>
       <div class="field">
-        <label class="field-label">State <span>*</span></label>
-        <input class="field-input" type="text" name="state"
-        value="{% if form_data.state %}{{ form_data.state }}{% elif address %}{{ address.state }}{% endif %}"
-          placeholder="State" required>
+        <label class="field-label" for="id_state">State <span>*</span></label>
+        <input
+          class="field-input" type="text" id="id_state" name="state"
+          value="{% if form_data.state %}{{ form_data.state }}{% elif address %}{{ address.state }}{% endif %}"
+          placeholder="State"
+          data-rule="letters"
+          data-label="State"
+          autocomplete="address-level1">
+        <div class="field-error" id="err_state">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
       </div>
       <div class="field">
-        <label class="field-label">Pincode <span>*</span></label>
-        <input class="field-input" type="text" name="pincode"
-        value="{% if form_data.pincode %}{{ form_data.pincode }}{% elif address %}{{ address.pincode }}{% endif %}"
-          placeholder="6-digit pincode" maxlength="6" required>
+        <label class="field-label" for="id_pincode">Pincode <span>*</span></label>
+        <input
+          class="field-input" type="text" id="id_pincode" name="pincode"
+          value="{% if form_data.pincode %}{{ form_data.pincode }}{% elif address %}{{ address.pincode }}{% endif %}"
+          placeholder="6-digit pincode"
+          maxlength="6"
+          inputmode="numeric"
+          data-rule="pincode"
+          data-label="Pincode"
+          autocomplete="postal-code">
+        <div class="field-error" id="err_pincode">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
       </div>
     </div>
 
     <div class="form-row single">
       <div class="field">
-        <label class="field-label">Country</label>
+        <label class="field-label" for="id_country">Country</label>
         <div class="select-wrap">
-          <select class="field-select" name="country">
-            <option value="India" {% if address.country == 'India' or not address %}selected{% endif %}>India</option>
-            <option value="United States" {% if address.country == 'United States' %}selected{% endif %}>United States</option>
+          <select class="field-select" id="id_country" name="country" autocomplete="country-name">
+            <option value="India"          {% if address.country == 'India'          or not address %}selected{% endif %}>India</option>
+            <option value="United States"  {% if address.country == 'United States'  %}selected{% endif %}>United States</option>
             <option value="United Kingdom" {% if address.country == 'United Kingdom' %}selected{% endif %}>United Kingdom</option>
             <option value="UAE"            {% if address.country == 'UAE'            %}selected{% endif %}>UAE</option>
             <option value="Singapore"      {% if address.country == 'Singapore'      %}selected{% endif %}>Singapore</option>
@@ -237,8 +304,6 @@
         </div>
       </div>
     </div>
-
-    
 
     <div class="checkbox-row">
       <input type="checkbox" id="is_default" name="is_default"
@@ -261,38 +326,116 @@
 
 {% block extra_js %}
 <script>
+(function () {
+  'use strict';
+
   window.addEventListener('load', () => {
     setTimeout(() => {
       document.getElementById('pageLoader').classList.add('hidden');
     }, 300);
   });
 
-  const addressForm     = document.getElementById('addressForm');
+  const RULES = {
+    required: {
+      test : v => v.trim().length > 0,
+      msg  : label => `${label} is required.`
+    },
+    phone: {
+      test : v => /^[6-9]\d{9}$/.test(v.replace(/\s+/g, '')),
+      msg  : () => 'Enter a valid 10-digit Indian mobile number.'
+    },
+    letters: {
+      test : v => v.trim().length > 0 && /^[A-Za-z ]+$/.test(v.trim()),
+      msg  : label => `${label} must contain only letters.`
+    },
+    pincode: {
+      test : v => /^\d{6}$/.test(v.trim()),
+      msg  : () => 'Enter a valid 6-digit pincode.'
+    },
+    optional: {
+      test : () => true,
+      msg  : () => ''
+    }
+  };
+
+  function showError(input, message) {
+    const errEl = document.getElementById('err_' + input.name);
+    input.classList.remove('is-valid');
+    input.classList.add('is-invalid');
+    if (errEl) {
+      errEl.querySelector('span').textContent = message;
+      errEl.classList.add('visible');
+    }
+  }
+
+  function clearError(input) {
+    const errEl = document.getElementById('err_' + input.name);
+    input.classList.remove('is-invalid');
+    if (errEl) {
+      errEl.classList.remove('visible');
+      errEl.querySelector('span').textContent = '';
+    }
+  }
+
+  function markValid(input) {
+    clearError(input);
+    if (input.dataset.rule !== 'optional') {
+      input.classList.add('is-valid');
+    }
+  }
+
+  function validateField(input) {
+    const ruleName = input.dataset.rule || 'required';
+    const label    = input.dataset.label || 'This field';
+    const rule     = RULES[ruleName];
+
+    if (!rule) return true;
+
+    if (rule.test(input.value)) {
+      markValid(input);
+      return true;
+    } else {
+      showError(input, rule.msg(label));
+      return false;
+    }
+  }
+
+  const validatableInputs = document.querySelectorAll(
+    '.field-input[data-rule]:not([data-rule="optional"])'
+  );
+
+  validatableInputs.forEach(input => {
+    input.addEventListener('blur', () => {
+      validateField(input);
+    });
+
+    input.addEventListener('input', () => {
+      if (input.classList.contains('is-invalid')) {
+        validateField(input);
+      }
+    });
+  });
+
+  const form            = document.getElementById('addressForm');
   const submitOverlay   = document.getElementById('submitOverlay');
   const submitOverlayText = document.getElementById('submitOverlayText');
   const saveBtn         = document.getElementById('saveBtn');
 
-  addressForm.addEventListener('submit', function(e) {
-    let valid = true;
-    const required = this.querySelectorAll('[required]');
-    required.forEach(input => {
-      input.classList.remove('error');
-      if (!input.value.trim()) {
-        input.classList.add('error');
-        valid = false;
+  form.addEventListener('submit', function (e) {
+    e.preventDefault(); 
+    let isFormValid = true;
+    validatableInputs.forEach(input => {
+      if (!validateField(input)) {
+        isFormValid = false;
       }
     });
 
-    const pincode = this.querySelector('[name="pincode"]');
-    if (pincode && pincode.value && !/^\d{6}$/.test(pincode.value)) {
-      pincode.classList.add('error');
-      valid = false;
-    }
-
-    if (!valid) {
-      e.preventDefault();
-      const firstError = this.querySelector('.error');
-      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!isFormValid) {
+      const firstInvalid = form.querySelector('.is-invalid');
+      if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid.focus();
+      }
       return;
     }
 
@@ -300,10 +443,10 @@
     submitOverlayText.textContent = isEdit ? 'Updating address…' : 'Saving address…';
     submitOverlay.classList.add('active');
     saveBtn.disabled = true;
+
+    this.submit();
   });
 
-  document.querySelectorAll('.field-input').forEach(input => {
-    input.addEventListener('input', () => input.classList.remove('error'));
-  });
+})();
 </script>
 {% endblock %}
