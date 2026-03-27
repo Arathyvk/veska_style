@@ -6,8 +6,19 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
  
 from .models import Address
+from core.otp import gen_otp, send_otp_email, is_otp_expired, save_otp_to_session, get_otp_from_session, clear_otp_from_session
+
+
+def is_google_user(user):
+    try:
+        return user.socialaccount_set.filter(provider='google').exists()
+    except Exception:
+        return False
+    
 
 @login_required
 @never_cache
@@ -129,4 +140,99 @@ def account_address_add(request):
         return redirect("account_address")
  
     return render(request, "account_address_form.html", {"action": "add", "form_data": {}, "address" : None})
+ 
+
+@login_required
+@never_cache
+def account_change_email(request):
+    user = request.user
+    google = is_google_user(user)
+ 
+    if request.method == "POST" and not google:
+        new_email = request.POST.get("new_email", "").strip().lower()
+        password  = request.POST.get("password",  "").strip()
+ 
+        errors = []
+ 
+        if not new_email:
+            errors.append("Please enter a new email address.")
+        elif not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', new_email):
+            errors.append("Please enter a valid email address.")
+        elif new_email == user.email:
+            errors.append("New email must be different from your current email.")
+        else:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            if User.objects.filter(email=new_email).exclude(pk=user.pk).exists():
+                errors.append("This email is already registered to another account.")
+ 
+        if not password:
+            errors.append("Please enter your current password.")
+        elif not user.check_password(password):
+            errors.append("Current password is incorrect.")
+ 
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            return render(request, "account_change_email.html",
+                          {"is_google_user": google, "step": "enter"})
+ 
+        otp = gen_otp()
+        request.session["pending_email"] = new_email
+        save_otp_to_session(request, "email_change", otp)
+        send_otp_email(new_email, otp, subject="Veska — Verify Your New Email")
+        return redirect("account_change_email_verify")
+ 
+    return render(request, "account_change_email.html",
+                  {"is_google_user": google, "step": "enter"})
+ 
+
+@login_required
+@never_cache
+def account_change_email_verify(request):
+    user      = request.user
+    google    = is_google_user(user)
+    new_email = request.session.get("pending_email")
+ 
+    if google or not new_email:
+        return redirect("account_change_email")
+ 
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp", "").strip()
+        stored_otp, otp_time = get_otp_from_session(request, "email_change")
+ 
+        if not stored_otp:
+            messages.error(request, "OTP not found. Please request a new one.")
+        elif is_otp_expired(otp_time):
+            messages.error(request, "OTP expired. Please request a new code.")
+        elif not entered_otp or len(entered_otp) < 4:
+            messages.error(request, "Please enter the complete 4-digit code.")
+        elif stored_otp != entered_otp:
+            messages.error(request, "Incorrect OTP. Please try again.")
+        else:
+            clear_otp_from_session(request, "email_change")
+            request.session.pop("pending_email", None)
+            user.email = new_email
+            user.save()
+            messages.success(request, f"Email updated to {new_email} successfully.")
+            return redirect("account_profile")
+ 
+    return render(request, "account_change_email.html", {
+        "is_google_user": google,
+        "step":      "otp",
+        "new_email": new_email,
+    })
+ 
+
+@login_required
+@require_POST
+def account_change_email_resend(request):
+    new_email = request.session.get("pending_email")
+    if not new_email:
+        return JsonResponse({"success": False, "message": "Session expired. Please start again."})
+ 
+    otp = gen_otp()
+    save_otp_to_session(request, "email_change", otp)
+    send_otp_email(new_email, otp, subject="Veska — Verify Your New Email")
+    return JsonResponse({"success": True})
  

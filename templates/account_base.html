@@ -152,6 +152,10 @@
     .msg-error   { background: #fdf0ee; border: 1px solid var(--error); color: #8b2e1e; }
     .msg-success { background: #f0fdf4; border: 1px solid var(--success); color: #166534; }
 
+    .msg-list {
+     transition: opacity 0.5s ease;
+    }
+
     @media (max-width: 768px) {
       .sidebar {
         transform: translateX(-100%);
@@ -241,6 +245,16 @@
         Password Change
       </a>
 
+      <a href="{% url 'account_change_email' %}" class="sidebar-link {% if request.resolver_match.url_name == 'email_change' %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="18" height="14" rx="2"/>
+          <path d="M3 7l9 6 9-6"/>
+          </svg>
+
+          Email
+        </a>
+
     </nav>
 
     <div class="sidebar-logout">
@@ -281,6 +295,21 @@
   overlay.addEventListener('click', () => {
     sidebar.classList.remove('open');
     overlay.classList.remove('open');
+  });
+
+   window.addEventListener("load", function () {
+    const msgBox = document.querySelector(".msg-list");
+
+    if (msgBox) {
+      setTimeout(() => {
+        msgBox.style.opacity = "0";
+
+        setTimeout(() => {
+          msgBox.remove();
+        }, 500);
+
+      }, 3000); 
+    }
   });
 </script>
 {% block extra_js %}{% endblock %}

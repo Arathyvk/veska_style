@@ -1,0 +1,499 @@
+{% extends "account_base.html" %}
+{% load static %}
+
+{% block title %}Change Email{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-loader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--cream);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+  .page-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .loader-spinner {
+    width: 38px; height: 38px;
+    border: 2px solid var(--sand); border-top-color: var(--bark);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem; color: var(--espresso); letter-spacing: 0.12em;
+  }
+  .submit-overlay {
+    display: none; position: fixed; inset: 0; z-index: 8000;
+    background: rgba(250,247,242,0.92); backdrop-filter: blur(6px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  .submit-overlay.active { display: flex; }
+  .submit-overlay .loader-spinner { border-top-color: var(--espresso); }
+  .submit-overlay-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem; color: var(--espresso); letter-spacing: 0.1em;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .page-card {
+    background: #fff; border: 1px solid var(--sand);
+    border-radius: 4px; padding: 28px 32px 32px;
+    max-width: 520px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .page-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; font-weight: 500; color: var(--espresso);
+    text-align: center; padding-bottom: 14px;
+    border-bottom: 1px solid var(--sand); margin-bottom: 24px;
+  }
+  .google-blocked {
+    background: #fdf0ee; border: 1px solid #e07b6a;
+    border-radius: 3px; padding: 18px 20px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .google-blocked svg { width: 20px; height: 20px; color: #8b2e1e; flex-shrink: 0; margin-top: 1px; }
+  .google-blocked-title { font-size: 0.82rem; font-weight: 500; color: #8b2e1e; margin-bottom: 4px; }
+  .google-blocked-body { font-size: 0.76rem; color: #8b2e1e; line-height: 1.6; }
+  .esteps {
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 28px;
+  }
+  .estep { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .estep-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1.5px solid var(--sand);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.62rem; font-weight: 500; color: var(--stone); background: #fff;
+  }
+  .estep.active .estep-dot { border-color: var(--bark); color: var(--bark); background: rgba(122,92,74,0.06); box-shadow: 0 0 0 3px rgba(122,92,74,0.1); }
+  .estep.done .estep-dot { border-color: var(--bark); background: var(--bark); color: #fff; }
+  .estep-label { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--stone); }
+  .estep.active .estep-label { color: var(--bark); }
+  .estep-line { width: 50px; height: 1px; background: var(--sand); margin: 0 6px; margin-bottom: 18px; }
+  .current-box {
+    background: var(--cream); border: 1px solid var(--sand);
+    border-radius: 3px; padding: 12px 16px; margin-bottom: 20px;
+  }
+  .current-box-label { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--stone); margin-bottom: 3px; }
+  .current-box-value { font-size: 0.86rem; color: var(--espresso); font-weight: 500; }
+  .field { margin-bottom: 18px; }
+  .field-label {
+    display: block; font-size: 0.68rem; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--bark); margin-bottom: 7px;
+  }
+  .field-input {
+    width: 100%; height: 44px; padding: 0 13px;
+    font-family: 'Jost', sans-serif; font-size: 0.86rem; color: var(--espresso);
+    background: var(--cream); border: 1.5px solid var(--sand); border-radius: 3px;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .field-input:focus { border-color: var(--bark); box-shadow: 0 0 0 3px rgba(122,92,74,0.1); background: #fff; }
+  .field-input.error { border-color: #e07b6a; background: #fdf0ee; }
+  .field-hint { font-size: 0.7rem; color: var(--stone); margin-top: 4px; }
+  .otp-row { display: flex; justify-content: center; gap: 12px; margin: 18px 0; }
+  .otp-box {
+    width: 52px; height: 58px;
+    font-size: 1.6rem; font-weight: 600;
+    font-family: 'Cormorant Garamond', serif;
+    text-align: center; background: var(--cream); color: var(--espresso);
+    border: 1.5px solid var(--sand); border-radius: 3px; outline: none;
+    caret-color: transparent; -webkit-appearance: none; appearance: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .otp-box:focus { border-color: var(--bark); box-shadow: 0 0 0 3px rgba(122,92,74,0.12); background: #fff; }
+  .otp-box.filled { border-color: var(--bark); background: #fff; }
+  .timer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.73rem; color: var(--stone); margin-bottom: 20px;
+  }
+  .timer { font-weight: 600; color: var(--bark); font-variant-numeric: tabular-nums; }
+  .timer.expired { color: #b91c1c; }
+  .resend-btn {
+    background: none; border: none; font-family: 'Jost', sans-serif;
+    font-size: 0.73rem; font-weight: 500; color: var(--stone);
+    cursor: default; padding: 0;
+  }
+  .resend-btn.active { color: var(--bark); text-decoration: underline; cursor: pointer; }
+  .sent-to { font-size: 0.76rem; color: var(--stone); text-align: center; margin-bottom: 4px; }
+  .sent-to strong { color: var(--bark); }
+  .form-actions { display: flex; gap: 10px; padding-top: 10px; border-top: 1px solid var(--sand); margin-top: 4px; }
+  .btn-primary {
+    height: 42px; padding: 0 28px;
+    background: var(--bark); color: #fff;
+    border: none; border-radius: 3px;
+    font-family: 'Jost', sans-serif; font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: var(--espresso); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-secondary {
+    height: 42px; padding: 0 20px;
+    background: transparent; color: var(--bark);
+    border: 1.5px solid var(--sand); border-radius: 3px;
+    font-family: 'Jost', sans-serif; font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    text-decoration: none; display: inline-flex; align-items: center;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--bark); background: var(--cream); }
+
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-loader" id="pageLoader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Loading...</div>
+</div>
+
+<div class="submit-overlay" id="submitOverlay">
+  <div class="loader-spinner"></div>
+  <div class="submit-overlay-text" id="overlayText">Processing...</div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">Account / Security</div>
+  <div class="page-title">Change Email</div>
+</div>
+
+<div class="page-card">
+  <div class="page-card-title">Change Email Address</div>
+
+  {% if is_google_user %}
+    <div class="google-blocked">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div>
+        <div class="google-blocked-title">Email change not available</div>
+        <div class="google-blocked-body">
+          Your account is linked to Google Sign-In. Your email is managed by Google
+          and cannot be changed here. To update your email, please visit your
+          <strong>Google Account settings</strong>.
+        </div>
+      </div>
+    </div>
+
+  {% elif step == 'otp' %}
+    <div class="esteps">
+      <div class="estep done">
+        <div class="estep-dot">✓</div>
+        <div class="estep-label">New Email</div>
+      </div>
+      <div class="estep-line"></div>
+      <div class="estep active">
+        <div class="estep-dot">02</div>
+        <div class="estep-label">Verify</div>
+      </div>
+    </div>
+
+    <div class="sent-to">
+      Code sent to <strong>{{ new_email }}</strong>
+    </div>
+
+    {% for msg in messages %}
+      <div class="msg {% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>
+    {% endfor %}
+
+    <form method="POST" action="{% url 'account_change_email_verify' %}" id="otpForm">
+      {% csrf_token %}
+      <input type="hidden" name="otp" id="otpHidden">
+
+      <div class="otp-row">
+        <input class="otp-box" id="e1" type="text" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+        <input class="otp-box" id="e2" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-box" id="e3" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-box" id="e4" type="text" maxlength="1" inputmode="numeric">
+      </div>
+
+      <div class="timer-row">
+        <span>Expires in <span class="timer" id="timer">00:50</span></span>
+        <button type="button" class="resend-btn" id="resendBtn">Resend code</button>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="verifyBtn">Verify &amp; Update</button>
+        <a href="{% url 'account_change_email' %}" class="btn-secondary">Back</a>
+      </div>
+    </form>
+
+  {% else %}
+    <div class="esteps">
+      <div class="estep active">
+        <div class="estep-dot">01</div>
+        <div class="estep-label">New Email</div>
+      </div>
+      <div class="estep-line"></div>
+      <div class="estep">
+        <div class="estep-dot">02</div>
+        <div class="estep-label">Verify</div>
+      </div>
+    </div>
+
+    <div class="current-box">
+      <div class="current-box-label">Current Email</div>
+      <div class="current-box-value">{{ user.email }}</div>
+    </div>
+
+    {% for msg in messages %}
+      <div class="msg {% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>
+    {% endfor %}
+
+    <form method="POST" action="{% url 'account_change_email' %}" id="emailForm">
+      {% csrf_token %}
+      <div class="field">
+        <label class="field-label">New Email Address</label>
+        <input class="field-input" type="email" name="new_email" id="newEmailInput"
+          placeholder="Enter new email address" autocomplete="email" autofocus>
+        <div class="field-hint">A 4-digit verification code will be sent to this email.</div>
+      </div>
+      <div class="field">
+        <label class="field-label">Confirm Password</label>
+
+        <div class="password-field">
+            <input class="field-input" type="password" name="password" id="passwordInput"
+            placeholder="Enter your current password">
+
+            <span id="togglePassword" class="eye-icon">👁️</span>
+        </div>
+
+        <div class="field-hint">Required to confirm it is you.</div>
+        </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="sendBtn">Send Verification Code</button>
+        <a href="{% url 'account_profile' %}" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  console.log("Script Loaded ✅");
+
+  window.addEventListener('load', () => {
+    const loader = document.getElementById('pageLoader');
+    if (loader) {
+      setTimeout(() => loader.classList.add('hidden'), 300);
+    }
+  });
+
+  const overlay    = document.getElementById('submitOverlay');
+  const overlayTxt = document.getElementById('overlayText');
+
+  function showOverlay(t) {
+    if (overlay && overlayTxt) {
+      overlayTxt.textContent = t;
+      overlay.classList.add('active');
+    }
+  }
+
+  const isGoogleUser = "{{ is_google_user|yesno:'true,false' }}" === "true";
+  const step = "{{ step|default:'enter' }}";
+
+  console.log("Google user:", isGoogleUser);
+  console.log("Step:", step);
+
+  if (!isGoogleUser && step !== 'otp') {
+    console.log("Email Step Running");
+
+    const form = document.getElementById('emailForm');
+
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        console.log("Form Submitted");
+
+        const emailEl = document.getElementById('newEmailInput');
+        const pwdEl   = document.getElementById('passwordInput');
+
+        const email = emailEl?.value.trim();
+        const pwd   = pwdEl?.value;
+
+        let valid = true;
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          emailEl?.classList.add('error');
+          valid = false;
+        }
+
+        if (!pwd) {
+          pwdEl?.classList.add('error');
+          valid = false;
+        }
+
+        if (!valid) {
+          e.preventDefault();
+          return;
+        }
+
+        showOverlay('Sending verification code...');
+        document.getElementById('sendBtn')?.setAttribute('disabled', true);
+      });
+    } else {
+      console.log("emailForm NOT found ❌");
+    }
+
+    ['newEmailInput','passwordInput'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => el.classList.remove('error'));
+      }
+    });
+  }
+
+  if (!isGoogleUser && step === 'otp') {
+    console.log("OTP Step Running");
+
+    const boxes   = document.querySelectorAll('.otp-box');
+    const hidden  = document.getElementById('otpHidden');
+    const timer   = document.getElementById('timer');
+    const resend  = document.getElementById('resendBtn');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const otpForm = document.getElementById('otpForm');
+
+    function updateHidden() {
+      if (hidden) hidden.value = [...boxes].map(b => b.value).join('');
+    }
+
+    boxes.forEach((box, i) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.replace(/[^0-9]/g, '');
+        box.classList.toggle('filled', !!box.value);
+        if (box.value && i < boxes.length - 1) boxes[i+1].focus();
+        updateHidden();
+      });
+    });
+
+    const DURATION  = 50;
+    const LOAD_TIME = Date.now();
+
+    function getRemaining() {
+      return Math.max(0, DURATION - Math.floor((Date.now() - LOAD_TIME) / 1000));
+    }
+
+    function fmt(s) {
+      return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    }
+
+    let ticker = setInterval(() => {
+      const r = getRemaining();
+      if (timer) timer.textContent = fmt(r);
+
+      if (r <= 0) {
+        clearInterval(ticker);
+        if (timer) timer.classList.add('expired');
+        verifyBtn && (verifyBtn.disabled = true);
+        resend && resend.classList.add('active');
+      }
+    }, 500);
+
+    if (otpForm) {
+      otpForm.addEventListener('submit', function(e) {
+        if (getRemaining() <= 0) {
+          e.preventDefault();
+          alert('Code expired. Please resend.');
+          return;
+        }
+
+        if (hidden.value.length < 4) {
+          e.preventDefault();
+          alert('Enter full OTP');
+          return;
+        }
+
+        showOverlay('Verifying...');
+        verifyBtn && (verifyBtn.disabled = true);
+      });
+    }
+
+    function getCookie(name) {
+      let v = null;
+      document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) {
+          v = decodeURIComponent(c.slice(name.length+1));
+        }
+      });
+      return v;
+    }
+
+    resend?.addEventListener('click', () => {
+      if (!resend.classList.contains('active')) return;
+
+      resend.textContent = 'Sending...';
+      resend.classList.remove('active');
+
+      fetch("{% url 'account_change_email_resend' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+      })
+      .then(r => r.json())
+      .then(data => {
+        resend.textContent = 'Resend code';
+        if (data.success) location.reload();
+        else {
+          alert(data.message || 'Error');
+          resend.classList.add('active');
+        }
+      })
+      .catch(() => {
+        resend.textContent = 'Resend code';
+        resend.classList.add('active');
+      });
+    });
+
+    boxes[0]?.focus();
+  }
+
+});
+
+<!-- your HTML content above -->
+
+const passwordInput = document.getElementById('passwordInput');
+const togglePassword = document.getElementById('togglePassword');
+
+if (togglePassword && passwordInput) {
+  togglePassword.addEventListener('click', function () {
+
+    const isPassword = passwordInput.type === 'password';
+
+    passwordInput.type = isPassword ? 'text' : 'password';
+
+    this.textContent = isPassword ? '🙈' : '👁️';
+  });
+}
+
+
+</script>
+{% endblock %}

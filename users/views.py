@@ -185,9 +185,8 @@ def verify_signup_otp(request):
             )
             request.session.pop("signup_data", None)
             clear_otp_from_session(request, "signup")
-            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             messages.success(request, f"Welcome to Veska, {user.first_name}!")
-            return redirect("home")
+            return redirect("login")
  
     return render(request, "verify_otp.html", {"email": signup_data["email"]})
  
