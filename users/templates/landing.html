@@ -1,0 +1,520 @@
+{% extends "user_base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+main {
+  padding: 0 !important;
+  display: block !important;
+  align-items: unset !important;
+  justify-content: unset !important;
+}
+
+.hero {
+  width: 100%;
+  overflow: hidden;
+}
+
+.hero img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.section-wrap {
+  max-width: 1926px;
+  margin: 3rem auto;
+  padding: 4.5rem 15.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-top: 1px;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-title h2,
+.section-title h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.8rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.section-title p {
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 580px;
+  margin: 0 auto;
+  line-height: 1.8;
+  font-weight: 300;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.product-card {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2rem;
+  text-align: center;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+}
+
+.brand-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+}
+
+.brand-logo img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+.product-image {
+  position: relative;
+  height: 260px;
+  margin-bottom: 1.2rem;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.04);
+}
+
+.qv-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--btn);
+  color: #fff;
+  padding: 0.35rem 0.85rem;
+  border-radius: 2px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-card h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.price {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.03em;
+}
+
+.add-btn {
+  display: inline-block;
+  background: var(--btn);
+  color: #fff;
+  padding: 0.7rem 2rem;
+  border-radius: 2px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.add-btn:hover {
+  background: var(--btn-hover);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.cat-card {
+  position: relative;
+  height: 340px;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.cat-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.cat-card:hover img { transform: scale(1.05); }
+
+.cat-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(26,22,20,0.72) 100%);
+}
+
+.cat-label {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  color: #fff;
+  z-index: 2;
+}
+
+.cat-label h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+.cat-label span {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+  padding-bottom: 1px;
+}
+
+.launches-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.launch-card {
+  display: flex;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.launch-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.08);
+}
+
+.launch-img {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.launch-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.launch-info {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.launch-info h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.container {
+  max-width: 1300px;
+  margin: 3rem auto;
+  padding: 0 2.5rem 3rem;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.category-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.08);
+}
+
+.category-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.category-card:hover img { transform: scale(1.04); }
+
+.category-card h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+  padding: 1rem 1rem 1.2rem;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 1100px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .category-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .cat-grid { grid-template-columns: repeat(2, 1fr); }
+  .launches-grid { grid-template-columns: repeat(2, 1fr); }
+  .section-title h2,
+  .section-title h1 { font-size: 2.2rem; }
+}
+
+@media (max-width: 640px) {
+  .cat-grid,
+  .product-grid,
+  .launches-grid,
+  .category-grid { grid-template-columns: 1fr; }
+  .launch-img { width: 130px; }
+  .section-wrap { padding: 2rem 1.25rem; }
+  .container { padding: 0 1.25rem 2rem; }
+}
+</style>
+
+<div class="hero">
+  <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1773808157/Untitled_v7r9vu.png"
+       alt="Luxury Women's Footwear – Elevate Your Style">
+</div>
+
+<section>
+  <div class="section-wrap">
+    <div class="section-title">
+      <h2>Featured Products</h2>
+    </div>
+    <div class="product-grid">
+
+      <div class="product-card">
+        <div class="brand-logo">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" alt="Adidas">
+        </div>
+        <div class="product-image">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771502748/samba-og-shoes_gb4p6p.avif" alt="Samba OG Shoes">
+          <div class="qv-pill">Quick View</div>
+        </div>
+        <h3>Samba OG Shoes</h3>
+        <p class="price">₹2,999</p>
+        <a class="add-btn" href="#">Add to Bag →</a>
+      </div>
+
+      <div class="product-card">
+        <div class="brand-logo">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771526405/download_drqnca.jpg" alt="Brand">
+        </div>
+        <div class="product-image">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1772714574/eFcUWijj_55fc9ec59673453ab7568755528baa49_vf87k6.jpg" alt="Ankle-Strap Block Heels">
+          <div class="qv-pill">Quick View</div>
+        </div>
+        <h3>Ankle-Strap Block Heels</h3>
+        <p class="price">₹2,599</p>
+        <a class="add-btn" href="#">Add to Bag →</a>
+      </div>
+
+      <div class="product-card">
+        <div class="brand-logo">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771527889/download_3_jifzca.png" alt="Puma">
+        </div>
+        <div class="product-image">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771581378/377045_16_sv01_ydliuc.jpg" alt="Puma Flyer Runner">
+          <div class="qv-pill">Quick View</div>
+        </div>
+        <h3>Puma Flyer Runner</h3>
+        <p class="price">₹4,585</p>
+        <a class="add-btn" href="#">Add to Bag →</a>
+      </div>
+
+      <div class="product-card">
+        <div class="brand-logo">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771528131/download_4_bz12ua.png" alt="Brand">
+        </div>
+        <div class="product-image">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771581106/MP000000018260214_437Wx649H_202307080000321_fdxr73.avif" alt="Strappy Block Heel Sandals">
+          <div class="qv-pill">Quick View</div>
+        </div>
+        <h3>Strappy Block Heel Sandals</h3>
+        <p class="price">₹999</p>
+        <a class="add-btn" href="#">Add to Bag →</a>
+      </div>
+
+
+      <div class="product-card">
+        <div class="brand-logo">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771528131/download_4_bz12ua.png" alt="Brand">
+        </div>
+        <div class="product-image">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771581106/MP000000018260214_437Wx649H_202307080000321_fdxr73.avif" alt="Strappy Block Heel Sandals">
+          <div class="qv-pill">Quick View</div>
+        </div>
+        <h3>Strappy Block Heel Sandals</h3>
+        <p class="price">₹999</p>
+        <a class="add-btn" href="#">Add to Bag →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-wrap">
+    <div class="section-title">
+      <h2>Shop by Category</h2>
+      <p>From heels to trainers, flat designs to stylish casual looks — find the perfect fit for your style and occasion.</p>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card">
+        <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=85" alt="Sandals">
+        <div class="cat-overlay"></div>
+        <div class="cat-label">
+          <h3>Sandals</h3>
+          <span>Shop Now</span>
+        </div>
+      </div>
+      <div class="cat-card">
+        <img src="https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=600&q=85" alt="Heels">
+        <div class="cat-overlay"></div>
+        <div class="cat-label">
+          <h3>Heels</h3>
+          <span>Shop Now</span>
+        </div>
+      </div>
+      <div class="cat-card">
+        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=85" alt="Sneakers">
+        <div class="cat-overlay"></div>
+        <div class="cat-label">
+          <h3>Sneakers</h3>
+          <span>Shop Now</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-wrap">
+    <div class="section-title">
+      <h2>New Launches</h2>
+    </div>
+    <div class="launches-grid">
+      <div class="launch-card">
+        <div class="launch-img">
+          <img src="https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&q=85" alt="Women's Vintage Rock Loafers">
+        </div>
+        <div class="launch-info">
+          <h3>Women's Vintage Rock Loafers</h3>
+          <p class="price">₹3,499</p>
+        </div>
+      </div>
+      <div class="launch-card">
+        <div class="launch-img">
+          <img src="https://images.unsplash.com/photo-1518049362265-d5b2a6467637?w=600&q=85" alt="Blushing Floral Flats">
+        </div>
+        <div class="launch-info">
+          <h3>Blushing Floral Flats</h3>
+          <p class="price">₹2,199</p>
+        </div>
+      </div>
+      <div class="launch-card">
+        <div class="launch-img">
+          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1772714018/istockphoto-184967562-612x612_a2rvoy.jpg" alt="Brissa Embellished Heels">
+        </div>
+        <div class="launch-info">
+          <h3>Brissa Embellished Heels</h3>
+          <p class="price">₹4,799</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-title">
+      <h2>Women's Footwear</h2>
+      <p>Explore every style, from everyday essentials to statement pieces.</p>
+    </div>
+    <div class="category-grid">
+      <div class="category-card">
+        <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771584275/122546425_201038338065684_4868185909036478700_n-021c18abb5434e80a1cc127ed579a66f_wxlyhy.jpg" alt="Heels">
+        <h3>Heels</h3>
+      </div>
+      <div class="category-card">
+        <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771528774/images_6_enne8z.jpg" alt="Flats">
+        <h3>Flats</h3>
+      </div>
+      <div class="category-card">
+        <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771526557/images_1_q7ps1l.jpg" alt="Sneakers">
+        <h3>Sneakers</h3>
+      </div>
+      <div class="category-card">
+        <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1772714647/z0ioQ3icu9mYUVJSUGylr5-al1xUWVCSmqJbkpRnrJdeXJJYkpmsl5yfq1-ckV9QkJmXbl9oC5SzcvRLsXRPDjbxNksyTso1iaxwLHYyj3d1cs-18PAwLzcvLPD1j48wcvMJCwtyyXHzdEnyDK9wiQ81dzXySPVLdzeqTEkuN84INEz0T_RKLAcAODotWg_qxy0yw.jpg" alt="Sandals">
+        <h3>Sandals</h3>
+      </div>
+      <div class="category-card">
+        <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1772714732/premium_photo-1671718111684-9142a70a5fe0_edbq2s.avif" alt="Boots">
+        <h3>Boots</h3>
+      </div>
+      <div class="category-card">
+        <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1772714782/premium_photo-1747054588419-0f228ffe510d_jrtoeo.avif" alt="Slippers">
+        <h3>Slippers</h3>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

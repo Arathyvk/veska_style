@@ -1,0 +1,452 @@
+{% extends "account_base.html" %}
+{% load static %}
+
+{% block title %}{% if action == 'edit' %}Edit Address{% else %}Add Address{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-loader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--cream);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+  .page-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .loader-spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--sand); border-top-color: var(--bark);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem; color: var(--espresso); letter-spacing: 0.12em;
+  }
+
+  .submit-overlay {
+    display: none; position: fixed; inset: 0; z-index: 8000;
+    background: rgba(250,247,242,0.9); backdrop-filter: blur(6px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  .submit-overlay.active { display: flex; }
+  .submit-overlay .loader-spinner { border-top-color: var(--espresso); }
+  .submit-overlay-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem; color: var(--espresso); letter-spacing: 0.1em;
+  }
+
+  .form-card {
+    background: #fff; border: 1px solid var(--sand);
+    border-radius: 4px; padding: 36px 40px;
+    max-width: 680px;
+    animation: fadeUp 0.5s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .form-row         { display: grid; grid-template-columns: 1fr 1fr;     gap: 20px; }
+  .form-row.single  { grid-template-columns: 1fr; }
+  .form-row.triple  { grid-template-columns: 1fr 1fr 1fr; }
+
+  .field { margin-bottom: 20px; }
+  .field-label {
+    display: block; font-size: 0.68rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bark); margin-bottom: 7px;
+  }
+  .field-label span { color: #b91c1c; margin-left: 2px; }
+
+  .field-input,
+  .field-select {
+    width: 100%; height: 44px; padding: 0 13px;
+    font-family: 'Jost', sans-serif; font-size: 0.86rem; color: var(--espresso);
+    background: var(--cream); border: 1.5px solid var(--sand); border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    -webkit-appearance: none; appearance: none;
+    box-sizing: border-box;
+  }
+  .field-input:focus,
+  .field-select:focus {
+    border-color: var(--bark);
+    box-shadow: 0 0 0 3px rgba(122,92,74,0.1);
+    background: #fff;
+  }
+
+  .field-input.is-valid {
+    border-color: #4caf7d;
+    background: #f6fdf9;
+  }
+  .field-input.is-invalid,
+  .field-select.is-invalid {
+    border-color: #d95f4b;
+    background: #fdf2f0;
+    box-shadow: 0 0 0 3px rgba(217,95,75,0.08);
+  }
+
+  .field-error {
+    display: none;          
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem;
+    color: #c0392b;
+    letter-spacing: 0.03em;
+    animation: errIn 0.18s ease;
+  }
+  .field-error.visible { display: flex; }
+  @keyframes errIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .field-error svg {
+    flex-shrink: 0;
+    width: 13px; height: 13px;
+  }
+
+  .select-wrap { position: relative; }  
+  
+
+  .select-wrap::after {
+    content: ''; position: absolute; right: 13px; top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent; border-top-color: var(--stone);
+    pointer-events: none;
+  }
+  .select-wrap .field-select { padding-right: 32px; cursor: pointer; }
+
+  .checkbox-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 24px; padding: 14px 16px;
+    background: var(--cream); border: 1px solid var(--sand);
+    border-radius: 3px;
+  }
+  .checkbox-row input[type="checkbox"] {
+    accent-color: var(--bark); width: 16px; height: 16px; cursor: pointer;
+  }
+  .checkbox-row label  { font-size: 0.78rem; color: var(--espresso); cursor: pointer; }
+  .checkbox-row span   { font-size: 0.7rem;  color: var(--stone);    margin-left: auto; }
+
+  .form-actions {
+    display: flex; gap: 12px; padding-top: 8px;
+    border-top: 1px solid var(--sand); margin-top: 4px;
+  }
+  .btn-primary {
+    height: 44px; padding: 0 32px;
+    background: var(--espresso); color: var(--cream);
+    border: none; border-radius: 3px;
+    font-family: 'Jost', sans-serif; font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover    { background: var(--ink); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    height: 44px; padding: 0 24px;
+    background: transparent; color: var(--bark);
+    border: 1.5px solid var(--sand); border-radius: 3px;
+    font-family: 'Jost', sans-serif; font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--bark); background: var(--cream); }
+
+  @media (max-width: 640px) {
+    .form-row,
+    .form-row.triple { grid-template-columns: 1fr; }
+    .form-card       { padding: 28px 20px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-loader" id="pageLoader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">
+    {% if action == 'edit' %}Loading address…{% else %}Preparing form…{% endif %}
+  </div>
+</div>
+
+<div class="submit-overlay" id="submitOverlay">
+  <div class="loader-spinner"></div>
+  <div class="submit-overlay-text" id="submitOverlayText">Saving address…</div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">Account / Addresses</div>
+  <div class="page-title">
+    {% if action == 'edit' %}Edit Address{% else %}Add New Address{% endif %}
+  </div>
+</div>
+
+<div class="form-card">
+  <form
+    method="POST"
+    novalidate
+    action="{% if action == 'edit' %}{% url 'account_address_edit' address.pk %}{% else %}{% url 'account_address_add' %}{% endif %}"
+    id="addressForm"
+  >
+    {% csrf_token %}
+
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label" for="id_phone">Phone Number <span>*</span></label>
+        <input
+          class="field-input" type="tel" id="id_phone" name="phone"
+          value="{% if form_data.phone %}{{ form_data.phone }}{% elif address %}{{ address.phone }}{% endif %}"
+          placeholder="+91 9876543210"
+          data-rule="phone"
+          data-label="Phone number"
+          autocomplete="tel">
+        <div class="field-error" id="err_phone">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row single">
+      <div class="field">
+        <label class="field-label" for="id_address_line1">Address Line 1 <span>*</span></label>
+        <input
+          class="field-input" type="text" id="id_address_line1" name="address_line1"
+          value="{% if form_data.address_line1 %}{{ form_data.address_line1 }}{% elif address %}{{ address.address_line1 }}{% endif %}"
+          placeholder="House / Flat / Building no."
+          data-rule="required"
+          data-label="Address line 1"
+          autocomplete="address-line1">
+        <div class="field-error" id="err_address_line1">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row single">
+      <div class="field">
+        <label class="field-label" for="id_address_line2">Address Line 2</label>
+        <input
+          class="field-input" type="text" id="id_address_line2" name="address_line2"
+          value="{% if form_data.address_line2 %}{{ form_data.address_line2 }}{% elif address %}{{ address.address_line2 }}{% endif %}"
+          placeholder="Street, Area, Landmark (optional)"
+          data-rule="optional"
+          autocomplete="address-line2">
+      </div>
+    </div>
+
+    <div class="form-row triple">
+      <div class="field">
+        <label class="field-label" for="id_city">City <span>*</span></label>
+        <input
+          class="field-input" type="text" id="id_city" name="city"
+          value="{% if form_data.city %}{{ form_data.city }}{% elif address %}{{ address.city }}{% endif %}"
+          placeholder="City"
+          data-rule="letters"
+          data-label="City"
+          autocomplete="address-level2">
+        <div class="field-error" id="err_city">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="id_state">State <span>*</span></label>
+        <input
+          class="field-input" type="text" id="id_state" name="state"
+          value="{% if form_data.state %}{{ form_data.state }}{% elif address %}{{ address.state }}{% endif %}"
+          placeholder="State"
+          data-rule="letters"
+          data-label="State"
+          autocomplete="address-level1">
+        <div class="field-error" id="err_state">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="id_pincode">Pincode <span>*</span></label>
+        <input
+          class="field-input" type="text" id="id_pincode" name="pincode"
+          value="{% if form_data.pincode %}{{ form_data.pincode }}{% elif address %}{{ address.pincode }}{% endif %}"
+          placeholder="6-digit pincode"
+          maxlength="6"
+          inputmode="numeric"
+          data-rule="pincode"
+          data-label="Pincode"
+          autocomplete="postal-code">
+        <div class="field-error" id="err_pincode">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row single">
+      <div class="field">
+        <label class="field-label" for="id_country">Country</label>
+        <div class="select-wrap">
+          <select class="field-select" id="id_country" name="country" autocomplete="country-name">
+            <option value="India"          {% if address.country == 'India'          or not address %}selected{% endif %}>India</option>
+            <option value="United States"  {% if address.country == 'United States'  %}selected{% endif %}>United States</option>
+            <option value="United Kingdom" {% if address.country == 'United Kingdom' %}selected{% endif %}>United Kingdom</option>
+            <option value="UAE"            {% if address.country == 'UAE'            %}selected{% endif %}>UAE</option>
+            <option value="Singapore"      {% if address.country == 'Singapore'      %}selected{% endif %}>Singapore</option>
+            <option value="Other"          {% if address.country == 'Other'          %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="is_default" name="is_default"
+        {% if address.is_default %}checked{% endif %}>
+      <label for="is_default">Set as default address</label>
+      <span>Used automatically at checkout</span>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" id="saveBtn">
+        {% if action == 'edit' %}Save Changes{% else %}Save Address{% endif %}
+      </button>
+      <a href="{% url 'account_address' %}" class="btn-secondary">Cancel</a>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  'use strict';
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('pageLoader').classList.add('hidden');
+    }, 300);
+  });
+
+  const RULES = {
+    required: {
+      test : v => v.trim().length > 0,
+      msg  : label => `${label} is required.`
+    },
+    phone: {
+      test : v => /^[6-9]\d{9}$/.test(v.replace(/\s+/g, '')),
+      msg  : () => 'Enter a valid 10-digit Indian mobile number.'
+    },
+    letters: {
+      test : v => v.trim().length > 0 && /^[A-Za-z ]+$/.test(v.trim()),
+      msg  : label => `${label} must contain only letters.`
+    },
+    pincode: {
+      test : v => /^\d{6}$/.test(v.trim()),
+      msg  : () => 'Enter a valid 6-digit pincode.'
+    },
+    optional: {
+      test : () => true,
+      msg  : () => ''
+    }
+  };
+
+  function showError(input, message) {
+    const errEl = document.getElementById('err_' + input.name);
+    input.classList.remove('is-valid');
+    input.classList.add('is-invalid');
+    if (errEl) {
+      errEl.querySelector('span').textContent = message;
+      errEl.classList.add('visible');
+    }
+  }
+
+  function clearError(input) {
+    const errEl = document.getElementById('err_' + input.name);
+    input.classList.remove('is-invalid');
+    if (errEl) {
+      errEl.classList.remove('visible');
+      errEl.querySelector('span').textContent = '';
+    }
+  }
+
+  function markValid(input) {
+    clearError(input);
+    if (input.dataset.rule !== 'optional') {
+      input.classList.add('is-valid');
+    }
+  }
+
+  function validateField(input) {
+    const ruleName = input.dataset.rule || 'required';
+    const label    = input.dataset.label || 'This field';
+    const rule     = RULES[ruleName];
+
+    if (!rule) return true;
+
+    if (rule.test(input.value)) {
+      markValid(input);
+      return true;
+    } else {
+      showError(input, rule.msg(label));
+      return false;
+    }
+  }
+
+  const validatableInputs = document.querySelectorAll(
+    '.field-input[data-rule]:not([data-rule="optional"])'
+  );
+
+  validatableInputs.forEach(input => {
+    input.addEventListener('blur', () => {
+      validateField(input);
+    });
+
+    input.addEventListener('input', () => {
+      if (input.classList.contains('is-invalid')) {
+        validateField(input);
+      }
+    });
+  });
+
+  const form            = document.getElementById('addressForm');
+  const submitOverlay   = document.getElementById('submitOverlay');
+  const submitOverlayText = document.getElementById('submitOverlayText');
+  const saveBtn         = document.getElementById('saveBtn');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault(); 
+    let isFormValid = true;
+    validatableInputs.forEach(input => {
+      if (!validateField(input)) {
+        isFormValid = false;
+      }
+    });
+
+    if (!isFormValid) {
+      const firstInvalid = form.querySelector('.is-invalid');
+      if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid.focus();
+      }
+      return;
+    }
+
+    const isEdit = '{{ action }}' === 'edit';
+    submitOverlayText.textContent = isEdit ? 'Updating address…' : 'Saving address…';
+    submitOverlay.classList.add('active');
+    saveBtn.disabled = true;
+
+    this.submit();
+  });
+
+})();
+</script>
+{% endblock %}

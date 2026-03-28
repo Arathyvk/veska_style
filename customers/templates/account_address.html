@@ -1,0 +1,383 @@
+{% extends "account_base.html" %}
+{% load static %}
+
+{% block title %}My Addresses{% endblock %}
+
+{% block extra_css %}
+<style>
+
+  .page-loader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--cream);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+  .page-loader.hidden {
+    opacity: 0; visibility: hidden; pointer-events: none;
+  }
+  .loader-spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--sand);
+    border-top-color: var(--bark);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem; color: var(--espresso);
+    letter-spacing: 0.12em;
+  }
+
+  .action-overlay {
+    display: none; position: fixed; inset: 0; z-index: 8000;
+    background: rgba(250,247,242,0.88); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+  }
+  .action-overlay.active { display: flex; }
+  .action-overlay .loader-spinner { width: 36px; height: 36px; }
+  .action-overlay-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem; color: var(--espresso); letter-spacing: 0.1em;
+  }
+
+  .address-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 28px;
+  }
+
+  .btn-add {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 20px;
+    background: var(--espresso); color: var(--cream);
+    border: none; border-radius: 3px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    text-decoration: none; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-add:hover { background: var(--ink); }
+  .btn-add svg { width: 14px; height: 14px; }
+
+  .empty-state {
+    background: #fff; border: 1px solid var(--sand);
+    border-radius: 4px; padding: 60px 40px;
+    text-align: center;
+    animation: fadeUp 0.5s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .empty-icon {
+    width: 48px; height: 48px; color: var(--stone);
+    margin: 0 auto 16px;
+  }
+  .empty-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; color: var(--espresso); margin-bottom: 6px;
+  }
+  .empty-body { font-size: 0.78rem; color: var(--stone); margin-bottom: 24px; }
+
+  .address-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .address-card {
+    background: #fff; border: 1px solid var(--sand);
+    border-radius: 4px; padding: 24px;
+    position: relative; overflow: hidden;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .address-card:nth-child(2) { animation-delay: 0.05s; }
+  .address-card:nth-child(3) { animation-delay: 0.1s; }
+  .address-card:hover { box-shadow: 0 4px 20px rgba(46,29,19,0.08); }
+  .address-card.is-default { border-color: var(--bark); }
+  .address-card.is-default::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--bark);
+  }
+
+  .address-card-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .address-type-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 0.62rem; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    background: var(--cream); color: var(--bark);
+    border: 1px solid var(--sand);
+  }
+  .address-type-badge svg { width: 10px; height: 10px; }
+
+  .default-badge {
+    font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--bark); font-weight: 500;
+  }
+
+  .address-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem; font-weight: 500;
+    color: var(--espresso); margin-bottom: 4px;
+  }
+  .address-phone { font-size: 0.76rem; color: var(--stone); margin-bottom: 10px; }
+  .address-lines { font-size: 0.78rem; color: var(--espresso); line-height: 1.6; }
+
+  .address-card-actions {
+    display: flex; gap: 8px; margin-top: 18px;
+    padding-top: 16px; border-top: 1px solid var(--sand);
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    height: 32px; padding: 0 14px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.68rem; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border-radius: 2px; cursor: pointer;
+    transition: all 0.2s; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1.5px solid var(--sand); background: transparent; color: var(--bark);
+  }
+  .btn-action:hover { border-color: var(--bark); background: var(--cream); }
+  .btn-action.danger { color: #b91c1c; }
+  .btn-action.danger:hover { border-color: #e07b6a; background: #fdf0ee; }
+  .btn-action svg { width: 11px; height: 11px; }
+
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: rgba(46,29,19,0.45); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .confirm-modal {
+    background: #fff; border: 1px solid var(--sand);
+    border-radius: 4px; padding: 32px 28px 28px;
+    width: 90%; max-width: 380px;
+    box-shadow: 0 8px 40px rgba(46,29,19,0.14);
+    animation: fadeUp 0.25s ease both;
+  }
+  .confirm-modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; color: var(--espresso); margin-bottom: 8px;
+  }
+  .confirm-modal-body { font-size: 0.78rem; color: var(--stone); line-height: 1.6; margin-bottom: 24px; }
+  .confirm-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  .btn-cancel {
+    height: 38px; padding: 0 18px;
+    background: transparent; color: var(--bark);
+    border: 1.5px solid var(--sand); border-radius: 3px;
+    font-family: 'Jost', sans-serif; font-size: 0.7rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-cancel:hover { border-color: var(--bark); }
+  .btn-confirm-delete {
+    height: 38px; padding: 0 18px;
+    background: #b91c1c; color: #fff;
+    border: none; border-radius: 3px;
+    font-family: 'Jost', sans-serif; font-size: 0.7rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-confirm-delete:hover { background: #991b1b; }
+
+  @media (max-width: 600px) {
+    .address-grid { grid-template-columns: 1fr; }
+    .address-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-loader" id="pageLoader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Loading addresses…</div>
+</div>
+
+<div class="action-overlay" id="actionOverlay">
+  <div class="loader-spinner"></div>
+  <div class="action-overlay-text" id="actionOverlayText">Processing…</div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">Account</div>
+  <div class="page-title">My Addresses</div>
+</div>
+
+<div class="address-header">
+  <div style="font-size:0.78rem; color:var(--stone);">
+    {% if addresses %}
+      {{ addresses|length }} of 3 addresses saved
+    {% else %}
+      Save addresses for faster checkout
+    {% endif %}
+  </div>
+  {% if addresses|length < 3 %}
+    <a href="{% url 'account_address_add' %}" class="btn-add" id="addAddressBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add Address
+    </a>
+  {% endif %}
+</div>
+
+{% if not addresses %}
+  <div class="empty-state">
+    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+    </svg>
+    <div class="empty-title">No addresses saved yet</div>
+    <div class="empty-body">Save your addresses for a faster checkout experience.</div>
+    <a href="{% url 'account_address_add' %}" class="btn-add">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add Your First Address
+    </a>
+  </div>
+
+{% else %}
+  <div class="address-grid">
+    {% for address in addresses %}
+    <div class="address-card {% if address.is_default %}is-default{% endif %}">
+
+      <div class="address-card-top">
+        <span class="address-type-badge">
+          {% if address.address_type == 'home' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          {% elif address.address_type == 'work' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          {% endif %}
+          {{ address.get_address_type_display }}
+        </span>
+        {% if address.is_default %}
+          <span class="default-badge">✓ Default</span>
+        {% endif %}
+      </div>
+
+      <div class="address-name">{{ address.full_name }}</div>
+      <div class="address-phone">{{ address.phone }}</div>
+      <div class="address-lines">
+        {{ address.address_line1 }}<br>
+        {% if address.address_line2 %}{{ address.address_line2 }}<br>{% endif %}
+        {{ address.city }}, {{ address.state }} – {{ address.pincode }}<br>
+        {{ address.country }}
+      </div>
+
+      <div class="address-card-actions">
+        <a href="{% url 'account_address_edit' address.pk %}" class="btn-action" onclick="showAction('Loading…')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </a>
+
+        {% if not address.is_default %}
+          <form method="POST" action="{% url 'account_address_set_default' address.pk %}" class="inline-form">
+            {% csrf_token %}
+            <button type="submit" class="btn-action" onclick="showAction('Setting default…')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Set Default
+            </button>
+          </form>
+        {% endif %}
+
+        <button type="button" class="btn-action danger"
+            data-pk="{{ address.pk }}"
+            data-name="{{ address.full_name }}"
+            onclick="confirmDelete(this.dataset.pk, this.dataset.name)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+          Delete
+        </button>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="modal-backdrop" id="deleteModal">
+  <div class="confirm-modal">
+    <div class="confirm-modal-title">Remove Address</div>
+    <div class="confirm-modal-body">
+      Are you sure you want to remove the address for <strong id="deleteAddressName"></strong>?
+      This cannot be undone.
+    </div>
+    <div class="confirm-modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <form method="POST" id="deleteForm" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-confirm-delete"
+          onclick="showAction('Removing address…')">
+          Remove
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.addEventListener('load', () => {
+    const loader = document.getElementById('pageLoader');
+    setTimeout(() => loader.classList.add('hidden'), 300);
+  });
+
+  const actionOverlay     = document.getElementById('actionOverlay');
+  const actionOverlayText = document.getElementById('actionOverlayText');
+
+  function showAction(text) {
+    actionOverlayText.textContent = text || 'Processing…';
+    actionOverlay.classList.add('active');
+  }
+
+  document.getElementById('addAddressBtn') &&
+    document.getElementById('addAddressBtn').addEventListener('click', () => showAction('Loading form…'));
+
+  document.querySelectorAll('.inline-form').forEach(form => {
+    form.addEventListener('submit', () => showAction('Updating…'));
+  });
+
+  function confirmDelete(pk, name) {
+    document.getElementById('deleteAddressName').textContent = name;
+    document.getElementById('deleteForm').action = "{% url 'account_address_delete' 0 %}".replace('/0/', '/' + pk + '/');
+    document.getElementById('deleteModal').classList.add('open');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+  }
+
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+</script>
+{% endblock %}
