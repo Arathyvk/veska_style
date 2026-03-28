@@ -1,0 +1,324 @@
+{% extends "account_base.html" %}
+{% load static %}
+
+{% block title %}Verify New Email{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-loader {
+    position: fixed; inset: 0; z-index: 9999; background: var(--cream);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+  .page-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .loader-spinner {
+    width: 38px; height: 38px; border: 2px solid var(--sand); border-top-color: var(--bark);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--espresso); letter-spacing: 0.12em; }
+  .submit-overlay {
+    display: none; position: fixed; inset: 0; z-index: 8000;
+    background: rgba(250,247,242,0.92); backdrop-filter: blur(6px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  .submit-overlay.active { display: flex; }
+  .submit-overlay .loader-spinner { border-top-color: var(--espresso); }
+  .submit-overlay-text { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--espresso); letter-spacing: 0.1em; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .page-card {
+    background: #fff; border: 1px solid var(--sand); border-radius: 4px;
+    padding: 28px 32px 32px; max-width: 520px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .page-card-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 500;
+    color: var(--espresso); text-align: center; padding-bottom: 14px;
+    border-bottom: 1px solid var(--sand); margin-bottom: 24px;
+  }
+  .esteps { display: flex; align-items: center; justify-content: center; margin-bottom: 26px; }
+  .estep  { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .estep-dot {
+    width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--sand);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.62rem; font-weight: 500; color: var(--stone); background: #fff;
+  }
+  .estep.active .estep-dot { border-color: var(--bark); color: var(--bark); background: rgba(122,92,74,0.06); box-shadow: 0 0 0 3px rgba(122,92,74,0.1); }
+  .estep.done   .estep-dot { border-color: var(--bark); background: var(--bark); color: #fff; }
+  .estep-label { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--stone); }
+  .estep.active .estep-label { color: var(--bark); }
+  .estep-line { width: 50px; height: 1px; background: var(--sand); margin: 0 6px; margin-bottom: 18px; }
+
+  /* Sent-to badge */
+  .sent-badge {
+    background: var(--cream); border: 1px solid var(--sand); border-radius: 3px;
+    padding: 10px 16px; text-align: center; margin-bottom: 22px;
+  }
+  .sent-badge-label { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--stone); margin-bottom: 3px; }
+  .sent-badge-value { font-size: 0.86rem; color: var(--bark); font-weight: 500; }
+
+  /* OTP boxes */
+  .otp-row { display: flex; justify-content: center; gap: 12px; margin: 18px 0 6px; }
+  .otp-box {
+    width: 54px; height: 60px; font-size: 1.7rem; font-weight: 600;
+    font-family: 'Cormorant Garamond', serif; text-align: center;
+    background: var(--cream); color: var(--espresso);
+    border: 1.5px solid var(--sand); border-radius: 3px; outline: none;
+    caret-color: transparent; -webkit-appearance: none; appearance: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .otp-box:focus { border-color: var(--bark); box-shadow: 0 0 0 3px rgba(122,92,74,0.12); background: #fff; }
+  .otp-box.filled { border-color: var(--bark); background: #fff; }
+  .otp-box.error  { border-color: #e07b6a; background: #fdf0ee; }
+
+  /* Timer row */
+  .timer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.73rem; color: var(--stone); margin-bottom: 20px; margin-top: 10px;
+  }
+  .timer { font-weight: 600; color: var(--bark); font-variant-numeric: tabular-nums; }
+  .timer.expired { color: #b91c1c; }
+  .resend-btn {
+    background: none; border: none; font-family: 'Jost', sans-serif;
+    font-size: 0.73rem; font-weight: 500; color: var(--stone); cursor: default; padding: 0;
+  }
+  .resend-btn.active { color: var(--bark); text-decoration: underline; cursor: pointer; }
+
+  /* Messages */
+  .msg { padding: 10px 14px; border-radius: 3px; font-size: 0.76rem; line-height: 1.5; margin-bottom: 14px; }
+  .msg-error   { background: #fdf0ee; border: 1px solid #e07b6a; color: #8b2e1e; }
+  .msg-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+
+  /* Actions */
+  .form-actions { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid var(--sand); margin-top: 8px; }
+  .btn-primary {
+    height: 42px; padding: 0 28px; background: var(--bark); color: #fff;
+    border: none; border-radius: 3px; font-family: 'Jost', sans-serif;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: var(--espresso); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-secondary {
+    height: 42px; padding: 0 20px; background: transparent; color: var(--bark);
+    border: 1.5px solid var(--sand); border-radius: 3px; font-family: 'Jost', sans-serif;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+    text-decoration: none; display: inline-flex; align-items: center; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--bark); background: var(--cream); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-loader" id="pageLoader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Loading...</div>
+</div>
+<div class="submit-overlay" id="submitOverlay">
+  <div class="loader-spinner"></div>
+  <div class="submit-overlay-text" id="overlayText">Processing...</div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">Account / Security</div>
+  <div class="page-title">Verify New Email</div>
+</div>
+
+<div class="page-card">
+  <div class="page-card-title">Verify New Email Address</div>
+
+  <!-- Step indicator: step 1 done, step 2 active -->
+  <div class="esteps">
+    <div class="estep done">
+      <div class="estep-dot">&#10003;</div>
+      <div class="estep-label">New Email</div>
+    </div>
+    <div class="estep-line"></div>
+    <div class="estep active">
+      <div class="estep-dot">02</div>
+      <div class="estep-label">Verify OTP</div>
+    </div>
+  </div>
+
+  <!-- Sent-to badge -->
+  <div class="sent-badge">
+    <div class="sent-badge-label">Verification code sent to</div>
+    <div class="sent-badge-value">{{ new_email }}</div>
+  </div>
+
+  {% for msg in messages %}
+    <div class="msg {% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>
+  {% endfor %}
+
+  <form method="POST" action="{% url 'account_verify_email_otp' %}" id="otpForm" novalidate>
+    {% csrf_token %}
+    <!-- hidden field: JS populates this before submit -->
+    <input type="hidden" name="otp" id="otpHidden">
+
+    <!-- 4-digit OTP boxes -->
+    <div class="otp-row" id="otpRow">
+      <input class="otp-box" id="b1" type="text" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+      <input class="otp-box" id="b2" type="text" maxlength="1" inputmode="numeric">
+      <input class="otp-box" id="b3" type="text" maxlength="1" inputmode="numeric">
+      <input class="otp-box" id="b4" type="text" maxlength="1" inputmode="numeric">
+    </div>
+
+    <!-- Timer + resend -->
+    <div class="timer-row">
+      <span>Expires in <span class="timer" id="timerEl">00:50</span></span>
+      <button type="button" class="resend-btn" id="resendBtn" disabled>Resend code</button>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" id="verifyBtn">Verify &amp; Update Email</button>
+      <a href="{% url 'account_change_email' %}" class="btn-secondary">Back</a>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* Page loader */
+  const pageLoader = document.getElementById('pageLoader');
+  window.addEventListener('load', () => {
+    if (pageLoader) setTimeout(() => pageLoader.classList.add('hidden'), 300);
+  });
+
+  /* Overlay */
+  const overlay    = document.getElementById('submitOverlay');
+  const overlayTxt = document.getElementById('overlayText');
+  function showOverlay(text) {
+    if (overlay && overlayTxt) { overlayTxt.textContent = text; overlay.classList.add('active'); }
+  }
+
+  /* OTP boxes */
+  const boxes     = document.querySelectorAll('.otp-box');
+  const hidden    = document.getElementById('otpHidden');
+  const otpForm   = document.getElementById('otpForm');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const timerEl   = document.getElementById('timerEl');
+  const resendBtn = document.getElementById('resendBtn');
+
+  function syncHidden() {
+    if (hidden) hidden.value = [...boxes].map(b => b.value).join('');
+  }
+
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/[^0-9]/g, '');
+      box.classList.toggle('filled', !!box.value);
+      box.classList.remove('error');
+      if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+      syncHidden();
+    });
+
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !box.value && i > 0) {
+        boxes[i - 1].focus();
+        boxes[i - 1].value = '';
+        boxes[i - 1].classList.remove('filled');
+        syncHidden();
+      }
+    });
+
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData)
+        .getData('text').replace(/\D/g, '').slice(0, 4);
+      pasted.split('').forEach((ch, j) => {
+        if (boxes[j]) { boxes[j].value = ch; boxes[j].classList.add('filled'); }
+      });
+      const next = Math.min(pasted.length, boxes.length - 1);
+      boxes[next].focus();
+      syncHidden();
+    });
+  });
+
+  /* Submit */
+  otpForm?.addEventListener('submit', function (e) {
+    syncHidden();
+    if (hidden.value.length < 4) {
+      e.preventDefault();
+      boxes.forEach(b => { if (!b.value) b.classList.add('error'); });
+      boxes[0].focus();
+      return;
+    }
+    showOverlay('Verifying OTP...');
+    verifyBtn.disabled = true;
+  });
+
+  /* Countdown: 50 s */
+  const DURATION  = 50;
+  const startTime = Date.now();
+
+  function getRemaining() {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    return Math.max(0, DURATION - elapsed);
+  }
+  function fmt(sec) {
+    return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
+  }
+  function tick() {
+    const rem = getRemaining();
+    if (timerEl) { timerEl.textContent = fmt(rem); timerEl.classList.toggle('expired', rem === 0); }
+    if (resendBtn) { resendBtn.classList.toggle('active', rem === 0); resendBtn.disabled = rem > 0; }
+    if (rem > 0) setTimeout(tick, 1000);
+  }
+  tick();
+
+  /* Resend via AJAX */
+  function getCookie(name) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+      c = c.trim();
+      if (c.startsWith(name + '=')) v = decodeURIComponent(c.slice(name.length + 1));
+    });
+    return v;
+  }
+
+  resendBtn?.addEventListener('click', () => {
+    if (!resendBtn.classList.contains('active')) return;
+    resendBtn.textContent = 'Sending...';
+    resendBtn.classList.remove('active');
+    resendBtn.disabled = true;
+
+    showOverlay('Resending code...');
+
+    fetch("{% url 'account_change_email_resend' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Accept': 'application/json',
+      },
+    })
+    .then(r => r.json())
+    .then(data => {
+      overlay?.classList.remove('active');
+      if (data.success) {
+        location.reload();   /* reload resets the timer */
+      } else {
+        resendBtn.textContent = 'Resend code';
+        resendBtn.classList.add('active');
+        resendBtn.disabled = false;
+        alert(data.message || 'Could not resend. Please try again.');
+      }
+    })
+    .catch(() => {
+      overlay?.classList.remove('active');
+      resendBtn.textContent = 'Resend code';
+      resendBtn.classList.add('active');
+      resendBtn.disabled = false;
+    });
+  });
+
+  /* Focus first box */
+  boxes[0]?.focus();
+});
+</script>
+{% endblock %}

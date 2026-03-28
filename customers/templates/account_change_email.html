@@ -1,0 +1,270 @@
+{% extends "account_base.html" %}
+{% load static %}
+
+{% block title %}Change Email{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-loader {
+    position: fixed; inset: 0; z-index: 9999; background: var(--cream);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+  .page-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .loader-spinner {
+    width: 38px; height: 38px; border: 2px solid var(--sand); border-top-color: var(--bark);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--espresso); letter-spacing: 0.12em; }
+  .submit-overlay {
+    display: none; position: fixed; inset: 0; z-index: 8000;
+    background: rgba(250,247,242,0.92); backdrop-filter: blur(6px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  .submit-overlay.active { display: flex; }
+  .submit-overlay .loader-spinner { border-top-color: var(--espresso); }
+  .submit-overlay-text { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--espresso); letter-spacing: 0.1em; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .page-card {
+    background: #fff; border: 1px solid var(--sand); border-radius: 4px;
+    padding: 28px 32px 32px; max-width: 520px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .page-card-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 500;
+    color: var(--espresso); text-align: center; padding-bottom: 14px;
+    border-bottom: 1px solid var(--sand); margin-bottom: 24px;
+  }
+  .blocked-box {
+    background: #fdf0ee; border: 1px solid #e07b6a; border-radius: 3px;
+    padding: 20px 18px; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .blocked-box svg { width: 22px; height: 22px; color: #8b2e1e; flex-shrink: 0; margin-top: 1px; }
+  .blocked-title { font-size: 0.84rem; font-weight: 500; color: #8b2e1e; margin-bottom: 5px; }
+  .blocked-body  { font-size: 0.76rem; color: #8b2e1e; line-height: 1.65; }
+  .esteps { display: flex; align-items: center; justify-content: center; margin-bottom: 26px; }
+  .estep  { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .estep-dot {
+    width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--sand);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.62rem; font-weight: 500; color: var(--stone); background: #fff;
+  }
+  .estep.active .estep-dot { border-color: var(--bark); color: var(--bark); background: rgba(122,92,74,0.06); box-shadow: 0 0 0 3px rgba(122,92,74,0.1); }
+  .estep.done   .estep-dot { border-color: var(--bark); background: var(--bark); color: #fff; }
+  .estep-label { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--stone); }
+  .estep.active .estep-label { color: var(--bark); }
+  .estep-line { width: 50px; height: 1px; background: var(--sand); margin: 0 6px; margin-bottom: 18px; }
+  .current-box {
+    background: var(--cream); border: 1px solid var(--sand); border-radius: 3px;
+    padding: 12px 16px; margin-bottom: 20px;
+  }
+  .current-box-label { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--stone); margin-bottom: 3px; }
+  .current-box-value { font-size: 0.86rem; color: var(--espresso); font-weight: 500; }
+  .field { margin-bottom: 18px; }
+  .field-label {
+    display: block; font-size: 0.68rem; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--bark); margin-bottom: 7px;
+  }
+  .field-input {
+    width: 100%; height: 44px; padding: 0 13px;
+    font-family: 'Jost', sans-serif; font-size: 0.86rem; color: var(--espresso);
+    background: var(--cream); border: 1.5px solid var(--sand); border-radius: 3px;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-sizing: border-box;
+  }
+  .field-input:focus { border-color: var(--bark); box-shadow: 0 0 0 3px rgba(122,92,74,0.1); background: #fff; }
+  .field-input.error { border-color: #e07b6a; background: #fdf0ee; }
+  .field-hint  { font-size: 0.7rem; color: var(--stone); margin-top: 4px; }
+  .field-error { font-size: 0.7rem; color: #b91c1c; margin-top: 4px; display: none; }
+  .input-wrap { position: relative; }
+  .input-wrap .field-input { padding-right: 42px; }
+  .toggle-pw {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    font-size: 1rem; color: var(--stone); padding: 0; line-height: 1;
+  }
+  .toggle-pw:hover { color: var(--bark); }
+  .msg { padding: 10px 14px; border-radius: 3px; font-size: 0.76rem; line-height: 1.5; margin-bottom: 14px; }
+  .msg-error   { background: #fdf0ee; border: 1px solid #e07b6a; color: #8b2e1e; }
+  .msg-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+  .form-actions { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid var(--sand); margin-top: 8px; }
+  .btn-primary {
+    height: 42px; padding: 0 28px; background: var(--bark); color: #fff;
+    border: none; border-radius: 3px; font-family: 'Jost', sans-serif;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: var(--espresso); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-secondary {
+    height: 42px; padding: 0 20px; background: transparent; color: var(--bark);
+    border: 1.5px solid var(--sand); border-radius: 3px; font-family: 'Jost', sans-serif;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+    text-decoration: none; display: inline-flex; align-items: center; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--bark); background: var(--cream); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-loader" id="pageLoader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Loading...</div>
+</div>
+<div class="submit-overlay" id="submitOverlay">
+  <div class="loader-spinner"></div>
+  <div class="submit-overlay-text" id="overlayText">Processing...</div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">Account / Security</div>
+  <div class="page-title">Change Email</div>
+</div>
+
+<div class="page-card">
+  <div class="page-card-title">Change Email Address</div>
+
+  {% if is_google_user %}
+  <!-- Google users blocked -->
+  <div class="blocked-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <div>
+      <div class="blocked-title">Email change not available for Google accounts</div>
+      <div class="blocked-body">
+        Your account was created using <strong>Google Sign-In</strong>. Your email address
+        is managed directly by Google and cannot be changed here.<br><br>
+        To update your email, please visit your
+        <a href="https://myaccount.google.com" target="_blank" rel="noopener"
+           style="color:#8b2e1e;font-weight:500;">Google Account settings</a>.
+      </div>
+    </div>
+  </div>
+  <div style="padding-top:20px; border-top:1px solid var(--sand); margin-top:20px;">
+    <a href="{% url 'account_profile' %}" class="btn-secondary">← Back to Profile</a>
+  </div>
+
+  {% else %}
+  <!-- Step indicator -->
+  <div class="esteps">
+    <div class="estep active">
+      <div class="estep-dot">01</div>
+      <div class="estep-label">New Email</div>
+    </div>
+    <div class="estep-line"></div>
+    <div class="estep">
+      <div class="estep-dot">02</div>
+      <div class="estep-label">Verify OTP</div>
+    </div>
+  </div>
+
+  <!-- Current email -->
+  <div class="current-box">
+    <div class="current-box-label">Current Email</div>
+    <div class="current-box-value">{{ user.email }}</div>
+  </div>
+
+  {% for msg in messages %}
+    <div class="msg {% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>
+  {% endfor %}
+
+  <form method="POST" action="{% url 'account_change_email' %}" id="emailForm" novalidate>
+    {% csrf_token %}
+    <div class="field">
+      <label class="field-label" for="newEmail">New Email Address</label>
+      <input class="field-input" type="email" name="new_email" id="newEmail"
+             placeholder="Enter new email address" autocomplete="email" autofocus>
+      <div class="field-hint">A 4-digit OTP will be sent to this address to confirm.</div>
+      <div class="field-error" id="emailErr">Please enter a valid email address.</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="curPassword">Current Password</label>
+      <div class="input-wrap">
+        <input class="field-input" type="password" name="password" id="curPassword"
+               placeholder="Confirm it's you" autocomplete="current-password">
+        <button type="button" class="toggle-pw" id="toggleCurPw">👁️</button>
+      </div>
+      <div class="field-hint">Required to authorise this change.</div>
+      <div class="field-error" id="pwErr">Password is required.</div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" id="sendBtn">Send Verification Code</button>
+      <a href="{% url 'account_profile' %}" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* Page loader */
+  const pageLoader = document.getElementById('pageLoader');
+  window.addEventListener('load', () => {
+    if (pageLoader) setTimeout(() => pageLoader.classList.add('hidden'), 300);
+  });
+
+  /* Overlay */
+  const overlay    = document.getElementById('submitOverlay');
+  const overlayTxt = document.getElementById('overlayText');
+  function showOverlay(text) {
+    if (overlay && overlayTxt) { overlayTxt.textContent = text; overlay.classList.add('active'); }
+  }
+
+  const isGoogleUser = "{{ is_google_user|yesno:'true,false' }}" === "true";
+  if (isGoogleUser) return;
+
+  /* Password toggle */
+  const curPw    = document.getElementById('curPassword');
+  const togglePw = document.getElementById('toggleCurPw');
+  if (togglePw && curPw) {
+    togglePw.addEventListener('click', () => {
+      const show = curPw.type === 'password';
+      curPw.type = show ? 'text' : 'password';
+      togglePw.textContent = show ? '🙈' : '👁️';
+    });
+  }
+
+  /* Form */
+  const emailForm = document.getElementById('emailForm');
+  const sendBtn   = document.getElementById('sendBtn');
+  const emailEl   = document.getElementById('newEmail');
+  const pwEl      = document.getElementById('curPassword');
+  const emailErr  = document.getElementById('emailErr');
+  const pwErr     = document.getElementById('pwErr');
+
+  emailEl?.addEventListener('input', () => { emailEl.classList.remove('error'); emailErr.style.display = 'none'; });
+  pwEl?.addEventListener('input',    () => { pwEl.classList.remove('error');    pwErr.style.display = 'none'; });
+
+  emailForm?.addEventListener('submit', function (e) {
+    let valid = true;
+
+    if (!emailEl.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim())) {
+      emailEl.classList.add('error');
+      emailErr.style.display = 'block';
+      valid = false;
+    }
+    if (!pwEl.value) {
+      pwEl.classList.add('error');
+      pwErr.style.display = 'block';
+      valid = false;
+    }
+    if (!valid) { e.preventDefault(); return; }
+
+    e.preventDefault();
+    showOverlay('Sending verification code...');
+    sendBtn.disabled = true;
+    setTimeout(() => emailForm.submit(), 200);
+  });
+});
+</script>
+{% endblock %}
