@@ -58,7 +58,7 @@ def login_view(request):
             return render(request, "login.html")
 
      
-        user = authenticate(request, email=email, password=password)
+        user = authenticate(request, username=email, password=password)
         if user is None:
             messages.error(request, "Incorrect password. Please try again or reset your password.")
             return render(request, "login.html")
@@ -187,7 +187,7 @@ def verify_signup_otp(request):
             clear_otp_from_session(request, "signup")
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             messages.success(request, f"Welcome to Veska, {user.first_name}!")
-            return redirect("home")
+            return redirect("login")
  
     return render(request, "verify_otp.html", {"email": signup_data["email"]})
  

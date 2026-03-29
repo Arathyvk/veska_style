@@ -3,7 +3,6 @@ import base64
 import cloudinary.uploader
 import random
 import string
-import json
 from datetime import datetime, timedelta
 
 
@@ -14,14 +13,12 @@ from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.cache import never_cache
+from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_POST
+from django.contrib.auth import update_session_auth_hash
 from django.http import JsonResponse
 
 from django.core.mail import send_mail
-from core.otp import (
-    gen_otp, send_otp_email, is_otp_expired,
-    save_otp_to_session, get_otp_from_session, clear_otp_from_session
-)
 from .models import Address
 
 User = get_user_model()
@@ -32,7 +29,10 @@ def _is_google_user(user):
         return user.socialaccount_set.filter(provider='google').exists()
     except AttributeError:
         return False
+
  
+def _has_usable_password(user):
+    return user.has_usable_password() 
  
 def _generate_otp(length=4):
     return ''.join(random.choices(string.digits, k=length))
@@ -117,48 +117,74 @@ def account_address(request):
 def account_address_add(request):
     if request.method == "POST":
         errors        = []
-        full_name     = request.POST.get("full_name",     "").strip()
-        phone         = request.POST.get("phone",         "").strip()
+        full_name     = request.POST.get("full_name", "").strip()
+        phone         = request.POST.get("phone", "").strip()
         address_line1 = request.POST.get("address_line1", "").strip()
         address_line2 = request.POST.get("address_line2", "").strip()
-        city          = request.POST.get("city",          "").strip()
-        state         = request.POST.get("state",         "").strip()
-        pincode       = request.POST.get("pincode",       "").strip()
-        country       = request.POST.get("country",       "India").strip()
+        city          = request.POST.get("city", "").strip()
+        state         = request.POST.get("state", "").strip()
+        pincode       = request.POST.get("pincode", "").strip()
+        country       = request.POST.get("country", "India").strip()
         is_default    = request.POST.get("is_default") == "on"
 
-        if not full_name:     errors.append("Full name is required.")
-        if not phone:         errors.append("Phone number is required.")
-        if not address_line1: errors.append("Address line 1 is required.")
-        if not city:          errors.append("City is required.")
-        if not state:         errors.append("State is required.")
+        if not full_name:
+            errors.append("Full name is required.")
+
+        if not phone:
+            errors.append("Phone number is required.")
+        elif not re.fullmatch(r"[6-9]\d{9}", phone):
+            errors.append("Enter a valid 10-digit Indian phone number.")
+
+        if not address_line1:
+            errors.append("Address line 1 is required.")
+        if not city:
+            errors.append("City is required.")
+        if not state:
+            errors.append("State is required.")
+
         if not pincode:
             errors.append("Pincode is required.")
         elif not re.fullmatch(r"\d{6}", pincode):
             errors.append("Pincode must be 6 digits.")
+
         if Address.objects.filter(user=request.user).count() >= 3:
             errors.append("You can save up to 3 addresses only.")
 
         if errors:
             for err in errors:
                 messages.error(request, err)
-            return render(request, "account_address_form.html",
-                          {"form_data": request.POST, "action": "add"})
+            return render(request, "account_address_form.html", {
+                "form_data": request.POST,
+                "action": "add"
+            })
 
         Address.objects.create(
             user=request.user,
-            full_name=full_name,         phone=phone,
-            address_line1=address_line1, address_line2=address_line2,
-            city=city,                   state=state,
-            pincode=pincode,             country=country,
+            full_name=full_name,
+            phone=phone,
+            address_line1=address_line1,
+            address_line2=address_line2,
+            city=city,
+            state=state,
+            pincode=pincode,
+            country=country,
             is_default=is_default,
         )
+
         messages.success(request, "Address added successfully.")
         return redirect("account_address")
 
-    return render(request, "account_address_form.html",
-                  {"action": "add", "form_data": {}, "address": None})
+    last_address = Address.objects.filter(user=request.user).last()
 
+    return render(request, "account_address_form.html", {
+        "action": "add",
+        "form_data": {
+            "full_name": f"{request.user.first_name} {request.user.last_name}".strip() 
+                        or request.user.username,
+            "phone": getattr(request.user, "phone", "")
+        },
+        "address": last_address   
+})
 
 @login_required
 @never_cache
@@ -338,3 +364,62 @@ def account_change_email_resend(request):
         return JsonResponse({'success': True, 'message': 'A new verification code has been sent.'})
     except Exception:
         return JsonResponse({'success': False, 'message': 'Failed to send code. Please try again.'})
+    
+
+
+@login_required
+def account_change_password(request):
+    is_google    = _is_google_user(request.user)
+    has_local_pw = request.user.has_usable_password()
+ 
+    if not has_local_pw:
+        return render(request, 'change_password.html',
+                      {'is_google_user': True, 'errors': {}})
+ 
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password', '')
+        new_password     = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+ 
+        print(f"[pw] user            : {request.user.email}")
+        print(f"[pw] current_pw repr : {repr(current_password)}")   
+        print(f"[pw] current_pw len  : {len(current_password)}")
+        print(f"[pw] new_pw len      : {len(new_password)}")
+        print(f"[pw] match           : {new_password == confirm_password}")
+        print(f"[pw] check_password  : {request.user.check_password(current_password)}")
+        print(f"[pw] current_pw[:3]  : {repr(current_password[:3])}")
+ 
+        if is_google:
+            messages.error(request, 'Google account users cannot change password here.')
+            return redirect('account_change_password')
+ 
+        errors = {}
+ 
+        if not current_password:
+            errors['current_password'] = 'Current password is required.'
+        elif not request.user.check_password(current_password):
+            errors['current_password'] = 'Current password is incorrect.'
+ 
+        if len(new_password) < 8:
+            errors['new_password'] = 'Password must be at least 8 characters.'
+        elif new_password == current_password:
+            errors['new_password'] = 'New password must differ from your current password.'
+ 
+        if new_password != confirm_password:
+            errors['confirm_password'] = 'Passwords do not match.'
+ 
+        if errors:
+            print(f"[pw] errors          : {errors}")
+            return render(request, 'change_password.html',
+                          {'is_google_user': is_google, 'errors': errors})
+ 
+        request.user.set_password(new_password)
+        request.user.save()
+        update_session_auth_hash(request, request.user)
+        print(f"[pw] ✓ Password saved for: {request.user.email}")
+ 
+        messages.success(request, 'Your password has been updated successfully.')
+        return redirect('account_profile')
+ 
+    return render(request, 'change_password.html',
+                  {'is_google_user': is_google, 'errors': {}})

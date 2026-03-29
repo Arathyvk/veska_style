@@ -50,7 +50,6 @@
   .estep.active .estep-label { color: var(--bark); }
   .estep-line { width: 50px; height: 1px; background: var(--sand); margin: 0 6px; margin-bottom: 18px; }
 
-  /* Sent-to badge */
   .sent-badge {
     background: var(--cream); border: 1px solid var(--sand); border-radius: 3px;
     padding: 10px 16px; text-align: center; margin-bottom: 22px;
@@ -58,7 +57,6 @@
   .sent-badge-label { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--stone); margin-bottom: 3px; }
   .sent-badge-value { font-size: 0.86rem; color: var(--bark); font-weight: 500; }
 
-  /* OTP boxes */
   .otp-row { display: flex; justify-content: center; gap: 12px; margin: 18px 0 6px; }
   .otp-box {
     width: 54px; height: 60px; font-size: 1.7rem; font-weight: 600;
@@ -72,7 +70,6 @@
   .otp-box.filled { border-color: var(--bark); background: #fff; }
   .otp-box.error  { border-color: #e07b6a; background: #fdf0ee; }
 
-  /* Timer row */
   .timer-row {
     display: flex; justify-content: space-between; align-items: center;
     font-size: 0.73rem; color: var(--stone); margin-bottom: 20px; margin-top: 10px;
@@ -85,12 +82,10 @@
   }
   .resend-btn.active { color: var(--bark); text-decoration: underline; cursor: pointer; }
 
-  /* Messages */
   .msg { padding: 10px 14px; border-radius: 3px; font-size: 0.76rem; line-height: 1.5; margin-bottom: 14px; }
   .msg-error   { background: #fdf0ee; border: 1px solid #e07b6a; color: #8b2e1e; }
   .msg-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
 
-  /* Actions */
   .form-actions { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid var(--sand); margin-top: 8px; }
   .btn-primary {
     height: 42px; padding: 0 28px; background: var(--bark); color: #fff;
@@ -128,7 +123,6 @@
 <div class="page-card">
   <div class="page-card-title">Verify New Email Address</div>
 
-  <!-- Step indicator: step 1 done, step 2 active -->
   <div class="esteps">
     <div class="estep done">
       <div class="estep-dot">&#10003;</div>
@@ -141,7 +135,6 @@
     </div>
   </div>
 
-  <!-- Sent-to badge -->
   <div class="sent-badge">
     <div class="sent-badge-label">Verification code sent to</div>
     <div class="sent-badge-value">{{ new_email }}</div>
@@ -153,10 +146,8 @@
 
   <form method="POST" action="{% url 'account_verify_email_otp' %}" id="otpForm" novalidate>
     {% csrf_token %}
-    <!-- hidden field: JS populates this before submit -->
     <input type="hidden" name="otp" id="otpHidden">
 
-    <!-- 4-digit OTP boxes -->
     <div class="otp-row" id="otpRow">
       <input class="otp-box" id="b1" type="text" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
       <input class="otp-box" id="b2" type="text" maxlength="1" inputmode="numeric">
@@ -164,7 +155,6 @@
       <input class="otp-box" id="b4" type="text" maxlength="1" inputmode="numeric">
     </div>
 
-    <!-- Timer + resend -->
     <div class="timer-row">
       <span>Expires in <span class="timer" id="timerEl">00:50</span></span>
       <button type="button" class="resend-btn" id="resendBtn" disabled>Resend code</button>
@@ -183,20 +173,17 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* Page loader */
   const pageLoader = document.getElementById('pageLoader');
   window.addEventListener('load', () => {
     if (pageLoader) setTimeout(() => pageLoader.classList.add('hidden'), 300);
   });
 
-  /* Overlay */
   const overlay    = document.getElementById('submitOverlay');
   const overlayTxt = document.getElementById('overlayText');
   function showOverlay(text) {
     if (overlay && overlayTxt) { overlayTxt.textContent = text; overlay.classList.add('active'); }
   }
 
-  /* OTP boxes */
   const boxes     = document.querySelectorAll('.otp-box');
   const hidden    = document.getElementById('otpHidden');
   const otpForm   = document.getElementById('otpForm');
@@ -239,7 +226,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  /* Submit */
   otpForm?.addEventListener('submit', function (e) {
     syncHidden();
     if (hidden.value.length < 4) {
@@ -252,7 +238,6 @@ document.addEventListener('DOMContentLoaded', function () {
     verifyBtn.disabled = true;
   });
 
-  /* Countdown: 50 s */
   const DURATION  = 50;
   const startTime = Date.now();
 
@@ -271,7 +256,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   tick();
 
-  /* Resend via AJAX */
   function getCookie(name) {
     let v = null;
     document.cookie.split(';').forEach(c => {
@@ -301,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(data => {
       overlay?.classList.remove('active');
       if (data.success) {
-        location.reload();   /* reload resets the timer */
+        location.reload();   
       } else {
         resendBtn.textContent = 'Resend code';
         resendBtn.classList.add('active');
@@ -317,7 +301,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  /* Focus first box */
   boxes[0]?.focus();
 });
 </script>

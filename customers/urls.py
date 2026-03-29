@@ -11,5 +11,6 @@ urlpatterns = [
     path('email/',views.account_change_email,name='account_change_email'),
     path('email/resend/',views.account_change_email_resend,name='account_change_email_resend'),
     path('account/verify-email-otp/',views.account_verify_email_otp,name='account_verify_email_otp'),
+    path('account/change-password/',views.account_change_password,name='account_change_password'),
 
 ]

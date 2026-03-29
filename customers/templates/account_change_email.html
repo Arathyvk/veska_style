@@ -127,7 +127,6 @@
   <div class="page-card-title">Change Email Address</div>
 
   {% if is_google_user %}
-  <!-- Google users blocked -->
   <div class="blocked-box">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"/>
@@ -150,7 +149,6 @@
   </div>
 
   {% else %}
-  <!-- Step indicator -->
   <div class="esteps">
     <div class="estep active">
       <div class="estep-dot">01</div>
@@ -163,7 +161,6 @@
     </div>
   </div>
 
-  <!-- Current email -->
   <div class="current-box">
     <div class="current-box-label">Current Email</div>
     <div class="current-box-value">{{ user.email }}</div>
@@ -207,13 +204,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* Page loader */
   const pageLoader = document.getElementById('pageLoader');
   window.addEventListener('load', () => {
     if (pageLoader) setTimeout(() => pageLoader.classList.add('hidden'), 300);
   });
 
-  /* Overlay */
   const overlay    = document.getElementById('submitOverlay');
   const overlayTxt = document.getElementById('overlayText');
   function showOverlay(text) {
@@ -223,7 +218,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const isGoogleUser = "{{ is_google_user|yesno:'true,false' }}" === "true";
   if (isGoogleUser) return;
 
-  /* Password toggle */
   const curPw    = document.getElementById('curPassword');
   const togglePw = document.getElementById('toggleCurPw');
   if (togglePw && curPw) {
@@ -234,7 +228,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  /* Form */
   const emailForm = document.getElementById('emailForm');
   const sendBtn   = document.getElementById('sendBtn');
   const emailEl   = document.getElementById('newEmail');
