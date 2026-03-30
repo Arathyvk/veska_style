@@ -5,6 +5,8 @@ from django.views.decorators.cache import never_cache
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib import messages
+from django.contrib.sessions.models import Session
+from django.utils import timezone
 
 
 
@@ -82,16 +84,16 @@ def user_list(request):
 
 @never_cache
 def block_user(request, uuid):
-    if not is_admin_user(request.user):
-        return redirect('admin_login')
-
     user = get_object_or_404(User, uuid=uuid)
+    user.is_active = False
+    user.save()
 
-    if request.method == 'POST':
-        user.is_active = False
-        user.save()
-        messages.success(request, "User blocked successfully")
+    for session in Session.objects.filter(expire_date__gte=timezone.now()):
+        data = session.get_decoded()
+        if data.get('_auth_user_id') == str(user.uuid):
+            session.delete()
 
+    messages.success(request, f"'{user.email}' blocked and logged out.")
     return redirect('user_list')
 
 
