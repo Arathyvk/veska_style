@@ -1,5 +1,7 @@
-from django.shortcuts        import render
-from django.core.paginator   import Paginator
+from django.shortcuts import render,redirect
+from django.core.paginator import Paginator
+from django.contrib import messages
+
  
 from .models import Category
  
@@ -23,4 +25,20 @@ def category_list(request):
         'query'     : query,
         'total'     : paginator.count,
     })
+
+
+
+def category_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, 'Category name cannot be empty.')
+        elif Category.objects.filter(name__iexact=name, is_deleted=False).exists():
+            messages.error(request, f'Category "{name}" already exists.')
+        else:
+            Category.objects.create(name=name)
+            messages.success(request, f'Category "{name}" added successfully.')
+            return redirect('admin_category_list')
+ 
+    return render(request, 'category_add.html')
  
