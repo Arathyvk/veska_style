@@ -157,6 +157,13 @@ def account_address_add(request):
                 "form_data": request.POST,
                 "action": "add"
             })
+        
+        existing_count = Address.objects.filter(user=request.user).count()
+        if existing_count == 0:
+            is_default = True
+
+        if is_default:
+            Address.objects.filter(user=request.user).update(is_default=False)    
 
         Address.objects.create(
             user=request.user,
@@ -174,16 +181,8 @@ def account_address_add(request):
         messages.success(request, "Address added successfully.")
         return redirect("account_address")
 
-    last_address = Address.objects.filter(user=request.user).last()
-
     return render(request, "account_address_form.html", {
-        "action": "add",
-        "form_data": {
-            "full_name": f"{request.user.first_name} {request.user.last_name}".strip() 
-                        or request.user.username,
-            "phone": getattr(request.user, "phone", "")
-        },
-        "address": last_address   
+    "action": "add",
 })
 
 @login_required
@@ -218,6 +217,10 @@ def account_address_edit(request, pk):
                 messages.error(request, err)
             return render(request, "account_address_form.html",
                           {"address": address, "action": "edit"})
+        
+        if is_default:
+            Address.objects.filter(user=request.user).exclude(pk=pk).update(is_default=False)
+    
 
         address.full_name     = full_name
         address.phone         = phone

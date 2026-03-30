@@ -9,6 +9,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('',include('users.urls')),
     path('customers/',include('customers.urls')),
-    # path('newadmin/',include('admin_side.urls')),
+    path('newadmin/',include('admin_side.urls')),
+    path('category_admin/',include('category_admin.urls')),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
