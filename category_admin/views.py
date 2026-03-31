@@ -1,84 +1,111 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.views.decorators.http import require_POST
+from django.db.models import Q
+from django.views.decorators.cache import never_cache
 
- 
 from .models import Category
- 
- 
-ITEMS_PER_PAGE = 10
- 
- 
+from .forms import CategoryForm
+
+
+def is_admin(user):
+    return user.is_authenticated and user.is_staff
+
+
+@never_cache
+@login_required(login_url='admin_login')
 def category_list(request):
+    if not is_admin(request.user):
+        return redirect('admin_login')
+
     query = request.GET.get('q', '').strip()
- 
-    qs = Category.objects.order_by('-created_at')     
+    sort  = request.GET.get('sort', 'desc')
+
+    categories = Category.objects.all()   
     if query:
-        qs = qs.filter(name__icontains=query)
- 
-    paginator   = Paginator(qs, ITEMS_PER_PAGE)         
-    page_number = request.GET.get('page', 1)
-    page_obj    = paginator.get_page(page_number)
- 
+        categories = categories.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    categories = categories.order_by(
+        'created_at' if sort == 'asc' else '-created_at'
+    )
+
+    paginator = Paginator(categories, 10)
+    page      = paginator.get_page(request.GET.get('page', 1))
+
     return render(request, 'category_list.html', {
-        'page_obj'  : page_obj,
-        'query'     : query,
-        'total'     : paginator.count,
+        'categories': page,
+        'query':      query,
+        'sort':       sort,
     })
 
 
-
+@never_cache
+@login_required(login_url='admin_login')
 def category_add(request):
+    if not is_admin(request.user):
+        return redirect('admin_login')
+
+    form = CategoryForm()
     if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        if not name:
-            messages.error(request, 'Category name cannot be empty.')
-        elif Category.objects.filter(name__iexact=name, is_deleted=False).exists():
-            messages.error(request, f'Category "{name}" already exists.')
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save()
+            messages.success(request, f'"{category.name}" added successfully!')
+            return redirect('category_list')
         else:
-            Category.objects.create(name=name)
-            messages.success(request, f'Category "{name}" added successfully.')
-            return redirect('admin_category_list')
- 
-    return render(request, 'category_add.html')
- 
+            messages.error(request, 'Please fix the errors below.')
 
-def category_edit(request, pk):
-    category = get_object_or_404(Category, pk=pk, is_deleted=False)
- 
+    return render(request, 'category_form.html', {'form': form, 'action': 'add'})
+
+
+@never_cache
+@login_required(login_url='admin_login')
+def category_edit(request, uuid):
+    if not is_admin(request.user):
+        return redirect('admin_login')
+
+    category = get_object_or_404(Category, uuid=uuid)
+    form     = CategoryForm(instance=category)
+
     if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        if not name:
-            messages.error(request, 'Category name cannot be empty.')
-        elif (
-            Category.objects
-            .filter(name__iexact=name, is_deleted=False)
-            .exclude(pk=pk)
-            .exists()
-        ):
-            messages.error(request, f'Category "{name}" already exists.')
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            category = form.save()
+            messages.success(request, f'"{category.name}" updated successfully!')
+            return redirect('category_list')
         else:
-            category.name = name
-            category.save(update_fields=['name', 'updated_at'])
-            messages.success(request, f'Category updated to "{name}".')
-            return redirect('admin_category_list')
- 
-    return render(request, 'category_edit.html', {'category': category})
- 
- 
+            messages.error(request, 'Please fix the errors below.')
 
-@require_POST
-def category_block(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-    category.soft_delete()  
-    messages.success(request, f'Category "{category.name}" has been blocked.')
-    return redirect('admin_category_list')
+    return render(request, 'category_form.html', {
+        'form': form, 'category': category, 'action': 'edit'
+    })
 
 
-@require_POST
-def category_unblock(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-    category.restore()  
-    messages.success(request, f'Category "{category.name}" has been unblocked.')
-    return redirect('admin_category_list')
+@never_cache
+@login_required(login_url='admin_login')
+def category_block(request, uuid):
+    if not is_admin(request.user):
+        return redirect('admin_login')
+
+    category = get_object_or_404(Category, uuid=uuid)
+    if request.method == 'POST':
+        category.block()
+        messages.success(request, f'"{category.name}" has been blocked.')
+    return redirect('category_list')
+
+
+@never_cache
+@login_required(login_url='admin_login')
+def category_unblock(request, uuid):
+    if not is_admin(request.user):
+        return redirect('admin_login')
+
+    category = get_object_or_404(Category, uuid=uuid)
+    if request.method == 'POST':
+        category.unblock()
+        messages.success(request, f'"{category.name}" has been unblocked.')
+    return redirect('category_list')

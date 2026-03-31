@@ -1,12 +1,16 @@
 {% extends "admin_base.html" %}
-{% block page_title %}Products{% endblock %}
+{% block page_title %}Categories{% endblock %}
 
 {% block topbar_actions %}
-  <a href="{% url 'product_add' %}" class="btn-add-new" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+  <a href="{% url 'category_add' %}"
+     style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+            background:linear-gradient(135deg,#c9967a,#a06848);color:#fff;
+            font-size:12px;font-weight:600;padding:8px 18px;
+            border-radius:6px;box-shadow:0 3px 12px rgba(201,150,122,.3);">
     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
     </svg>
-    Add Product
+    Add Category
   </a>
 {% endblock %}
 
@@ -18,25 +22,48 @@
     --rose:#c9967a;--rose2:#e8b49a;
     --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
     --green:#4caf7d;--red:#e05252;--radius:6px;
-    --head:'Playfair Display',serif;--body:'Jost',sans-serif;
+    --head:'Playfair Display',serif;
   }
-  html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
 
   .section-header{
     background:var(--card);border:1px solid var(--border);
     border-radius:var(--radius) var(--radius) 0 0;
-    padding:11px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    padding:11px 16px;display:flex;align-items:center;
+    justify-content:space-between;flex-wrap:wrap;gap:10px;
   }
   .section-header h2{font-family:var(--head);font-size:15px;font-weight:600;color:var(--text)}
 
+  .search-form{display:flex;align-items:center;gap:0}
   .search-box{
     display:flex;align-items:center;
     background:var(--card2);border:1px solid var(--border2);
-    border-radius:20px;padding:11px 12px;
+    border-radius:20px;padding:5px 12px;
   }
   .search-box svg{width:13px;height:13px;color:var(--muted);flex-shrink:0}
-  .search-box input{background:none;border:none;color:var(--text);font-size:12px;padding:0 8px;width:160px;outline:none}
+  .search-box input{background:none;border:none;color:var(--text);font-size:12px;padding:0 8px;width:180px;outline:none}
   .search-box input::placeholder{color:var(--muted)}
+  .clear-btn{
+    display:flex;align-items:center;justify-content:center;
+    width:18px;height:18px;border-radius:50%;
+    background:var(--border2);color:var(--muted);
+    text-decoration:none;transition:background .15s;flex-shrink:0;
+  }
+  .clear-btn:hover{background:var(--red);color:#fff}
+  .btn-search{
+    background:var(--rose);color:#fff;font-size:12px;font-weight:600;
+    padding:5px 14px;border-radius:20px;border:none;cursor:pointer;
+    margin-left:6px;font-family:inherit;
+  }
+  .btn-search:hover{opacity:.88}
+
+  .sort-btn{
+    display:inline-flex;align-items:center;gap:6px;padding:5px 14px;
+    background:var(--card2);border:1px solid var(--border2);border-radius:20px;
+    font-size:12px;font-weight:500;color:var(--muted2);
+    cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap;
+  }
+  .sort-btn:hover{border-color:var(--rose);color:var(--rose2)}
+  .sort-btn.active{background:var(--rose);border-color:var(--rose);color:#fff}
 
   .table-wrap{background:var(--card);border:1px solid var(--border);border-top:none;border-bottom:none;overflow-x:auto}
   table{width:100%;border-collapse:collapse}
@@ -46,191 +73,230 @@
   tr:last-child td{border-bottom:none}
   tr:hover td{background:rgba(201,150,122,.04)}
 
-  .prod-img-cell img{width:38px;height:38px;object-fit:cover;border-radius:5px;border:1px solid var(--border)}
-  .no-img{width:38px;height:38px;border-radius:5px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .badge-active{
+    display:inline-block;background:rgba(76,175,125,.12);
+    border:1px solid rgba(76,175,125,.35);color:#4caf7d;
+    font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;
+  }
+  .badge-blocked{
+    display:inline-block;background:rgba(224,82,82,.12);
+    border:1px solid rgba(224,82,82,.35);color:#e05252;
+    font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;
+  }
 
-  .stock-badge{display:inline-block;background:var(--card2);border:1px solid var(--border2);color:var(--muted2);font-size:12px;font-weight:500;padding:3px 10px;border-radius:4px;min-width:36px;text-align:center}
-
-  .btn-edit{background:#2a6e45;color:#5df0a0;font-size:11px;font-weight:600;padding:6px 12px;border-radius:4px;border:none;cursor:pointer;transition:background .15s;text-decoration:none;display:inline-block}
-  .btn-edit:hover{background:#347a50}
-  .btn-remove{background:#6e2a2a;color:#f07070;font-size:11px;font-weight:600;padding:6px 18px;border-radius:4px;border:none;cursor:pointer;transition:background .15s}
-  .btn-remove:hover{background:#7a3434}
+  .btn-edit-link{
+    background:#2a6e45;color:#5df0a0;font-size:11px;font-weight:600;
+    padding:4px 12px;border-radius:4px;text-decoration:none;display:inline-block;
+    transition:background .15s;
+  }
+  .btn-edit-link:hover{background:#347a50}
+  .btn-danger-soft{
+    background:#6e2a2a;color:#f07070;font-size:11px;font-weight:600;
+    padding:4px 12px;border-radius:4px;border:none;cursor:pointer;
+    transition:background .15s;font-family:inherit;
+  }
+  .btn-danger-soft:hover{background:#7a3434}
+  .btn-success-soft{
+    background:#2a6e45;color:#5df0a0;font-size:11px;font-weight:600;
+    padding:4px 12px;border-radius:4px;border:none;cursor:pointer;
+    transition:background .15s;font-family:inherit;
+  }
+  .btn-success-soft:hover{background:#347a50}
   .actions-cell{display:flex;gap:6px;align-items:center}
 
-  .btn-add-new{background:linear-gradient(135deg,#c9967a,#a06848);color:#fff;font-size:12px;font-weight:600;padding:8px 18px;border-radius:var(--radius);border:none;cursor:pointer;transition:opacity .18s;box-shadow:0 3px 12px rgba(201,150,122,.3)}
-  .btn-add-new:hover{opacity:.88}
-
-  .table-footer{background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .table-footer{
+    background:var(--card);border:1px solid var(--border);border-top:none;
+    border-radius:0 0 var(--radius) var(--radius);
+    padding:12px 16px;display:flex;align-items:center;
+    justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+  .page-info{font-size:14px;color:var(--muted)}
   .pagination{display:flex;align-items:center;gap:5px}
-  .pg-btn{background:var(--card2);border:1px solid var(--border2);color:var(--muted2);font-size:12px;font-weight:600;padding:4px 12px;border-radius:4px;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block}
+  .pg-btn{
+    background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
+    font-size:12px;font-weight:600;padding:4px 12px;border-radius:4px;
+    text-decoration:none;display:inline-block;transition:all .15s;
+  }
   .pg-btn:hover{background:var(--rose);border-color:var(--rose);color:#fff}
   .pg-btn.disabled{opacity:.35;pointer-events:none}
-  .pg-num{width:28px;height:28px;border-radius:4px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;background:var(--card2);border:1px solid var(--border2);color:var(--muted2);cursor:pointer;transition:all .15s;text-decoration:none}
+  .pg-num{
+    width:28px;height:28px;border-radius:4px;font-size:12px;font-weight:500;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--card2);border:1px solid var(--border2);
+    color:var(--muted2);text-decoration:none;transition:all .15s;
+  }
   .pg-num.active,.pg-num:hover{background:var(--rose);border-color:var(--rose);color:#fff}
-  .page-info{font-size:11px;color:var(--muted)}
 
-  .btn-search{background:var(--rose);color:#fff;font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;border:none;cursor:pointer;margin-left:6px;font-family:inherit}
-  .sort-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:var(--card2);border:1px solid var(--border2);border-radius:20px;font-size:12px;font-weight:500;color:var(--muted2);cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap}
-  .sort-btn:hover{border-color:var(--rose);color:var(--rose2)}
-  .sort-btn.active{background:var(--rose);border-color:var(--rose);color:#fff}
-
-  .empty-row{text-align:center;padding:40px 20px;color:var(--muted)}
+  .empty-row{text-align:center;padding:48px 20px;color:var(--muted)}
   .empty-row a{color:var(--rose2);text-decoration:none}
-  .site-footer{text-align:center;padding:14px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);margin-top:24px}
 
   .messages-wrap{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
-  .msg-toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 15px;font-size:12.5px;display:flex;align-items:center;gap:9px;min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45)}
+  .msg-toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 15px;font-size:12.5px;display:flex;align-items:center;gap:9px;min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45);animation:toastIn .22s ease}
   .msg-toast.success{border-left:3px solid var(--green)}
   .msg-toast.error{border-left:3px solid var(--red)}
-</style>
+  @keyframes toastIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
 
-<div class="section-header">
-  <h2>Category</h2>
+  .desc-cell{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted2)}
+  .site-footer{
+    text-align:center;padding:14px;font-size:14px;
+    color:var(--muted);border-top:1px solid var(--border);margin-top:30pc;max-width:119pc;
+  }</style>
 
-  <div style="display:flex;align-items:center;gap:10px;">
-    <form method="GET" action="{% url 'admin_category_list' %}" id="searchForm"
-          style="display:flex;align-items:center;gap:8px;">
-      <div class="search-wrap">
+{% if messages %}
+<div class="messages-wrap" id="msg-wrap">
+  {% for msg in messages %}
+  <div class="msg-toast {{ msg.tags }}">
+    <span style="font-size:16px">{% if msg.tags == 'success' %}✓{% else %}✕{% endif %}</span>
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+<script>setTimeout(()=>{ const w=document.getElementById('msg-wrap'); if(w) w.remove(); },3500)</script>
+{% endif %}
+
+<div>
+  <div class="section-header">
+    <h2>All Categories</h2>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+
+      {% if sort == 'asc' %}
+        <a href="?sort=desc{% if query %}&q={{ query }}{% endif %}" class="sort-btn active">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+          </svg>Oldest First
+        </a>
+      {% else %}
+        <a href="?sort=asc{% if query %}&q={{ query }}{% endif %}" class="sort-btn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+          </svg>Latest First
+        </a>
+      {% endif %}
+
+      <form method="GET" class="search-form">
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
         <div class="search-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input type="text" name="q" id="searchInput",  style="  width: 26pc;"
-                 value="{{ query }}" placeholder="Search categories…"
-                 autocomplete="off" oninput="toggleClear(this)">
-        </div>
-        <button type="button" style="margin-top: 1pc;" class="btn-primary" id="clearBtn"
-                onclick="clearSearch()" title="Clear search">Cancel</button>
-      </div>
-    </form>
-
-    <a href="{%  url 'admin_category_add' %}" class="btn-primary">+ Add Category</a>
-  </div>
-</div>
-
-<div class="card" style="border-top:none;border-radius:0 0 var(--radius) var(--radius);margin-bottom:0;">
-  {% if query %}
-  <div style="padding:8px 16px;font-size:12px;color:var(--muted);background:var(--card2);border-bottom:1px solid var(--border);">
-    Showing results for <strong style="color:var(--rose2)">"{{ query }}"</strong>
-    — {{ total }} record{{ total|pluralize }} found
-  </div>
-  {% endif %}
-
-  <table>
-    <thead>
-      <tr>
-        <th style="width:60px;">Sl.No</th>
-        <th>
-          Name
-        </th>
-        <th style="width:50pc;">Status</th>
-        <th style="width:130px;text-align:center;">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for category in page_obj %}
-      <tr>
-        <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-        <td>{{ category.name }}</td>
-        <td>
-          {% if category.is_blocked %}
-            <span class="badge-deleted">Blocked</span>
-          {% else %}
-            <span class="badge-active">Active</span>
+          <input type="text" name="q" placeholder="Search categories…" value="{{ query|default:'' }}">
+          {% if query %}
+            <a href="{% url 'category_list' %}{% if sort %}?sort={{ sort }}{% endif %}" class="clear-btn">
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </a>
           {% endif %}
-        </td>
-<td style="text-align:center;">
+        </div>
+        <button class="btn-search" type="submit">Search</button>
+      </form>
 
-  {% if not category.is_blocked %}
-    
-    <a href="{% url 'admin_category_edit' category.pk %}">
-      <button style="width: 4pc;" class="btn-edit">Edit</button>
-    </a>
-
-    <form method="POST"
-          action="{% url 'category_block' category.pk %}"
-          style="display:inline;"
-          onsubmit="return confirm('Block category \'{{ category.name }}\'?');">
-      {% csrf_token %}
-      <button type="submit" style="margin-top: 15px;" class="btn-remove">
-        Block
-      </button>
-    </form>
-
-  {% else %}
-
-    <form method="POST"
-          action="{% url 'category_unblock' category.pk %}"
-          style="display:inline;"
-          onsubmit="return confirm('Unblock category \'{{ category.name }}\'?');">
-      {% csrf_token %}
-      <button type="submit" class="btn-edit">
-        Unblock
-      </button>
-    </form>
-
-  {% endif %}
-
-</td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="4" style="text-align:center;padding:28px;color:var(--muted);">
-          {% if query %}No categories match "{{ query }}".{% else %}No categories found.{% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div class="table-footer">
-  <span style="font-size:12px;color:var(--muted);">
-    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total }} entr{{ total|pluralize:"y,ies" }}
-  </span>
-
-  {% if page_obj.has_other_pages %}
-  <div class="pagination">
-    {% if page_obj.has_previous %}
-      <a class="pg-btn" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">&#8249; Prev</a>
-    {% else %}
-      <span class="pg-btn" style="opacity:.4;cursor:default;">&#8249; Prev</span>
-    {% endif %}
-
-    {% for num in page_obj.paginator.page_range %}
-      {% if page_obj.number == num %}
-        <span class="pg-btn active">{{ num }}</span>
-      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-        <a class="pg-btn" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
-      {% endif %}
-    {% endfor %}
-
-    {% if page_obj.has_next %}
-      <a class="pg-btn" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Next &#8250;</a>
-    {% else %}
-      <span class="pg-btn" style="opacity:.4;cursor:default;">Next &#8250;</span>
-    {% endif %}
+    </div>
   </div>
-  {% endif %}
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:60px">Sl No</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>
+            Created
+            {% if sort == 'asc' %}
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
+                   viewBox="0 0 24 24" style="margin-left:4px;vertical-align:middle;opacity:.5">
+                <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+              </svg>
+            {% else %}
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
+                   viewBox="0 0 24 24" style="margin-left:4px;vertical-align:middle;opacity:.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+              </svg>
+            {% endif %}
+          </th>
+          <th style="width:100px">Status</th>
+          <th style="width:160px">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr>
+          <td style="color:var(--muted)">{{ forloop.counter }}</td>
+          <td style="font-weight:500;color:var(--text)">{{ cat.name }}</td>
+          <td class="desc-cell">{{ cat.description|default:"—" }}</td>
+          <td style="color:var(--muted)">{{ cat.created_at|date:"d M Y" }}</td>
+          <td>
+            {% if cat.is_active %}
+              <span class="badge-active">Active</span>
+            {% else %}
+              <span class="badge-blocked">Blocked</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="actions-cell">
+
+              <a href="{% url 'category_edit' cat.uuid %}" class="btn-edit-link">Edit</a>
+
+              {% if cat.is_active %}
+                <form method="POST" action="{% url 'category_block' cat.uuid %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-danger-soft">Block</button>
+                </form>
+              {% else %}
+                <form method="POST" action="{% url 'category_unblock' cat.uuid %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-success-soft">Unblock</button>
+                </form>
+              {% endif %}
+
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="empty-row">
+            {% if query %}
+              No categories match "<strong>{{ query }}</strong>".
+              <a href="{% url 'category_list' %}">Clear search</a>
+            {% else %}
+              No categories yet. <a href="{% url 'category_add' %}">Add first category</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-footer">
+    <span class="page-info">
+      Page {{ categories.number }} of {{ categories.paginator.num_pages }}
+      &nbsp;·&nbsp;
+      {{ categories.paginator.count }} categor{{ categories.paginator.count|pluralize:"y,ies" }}
+    </span>
+    <div class="pagination">
+      {% if categories.has_previous %}
+        <a href="?page={{ categories.previous_page_number }}{% if query %}&q={{ query }}{% endif %}&sort={{ sort }}" class="pg-btn">Prev</a>
+      {% else %}
+        <span class="pg-btn disabled">Prev</span>
+      {% endif %}
+
+      {% for num in categories.paginator.page_range %}
+        {% if num == categories.number %}
+          <span class="pg-num active">{{ num }}</span>
+        {% elif num >= categories.number|add:'-2' and num <= categories.number|add:'2' %}
+          <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}&sort={{ sort }}" class="pg-num">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if categories.has_next %}
+        <a href="?page={{ categories.next_page_number }}{% if query %}&q={{ query }}{% endif %}&sort={{ sort }}" class="pg-btn">Next</a>
+      {% else %}
+        <span class="pg-btn disabled">Next</span>
+      {% endif %}
+    </div>
+  </div>
 </div>
 
-{% endblock %}
-
-
-
-
-{% block extra_js %}
-<script>
-function toggleClear(input) {
-  document.getElementById('clearBtn').style.display = input.value ? 'flex' : 'none';
-  if (!input.value) document.getElementById('searchForm').submit();
-}
-
-function clearSearch() {
-  const input = document.getElementById('searchInput');
-  input.value = '';
-  document.getElementById('clearBtn').style.display = 'none';
-  window.location.href = "{% url 'admin_category_list' %}";
-}
-</script>
 {% endblock %}

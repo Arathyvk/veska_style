@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'customers',
     'admin_side',
     'category_admin',
+    'product_admin',
     
 ]
 
