@@ -4,7 +4,7 @@ from django.utils import timezone
 
 class Category(models.Model):
     name        = models.CharField(max_length=255, unique=True)
-    is_deleted  = models.BooleanField(default=False)        
+    is_blocked = models.BooleanField(default=False)        
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
 
@@ -16,13 +16,13 @@ class Category(models.Model):
         return self.name
 
     def soft_delete(self):
-        self.is_deleted = True
-        self.save(update_fields=['is_deleted', 'updated_at'])
+        self.is_blocked = True
+        self.save(update_fields=['is_blocked', 'updated_at'])
 
     def restore(self):
-        self.is_deleted = False
-        self.save(update_fields=['is_deleted', 'updated_at'])
+        self.is_blocked = False
+        self.save(update_fields=['is_blocked', 'updated_at'])
 
     @property
     def status(self):
-        return 'Deleted' if self.is_deleted else 'Active'
+        return 'Blocked' if self.is_blocked else 'Active'

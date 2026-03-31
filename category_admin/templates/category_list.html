@@ -32,7 +32,7 @@
   .search-box{
     display:flex;align-items:center;
     background:var(--card2);border:1px solid var(--border2);
-    border-radius:20px;padding:5px 12px;
+    border-radius:20px;padding:11px 12px;
   }
   .search-box svg{width:13px;height:13px;color:var(--muted);flex-shrink:0}
   .search-box input{background:none;border:none;color:var(--text);font-size:12px;padding:0 8px;width:160px;outline:none}
@@ -51,9 +51,9 @@
 
   .stock-badge{display:inline-block;background:var(--card2);border:1px solid var(--border2);color:var(--muted2);font-size:12px;font-weight:500;padding:3px 10px;border-radius:4px;min-width:36px;text-align:center}
 
-  .btn-edit{background:#2a6e45;color:#5df0a0;font-size:11px;font-weight:600;padding:4px 12px;border-radius:4px;border:none;cursor:pointer;transition:background .15s;text-decoration:none;display:inline-block}
+  .btn-edit{background:#2a6e45;color:#5df0a0;font-size:11px;font-weight:600;padding:6px 12px;border-radius:4px;border:none;cursor:pointer;transition:background .15s;text-decoration:none;display:inline-block}
   .btn-edit:hover{background:#347a50}
-  .btn-remove{background:#6e2a2a;color:#f07070;font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;border:none;cursor:pointer;transition:background .15s}
+  .btn-remove{background:#6e2a2a;color:#f07070;font-size:11px;font-weight:600;padding:6px 18px;border-radius:4px;border:none;cursor:pointer;transition:background .15s}
   .btn-remove:hover{background:#7a3434}
   .actions-cell{display:flex;gap:6px;align-items:center}
 
@@ -95,12 +95,12 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
-          <input type="text" name="q" id="searchInput"
+          <input type="text" name="q" id="searchInput",  style="  width: 26pc;"
                  value="{{ query }}" placeholder="Search categories…"
                  autocomplete="off" oninput="toggleClear(this)">
         </div>
-        <button type="button" class="search-clear" id="clearBtn"
-                onclick="clearSearch()" title="Clear search">&#x2715;</button>
+        <button type="button" style="margin-top: 1pc;" class="btn-primary" id="clearBtn"
+                onclick="clearSearch()" title="Clear search">Cancel</button>
       </div>
     </form>
 
@@ -123,7 +123,7 @@
         <th>
           Name
         </th>
-        <th style="width:100px;">Status</th>
+        <th style="width:50pc;">Status</th>
         <th style="width:130px;text-align:center;">Actions</th>
       </tr>
     </thead>
@@ -133,27 +133,45 @@
         <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
         <td>{{ category.name }}</td>
         <td>
-          {% if category.is_deleted %}
-            <span class="badge-deleted">Deleted</span>
+          {% if category.is_blocked %}
+            <span class="badge-deleted">Blocked</span>
           {% else %}
             <span class="badge-active">Active</span>
           {% endif %}
         </td>
-        <td style="text-align:center;">
-          {% if not category.is_deleted %}
-          <a href="#">
-            <button class="btn-edit">Edit</button>
-          </a>
-          <form method="POST" action="#"
-                style="display:inline;"
-                onsubmit="return confirm('Remove category \'{{ category.name }}\'?');">
-            {% csrf_token %}
-            <button type="submit" class="btn-remove">Remove</button>
-          </form>
-          {% else %}
-          <span style="color:var(--muted);font-size:11px;">—</span>
-          {% endif %}
-        </td>
+<td style="text-align:center;">
+
+  {% if not category.is_blocked %}
+    
+    <a href="{% url 'admin_category_edit' category.pk %}">
+      <button style="width: 4pc;" class="btn-edit">Edit</button>
+    </a>
+
+    <form method="POST"
+          action="{% url 'category_block' category.pk %}"
+          style="display:inline;"
+          onsubmit="return confirm('Block category \'{{ category.name }}\'?');">
+      {% csrf_token %}
+      <button type="submit" style="margin-top: 15px;" class="btn-remove">
+        Block
+      </button>
+    </form>
+
+  {% else %}
+
+    <form method="POST"
+          action="{% url 'category_unblock' category.pk %}"
+          style="display:inline;"
+          onsubmit="return confirm('Unblock category \'{{ category.name }}\'?');">
+      {% csrf_token %}
+      <button type="submit" class="btn-edit">
+        Unblock
+      </button>
+    </form>
+
+  {% endif %}
+
+</td>
       </tr>
       {% empty %}
       <tr>
