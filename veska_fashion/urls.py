@@ -11,5 +11,6 @@ urlpatterns = [
     path('customers/',include('customers.urls')),
     path('newadmin/',include('admin_side.urls')),
     path('category_admin/',include('category_admin.urls')),
+    path('product_admin/',include('product_admin.urls')),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

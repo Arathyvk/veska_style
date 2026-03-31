@@ -1,28 +1,24 @@
 from django.db import models
-from django.utils import timezone
+import uuid
 
 
 class Category(models.Model):
-    name        = models.CharField(max_length=255, unique=True)
-    is_blocked = models.BooleanField(default=False)        
+    uuid        = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name        = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    is_active   = models.BooleanField(default=True)   
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']        
-        verbose_name_plural = 'Categories'
-
+        ordering = ['-created_at']  
     def __str__(self):
         return self.name
 
-    def soft_delete(self):
-        self.is_blocked = True
-        self.save(update_fields=['is_blocked', 'updated_at'])
+    def block(self):
+        self.is_active = False
+        self.save(update_fields=['is_active'])
 
-    def restore(self):
-        self.is_blocked = False
-        self.save(update_fields=['is_blocked', 'updated_at'])
-
-    @property
-    def status(self):
-        return 'Blocked' if self.is_blocked else 'Active'
+    def unblock(self):
+        self.is_active = True
+        self.save(update_fields=['is_active'])
