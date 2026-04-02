@@ -236,3 +236,4 @@ CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
 ACCOUNT_INACTIVE_URL = '/accounts/inactive/' 
+

@@ -140,7 +140,8 @@
   .site-footer{
     text-align:center;padding:14px;font-size:14px;
     color:var(--muted);border-top:1px solid var(--border);margin-top:30pc;max-width:119pc;
-  }</style>
+  }
+  </style>
 
 {% if messages %}
 <div class="messages-wrap" id="msg-wrap">
@@ -155,44 +156,55 @@
 {% endif %}
 
 <div>
-  <div class="section-header">
-    <h2>All Categories</h2>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+<div class="section-header">
+  <h2>All Categories</h2>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
 
-      {% if sort == 'asc' %}
-        <a href="?sort=desc{% if query %}&q={{ query }}{% endif %}" class="sort-btn active">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
-          </svg>Oldest First
-        </a>
-      {% else %}
-        <a href="?sort=asc{% if query %}&q={{ query }}{% endif %}" class="sort-btn">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
-          </svg>Latest First
-        </a>
-      {% endif %}
+    {% if sort == 'asc' %}
+      <a href="?sort=desc{% if query %}&q={{ query }}{% endif %}" class="sort-btn active">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+        </svg>Oldest First
+      </a>
+    {% else %}
+      <a href="?sort=asc{% if query %}&q={{ query }}{% endif %}" class="sort-btn">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+        </svg>Latest First
+      </a>
+    {% endif %}
 
-      <form method="GET" class="search-form">
-        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
-        <div class="search-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input type="text" name="q" placeholder="Search categories…" value="{{ query|default:'' }}">
-          {% if query %}
-            <a href="{% url 'category_list' %}{% if sort %}?sort={{ sort }}{% endif %}" class="clear-btn">
-              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </a>
-          {% endif %}
-        </div>
-        <button class="btn-search" type="submit">Search</button>
-      </form>
+    <form method="GET" class="search-form">
+      {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" name="q" placeholder="Search categories…" value="{{ query|default:'' }}">
+        {% if query %}
+          <a href="{% url 'category_list' %}{% if sort %}?sort={{ sort }}{% endif %}" class="clear-btn">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </a>
+        {% endif %}
+      </div>
+      <button class="btn-search" type="submit">Search</button>
+    </form>
 
-    </div>
+    <a href="{% url 'category_add' %}"
+       style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+              background:linear-gradient(135deg,#c9967a,#a06848);color:#fff;
+              font-size:12px;font-weight:600;padding:8px 18px;
+              border-radius:6px;box-shadow:0 3px 12px rgba(201,150,122,.3);margin-left:auto;">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add Category
+    </a>
+
   </div>
+</div>
 
   <div class="table-wrap">
     <table>

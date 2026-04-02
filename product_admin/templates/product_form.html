@@ -1,0 +1,737 @@
+{% extends "admin_base.html" %}
+{% block page_title %}{% if action == 'edit' %}Edit Product{% else %}Add Product{% endif %}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'product_list' %}" class="btn-back"
+   style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+          background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
+          font-size:12px;font-weight:500;padding:7px 14px;border-radius:6px">
+  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+  Back to Products
+</a>
+{% endblock %}
+
+{% block content %}
+<style>
+:root{
+  --bg:#1a1410;--card:#231f1a;--card2:#2c2620;
+  --border:#3a342c;--border2:#4a4038;
+  --rose:#c9967a;--rose2:#e8b49a;
+  --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
+  --green:#4caf7d;--red:#e05252;--orange:#e09a52;
+  --radius:6px;
+  --head:'Playfair Display',serif;--body:'Jost',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
+
+.form-shell{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+@media(max-width:860px){.form-shell{grid-template-columns:1fr}}
+
+.fsec{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.fsec-head{background:var(--card2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
+.fsec-head h3{font-family:var(--head);font-size:16px;font-weight:600}
+.fsec-body{padding:18px}
+
+.frow{margin-bottom:14px}
+.frow:last-child{margin-bottom:0}
+.flabel{display:block;font-size:10.5px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.flabel .req{color:var(--rose2);margin-left:2px}
+.finput,.fselect,.ftextarea{
+  width:100%;background:var(--card2);border:1px solid var(--border2);
+  color:var(--text);font-family:var(--body);font-size:17px;
+  padding:9px 12px;border-radius:var(--radius);outline:none;transition:border .18s;
+}
+.finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--rose)}
+.finput::placeholder,.ftextarea::placeholder{color:var(--muted)}
+.fselect{
+  cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%238a7d72' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+}
+.fselect option{background:#2c2620}
+.ftextarea{resize:vertical;min-height:90px;line-height:1.6}
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ferror{font-size:11px;color:var(--red);margin-top:4px}
+.fhint{font-size:13.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0}
+.toggle-label{font-size:12.5px;font-weight:500}
+.toggle-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.toggle-wrap{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;transition:background .2s}
+.toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle-wrap input:checked + .toggle-track{background:var(--rose)}
+.toggle-wrap input:checked + .toggle-track::after{transform:translateX(20px)}
+
+.upload-zone{
+  border:2px dashed var(--border2);border-radius:10px;padding:26px 20px;
+  text-align:center;cursor:pointer;transition:all .2s;background:rgba(42,38,32,.5);
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--rose);background:rgba(201,150,122,.05)}
+.upload-zone-icon{font-size:30px;margin-bottom:8px;line-height:1}
+.upload-zone p{font-size:12px;color:var(--muted);line-height:1.7}
+.upload-zone span{color:var(--rose2);font-weight:600}
+.upload-zone input[type=file]{display:none}
+
+.img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.img-item{
+  position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;
+  border:2px solid var(--border2);background:var(--card2);cursor:grab;transition:border-color .15s;
+}
+.img-item.primary-img{border-color:var(--rose)}
+.img-item img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.img-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.55);
+  opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.img-item:hover .img-overlay{opacity:1}
+.ovr-btn{
+  width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+}
+.ovr-btn.crop{background:var(--rose);color:#fff}
+.ovr-btn.del{background:#6e2a2a;color:#f07070}
+.img-num{position:absolute;top:5px;left:5px;background:rgba(0,0,0,.6);color:var(--muted2);font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;pointer-events:none}
+.img-primary-lbl{position:absolute;bottom:5px;left:5px;background:var(--rose);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:3px;pointer-events:none}
+.img-count-bar{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:11px}
+.img-count-text.ok{color:var(--green)}.img-count-text.warn{color:var(--orange)}.img-count-text.err{color:var(--red)}
+
+.existing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.ex-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid var(--border2)}
+.ex-thumb.is-primary{border-color:var(--rose)}
+.ex-thumb img{width:100%;height:100%;object-fit:cover}
+.ex-del-btn{
+  position:absolute;top:5px;right:5px;width:22px;height:22px;
+  background:rgba(0,0,0,.75);color:#f07070;border-radius:50%;border:none;
+  font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.ex-del-btn:hover{background:var(--red);color:#fff}
+.ex-primary-lbl{position:absolute;bottom:4px;left:4px;background:var(--rose);color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px}
+
+.variant-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.variant-row{
+  background:var(--card2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;
+  display:grid;grid-template-columns:1fr 90px 90px 75px auto;gap:8px;align-items:center;
+}
+.variant-row .finput{padding:6px 9px;font-size:18px}
+.vdel-btn{
+  width:28px;height:28px;border-radius:6px;background:#6e2a2a;color:#f07070;
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;transition:background .15s;
+}
+.vdel-btn:hover{background:#7a3434}
+.btn-add-variant{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--card2);border:1px dashed var(--border2);
+  color:var(--muted2);font-size:17px;font-weight:500;padding:7px 14px;
+  border-radius:var(--radius);cursor:pointer;transition:all .15s;
+  font-family:var(--body);width:100%;justify-content:center;
+}
+.btn-add-variant:hover{border-color:var(--rose);color:var(--rose2)}
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+.action-bar{display:flex;gap:10px;flex-wrap:wrap}
+.btn-save{
+  flex:1;background:linear-gradient(135deg,#c9967a,#a06848);color:#fff;
+  font-size:13px;font-weight:600;padding:11px 20px;border-radius:var(--radius);
+  border:none;cursor:pointer;transition:opacity .18s;font-family:var(--body);
+  box-shadow:0 3px 14px rgba(201,150,122,.3);
+}
+.btn-save:hover{opacity:.88}
+.btn-draft{
+  background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
+  font-size:12px;font-weight:500;padding:11px 16px;
+  border-radius:var(--radius);cursor:pointer;transition:all .15s;font-family:var(--body);
+}
+.btn-draft:hover{border-color:var(--rose);color:var(--rose2)}
+
+.crop-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(5px);
+  z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.crop-overlay.open{opacity:1;pointer-events:all}
+.crop-modal{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  width:100%;max-width:560px;overflow:hidden;
+  transform:translateY(18px);transition:transform .25s;
+}
+.crop-overlay.open .crop-modal{transform:none}
+.crop-modal-head{background:var(--card2);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center}
+.crop-modal-head h4{font-family:var(--head);font-size:15px;font-weight:600;flex:1}
+.crop-close{width:28px;height:28px;border-radius:50%;background:var(--border2);color:var(--muted2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px}
+.crop-close:hover{background:var(--red);color:#fff}
+.crop-modal-body{padding:18px}
+.crop-area{background:#000;border-radius:10px;overflow:hidden;height:280px;display:flex;align-items:center;justify-content:center;position:relative;border:1px solid var(--border2);user-select:none}
+.crop-area img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.crop-sel{position:absolute;border:2px solid var(--rose);box-shadow:0 0 0 9999px rgba(0,0,0,.6);cursor:move;touch-action:none}
+.crop-handle{position:absolute;width:10px;height:10px;background:var(--rose);border-radius:2px}
+.crop-handle.se{bottom:-5px;right:-5px;cursor:se-resize}
+.crop-handle.sw{bottom:-5px;left:-5px;cursor:sw-resize}
+.crop-handle.ne{top:-5px;right:-5px;cursor:ne-resize}
+.crop-handle.nw{top:-5px;left:-5px;cursor:nw-resize}
+.crop-controls{display:flex;align-items:center;gap:12px;padding:12px 0 0}
+.crop-controls label{font-size:11px;color:var(--muted);flex-shrink:0;width:38px}
+.crop-controls input[type=range]{flex:1;accent-color:var(--rose)}
+.crop-controls span{font-size:11px;color:var(--muted2);width:36px;text-align:right;flex-shrink:0}
+.crop-foot{background:var(--card2);border-top:1px solid var(--border);padding:12px 18px;display:flex;justify-content:flex-end;gap:10px}
+.btn-crop-apply{background:linear-gradient(135deg,#c9967a,#a06848);color:#fff;font-size:12px;font-weight:600;padding:8px 20px;border-radius:var(--radius);border:none;cursor:pointer;font-family:var(--body)}
+.btn-crop-cancel{background:var(--card2);border:1px solid var(--border2);color:var(--muted2);font-size:12px;padding:8px 16px;border-radius:var(--radius);cursor:pointer;font-family:var(--body)}
+
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 15px;font-size:12.5px;display:flex;align-items:center;gap:9px;min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45)}
+.toast.ok{border-left:3px solid var(--green)}.toast.err{border-left:3px solid var(--red)}.toast.warn{border-left:3px solid var(--orange)}
+
+.badge-draft{display:inline-block;background:rgba(224,154,82,.12);border:1px solid rgba(224,154,82,.3);color:var(--orange);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px}
+.site-footer{text-align:center;padding:15px;font-size:14px;color:var(--muted);border-top:1px solid var(--border);margin-top:47pc;max-width:139pc} 
+</style>
+
+{% if messages %}
+<div class="toast-wrap" id="msg-wrap">
+  {% for msg in messages %}
+  <div class="toast {{ msg.tags }}">
+    <span style="font-size:15px">{% if msg.tags == 'success' %}✓{% elif msg.tags == 'error' %}✕{% else %}⚠{% endif %}</span>
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+<script>setTimeout(()=>{ const w=document.getElementById('msg-wrap'); if(w){w.style.opacity='0';setTimeout(()=>w.remove(),400);} }, 3500)</script>
+{% endif %}
+
+<div style="margin-bottom:18px">
+  <h2 style="font-family:var(--head);font-size:19px;font-weight:700">
+    {% if action == 'edit' %}Edit Product{% else %}Add New Product{% endif %}
+    {% if product and not product.is_active %}<span class="badge-draft">DRAFT</span>{% endif %}
+  </h2>
+  <p style="font-size:12px;color:var(--muted);margin-top:3px">
+    {% if action == 'edit' %}Update product details, images and variants{% else %}Fill in details · upload at least 3 images · add variants{% endif %}
+  </p>
+</div>
+
+<form method="POST" id="product-form" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="cropped_images_json"  id="cropped_images_json"  value="[]">
+  <input type="hidden" name="removed_image_ids"    id="removed_image_ids"    value="[]">
+  <input type="hidden" name="save_as_draft"        id="save_as_draft"        value="0">
+  <input type="hidden" name="new_variants_json"    id="new_variants_json"    value="[]">
+  <input type="hidden" name="deleted_variant_ids"  id="deleted_variant_ids"  value="[]">
+
+  <div class="form-shell">
+
+    <div>
+
+      <div class="fsec">
+        <div class="fsec-head"><h3>Product Details</h3></div>
+        <div class="fsec-body">
+
+          <div class="frow">
+            <label class="flabel">Product Name <span class="req">*</span></label>
+            <input class="finput" name="name" placeholder="e.g. Womens Vintage Flock Loafers"
+                   value="{{ form.name.value|default:'' }}" required>
+            {% if form.name.errors %}<div class="ferror">{{ form.name.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="fgrid2">
+            <div class="frow">
+              <label class="flabel">Price (₹) <span class="req">*</span></label>
+              <input class="finput" name="price" type="number" step="0.01" min="0"
+                     placeholder="0.00" value="{{ form.price.value|default:'' }}" required>
+              {% if form.price.errors %}<div class="ferror">{{ form.price.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="frow">
+              <label class="flabel">Color</label>
+              <input class="finput" name="color" placeholder="e.g. Brown, White"
+                     value="{{ form.color.value|default:'' }}">
+            </div>
+          </div>
+
+          <div class="fgrid2">
+            <div class="frow">
+              <label class="flabel">Category <span class="req">*</span></label>
+              <select class="fselect" name="category" required>
+                <option value="">— Select —</option>
+                {% for val, label in form.fields.category.choices %}
+                  {% if val %}
+                  <option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ label }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+              {% if form.category.errors %}<div class="ferror">{{ form.category.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="frow">
+              <label class="flabel">Stock <span class="req">*</span></label>
+              <input class="finput" name="stock" type="number" min="0"
+                     placeholder="0" value="{{ form.stock.value|default:'' }}" required>
+              {% if form.stock.errors %}<div class="ferror">{{ form.stock.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="frow">
+            <label class="flabel">Description</label>
+            <textarea class="ftextarea" name="description"
+                      placeholder="Describe the product — material, use, style…"
+                      rows="4">{{ form.description.value|default:'' }}</textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="fsec">
+        <div class="fsec-head">
+          <h3>Variants</h3>
+          <span style="font-size:11px;color:var(--muted)">Size · Color · Stock per variant</span>
+        </div>
+        <div class="fsec-body">
+
+          {% if product and product.variants.all %}
+          <div id="existing-variant-list">
+            {% for v in product.variants.all %}
+            <div class="variant-row" id="ev-{{ v.pk }}">
+              <input class="finput" name="ev_name_{{ v.pk }}"  value="{{ v.variant_name }}" placeholder="Name">
+              <input class="finput" name="ev_size_{{ v.pk }}"  value="{{ v.size }}"         placeholder="Size">
+              <input class="finput" name="ev_color_{{ v.pk }}" value="{{ v.color }}"        placeholder="Color">
+              <input class="finput" name="ev_stock_{{ v.pk }}" type="number" min="0"
+                     value="{{ v.stock }}" placeholder="Stock">
+              <button type="button" class="vdel-btn"
+                      onclick="deleteExistingVariant('{{ v.pk }}', this)" title="Remove">✕</button>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="divider"></div>
+          {% endif %}
+
+          <div class="variant-list" id="new-variant-list"></div>
+
+          <button type="button" class="btn-add-variant" onclick="addVariantRow()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Variant
+          </button>
+          <p class="fhint" style="margin-top:8px">Variants let you offer multiple sizes / colours with separate stock counts.</p>
+        </div>
+      </div>
+
+    </div>
+    <div>
+
+      <div class="fsec">
+        <div class="fsec-head"><h3>Publish Settings</h3></div>
+        <div class="fsec-body" style="padding:12px 18px">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Active / Published</div>
+              <div class="toggle-sub">Off = draft (hidden from storefront)</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" name="is_active" id="toggle-active"
+                     {% if action == 'add' or product.is_active %}checked{% endif %}>
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <div class="fsec-head">
+          <h3>Product Images</h3>
+          <span style="font-size:10px;color:var(--rose2);font-weight:700;letter-spacing:.4px">MIN 3 REQUIRED</span>
+        </div>
+        <div class="fsec-body">
+
+          {% if product and product.images.all %}
+          <p style="font-size:10.5px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">
+            Saved Images
+          </p>
+          <div class="existing-grid" id="existing-img-grid">
+            {% for img in product.images.all %}
+            <div class="ex-thumb {% if forloop.first %}is-primary{% endif %}" id="eximg-{{ img.pk }}">
+              <img src="{{ img.image.url }}" alt="Image {{ forloop.counter }}">
+              {% if forloop.first %}<div class="ex-primary-lbl">PRIMARY</div>{% endif %}
+              <button type="button" class="ex-del-btn"
+                      onclick="removeExistingImg('{{ img.pk }}', this)" title="Remove">✕</button>
+            </div>
+            {% endfor %}
+          </div>
+          <div id="existing-count-msg"
+               style="font-size:11px;color:var(--muted);margin-bottom:10px">
+            {{ product.images.count }} saved image{{ product.images.count|pluralize }}
+          </div>
+          <div class="divider"></div>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Upload additional images below:</p>
+          {% endif %}
+
+          <div class="upload-zone" id="upload-zone"
+               onclick="document.getElementById('file-input').click()"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDrop(event)">
+            <input type="file" id="file-input" accept="image/*" multiple
+                   onchange="handleFiles(this.files)">
+            <div class="upload-zone-icon">📸</div>
+            <p><span>Click to upload</span> or drag & drop</p>
+            <p style="font-size:10.5px;color:var(--muted);margin-top:4px">
+              PNG · JPG · WEBP — cropped & resized to 600×600
+            </p>
+          </div>
+
+          <div class="img-grid" id="img-grid"></div>
+          <div class="img-count-bar" id="img-count-bar" style="display:none">
+            <span class="img-count-text" id="img-count-text"></span>
+            <span style="font-size:10px;color:var(--muted)">Drag to reorder · first = primary</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button type="submit" class="btn-save" id="save-btn">
+          {% if action == 'edit' %}✓ Update Product{% else %}+ Add Product{% endif %}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</form>
+
+<div class="crop-overlay" id="crop-overlay">
+  <div class="crop-modal">
+    <div class="crop-modal-head">
+      <h4>Crop & Resize Image</h4>
+      <button class="crop-close" onclick="closeCrop()">✕</button>
+    </div>
+    <div class="crop-modal-body">
+      <p style="font-size:11.5px;color:var(--muted);margin-bottom:12px">
+        Drag the selection to crop. Output: <strong style="color:var(--rose2)">600 × 600 px JPEG</strong>.
+      </p>
+      <div class="crop-area" id="crop-area">
+        <img id="crop-img" src="" alt="" draggable="false">
+        <div class="crop-sel" id="crop-sel">
+          <div class="crop-handle nw" data-dir="nw"></div>
+          <div class="crop-handle ne" data-dir="ne"></div>
+          <div class="crop-handle sw" data-dir="sw"></div>
+          <div class="crop-handle se" data-dir="se"></div>
+        </div>
+      </div>
+      <div class="crop-controls">
+        <label>Zoom</label>
+        <input type="range" id="zoom-range" min="100" max="250" value="100"
+               oninput="applyZoom(this.value)">
+        <span id="zoom-lbl">1.0×</span>
+      </div>
+      <div class="crop-controls">
+        <label>Aspect</label>
+        <select id="aspect-sel" class="fselect" style="flex:1" onchange="resetCropBox()">
+          <option value="1">Square (1:1)</option>
+          <option value="1.333">Landscape (4:3)</option>
+          <option value="0.75">Portrait (3:4)</option>
+          <option value="0">Free</option>
+        </select>
+        <span style="width:36px"></span>
+      </div>
+    </div>
+    <div class="crop-foot">
+      <button class="btn-crop-cancel" onclick="closeCrop()">Cancel</button>
+      <button class="btn-crop-apply" onclick="applyCrop()">✓ Use This Crop</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="live-toasts"></div>
+<div class="site-footer">© 2026 Veska. All Rights Reserved.</div>
+
+<script>
+const pendingImgs   = [];
+let   cropIndex     = null;
+let   cropSrc       = null;
+let   removedExIds  = [];
+let   deletedVarIds = [];
+let   variantRows   = [];
+let   dragIdx       = null;
+let   cropDrag      = { on:false };
+let   cropZoom      = 1;
+
+document.getElementById('upload-zone').addEventListener('drop', e => {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+});
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  handleFiles(files);
+}
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      pendingImgs.push({ dataURL: ev.target.result, original: ev.target.result });
+      openCrop(pendingImgs.length - 1);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderImgGrid() {
+  const grid = document.getElementById('img-grid');
+  const bar  = document.getElementById('img-count-bar');
+  const txt  = document.getElementById('img-count-text');
+  const n    = pendingImgs.length;
+
+  grid.innerHTML = pendingImgs.map((img, i) => `
+    <div class="img-item ${i===0?'primary-img':''}" data-idx="${i}"
+         draggable="true"
+         ondragstart="dragIdx=${i}"
+         ondragover="event.preventDefault()"
+         ondrop="dropImg(event,${i})"
+         ondragend="dragIdx=null">
+      <img src="${img.dataURL}" alt="">
+      <span class="img-num">${i+1}</span>
+      ${i===0?'<span class="img-primary-lbl">PRIMARY</span>':''}
+      <div class="img-overlay">
+        <button type="button" class="ovr-btn crop" onclick="reCrop(${i})" title="Re-crop">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M6.13 1L6 16a2 2 0 002 2h15"/><path d="M1 6.13L16 6a2 2 0 012 2v15"/>
+          </svg>
+        </button>
+        <button type="button" class="ovr-btn del" onclick="removeImg(${i})" title="Remove">✕</button>
+      </div>
+    </div>`).join('');
+
+  if (n > 0) {
+    bar.style.display = 'flex';
+    if (n >= 3) { txt.textContent = `${n} image${n>1?'s':''} ✓`; txt.className = 'img-count-text ok'; }
+    else        { txt.textContent = `${n} — need ${3-n} more`;    txt.className = 'img-count-text warn'; }
+  } else {
+    bar.style.display = 'none';
+  }
+  syncJSON();
+}
+
+function removeImg(i) { pendingImgs.splice(i, 1); renderImgGrid(); }
+function reCrop(i)    { cropIndex = i; openCrop(i, true); }
+
+function dropImg(e, i) {
+  e.preventDefault();
+  if (dragIdx === null || dragIdx === i) return;
+  const moved = pendingImgs.splice(dragIdx, 1)[0];
+  pendingImgs.splice(i, 0, moved);
+  renderImgGrid();
+}
+
+function removeExistingImg(pk, btn) {
+  removedExIds.push(pk);
+  document.getElementById('removed_image_ids').value = JSON.stringify(removedExIds);
+  const el = document.getElementById('eximg-' + pk);
+  if (el) el.style.cssText = 'opacity:.3;pointer-events:none;filter:grayscale(1)';
+  const remaining = document.querySelectorAll('.ex-thumb:not([style*="opacity"])').length;
+  document.getElementById('existing-count-msg').textContent =
+    `${remaining} saved image${remaining!==1?'s':''}`;
+  showToast('Image marked for removal — save to confirm', 'warn');
+}
+
+function syncJSON() {
+  document.getElementById('cropped_images_json').value =
+    JSON.stringify(pendingImgs.map(img => img.dataURL));
+}
+
+function openCrop(idx, reCropMode = false) {
+  cropIndex = idx;
+  cropSrc   = pendingImgs[idx].original || pendingImgs[idx].dataURL;
+  const img = document.getElementById('crop-img');
+  img.src = cropSrc;
+  img.style.transform = 'scale(1)';
+  document.getElementById('zoom-range').value = 100;
+  document.getElementById('zoom-lbl').textContent = '1.0×';
+  cropZoom = 1;
+  document.getElementById('crop-overlay').classList.add('open');
+  img.onload = () => { resetCropBox(); setupCropDrag(); };
+  if (img.complete) { resetCropBox(); setupCropDrag(); }
+}
+
+function closeCrop() {
+  document.getElementById('crop-overlay').classList.remove('open');
+  if (cropIndex !== null && pendingImgs[cropIndex] && !pendingImgs[cropIndex]._cropped) {
+    pendingImgs.splice(cropIndex, 1);
+  }
+  renderImgGrid();
+}
+
+function resetCropBox() {
+  const area   = document.getElementById('crop-area');
+  const sel    = document.getElementById('crop-sel');
+  const aspect = parseFloat(document.getElementById('aspect-sel').value) || 1;
+  const aW = area.clientWidth, aH = area.clientHeight;
+  let   sw = Math.min(aW * 0.7, aH * 0.7);
+  let   sh = aspect === 0 ? sw : sw / aspect;
+  if (sh > aH * 0.85) { sh = aH * 0.85; sw = aspect === 0 ? sh : sh * aspect; }
+  sel.style.cssText = `width:${sw}px;height:${sh}px;left:${(aW-sw)/2}px;top:${(aH-sh)/2}px`;
+}
+
+function applyZoom(v) {
+  cropZoom = v / 100;
+  document.getElementById('zoom-lbl').textContent = cropZoom.toFixed(1) + '×';
+  document.getElementById('crop-img').style.transform = `scale(${cropZoom})`;
+}
+
+function setupCropDrag() {
+  const sel     = document.getElementById('crop-sel');
+  const area    = document.getElementById('crop-area');
+  const handles = sel.querySelectorAll('.crop-handle');
+
+  const onMove = e => {
+    if (!cropDrag.on) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const aR = area.getBoundingClientRect();
+    if (cropDrag.type === 'move') {
+      let nl = pt.clientX - aR.left - cropDrag.ox;
+      let nt = pt.clientY - aR.top  - cropDrag.oy;
+      nl = Math.max(0, Math.min(nl, aR.width  - cropDrag.w));
+      nt = Math.max(0, Math.min(nt, aR.height - cropDrag.h));
+      sel.style.left = nl + 'px'; sel.style.top = nt + 'px';
+    } else {
+      const dx = pt.clientX - aR.left - cropDrag.sx;
+      const dy = pt.clientY - aR.top  - cropDrag.sy;
+      const d  = cropDrag.type;
+      let l = cropDrag.l, t = cropDrag.t, w = cropDrag.w, h = cropDrag.h;
+      if (d.includes('e')) w = Math.max(50, cropDrag.w + dx);
+      if (d.includes('s')) h = Math.max(50, cropDrag.h + dy);
+      if (d.includes('w')) { l = cropDrag.l + dx; w = Math.max(50, cropDrag.w - dx); }
+      if (d.includes('n')) { t = cropDrag.t + dy; h = Math.max(50, cropDrag.h - dy); }
+      l = Math.max(0, Math.min(l, aR.width  - 30));
+      t = Math.max(0, Math.min(t, aR.height - 30));
+      sel.style.cssText = `left:${l}px;top:${t}px;width:${Math.min(w,aR.width-l)}px;height:${Math.min(h,aR.height-t)}px`;
+    }
+  };
+
+  sel.onmousedown = e => {
+    if (e.target.classList.contains('crop-handle')) return;
+    const sR = sel.getBoundingClientRect();
+    const aR = area.getBoundingClientRect();
+    cropDrag = { on:true, type:'move', ox:e.clientX-sR.left, oy:e.clientY-sR.top,
+                 w:sR.width, h:sR.height };
+    e.preventDefault();
+  };
+
+  handles.forEach(h => h.onmousedown = e => {
+    const sR = sel.getBoundingClientRect();
+    const aR = area.getBoundingClientRect();
+    cropDrag = { on:true, type:h.dataset.dir,
+                 sx:e.clientX-aR.left, sy:e.clientY-aR.top,
+                 l:sR.left-aR.left, t:sR.top-aR.top, w:sR.width, h:sR.height };
+    e.preventDefault(); e.stopPropagation();
+  });
+
+  document.onmousemove = onMove;
+  document.onmouseup   = () => { cropDrag.on = false; };
+}
+
+function applyCrop() {
+  const img  = document.getElementById('crop-img');
+  const sel  = document.getElementById('crop-sel');
+  const area = document.getElementById('crop-area');
+  const iR   = img.getBoundingClientRect();
+  const sR   = sel.getBoundingClientRect();
+  const scX  = img.naturalWidth  / iR.width;
+  const scY  = img.naturalHeight / iR.height;
+  const cx   = (sR.left - iR.left) * scX;
+  const cy   = (sR.top  - iR.top ) * scY;
+  const cw   = sR.width  * scX;
+  const ch   = sR.height * scY;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 600;
+  const ctx = canvas.getContext('2d');
+  const tmp = new Image();
+  tmp.onload = () => {
+    ctx.drawImage(tmp, Math.max(0,cx), Math.max(0,cy), Math.max(1,cw), Math.max(1,ch), 0, 0, 600, 600);
+    const cropped = canvas.toDataURL('image/jpeg', 0.85);
+    pendingImgs[cropIndex].dataURL  = cropped;
+    pendingImgs[cropIndex]._cropped = true;
+    if (!pendingImgs[cropIndex].original) pendingImgs[cropIndex].original = cropSrc;
+    document.getElementById('crop-overlay').classList.remove('open');
+    renderImgGrid();
+    showToast('Image cropped to 600×600 ✓', 'ok');
+  };
+  tmp.src = cropSrc;
+}
+
+function addVariantRow() {
+  variantRows.push({ name:'', size:'', color:'', stock:0 });
+  renderVariantRows();
+}
+
+function renderVariantRows() {
+  document.getElementById('new-variant-list').innerHTML = variantRows.map((v,i) => `
+    <div class="variant-row">
+      <input class="finput" placeholder="Variant name" value="${v.name}"
+             oninput="variantRows[${i}].name=this.value;syncVariantsJSON()">
+      <input class="finput" placeholder="Size"  value="${v.size}"
+             oninput="variantRows[${i}].size=this.value;syncVariantsJSON()">
+      <input class="finput" placeholder="Color" value="${v.color}"
+             oninput="variantRows[${i}].color=this.value;syncVariantsJSON()">
+      <input class="finput" type="number" min="0" placeholder="Stock" value="${v.stock}"
+             oninput="variantRows[${i}].stock=+this.value;syncVariantsJSON()">
+      <button type="button" class="vdel-btn" onclick="removeVariantRow(${i})" title="Remove">✕</button>
+    </div>`).join('');
+  syncVariantsJSON();
+}
+
+function removeVariantRow(i) { variantRows.splice(i,1); renderVariantRows(); }
+function syncVariantsJSON()  { document.getElementById('new_variants_json').value = JSON.stringify(variantRows); }
+
+function deleteExistingVariant(pk, btn) {
+  deletedVarIds.push(pk);
+  document.getElementById('deleted_variant_ids').value = JSON.stringify(deletedVarIds);
+  const row = document.getElementById('ev-' + pk);
+  if (row) row.style.cssText = 'opacity:.3;pointer-events:none;filter:grayscale(1)';
+}
+
+function saveDraft() {
+  document.getElementById('save_as_draft').value = '1';
+  document.getElementById('toggle-active').checked = false;
+  showToast('Saving as draft…', 'warn');
+  document.getElementById('product-form').submit();
+}
+
+document.getElementById('product-form').addEventListener('submit', function(e) {
+  const isDraft = document.getElementById('save_as_draft').value === '1';
+    if (!isEdit) {
+    if (pendingImgs.length < 3) {
+        e.preventDefault();
+        showToast('Please upload at least 3 product images', 'err');
+        return;
+    }
+    } else {
+    const exCount  = document.querySelectorAll('.ex-thumb:not([style*="opacity"])').length;
+    const newCount = pendingImgs.length;
+
+    if (exCount + newCount < 3) {
+        e.preventDefault();
+        showToast('Product must have at least 3 images total', 'err');
+        return;
+    }
+}
+  syncJSON();
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+});
+
+function showToast(msg, type='ok') {
+  const wrap = document.getElementById('live-toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span style="font-size:15px">${type==='ok'?'✓':type==='err'?'✕':'⚠'}</span>${msg}`;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 3000);
+}
+</script>
+{% endblock %}
