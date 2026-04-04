@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'admin_side',
     'category_admin',
     'product_admin',
+    'product_user',
     
 ]
 
@@ -237,3 +238,7 @@ SESSION_COOKIE_SECURE = False
 
 ACCOUNT_INACTIVE_URL = '/accounts/inactive/' 
 
+from decouple import config
+
+GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')

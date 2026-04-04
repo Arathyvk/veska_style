@@ -58,7 +58,7 @@ def login_view(request):
             return render(request, "login.html")
 
      
-        user = authenticate(request, username=email, password=password)
+        user = authenticate(request, email=email, password=password)
         if user is None:
             messages.error(request, "Incorrect password. Please try again or reset your password.")
             return render(request, "login.html")
@@ -182,6 +182,9 @@ def verify_signup_otp(request):
                 password=signup_data["password"],
                 first_name=signup_data["first_name"],
                 last_name=signup_data.get("last_name", ""),
+                is_staff=False,
+                is_superuser=False
+                
             )
             request.session.pop("signup_data", None)
             clear_otp_from_session(request, "signup")

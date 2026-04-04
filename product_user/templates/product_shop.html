@@ -1,0 +1,731 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Shop – All Products · Veska{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:#faf8f5; --warm-white:#ffffff; --parchment:#f2ede6;
+  --sand:#e8dfd3; --blush:#e9d5c8;
+  --terra:#b56744; --terra-deep:#8f4f31; --terra-pale:#f7ede5;
+  --ink:#1e1a17; --charcoal:#2e2925;
+  --muted:#7a6f66; --muted-lt:#b0a699;
+  --border:#e0d9d0; --border-lt:#ece6de;
+  --shadow-xs:0 1px 3px rgba(30,26,23,.06);
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --shadow-md:0 6px 24px rgba(30,26,23,.1);
+  --shadow-lg:0 16px 48px rgba(30,26,23,.14);
+  --radius-sm:6px; --radius-md:10px;
+  --radius-lg:16px; --radius-xl:24px;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+  --head:'Cormorant Garamond',Georgia,serif;
+  --body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+
+.shop-page{padding-bottom:80px;background:var(--cream);min-height:100vh}
+
+.shop-hero{
+  background:var(--charcoal);padding:52px 0 48px;
+  position:relative;overflow:hidden;
+}
+.shop-hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 80% at 80% 50%,rgba(181,103,58,.18) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 60% at 20% 80%,rgba(181,103,58,.1) 0%,transparent 60%);
+}
+.shop-hero::after{
+  content:'VESKA';
+  position:absolute;right:-20px;top:50%;transform:translateY(-50%);
+  font-family:var(--head);font-size:140px;font-weight:700;
+  color:rgba(255,255,255,.03);line-height:1;letter-spacing:-4px;
+  pointer-events:none;user-select:none;
+}
+.shop-hero .inner{position:relative;z-index:1}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:10px;font-weight:600;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--terra);
+  background:rgba(181,103,58,.12);border:1px solid rgba(181,103,58,.25);
+  border-radius:40px;padding:5px 14px;margin-bottom:16px;
+}
+.hero-eyebrow span{width:4px;height:4px;background:var(--terra);border-radius:50%}
+.shop-hero h1{
+  font-family:var(--head);font-size:clamp(36px,5vw,54px);
+  font-weight:600;color:#fff;line-height:1.08;
+  letter-spacing:-.5px;margin-bottom:12px;
+}
+.shop-hero h1 em{font-style:italic;color:var(--blush)}
+.shop-hero p{
+  font-size:14px;color:rgba(255,255,255,.5);
+  font-weight:300;max-width:400px;line-height:1.7;
+}
+
+.container{max-width:1300px;margin:0 auto;padding:0 24px}
+
+.shop-shell{
+  display:grid;
+  grid-template-columns:256px 1fr;
+  gap:28px;
+  align-items:start;
+  padding-top:32px;
+}
+@media(max-width:960px){
+  .shop-shell{grid-template-columns:1fr}
+}
+
+
+.filter-sidebar{
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:var(--radius-xl);
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+  position:sticky;top:24px;
+  margin-left: -29pc;
+  margin-right: 27pc;
+
+}
+
+.hidden { display: none; }
+.visible { display: flex; }
+
+.fs-header{
+  padding:20px 22px 18px;
+  background:linear-gradient(135deg,var(--charcoal) 0%,#3d3630 100%);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.fs-header h3{
+  font-family:var(--head);font-size:17px;font-weight:600;
+  color:#fff;display:flex;align-items:center;gap:9px;letter-spacing:.2px;
+}
+.fs-header h3 svg{width:15px;height:15px;color:var(--terra)}
+.fs-clear-all{
+  font-size:10.5px;color:rgba(255,255,255,.6);font-weight:500;
+  text-decoration:none;padding:4px 10px;border-radius:20px;
+  border:1px solid rgba(255,255,255,.15);transition:var(--transition);letter-spacing:.3px;
+}
+.fs-clear-all:hover{background:rgba(255,255,255,.1);color:#fff}
+
+.filter-block{border-bottom:1px solid var(--border-lt)}
+.filter-block:last-child{border-bottom:none}
+.filter-block-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px;cursor:pointer;user-select:none;transition:background .15s;
+}
+.filter-block-head:hover{background:var(--parchment)}
+.filter-block-head h4{
+  font-size:9.5px;font-weight:700;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--charcoal);
+}
+.filter-block-head svg{
+  width:13px;height:13px;color:var(--muted-lt);transition:transform .22s;
+}
+.filter-block-head.open svg{transform:rotate(180deg)}
+.filter-block-body{padding:6px 14px 18px}
+
+.cat-radio-label{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:var(--radius-sm);
+  cursor:pointer;transition:var(--transition);
+  font-size:13px;color:var(--muted);font-weight:400;
+}
+.cat-radio-label:hover{background:var(--terra-pale);color:var(--ink)}
+.cat-radio-label.active{
+  background:var(--terra-pale);color:var(--terra-deep);font-weight:600;
+}
+.cat-radio-label input[type=radio]{
+  accent-color:var(--terra);width:14px;height:14px;
+  flex-shrink:0;cursor:pointer;
+}
+.cat-clear-link{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:10px;margin-left:10px;
+  font-size:11px;color:var(--terra);font-weight:600;
+  text-decoration:none;transition:color .15s;
+}
+.cat-clear-link:hover{color:var(--terra-deep)}
+
+.price-inputs{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.price-field{flex:1;position:relative}
+.price-field .sym{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  font-size:12px;color:var(--muted);font-weight:500;pointer-events:none;
+}
+.price-field input{
+  width:100%;border:1.5px solid var(--border);
+  border-radius:var(--radius-md);padding:9px 10px 9px 26px;
+  font-size:13px;font-family:var(--body);
+  background:var(--parchment);color:var(--ink);outline:none;
+  transition:var(--transition);
+}
+.price-field input:focus{
+  border-color:var(--terra);background:var(--warm-white);
+  box-shadow:0 0 0 3px rgba(181,103,58,.1);
+}
+.price-sep{font-size:13px;color:var(--muted-lt);flex-shrink:0}
+
+.btn-apply{
+  width:100%;padding:10px;
+  background:var(--charcoal);color:#fff;
+  border:none;border-radius:var(--radius-md);
+  font-family:var(--body);font-size:12px;font-weight:600;
+  letter-spacing:.8px;text-transform:uppercase;
+  cursor:pointer;transition:var(--transition);
+}
+.btn-apply:hover{background:var(--terra)}
+
+
+.shop-main{}
+
+.shop-topbar{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;flex-wrap:wrap;
+}
+.search-field{
+  display:flex;align-items:center;gap:10px;
+  background:var(--warm-white);border:1.5px solid var(--border);
+  border-radius:40px;padding:10px 18px;
+  flex:1;max-width:380px;
+  box-shadow:var(--shadow-xs);transition:var(--transition);
+}
+.search-field:focus-within{
+  border-color:var(--terra);
+  box-shadow:0 0 0 3px rgba(181,103,58,.1);
+}
+.search-field svg{width:14px;height:14px;color:var(--muted-lt);flex-shrink:0}
+.search-field input{
+  border:none;background:none;font-family:var(--body);
+  font-size:13.5px;color:var(--ink);outline:none;flex:1;
+}
+.search-field input::placeholder{color:var(--muted-lt)}
+.search-clear-btn{
+  background:none;border:none;color:var(--muted-lt);
+  font-size:14px;cursor:pointer;padding:0;
+  display:flex;align-items:center;transition:color .15s;line-height:1;
+}
+.search-clear-btn:hover{color:var(--terra)}
+.sort-field{
+  border:1.5px solid var(--border);border-radius:var(--radius-md);
+  padding:10px 38px 10px 14px;font-family:var(--body);
+  font-size:13px;background:var(--warm-white);color:var(--ink);
+  cursor:pointer;outline:none;box-shadow:var(--shadow-xs);
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%23b0a699' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;
+  transition:var(--transition);
+}
+.sort-field:focus{border-color:var(--terra)}
+.result-count{
+  font-size:12.5px;color:var(--muted);
+  margin-left:auto;white-space:nowrap;
+}
+.result-count strong{color:var(--ink);font-weight:600}
+
+.active-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.filter-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 12px;border-radius:40px;
+  background:var(--terra-pale);border:1px solid var(--blush);
+  font-size:12px;color:var(--terra-deep);font-weight:500;
+}
+.filter-pill-x{
+  color:var(--terra);text-decoration:none;
+  font-size:12px;line-height:1;opacity:.7;transition:opacity .15s;
+}
+.filter-pill-x:hover{opacity:1}
+
+.product-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:20px;
+  margin-left: -11pc;
+  margin-right: 3pc;
+}
+@media(max-width:600px){
+  .product-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+}
+
+.product-card{
+  background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;position:relative;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),
+             box-shadow .3s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;
+}
+.product-card:hover{
+  transform:translateY(-6px);
+  box-shadow:var(--shadow-lg);
+  border-color:var(--sand);
+}
+.product-card.oos{opacity:.65}
+
+.card-img{
+  position:relative;aspect-ratio:4/5;
+  overflow:hidden;background:var(--parchment);
+}
+.card-img img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .6s cubic-bezier(.4,0,.2,1);
+}
+.product-card:hover .card-img img{transform:scale(1.07)}
+.card-img::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(30,26,23,.35) 0%,transparent 50%);
+  opacity:0;transition:opacity .3s;
+}
+.product-card:hover .card-img::after{opacity:1}
+
+.card-no-img{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;
+  color:var(--muted-lt);font-size:11px;font-weight:500;
+}
+.card-no-img svg{width:30px;height:30px;opacity:.3}
+
+.card-badges{
+  position:absolute;top:12px;left:12px;
+  display:flex;flex-direction:column;gap:5px;z-index:1;
+}
+.badge{
+  display:inline-block;padding:3px 9px;border-radius:20px;
+  font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+}
+.badge-oos{background:rgba(30,26,23,.7);color:#fff;backdrop-filter:blur(4px)}
+
+.card-wishlist{
+  position:absolute;top:12px;right:12px;z-index:1;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,.85);backdrop-filter:blur(6px);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:var(--transition);
+  opacity:0;
+}
+.product-card:hover .card-wishlist{opacity:1}
+.card-wishlist:hover{background:#fff;border-color:var(--terra)}
+.card-wishlist svg{width:14px;height:14px;color:var(--muted)}
+.card-wishlist:hover svg{color:var(--terra)}
+
+.card-body{padding:16px 16px 18px}
+.card-cat{
+  font-size:9.5px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--terra);margin-bottom:6px;
+}
+.card-name{
+  font-family:var(--head);font-size:15px;font-weight:500;
+  line-height:1.35;color:var(--ink);margin-bottom:12px;
+  display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;
+}
+.card-name a{color:inherit;text-decoration:none}
+.card-name a:hover{color:var(--terra)}
+.card-footer{
+  display:flex;align-items:center;
+  justify-content:space-between;gap:10px;
+}
+.card-price{display:flex;align-items:baseline;gap:7px}
+.card-price .now{
+  font-size:17px;font-weight:700;color:var(--charcoal);
+  font-family:var(--head);letter-spacing:-.3px;
+}
+.card-add{
+  flex-shrink:0;background:var(--charcoal);color:#fff;
+  border:none;border-radius:var(--radius-md);
+  font-family:var(--body);font-size:11.5px;font-weight:600;
+  padding:9px 14px;letter-spacing:.3px;
+  cursor:pointer;transition:var(--transition);white-space:nowrap;
+}
+.card-add:hover{background:var(--terra)}
+.card-add:disabled{
+  background:var(--sand);color:var(--muted-lt);cursor:not-allowed;
+}
+
+.pagination{
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;margin-top:48px;flex-wrap:wrap;
+}
+.pg-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:38px;height:38px;padding:0 8px;
+  border-radius:var(--radius-sm);font-size:13.5px;
+  font-family:var(--body);font-weight:500;
+  border:1.5px solid var(--border);background:var(--warm-white);
+  color:var(--muted);text-decoration:none;
+  transition:var(--transition);cursor:pointer;
+}
+.pg-btn:hover{border-color:var(--terra);color:var(--terra);background:var(--terra-pale)}
+.pg-btn.active{
+  background:var(--charcoal);border-color:var(--charcoal);
+  color:#fff;font-weight:700;
+}
+.pg-btn.disabled{opacity:.3;pointer-events:none}
+.pg-label{font-size:12px;color:var(--muted);padding:0 4px}
+
+.empty-state{
+  text-align:center;padding:80px 24px;
+  background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);
+}
+.empty-state svg{
+  width:48px;height:48px;color:var(--muted-lt);
+  margin:0 auto 20px;display:block;
+}
+.empty-state h3{
+  font-family:var(--head);font-size:26px;font-weight:500;
+  color:var(--charcoal);margin-bottom:10px;
+}
+.empty-state p{font-size:14px;color:var(--muted);margin-bottom:28px}
+.btn-terra{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--terra);color:#fff;border:none;
+  border-radius:var(--radius-md);font-family:var(--body);
+  font-size:13px;font-weight:600;padding:12px 24px;
+  text-decoration:none;cursor:pointer;transition:var(--transition);
+}
+.btn-terra:hover{background:var(--terra-deep)}
+
+@keyframes cardReveal{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.product-card{animation:cardReveal .35s ease both}
+.product-card:nth-child(1){animation-delay:0ms}
+.product-card:nth-child(2){animation-delay:50ms}
+.product-card:nth-child(3){animation-delay:100ms}
+.product-card:nth-child(4){animation-delay:150ms}
+.product-card:nth-child(5){animation-delay:200ms}
+.product-card:nth-child(6){animation-delay:250ms}
+.product-card:nth-child(7){animation-delay:300ms}
+.product-card:nth-child(8){animation-delay:350ms}
+
+@media(max-width:960px){
+  .filter-sidebar{position:static}
+  .shop-topbar{flex-wrap:wrap}
+  .search-field{max-width:100%}
+}
+</style>
+
+<div class="shop-page">
+
+
+
+  <div class="container">
+    <div class="shop-shell">
+
+      <aside>
+        <form method="GET" action="{% url 'product_shop' %}" id="filterForm">
+          {% if sort_by %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
+
+          <div class="filter-sidebar">
+
+            <div class="fs-header">
+              <h3>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <line x1="4" y1="6" x2="20" y2="6"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                  <line x1="11" y1="18" x2="13" y2="18"/>
+                </svg>
+                Filter
+              </h3>
+              {% if price_min or price_max or cat_slug or query or size_selected %}
+              <a class="fs-clear-all"
+                 href="?{% if sort_by %}sort={{ sort_by }}{% endif %}">Clear all</a>
+              {% endif %}
+            </div>
+
+            <div class="filter-block">
+              <div class="filter-block-head open" onclick="toggleBlock(this)">
+                <h4>Category</h4>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+              <div class="filter-block-body">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                {% for cat in all_categories %}
+                <label class="cat-radio-label {% if cat_slug == cat.slug %}active{% endif %}">
+                  <input type="radio" name="category" value="{{ cat.slug }}"
+                         {% if cat_slug == cat.slug %}checked{% endif %}
+                         onchange="document.getElementById('filterForm').submit()">
+                  {{ cat.name }}
+                </label>
+                {% endfor %}
+                {% if cat_slug %}
+                <a class="cat-clear-link"
+                   href="?{% if query %}q={{ query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">
+                  ✕ Clear category
+                </a>
+                {% endif %}
+              </div>
+            </div>
+
+
+            <div class="filter-block">
+  <div class="filter-block-head open" onclick="toggleBlock(this)">
+    <h4>Size</h4>
+    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </div>
+
+  <div class="filter-block-body">
+   {% for size in all_sizes %}
+  {% if size %}
+    <label class="cat-radio-label {% if size_selected == size %}active{% endif %}">
+      <input type="radio" name="size" value="{{ size }}"
+             {% if size_selected == size %}checked{% endif %}
+             onchange="document.getElementById('filterForm').submit()">
+      {{ size }}
+    </label>
+  {% endif %}
+{% endfor %}
+
+    {% if size_selected %}
+    <a class="cat-clear-link"
+       href="?{% if query %}q={{ query }}&{% endif %}
+              {% if cat_slug %}category={{ cat_slug }}&{% endif %}
+              {% if price_min %}price_min={{ price_min }}&{% endif %}
+              {% if price_max %}price_max={{ price_max }}&{% endif %}
+              {% if sort_by %}sort={{ sort_by }}{% endif %}">
+      ✕ Clear size
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+            <div class="filter-block">
+              <div class="filter-block-head open" onclick="toggleBlock(this)">
+                <h4>Price Range</h4>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+              <div class="filter-block-body">
+                <div class="price-inputs">
+                  <div class="price-field">
+                    <span class="sym">₹</span>
+                    <input type="number" name="price_min" placeholder="Min"
+                           value="{{ price_min|default:'' }}" min="0">
+                  </div>
+                  <span class="price-sep">—</span>
+                  <div class="price-field">
+                    <span class="sym">₹</span>
+                    <input type="number" name="price_max" placeholder="Max"
+                           value="{{ price_max|default:'' }}" min="0">
+                  </div>
+                </div>
+                <button type="submit" class="btn-apply">Apply</button>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </aside>
+
+      <div class="shop-main">
+
+        <div class="shop-topbar">
+          <form method="GET" action="{% url 'product_shop' %}"
+                style="display:contents" id="searchForm">
+            {% if cat_slug  %}<input type="hidden" name="category"  value="{{ cat_slug }}">{% endif %}
+            {% if price_min %}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
+            {% if price_max %}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
+
+            <div class="search-field">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input type="text" name="q" id="searchInput"
+                     value="{{ query|default:'' }}"
+                     placeholder="Search styles…"
+                     autocomplete="off"
+                     oninput="toggleClear(this)">
+              <button type="button" class="search-clear-btn {% if query %}visible{% else %}hidden{% endif %}"
+                      id="clearBtn"
+                      onclick="clearSearch()">✕</button>
+            </div>
+
+            <select name="sort" class="sort-field" onchange="this.form.submit()">
+              {% for val, label in sort_options %}
+              <option value="{{ val }}" {% if sort_by == val %}selected{% endif %}>
+                {{ label }}
+              </option>
+              {% endfor %}
+            </select>
+          </form>
+
+          <span class="result-count">
+            {% if query %}Results for "<strong>{{ query }}</strong>" — {% endif %}
+            <strong>{{ total }}</strong> product{{ total|pluralize }}
+          </span>
+        </div>
+
+        {% if query or cat_slug or price_min or price_max %}
+        <div class="active-filters">
+          {% if query %}
+          <span class="filter-pill">
+            🔍 {{ query }}
+            <a class="filter-pill-x"
+               href="?{% if cat_slug %}category={{ cat_slug }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+          </span>
+          {% endif %}
+          {% if cat_slug %}
+          <span class="filter-pill">
+            📂 {{ cat_slug }}
+            <a class="filter-pill-x"
+               href="?{% if query %}q={{ query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+          </span>
+          {% endif %}
+          {% if price_min or price_max %}
+          <span class="filter-pill">
+            ₹ {{ price_min|default:"0" }} – {{ price_max|default:"∞" }}
+            <a class="filter-pill-x"
+               href="?{% if query %}q={{ query }}&{% endif %}{% if cat_slug %}category={{ cat_slug }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+          </span>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if page_obj %}
+        <div class="product-grid">
+          {% for product in page_obj %}
+          <article class="product-card {% if product.total_stock == 0 %}oos{% endif %}">
+
+            <a href="{% url 'product_detail' product.slug %}">
+              <div class="card-img">
+                {% with img=product.primary_image %}
+                  {% if img %}
+                    <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+                  {% else %}
+                    <div class="card-no-img">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                      No image
+                    </div>
+                  {% endif %}
+                {% endwith %}
+                <div class="card-badges">
+                  {% if product.total_stock == 0 %}
+                    <span class="badge badge-oos">Out of Stock</span>
+                  {% endif %}
+                </div>
+                <button class="card-wishlist" type="button" aria-label="Save">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                </button>
+              </div>
+            </a>
+
+            <div class="card-body">
+              <div class="card-cat">{{ product.category }}</div>
+              <div class="card-name">
+                <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
+              </div>
+              <div class="card-footer">
+                <div class="card-price">
+                  <span class="now">₹{{ product.price|floatformat:2 }}</span>
+                </div>
+                {% if product.total_stock == 0 %}
+                  <button class="card-add" disabled>Sold Out</button>
+                {% else %}
+                  <form method="POST" action="#">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="card-add">+ Cart</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+
+          </article>
+          {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+          {% if page_obj.has_previous %}
+          <a class="pg-btn" href="?{{ params_str }}&page={{ page_obj.previous_page_number }}">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </a>
+          {% else %}
+          <span class="pg-btn disabled">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </span>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <span class="pg-btn active">{{ num }}</span>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+              <a class="pg-btn" href="?{{ params_str }}&page={{ num }}">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+
+          <span class="pg-label">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+          {% if page_obj.has_next %}
+          <a class="pg-btn" href="?{{ params_str }}&page={{ page_obj.next_page_number }}">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </a>
+          {% else %}
+          <span class="pg-btn disabled">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </span>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <h3>No products found</h3>
+          <p>Try adjusting your search or clearing the filters.</p>
+          <a href="{% url 'product_list' %}" class="btn-terra">Clear all filters</a>
+        </div>
+        {% endif %}
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleClear(inp) {
+  document.getElementById('clearBtn').style.display = inp.value ? 'flex' : 'none';
+}
+function clearSearch() {
+  const inp = document.getElementById('searchInput');
+  inp.value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  inp.closest('form').submit();
+}
+function toggleBlock(head) {
+  head.classList.toggle('open');
+  const body = head.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+</script>
+{% endblock %}
