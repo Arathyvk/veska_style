@@ -221,8 +221,7 @@
         <label class="field-label" for="id_phone">Phone Number <span>*</span></label>
         <input
           class="field-input" type="tel" id="id_phone" name="phone"
-          value="{% if form_data.phone %}{{ form_data.phone }}{% elif address %}{{ address.phone }}{% endif %}"
-          placeholder="+91 9876543210"
+            value="{% if form_data.phone %}{{ form_data.phone }}{% elif address %}{{ address.phone }}{% elif user.phone_number %}{{ user.phone_number }}{% endif %}"          placeholder="+91 9876543210"
           data-rule="phone"
           data-label="Phone number"
           autocomplete="tel">

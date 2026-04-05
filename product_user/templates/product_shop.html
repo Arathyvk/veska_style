@@ -623,11 +623,16 @@ a{text-decoration:none;color:inherit}
                     <span class="badge badge-oos">Out of Stock</span>
                   {% endif %}
                 </div>
-                <button class="card-wishlist" type="button" aria-label="Save">
-                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                </button>
+                 <form method="POST"
+                      action="{% url 'wishlist_toggle' product.slug %}"
+                      style="position:absolute;top:12px;right:12px;z-index:10;">
+                  {% csrf_token %}
+                  <button class="card-wishlist" type="submit">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                  </button>
+                </form>
               </div>
             </a>
 
