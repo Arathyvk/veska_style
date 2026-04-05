@@ -244,7 +244,8 @@ def product_remove(request, uuid):
     if not is_admin(request.user):
         return redirect('admin_login')
     product = get_object_or_404(Product, uuid=uuid)
-    product.deactivate()
+    product.is_active = False
+    product.save()  
     messages.success(request, f'"{product.name}" has been removed.')
     return redirect('product_list')
 
