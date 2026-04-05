@@ -1,0 +1,262 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.contrib import messages
+from django.views.decorators.http import require_POST
+ 
+from product_admin.models import Product, ProductVariant, ProductReview
+from cart_user.models import Cart, CartItem, Wishlist, MAX_QTY_PER_ITEM
+ 
+ITEMS_PER_PAGE = 12
+ 
+ 
+
+ 
+def _get_cart(request):
+    if not request.session.session_key:
+        request.session.create()
+    cart, _ = Cart.objects.get_or_create(session_key=request.session.session_key)
+    return cart
+ 
+ 
+def _get_wishlist(request):
+    if not request.session.session_key:
+        request.session.create()
+    wl, _ = Wishlist.objects.get_or_create(session_key=request.session.session_key)
+    return wl
+ 
+@require_POST
+def submit_review(request, slug):
+    product = get_object_or_404(Product, slug=slug, is_active=True)
+    author  = request.POST.get('author_name', '').strip() or 'Anonymous'
+    body    = request.POST.get('body', '').strip()
+    try:
+        rating = int(request.POST.get('rating', 0))
+        assert 1 <= rating <= 5
+    except (ValueError, TypeError, AssertionError):
+        messages.error(request, 'Please select a rating between 1 and 5.')
+        return redirect('product_detail', slug=slug)
+    if not body:
+        messages.error(request, 'Review text cannot be empty.')
+        return redirect('product_detail', slug=slug)
+    ProductReview.objects.create(
+        product=product, author_name=author,
+        rating=rating, body=body, is_approved=False,
+    )
+    messages.success(request, 'Thank you! Your review will appear after moderation.')
+    return redirect('product_detail', slug=slug)
+ 
+ 
+
+ 
+@require_POST
+def cart_add(request, slug):
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+ 
+    try:
+        product = Product.objects.prefetch_related('variants').get(slug=slug, is_active=True)
+    except Product.DoesNotExist:
+        if is_ajax:
+            return JsonResponse({'ok': False, 'msg': 'Product is not available.'}, status=404)
+        messages.error(request, 'This product is not available.')
+        return redirect('product_shop')
+ 
+    size    = request.POST.get('size', '').strip()
+    variant = None
+    if size:
+        try:
+            variant = product.variants.get(size=size)
+        except ProductVariant.DoesNotExist:
+            if is_ajax:
+                return JsonResponse({'ok': False, 'msg': 'Selected size not found.'}, status=400)
+            messages.error(request, 'Selected size is not available.')
+            return redirect('product_detail', slug=slug)
+ 
+    available = variant.stock if variant else product.total_stock
+    if available == 0:
+        if is_ajax:
+            return JsonResponse({'ok': False, 'msg': 'This item is out of stock.'}, status=400)
+        messages.error(request, 'Sorry, this item is out of stock.')
+        return redirect('product_detail', slug=slug)
+ 
+    try:
+        qty = max(1, int(request.POST.get('quantity', 1)))
+    except (ValueError, TypeError):
+        qty = 1
+ 
+    cart = _get_cart(request)
+    item, created = CartItem.objects.get_or_create(
+        cart=cart, product=product, variant=variant,
+        defaults={'quantity': 0},
+    )
+    new_qty       = item.quantity + qty
+    capped        = min(new_qty, available, MAX_QTY_PER_ITEM)
+    item.quantity = capped
+    item.save()
+ 
+    _get_wishlist(request).products.remove(product)
+ 
+    msg = f'"{product.name}" added to cart!' if created else f'Cart updated — {capped} in bag.'
+    if capped < new_qty:
+        msg += f' (Max {MAX_QTY_PER_ITEM} per item.)'
+ 
+    if is_ajax:
+        return JsonResponse({'ok': True, 'msg': msg,
+                             'cart_count': cart.total_items, 'item_qty': capped})
+    messages.success(request, msg)
+    return redirect(request.POST.get('next', 'cart_detail'))
+ 
+ 
+
+ 
+@require_POST
+def cart_update(request, item_id):
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    cart    = _get_cart(request)
+ 
+    try:
+        item = CartItem.objects.select_related('product', 'variant').get(pk=item_id, cart=cart)
+    except CartItem.DoesNotExist:
+        if is_ajax:
+            return JsonResponse({'ok': False, 'msg': 'Item not found.'}, status=404)
+        return redirect('cart_detail')
+ 
+    action = request.POST.get('action', '')
+    if action == 'inc':
+        new_qty = item.quantity + 1
+    elif action == 'dec':
+        new_qty = item.quantity - 1
+    elif action == 'set':
+        try:
+            new_qty = int(request.POST.get('quantity', item.quantity))
+        except (ValueError, TypeError):
+            new_qty = item.quantity
+    else:
+        new_qty = item.quantity
+ 
+    if new_qty <= 0:
+        item.delete()
+        if is_ajax:
+            return JsonResponse({
+                'ok': True, 'removed': True,
+                'cart_count': cart.total_items,
+                'subtotal':   str(cart.subtotal),
+            })
+        messages.info(request, 'Item removed from cart.')
+        return redirect('cart_detail')
+ 
+    capped        = min(new_qty, item.available_stock, MAX_QTY_PER_ITEM)
+    item.quantity = capped
+    item.save()
+ 
+    from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+    fresh_items   = CartItem.objects.filter(cart=cart).select_related('product')
+    fresh_subtotal = sum(
+        float(ci.product.price) * ci.quantity for ci in fresh_items
+    )
+    line_total    = float(item.product.price) * capped
+ 
+    if is_ajax:
+        return JsonResponse({
+            'ok':        True,
+            'removed':   False,
+            'item_qty':  capped,
+            'line_total': f'{line_total:.2f}',
+            'cart_count': sum(ci.quantity for ci in fresh_items),
+            'subtotal':   f'{fresh_subtotal:.2f}',
+            'capped':     capped < new_qty,
+        })
+    return redirect('cart_detail')
+ 
+ 
+
+ 
+@require_POST
+def cart_remove(request, item_id):
+    cart = _get_cart(request)
+    CartItem.objects.filter(pk=item_id, cart=cart).delete()
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    if is_ajax:
+        fresh_items    = CartItem.objects.filter(cart=cart).select_related('product')
+        fresh_subtotal = sum(float(ci.product.price) * ci.quantity for ci in fresh_items)
+        fresh_count    = sum(ci.quantity for ci in fresh_items)
+        return JsonResponse({
+            'ok':        True,
+            'cart_count': fresh_count,
+            'subtotal':  f'{fresh_subtotal:.2f}',
+        })
+    messages.info(request, 'Item removed from cart.')
+    return redirect('cart_detail')
+ 
+ 
+
+ 
+def cart_detail(request):
+    cart  = _get_cart(request)
+    items = list(cart.items)
+ 
+    blocked_items = [i for i in items if not i.is_available]
+    ok_items      = [i for i in items if i.is_available]
+    can_checkout  = bool(ok_items) and not blocked_items
+ 
+    FREE_SHIPPING = 999
+    subtotal      = cart.subtotal
+    shipping      = 0 if subtotal >= FREE_SHIPPING else 79
+    order_total   = subtotal + shipping
+    remaining_free = max(0, FREE_SHIPPING - subtotal)
+ 
+    return render(request, 'cart.html', {
+        'cart':           cart,
+        'items':          items,
+        'blocked_items':  blocked_items,
+        'ok_items':       ok_items,
+        'can_checkout':   can_checkout,
+        'subtotal':       subtotal,
+        'shipping':       shipping,
+        'order_total':    order_total,
+        'remaining_free': remaining_free,
+        'max_qty':        MAX_QTY_PER_ITEM,
+        'cart_count':     cart.total_items,
+    })
+ 
+ 
+
+ 
+@require_POST
+def wishlist_toggle(request, slug):
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    try:
+        product = Product.objects.get(slug=slug, is_active=True)
+    except Product.DoesNotExist:
+        if is_ajax:
+            return JsonResponse({'ok': False}, status=404)
+        return redirect('product_shop')
+ 
+    wl = _get_wishlist(request)
+    if wl.products.filter(pk=product.pk).exists():
+        wl.products.remove(product)
+        added = False
+        msg   = f'"{product.name}" removed from wishlist.'
+    else:
+        wl.products.add(product)
+        added = True
+        msg   = f'"{product.name}" saved to wishlist!'
+ 
+    if is_ajax:
+        return JsonResponse({'ok': True, 'added': added, 'msg': msg})
+    messages.success(request, msg)
+    return redirect(request.POST.get('next', 'product_detail'), slug=slug)
+ 
+ 
+
+def wishlist_detail(request):
+    wl       = _get_wishlist(request)
+    products = wl.products.filter(is_active=True).prefetch_related('images', 'variants')
+    cart     = _get_cart(request)
+    cart_product_ids = set(cart.cart_items.values_list('product_id', flat=True))
+ 
+    return render(request, 'wishlist.html', {
+        'products':          products,
+        'cart_product_ids':  cart_product_ids,
+        'cart_count':        cart.total_items,
+    })
+ 

@@ -179,9 +179,6 @@ a{text-decoration:none;color:inherit}
 }
 .btn-apply:hover{background:var(--terra)}
 
-
-.shop-main{}
-
 .shop-topbar{
   display:flex;align-items:center;gap:12px;
   margin-bottom:20px;flex-wrap:wrap;
@@ -317,11 +314,18 @@ a{text-decoration:none;color:inherit}
   font-size:9.5px;font-weight:700;letter-spacing:1.5px;
   text-transform:uppercase;color:var(--terra);margin-bottom:6px;
 }
-.card-name{
-  font-family:var(--head);font-size:15px;font-weight:500;
-  line-height:1.35;color:var(--ink);margin-bottom:12px;
-  display:-webkit-box;-webkit-line-clamp:2;
-  -webkit-box-orient:vertical;overflow:hidden;
+.card-name {
+  font-family: var(--head);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--ink);
+  margin-bottom: 12px;
+
+  display: -webkit-box;          
+  -webkit-line-clamp: 2;       
+  -webkit-box-orient: vertical;
+  overflow: hidden;              
 }
 .card-name a{color:inherit;text-decoration:none}
 .card-name a:hover{color:var(--terra)}
@@ -639,7 +643,7 @@ a{text-decoration:none;color:inherit}
                 {% if product.total_stock == 0 %}
                   <button class="card-add" disabled>Sold Out</button>
                 {% else %}
-                  <form method="POST" action="#">
+                  <form method="POST" action="{% url 'cart_update' product.id %}">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <button type="submit" class="card-add">+ Cart</button>

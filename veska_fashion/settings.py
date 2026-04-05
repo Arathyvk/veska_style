@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'category_admin',
     'product_admin',
     'product_user',
+    'cart_user',
     
 ]
 
