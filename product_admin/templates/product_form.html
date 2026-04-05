@@ -32,17 +32,17 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 
 .fsec{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
 .fsec-head{background:var(--card2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
-.fsec-head h3{font-family:var(--head);font-size:16px;font-weight:600}
-.fsec-body{padding:18px}
+.fsec-head h3{font-family:var(--head);font-size:20px;font-weight:600}
+.fsec-body{padding:1pc}
 
 .frow{margin-bottom:14px}
 .frow:last-child{margin-bottom:0}
-.flabel{display:block;font-size:10.5px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.flabel{display:block;font-size:16.5px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
 .flabel .req{color:var(--rose2);margin-left:2px}
 .finput,.fselect,.ftextarea{
   width:100%;background:var(--card2);border:1px solid var(--border2);
-  color:var(--text);font-family:var(--body);font-size:17px;
-  padding:9px 12px;border-radius:var(--radius);outline:none;transition:border .18s;
+  color:var(--text);font-family:var(--body);font-size:20px;
+  padding:20px 12px;border-radius:var(--radius);outline:none;transition:border .18s;
 }
 .finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--rose)}
 .finput::placeholder,.ftextarea::placeholder{color:var(--muted)}
@@ -56,11 +56,11 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .ferror{font-size:11px;color:var(--red);margin-top:4px}
-.fhint{font-size:13.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+.fhint{font-size:16.5px;color:var(--muted);margin-top:4px;line-height:1.5}
 
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0}
-.toggle-label{font-size:12.5px;font-weight:500}
-.toggle-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.toggle-label{font-size:15.5px;font-weight:500}
+.toggle-sub{font-size:14px;color:var(--muted);margin-top:2px}
 .toggle-wrap{position:relative;width:44px;height:24px;flex-shrink:0}
 .toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
 .toggle-track{position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;transition:background .2s}
@@ -69,7 +69,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .toggle-wrap input:checked + .toggle-track::after{transform:translateX(20px)}
 
 .upload-zone{
-  border:2px dashed var(--border2);border-radius:10px;padding:26px 20px;
+  border:2px dashed var(--border2);border-radius:10px;padding: 97px 47px;
   text-align:center;cursor:pointer;transition:all .2s;background:rgba(42,38,32,.5);
 }
 .upload-zone:hover,.upload-zone.drag{border-color:var(--rose);background:rgba(201,150,122,.05)}
@@ -129,7 +129,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .btn-add-variant{
   display:inline-flex;align-items:center;gap:6px;
   background:var(--card2);border:1px dashed var(--border2);
-  color:var(--muted2);font-size:17px;font-weight:500;padding:7px 14px;
+  color:var(--muted2);font-size:17px;font-weight:500;padding:27px 14px;
   border-radius:var(--radius);cursor:pointer;transition:all .15s;
   font-family:var(--body);width:100%;justify-content:center;
 }
@@ -139,7 +139,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .action-bar{display:flex;gap:10px;flex-wrap:wrap}
 .btn-save{
   flex:1;background:linear-gradient(135deg,#c9967a,#a06848);color:#fff;
-  font-size:13px;font-weight:600;padding:11px 20px;border-radius:var(--radius);
+  font-size:16px;font-weight:600;padding:11px 20px;border-radius:var(--radius);
   border:none;cursor:pointer;transition:opacity .18s;font-family:var(--body);
   box-shadow:0 3px 14px rgba(201,150,122,.3);
 }
@@ -205,11 +205,11 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 {% endif %}
 
 <div style="margin-bottom:18px">
-  <h2 style="font-family:var(--head);font-size:19px;font-weight:700">
+  <h2 style="font-family:var(--head);font-size:2pc;font-weight:700">
     {% if action == 'edit' %}Edit Product{% else %}Add New Product{% endif %}
-    {% if product and not product.is_active %}<span class="badge-draft">DRAFT</span>{% endif %}
+    {% if product and not product.is_active %}{% endif %}
   </h2>
-  <p style="font-size:12px;color:var(--muted);margin-top:3px">
+  <p style="font-size:16px;color:var(--muted);margin-top:3px">
     {% if action == 'edit' %}Update product details, images and variants{% else %}Fill in details · upload at least 3 images · add variants{% endif %}
   </p>
 </div>
@@ -285,7 +285,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
       <div class="fsec">
         <div class="fsec-head">
           <h3>Variants</h3>
-          <span style="font-size:11px;color:var(--muted)">Size · Color · Stock per variant</span>
+          <span style="font-size:14px;color:var(--muted)">Size · Color · Stock per variant</span>
         </div>
         <div class="fsec-body">
 
@@ -341,7 +341,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
       <div class="fsec">
         <div class="fsec-head">
           <h3>Product Images</h3>
-          <span style="font-size:10px;color:var(--rose2);font-weight:700;letter-spacing:.4px">MIN 3 REQUIRED</span>
+          <span style="font-size:12px;color:var(--rose2);font-weight:700;letter-spacing:.4px">MIN 3 REQUIRED</span>
         </div>
         <div class="fsec-body">
 

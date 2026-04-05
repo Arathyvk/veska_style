@@ -1,338 +1,392 @@
-  {% extends "admin_base.html" %}
-  {% block page_title %}Products{% endblock %}
+{% extends "admin_base.html" %}
+{% block page_title %}Products{% endblock %}
 
-  {% block topbar_actions %}
-  <a href="{% url 'product_add' %}" class="btn-add-new"
-    style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">
-    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-    Add Product
-  </a>
-  {% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'product_add' %}" class="btn-add-new"
+  style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+  Add Product
+</a>
+{% endblock %}
 
-  {% block content %}
-  <style>
-  :root{
-    --bg:#1a1410;--card:#231f1a;--card2:#2c2620;
-    --border:#3a342c;--border2:#4a4038;
-    --rose:#c9967a;--rose2:#e8b49a;
-    --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
-    --green:#4caf7d;--red:#e05252;--orange:#e09a52;
-    --radius:6px;
-    --head:'Playfair Display',serif;--body:'Jost',sans-serif;
-  }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
+{% block content %}
+<style>
+:root{
+  --bg:#1a1410;--card:#231f1a;--card2:#2c2620;
+  --border:#3a342c;--border2:#4a4038;
+  --rose:#c9967a;--rose2:#e8b49a;
+  --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
+  --green:#4caf7d;--red:#e05252;--orange:#e09a52;
+  --radius:6px;
+  --head:'Playfair Display',serif;--body:'Jost',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
 
-  .section-header{
-    background:var(--card);border:1px solid var(--border);
-    border-radius:var(--radius) var(--radius) 0 0;
-    padding:11px 16px;display:flex;align-items:center;
-    justify-content:space-between;flex-wrap:wrap;gap:10px;
-  }
-  .section-header h2{font-family:var(--head);font-size:15px;font-weight:600}
+.section-header{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius) var(--radius) 0 0;
+  padding:11px 16px;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.section-header h2{font-family:var(--head);font-size:2pc;font-weight:600}
 
-  .search-box{
-    display:flex;align-items:center;
-    background:var(--card2);border:1px solid var(--border2);
-    border-radius:20px;padding:5px 12px;gap:6px;
-  }
-  .search-box svg{width:13px;height:13px;color:var(--muted);flex-shrink:0}
-  .search-box input{
-    background:none;border:none;color:var(--text);
-    font-size:12px;padding:0 6px;width:160px;outline:none;font-family:var(--body);
-  }
-  .search-box input::placeholder{color:var(--muted)}
-  .btn-search{
-    background:var(--rose);color:#fff;font-size:12px;font-weight:600;
-    padding:5px 14px;border-radius:20px;border:none;cursor:pointer;font-family:var(--body);
-  }
+.search-box{
+  display:flex;align-items:center;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;gap:6px;
+}
+.search-box svg{width:13px;height:13px;color:var(--muted);flex-shrink:0}
+.search-box input{
+  background:none;border:none;color:var(--text);
+  font-size:17px;padding:0 6px;width:160px;outline:none;font-family:var(--body);
+}
+.search-box input::placeholder{color:var(--muted)}
+.btn-search{
+  background:var(--rose);color:#fff;font-size:17px;font-weight:600;
+  padding:5px 14px;border-radius:20px;border:none;cursor:pointer;font-family:var(--body);
+}
+.sort-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;background:var(--card2);border:1px solid var(--border2);
+  border-radius:20px;font-size:17px;font-weight:500;color:var(--muted2);
+  cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap;
+}
+.sort-btn:hover{border-color:var(--rose);color:var(--rose2)}
+.sort-btn.active{background:var(--rose);border-color:var(--rose);color:#fff}
 
-  .sort-btn{
-    display:inline-flex;align-items:center;gap:6px;
-    padding:5px 14px;background:var(--card2);border:1px solid var(--border2);
-    border-radius:20px;font-size:14px;font-weight:500;color:var(--muted2);
-    cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap;
-  }
-  .sort-btn:hover{border-color:var(--rose);color:var(--rose2)}
-  .sort-btn.active{background:var(--rose);border-color:var(--rose);color:#fff}
+.table-wrap{
+  background:var(--card);border:1px solid var(--border);
+  border-top:none;border-bottom:none;overflow-x:auto;
+}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--card2)}
+th{
+  padding:10px 14px;font-size:15px;font-weight:600;
+  color:var(--muted2);text-transform:uppercase;letter-spacing:.7px;
+  border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;
+}
+td{
+  padding:36px 14px;border-bottom:1px solid rgba(58,52,44,.5);
+  font-size:24px;vertical-align:middle;
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(201,150,122,.04)}
 
-  .btn-add-new{
-    background:linear-gradient(135deg,#c9967a,#a06848);color:#fff;
-    font-size:12px;font-weight:600;padding:8px 18px;
-    border-radius:var(--radius);border:none;cursor:pointer;
-    transition:opacity .18s;box-shadow:0 3px 12px rgba(201,150,122,.3);
-  }
-  .btn-add-new:hover{opacity:.88}
+.cat-pill{
+  display:inline-block;background:rgba(201,150,122,.1);
+  border:1px solid rgba(201,150,122,.25);color:var(--rose2);
+  font-size:20px;font-weight:700;padding:2px 9px;border-radius:20px;
+}
+.stock-badge{
+  display:inline-block;background:var(--card2);border:1px solid var(--border2);
+  color:var(--muted2);font-size:20px;font-weight:600;
+  padding:3px 10px;border-radius:4px;min-width:36px;text-align:center;
+}
+.stock-badge.low{background:rgba(224,82,82,.1);border-color:rgba(224,82,82,.3);color:var(--red)}
 
-  .table-wrap{
-    background:var(--card);border:1px solid var(--border);
-    border-top:none;border-bottom:none;overflow-x:auto;
-  }
-  table{width:100%;border-collapse:collapse}
-  thead tr{background:var(--card2)}
-  th{
-    padding:10px 14px;font-size:15px;font-weight:600;
-    color:var(--muted2);text-transform:uppercase;letter-spacing:.7px;
-    border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;
-  }
-  td{
-    padding:64px 14px;border-bottom:1px solid rgba(58,52,44,.5);
-    font-size:18.5px;vertical-align:middle;
-  }
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:rgba(201,150,122,.04)}
+.status-active  {color:var(--green);font-weight:600;font-size:20px}
+.status-inactive{color:var(--red);font-weight:600;font-size:20px}
 
-   .cat-pill{
-    display:inline-block;background:rgba(201,150,122,.1);
-    border:1px solid rgba(201,150,122,.25);color:var(--rose2);
-    font-size:16.5px;font-weight:700;padding:2px 9px;border-radius:20px;
-  }
+.actions-cell{display:flex;gap:6px;align-items:center}
+.btn-edit{
+  background:#2a6e45;color:#5df0a0;font-size:14px;font-weight:600;
+  padding:5px 13px;border-radius:4px;border:none;cursor:pointer;
+  text-decoration:none;display:inline-block;transition:background .15s;
+}
+.btn-edit:hover{background:#347a50}
+.btn-remove{
+  background:#6e2a2a;color:#f07070;font-size:14px;font-weight:600;
+  padding:5px 11px;border-radius:4px;border:none;cursor:pointer;
+  transition:background .15s;font-family:var(--body);
+}
+.btn-remove:hover{background:#7a3434}
 
-  .stock-badge{
-    display:inline-block;background:var(--card2);border:1px solid var(--border2);
-    color:var(--muted2);font-size:15px;font-weight:600;
-    padding:3px 10px;border-radius:4px;min-width:36px;text-align:center;
-  }
-  .stock-badge.low{background:rgba(224,82,82,.1);border-color:rgba(224,82,82,.3);color:var(--red)}
+.table-footer{
+  background:var(--card);border:1px solid var(--border);border-top:none;
+  border-radius:0 0 var(--radius) var(--radius);
+  padding:12px 16px;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.pagination{display:flex;align-items:center;gap:5px}
+.pg-btn{
+  background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
+  font-size:12px;font-weight:600;padding:4px 12px;border-radius:4px;
+  cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block;
+}
+.pg-btn:hover{background:var(--rose);border-color:var(--rose);color:#fff}
+.pg-btn.disabled{opacity:.35;pointer-events:none}
+.pg-num{
+  width:28px;height:28px;border-radius:4px;font-size:12px;font-weight:500;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
+  cursor:pointer;transition:all .15s;text-decoration:none;
+}
+.pg-num.active,.pg-num:hover{background:var(--rose);border-color:var(--rose);color:#fff}
+.page-info{font-size:14px;color:var(--muted)}
 
-  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
-  .dot.active{background:var(--green)}
-  .dot.inactive{background:var(--red)}
+.empty-row td{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-row a{color:var(--rose2);text-decoration:none}
 
-  .actions-cell{display:flex;gap:6px;align-items:center}
-  .btn-edit{
-    background:#2a6e45;color:#5df0a0;font-size:15px;font-weight:600;
-    padding:4px 12px;border-radius:4px;border:none;cursor:pointer;
-    text-decoration:none;display:inline-block;transition:background .15s;
-  }
-  .btn-edit:hover{background:#347a50}
-  .btn-remove{
-    background:#6e2a2a;color:#f07070;font-size:15px;font-weight:600;
-    padding:4px 10px;border-radius:4px;border:none;cursor:pointer;transition:background .15s;
-  }
-  .btn-remove:hover{background:#7a3434}
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+  z-index:1000;align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:10px;padding:28px 30px;max-width:380px;width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.modal-box h3{font-family:var(--head);font-size:17px;margin-bottom:10px;color:var(--text)}
+.modal-box p{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:22px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-cancel{
+  background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
+  font-size:12px;font-weight:600;padding:8px 18px;border-radius:5px;
+  cursor:pointer;font-family:var(--body);transition:all .15s;
+}
+.modal-cancel:hover{border-color:var(--rose2);color:var(--rose2)}
+.modal-confirm{
+  background:#6e2a2a;color:#f07070;
+  font-size:12px;font-weight:600;padding:8px 18px;border-radius:5px;
+  cursor:pointer;font-family:var(--body);border:none;transition:background .15s;
+}
+.modal-confirm:hover{background:#7a3434}
 
-  .table-footer{
-    background:var(--card);border:1px solid var(--border);border-top:none;
-    border-radius:0 0 var(--radius) var(--radius);
-    padding:12px 16px;display:flex;align-items:center;
-    justify-content:space-between;flex-wrap:wrap;gap:8px;
-  }
-  .pagination{display:flex;align-items:center;gap:5px}
-  .pg-btn{
-    background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
-    font-size:12px;font-weight:600;padding:4px 12px;border-radius:4px;
-    cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block;
-  }
-  .pg-btn:hover{background:var(--rose);border-color:var(--rose);color:#fff}
-  .pg-btn.disabled{opacity:.35;pointer-events:none}
-  .pg-num{
-    width:28px;height:28px;border-radius:4px;font-size:12px;font-weight:500;
-    display:inline-flex;align-items:center;justify-content:center;
-    background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
-    cursor:pointer;transition:all .15s;text-decoration:none;
-  }
-  .pg-num.active,.pg-num:hover{background:var(--rose);border-color:var(--rose);color:#fff}
-  .page-info{font-size:15px;color:var(--muted)}
+.messages-wrap{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.msg-toast{
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:11px 15px;font-size:12.5px;display:flex;align-items:center;gap:9px;
+  min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45);
+}
 
-  .empty-row td{text-align:center;padding:40px 20px;color:var(--muted)}
-  .empty-row a{color:var(--rose2);text-decoration:none}
+.site-footer{
+    text-align:center;padding:14px;font-size:16px;
+    color:var(--muted);border-top:1px solid var(--border);margin-top:5pc;max-width:170pc;
+  } 
+.msg-toast.success{border-left:3px solid var(--green)}
+.msg-toast.error  {border-left:3px solid var(--red)}
+.msg-toast.warning{border-left:3px solid var(--orange)}
+</style>
 
-  .messages-wrap{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
-  .msg-toast{
-    background:var(--card);border:1px solid var(--border);border-radius:8px;
-    padding:11px 15px;font-size:12.5px;display:flex;align-items:center;gap:9px;
-    min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45);
-  }
-   
-  .msg-toast.success{border-left:3px solid var(--green)}
-  .msg-toast.error  {border-left:3px solid var(--red)}
-  .msg-toast.warning{border-left:3px solid var(--orange)}
-
-  .site-footer{text-align:center;padding:15px;font-size:15px;color:var(--muted);border-top:1px solid var(--border);margin-top:6pc;max-width:139pc} 
-
-  </style>
-
-  {% if messages %}
-  <div class="messages-wrap" id="msg-wrap">
-    {% for msg in messages %}
-    <div class="msg-toast {{ msg.tags }}">
-      <span style="font-size:15px">
-        {% if msg.tags == 'success' %}✓{% elif msg.tags == 'error' %}✕{% else %}⚠{% endif %}
-      </span>
-      {{ msg }}
-    </div>
-    {% endfor %}
+{% if messages %}
+<div class="messages-wrap" id="msg-wrap">
+  {% for msg in messages %}
+  <div class="msg-toast {{ msg.tags }}">
+    <span style="font-size:15px">
+      {% if msg.tags == 'success' %}✓{% elif msg.tags == 'error' %}✕{% else %}⚠{% endif %}
+    </span>
+    {{ msg }}
   </div>
-  <script>setTimeout(()=>{ const w=document.getElementById('msg-wrap'); if(w) w.remove(); }, 3500)</script>
-  {% endif %}
+  {% endfor %}
+</div>
+<script>setTimeout(()=>{ const w=document.getElementById('msg-wrap'); if(w) w.remove(); }, 3500)</script>
+{% endif %}
 
-  <div>
-    <div class="section-header">
-      <h2>All Products</h2>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-
-        {% if sort == 'asc' %}
-        <a href="?sort=desc{% if query %}&q={{ query }}{% endif %}" class="sort-btn active">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
-          </svg>
-          Oldest First
-        </a>
-        {% else %}
-        <a href="?sort=asc{% if query %}&q={{ query }}{% endif %}" class="sort-btn">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
-          </svg>
-          Latest First
-        </a>
-        {% endif %}
-
-        <form method="GET" style="display:flex;align-items:center;gap:6px">
-          {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
-          <div class="search-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" name="q" placeholder="Search products…" value="{{ query|default:'' }}">
-            {% if query %}
-            <a href="{% url 'product_list' %}"
-              style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--border2);color:var(--muted);text-decoration:none">
-              <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </a>
-            {% endif %}
-          </div>
-          <button type="submit" class="btn-search">Search</button>
-        </form>
-
-
-        <a href="{% url 'product_add' %}" class="sort-btn">
-          <span class="icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 5v14M5 12h14"/>
-            </svg>
-          </span>
-          <span>  + Add Product</span>
-        </a>
-
-      </div>
+<div class="modal-overlay" id="removeModal">
+  <div class="modal-box">
+    <h3>Remove Product</h3>
+    <p id="modalMsg">Are you sure you want to remove this product? It will no longer appear in the shop.</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" id="modalConfirmBtn">Yes, Remove</button>
     </div>
+  </div>
+</div>
 
-    <div class="table-wrap">
-      <table>
-  <thead>
-    <tr>
-      <th>Sl no</th>
-      <th>Image</th>
-      <th>Product Name</th>
-      <th>Category</th>
-      <th>Color</th>
-      <th>Price</th>
-      <th>Stock</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
+<div>
+  <div class="section-header">
+    <h2>All Products</h2>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
 
-  <tbody>
-    {% for product in products %}
-    <tr>
-      <td style="color:var(--muted)">{{ forloop.counter }}</td>
+      {% if sort == 'asc' %}
+      <a href="?sort=desc{% if query %}&q={{ query }}{% endif %}" class="sort-btn active">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+        </svg>
+        Oldest First
+      </a>
+      {% else %}
+      <a href="?sort=asc{% if query %}&q={{ query }}{% endif %}" class="sort-btn">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+        </svg>
+        Latest First
+      </a>
+      {% endif %}
 
-      <td>
-        {% if product.images.first %}
-          <img src="{{ product.images.first.image.url }}"
-               style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
-        {% else %}
-          —
-        {% endif %}
-      </td>
-
-      <td style="font-weight:600;max-width:220px">
-        {{ product.name }}
-      </td>
-
-      <td><span class="cat-pill">{{ product.category }}</span></td>
-
-      <td style="color:var(--muted2)">
-        {{ product.color|default:"—" }}
-      </td>
-
-      <td style="font-family:var(--head);font-weight:700">
-        ₹{{ product.price|floatformat:0 }}
-      </td>
-
-      <td>
-        <span class="stock-badge {% if product.total_stock|default:0 == 0 %}low{% endif %}">
-          {{ product.total_stock }}
-        </span>
-      </td>
-
-      <td>
-        {{ product.is_active|yesno:"Active,Inactive" }}
-      </td>
-
-      <td>
-        <div class="actions-cell">
-          <a href="{% url 'product_edit' product.uuid %}" class="btn-edit">Edit</a>
-
-          <form method="POST" action="{% url 'product_remove' product.uuid %}"
-                style="display:inline"
-                onsubmit="return confirm('Remove \'{{ product.name }}\'?')">
-            {% csrf_token %}
-            <button type="submit" class="btn-remove">Remove</button>
-          </form>
-        </div>
-      </td>
-    </tr>
-    {% empty %}
-    <tr class="empty-row">
-      <td colspan="9">
-        No products found.
-        <a href="{% url 'product_add' %}">Add product</a>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-      </table>
-    </div>
-
-    <div class="table-footer">
-      <span class="page-info">
-        Page {{ products.number }} of {{ products.paginator.num_pages }}
-        &nbsp;·&nbsp;
-        {{ products.paginator.count }} product{{ products.paginator.count|pluralize }}
-      </span>
-      <div class="pagination">
-        {% if products.has_previous %}
-        <a href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
-          class="pg-btn">Prev</a>
-        {% else %}
-        <span class="pg-btn disabled">Prev</span>
-        {% endif %}
-
-        {% for num in products.paginator.page_range %}
-          {% if num == products.number %}
-            <span class="pg-num active">{{ num }}</span>
-          {% elif num >= products.number|add:"-2" and num <= products.number|add:"2" %}
-            <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
-              class="pg-num">{{ num }}</a>
+      <form method="GET" style="display:flex;align-items:center;gap:6px">
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" name="q" placeholder="Search products…" value="{{ query|default:'' }}">
+          {% if query %}
+          <a href="{% url 'product_list' %}"
+            style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;
+                   border-radius:50%;background:var(--border2);color:var(--muted);text-decoration:none">
+            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </a>
           {% endif %}
-        {% endfor %}
+        </div>
+        <button type="submit" class="btn-search">Search</button>
+      </form>
 
-        {% if products.has_next %}
-        <a href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
-          class="pg-btn">Next</a>
-        {% else %}
-        <span class="pg-btn disabled">Next</span>
-        {% endif %}
-      </div>
+      <a href="{% url 'product_add' %}" class="sort-btn">+ Add Product</a>
+
     </div>
   </div>
 
-  {% endblock %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>sl no</th>
+          <th>Image</th>
+          <th>Product Name</th>
+          <th>Category</th>
+          <th>Color</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td style="color:var(--muted)">{{ forloop.counter }}</td>
+
+          <td>
+            {% if product.images.first %}
+              <img src="{{ product.images.first.image.url }}"
+                   style="width:6pc;height:7pc;object-fit:cover;border-radius:6px;">
+            {% else %}
+              <span style="color:var(--muted)">—</span>
+            {% endif %}
+          </td>
+
+          <td style="font-weight:600;max-width:220px">{{ product.name }}</td>
+
+          <td><span class="cat-pill">{{ product.category }}</span></td>
+
+          <td style="color:var(--muted2)">{{ product.color|default:"—" }}</td>
+
+          <td style="font-family:var(--head);font-weight:700">
+            ₹{{ product.price|floatformat:0 }}
+          </td>
+
+          <td>
+            <span class="stock-badge {% if product.total_stock == 0 %}low{% endif %}">
+              {{ product.total_stock }}
+            </span>
+          </td>
+
+          <td>
+            {% if product.is_active %}
+              <span class="status-active">● Active</span>
+            {% else %}
+              <span class="status-inactive">● Inactive</span>
+            {% endif %}
+          </td>
+
+          <td>
+            <div class="actions-cell">
+              <a href="{% url 'product_edit' product.uuid %}" class="btn-edit">Edit</a>
+
+              <form method="POST"
+                    action="{% url 'product_remove' product.uuid %}"
+                    id="removeForm-{{ product.pk }}"
+                    style="display:inline">
+                {% csrf_token %}
+                <button type="button"
+                        class="btn-remove"
+                        onclick="openModal('{{ product.name|escapejs }}', 'removeForm-{{ product.pk }}')">
+                  Remove
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row">
+          <td colspan="9">
+            No products found.
+            <a href="{% url 'product_add' %}">Add one now →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-footer">
+    <span class="page-info">
+      Page {{ products.number }} of {{ products.paginator.num_pages }}
+      &nbsp;·&nbsp;
+      {{ products.paginator.count }} product{{ products.paginator.count|pluralize }}
+    </span>
+    <div class="pagination">
+      {% if products.has_previous %}
+      <a href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+         class="pg-btn">Prev</a>
+      {% else %}
+      <span class="pg-btn disabled">Prev</span>
+      {% endif %}
+
+      {% for num in products.paginator.page_range %}
+        {% if num == products.number %}
+          <span class="pg-num active">{{ num }}</span>
+        {% elif num >= products.number|add:"-2" and num <= products.number|add:"2" %}
+          <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+             class="pg-num">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if products.has_next %}
+      <a href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+         class="pg-btn">Next</a>
+      {% else %}
+      <span class="pg-btn disabled">Next</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+let pendingFormId = null;
+
+function openModal(productName, formId) {
+  pendingFormId = formId;
+  document.getElementById('modalMsg').textContent =
+    `Are you sure you want to remove "${productName}"? It will no longer appear in the shop.`;
+  document.getElementById('removeModal').classList.add('open');
+}
+
+function closeModal() {
+  pendingFormId = null;
+  document.getElementById('removeModal').classList.remove('open');
+}
+
+document.getElementById('modalConfirmBtn').addEventListener('click', function() {
+  if (pendingFormId) {
+    document.getElementById(pendingFormId).submit();
+  }
+});
+
+document.getElementById('removeModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+
+{% endblock %}
