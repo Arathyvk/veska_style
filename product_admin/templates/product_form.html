@@ -442,8 +442,8 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
   </div>
 </div>
 
+
 <div class="toast-wrap" id="live-toasts"></div>
-<div class="site-footer">© 2026 Veska. All Rights Reserved.</div>
 
 <script>
 const pendingImgs   = [];
@@ -669,17 +669,25 @@ function addVariantRow() {
 }
 
 function renderVariantRows() {
+  const sizeOptions = ['','US 6','US 7','US 8','US 9','US 10','US 11']
+    .map(s => `<option value="${s}" ${v.size===s?'selected':''}>${s||'— Size —'}</option>`)
+    .join('');
+
   document.getElementById('new-variant-list').innerHTML = variantRows.map((v,i) => `
     <div class="variant-row">
       <input class="finput" placeholder="Variant name" value="${v.name}"
              oninput="variantRows[${i}].name=this.value;syncVariantsJSON()">
-      <input class="finput" placeholder="Size"  value="${v.size}"
-             oninput="variantRows[${i}].size=this.value;syncVariantsJSON()">
+      <select class="fselect finput" style="padding:6px 9px"
+              onchange="variantRows[${i}].size=this.value;syncVariantsJSON()">
+        ${['','US 6','US 7','US 8','US 9','US 10','US 11']
+          .map(s=>`<option value="${s}" ${v.size===s?'selected':''}>${s||'— Size —'}</option>`)
+          .join('')}
+      </select>
       <input class="finput" placeholder="Color" value="${v.color}"
              oninput="variantRows[${i}].color=this.value;syncVariantsJSON()">
       <input class="finput" type="number" min="0" placeholder="Stock" value="${v.stock}"
              oninput="variantRows[${i}].stock=+this.value;syncVariantsJSON()">
-      <button type="button" class="vdel-btn" onclick="removeVariantRow(${i})" title="Remove">✕</button>
+      <button type="button" class="vdel-btn" onclick="removeVariantRow(${i})">✕</button>
     </div>`).join('');
   syncVariantsJSON();
 }
@@ -700,25 +708,30 @@ function saveDraft() {
   showToast('Saving as draft…', 'warn');
   document.getElementById('product-form').submit();
 }
+const isEdit = "{{ action }}" === "edit";  
 
 document.getElementById('product-form').addEventListener('submit', function(e) {
   const isDraft = document.getElementById('save_as_draft').value === '1';
+
+  if (!isDraft) {
     if (!isEdit) {
-    if (pendingImgs.length < 3) {
+      if (pendingImgs.length < 3) {
         e.preventDefault();
         showToast('Please upload at least 3 product images', 'err');
         return;
-    }
+      }
     } else {
-    const exCount  = document.querySelectorAll('.ex-thumb:not([style*="opacity"])').length;
-    const newCount = pendingImgs.length;
+      const exCount  = document.querySelectorAll('.ex-thumb:not([style*="opacity"])').length;
+      const newCount = pendingImgs.length;
 
-    if (exCount + newCount < 3) {
+      if (exCount + newCount < 3) {
         e.preventDefault();
         showToast('Product must have at least 3 images total', 'err');
         return;
+      }
     }
-}
+  }
+
   syncJSON();
   const btn = document.getElementById('save-btn');
   btn.textContent = 'Saving…';

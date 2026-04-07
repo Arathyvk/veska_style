@@ -154,7 +154,7 @@ class ProductVariant(models.Model):
 
 
 
-RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]   # 1 – 5
+RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]   
 
 
 class ProductReview(models.Model):

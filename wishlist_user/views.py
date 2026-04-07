@@ -1,13 +1,20 @@
+# ============================================================
+#  cart_user / views.py
+#  Cart · Wishlist · Reviews
+# ============================================================
+
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.contrib import messages
+from django.http      import JsonResponse
+from django.contrib   import messages
 from django.views.decorators.http import require_POST
 
-from product_admin.models import Product,ProductVariant, ProductReview
-from cart_user.models import Cart, CartItem, Wishlist, MAX_QTY_PER_ITEM
+from product_admin.models import Product, ProductVariant, ProductReview
+from cart_user.models     import Cart, CartItem, Wishlist, MAX_QTY_PER_ITEM
 
 
-
+# ─────────────────────────────────────────────
+#  Internal helpers
+# ─────────────────────────────────────────────
 
 def _get_cart(request):
     if not request.session.session_key:
@@ -24,7 +31,6 @@ def _get_wishlist(request):
 
 
 def _cart_subtotal(cart):
-    """Recalculate subtotal fresh from the DB."""
     items = CartItem.objects.filter(cart=cart).select_related('product')
     return sum(float(ci.product.price) * ci.quantity for ci in items)
 
@@ -33,7 +39,19 @@ def _is_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
 
+def _wishlist_ids(request):
+    """Set of product PKs in the session wishlist — used by templates."""
+    return set(_get_wishlist(request).products.values_list('pk', flat=True))
 
+
+def _cart_ids(request):
+    """Set of product PKs in the session cart — used by templates."""
+    return set(_get_cart(request).cart_items.values_list('product_id', flat=True))
+
+
+# ─────────────────────────────────────────────
+#  Review
+# ─────────────────────────────────────────────
 
 @require_POST
 def submit_review(request, slug):
@@ -54,17 +72,16 @@ def submit_review(request, slug):
         return redirect('product_detail', slug=slug)
 
     ProductReview.objects.create(
-        product     = product,
-        author_name = author,
-        rating      = rating,
-        body        = body,
-        is_approved = False,
+        product=product, author_name=author,
+        rating=rating, body=body, is_approved=False,
     )
     messages.success(request, 'Thank you! Your review will appear after moderation.')
     return redirect('product_detail', slug=slug)
 
 
-
+# ─────────────────────────────────────────────
+#  Cart — Add
+# ─────────────────────────────────────────────
 
 @require_POST
 def cart_add(request, slug):
@@ -107,16 +124,15 @@ def cart_add(request, slug):
 
     cart = _get_cart(request)
     item, created = CartItem.objects.get_or_create(
-        cart    = cart,
-        product = product,
-        variant = variant,
-        defaults = {'quantity': 0},
+        cart=cart, product=product, variant=variant,
+        defaults={'quantity': 0},
     )
     new_qty       = item.quantity + qty
     capped        = min(new_qty, available, MAX_QTY_PER_ITEM)
     item.quantity = capped
     item.save()
 
+    # ✅ Auto-remove from wishlist when moved to cart
     _get_wishlist(request).products.remove(product)
 
     msg = (
@@ -138,6 +154,9 @@ def cart_add(request, slug):
     return redirect(request.POST.get('next', 'cart_detail'))
 
 
+# ─────────────────────────────────────────────
+#  Cart — Update quantity
+# ─────────────────────────────────────────────
 
 @require_POST
 def cart_update(request, item_id):
@@ -172,8 +191,7 @@ def cart_update(request, item_id):
         item.delete()
         if ajax:
             return JsonResponse({
-                'ok':         True,
-                'removed':    True,
+                'ok': True, 'removed': True,
                 'cart_count': cart.total_items,
                 'subtotal':   f'{_cart_subtotal(cart):.2f}',
             })
@@ -186,7 +204,7 @@ def cart_update(request, item_id):
 
     subtotal   = _cart_subtotal(cart)
     line_total = float(item.product.price) * capped
-    cart_count = CartItem.objects.filter(cart=cart).values_list('quantity', flat=True)
+    cart_count = sum(CartItem.objects.filter(cart=cart).values_list('quantity', flat=True))
 
     if ajax:
         return JsonResponse({
@@ -194,13 +212,16 @@ def cart_update(request, item_id):
             'removed':    False,
             'item_qty':   capped,
             'line_total': f'{line_total:.2f}',
-            'cart_count': sum(cart_count),
+            'cart_count': cart_count,
             'subtotal':   f'{subtotal:.2f}',
             'capped':     capped < new_qty,
         })
     return redirect('cart_detail')
 
 
+# ─────────────────────────────────────────────
+#  Cart — Remove item
+# ─────────────────────────────────────────────
 
 @require_POST
 def cart_remove(request, item_id):
@@ -210,20 +231,15 @@ def cart_remove(request, item_id):
     ajax = _is_ajax(request)
     if ajax:
         subtotal   = _cart_subtotal(cart)
-        cart_count = sum(
-            CartItem.objects
-            .filter(cart=cart)
-            .values_list('quantity', flat=True)
-        )
-        return JsonResponse({
-            'ok':         True,
-            'cart_count': cart_count,
-            'subtotal':   f'{subtotal:.2f}',
-        })
+        cart_count = sum(CartItem.objects.filter(cart=cart).values_list('quantity', flat=True))
+        return JsonResponse({'ok': True, 'cart_count': cart_count, 'subtotal': f'{subtotal:.2f}'})
     messages.info(request, 'Item removed from cart.')
     return redirect('cart_detail')
 
 
+# ─────────────────────────────────────────────
+#  Cart — Detail page
+# ─────────────────────────────────────────────
 
 def cart_detail(request):
     FREE_SHIPPING = 999
@@ -256,6 +272,9 @@ def cart_detail(request):
     })
 
 
+# ─────────────────────────────────────────────
+#  Wishlist — Toggle  (AJAX + fallback POST)
+# ─────────────────────────────────────────────
 
 @require_POST
 def wishlist_toggle(request, slug):
@@ -265,7 +284,7 @@ def wishlist_toggle(request, slug):
         product = Product.objects.get(slug=slug, is_active=True)
     except Product.DoesNotExist:
         if ajax:
-            return JsonResponse({'ok': False}, status=404)
+            return JsonResponse({'ok': False, 'msg': 'Product not found.'}, status=404)
         return redirect('product_shop')
 
     wl = _get_wishlist(request)
@@ -280,24 +299,99 @@ def wishlist_toggle(request, slug):
         msg   = f'"{product.name}" saved to wishlist!'
 
     if ajax:
-        return JsonResponse({'ok': True, 'added': added, 'msg': msg})
+        return JsonResponse({
+            'ok':             True,
+            'added':          added,
+            'msg':            msg,
+            'wishlist_count': wl.products.count(),
+        })
+
     messages.success(request, msg)
-    return redirect(request.POST.get('next', 'product_detail'), slug=slug)
+    return redirect(request.POST.get('next', 'product_shop'))
 
 
-
+# ─────────────────────────────────────────────
+#  Wishlist — Detail page
+# ─────────────────────────────────────────────
 
 def wishlist_detail(request):
     wl       = _get_wishlist(request)
     products = wl.products.filter(is_active=True).prefetch_related('images', 'variants')
     cart     = _get_cart(request)
 
-    cart_product_ids = set(
-        cart.cart_items.values_list('product_id', flat=True)
-    )
-
     return render(request, 'wishlist.html', {
         'products':         products,
-        'cart_product_ids': cart_product_ids,
+        'cart_product_ids': _cart_ids(request),     # ✅ shows "In Cart" state
         'cart_count':       cart.total_items,
+        'wishlist_count':   wl.products.count(),
+    })
+
+
+# ─────────────────────────────────────────────
+#  Product Shop — listing page
+#  Inject wishlist + cart state for button rendering
+# ─────────────────────────────────────────────
+
+def product_shop(request):
+    from django.core.paginator import Paginator
+    from django.db.models      import Q
+
+    query    = request.GET.get('q', '').strip()
+    category = request.GET.get('category', '').strip()
+    sort     = request.GET.get('sort', 'newest')
+
+    qs = Product.objects.filter(is_active=True).prefetch_related('images', 'variants')
+
+    if query:
+        qs = qs.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__icontains=query)
+        )
+    if category:
+        qs = qs.filter(category=category)
+
+    sort_map = {
+        'newest':     '-created_at',
+        'oldest':     'created_at',
+        'price_asc':  'price',
+        'price_desc': '-price',
+    }
+    qs = qs.order_by(sort_map.get(sort, '-created_at'))
+
+    paginator = Paginator(qs, 12)
+    page      = paginator.get_page(request.GET.get('page', 1))
+
+    return render(request, 'product_shop.html', {
+        'products':             page,
+        'query':                query,
+        'category':             category,
+        'sort':                 sort,
+        # ✅ Required by wishlist_btn.html include on each product card
+        'wishlist_product_ids': _wishlist_ids(request),
+        'cart_product_ids':     _cart_ids(request),
+        'cart_count':           _get_cart(request).total_items,
+        'wishlist_count':       _get_wishlist(request).products.count(),
+    })
+
+
+# ─────────────────────────────────────────────
+#  Product Detail page
+#  Inject wishlist + cart state for button rendering
+# ─────────────────────────────────────────────
+
+def product_detail(request, slug):
+    product  = get_object_or_404(Product, slug=slug, is_active=True)
+    reviews  = product.reviews.filter(is_approved=True)
+    variants = product.variants.all()
+
+    return render(request, 'product_detail.html', {
+        'product':              product,
+        'reviews':              reviews,
+        'variants':             variants,
+        # ✅ Required by wishlist_btn.html include on the detail page
+        'wishlist_product_ids': _wishlist_ids(request),
+        'cart_product_ids':     _cart_ids(request),
+        'cart_count':           _get_cart(request).total_items,
+        'wishlist_count':       _get_wishlist(request).products.count(),
     })

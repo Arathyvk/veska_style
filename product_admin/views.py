@@ -19,6 +19,13 @@ from .forms  import ProductForm, ProductVariantForm
 def is_admin(user):
     return user.is_authenticated and user.is_staff
 
+def _safe_int(value, default=0):
+    try:
+        return max(0, int(float(str(value))))
+    except (ValueError, TypeError):
+        return default
+
+
 
 def save_cropped_images(product, json_str):
    
@@ -69,16 +76,27 @@ def save_new_variants(product, json_str):
         rows = json.loads(json_str or '[]')
     except (json.JSONDecodeError, TypeError):
         return
+
+    VALID_SIZES = {'US 6', 'US 7', 'US 8', 'US 9', 'US 10', 'US 11', ''}
+
     for row in rows:
-        name = str(row.get('name', '')).strip()
-        if not name:
+        name  = str(row.get('name',  '') or '').strip()
+        size  = str(row.get('size',  '') or '').strip()
+        color = str(row.get('color', '') or '').strip()
+        stock = _safe_int(row.get('stock', 0)) 
+
+        if not name and not size:
             continue
+
+        if size not in VALID_SIZES:
+            size = ''
+
         ProductVariant.objects.create(
-            product=product,
-            variant_name=name,
-            size=str(row.get('size',  '')).strip(),
-            color=str(row.get('color', '')).strip(),
-            stock=int(row.get('stock', 0)),
+            product      = product,
+            variant_name = name,
+            size         = size,
+            color        = color,
+            stock        = stock,
         )
 
 

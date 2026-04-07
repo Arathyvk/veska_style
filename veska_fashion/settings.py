@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'product_admin',
     'product_user',
     'cart_user',
+    'wishlist_user',
     
 ]
 
