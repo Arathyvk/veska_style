@@ -437,13 +437,13 @@ a{text-decoration:none;color:inherit}
                 </svg>
                 Filter
               </h3>
-              {% if price_min or price_max or cat_slug or query or size_selected %}
+              {% if price_min or price_max or cat_slug_list or query or size_list %}
               <a class="fs-clear-all"
                  href="?{% if sort_by %}sort={{ sort_by }}{% endif %}">Clear all</a>
               {% endif %}
             </div>
 
-            <div class="filter-block">
+           <div class="filter-block">
               <div class="filter-block-head open" onclick="toggleBlock(this)">
                 <h4>Category</h4>
                 <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -451,57 +451,50 @@ a{text-decoration:none;color:inherit}
                 </svg>
               </div>
               <div class="filter-block-body">
-                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
                 {% for cat in all_categories %}
-                <label class="cat-radio-label {% if cat_slug == cat.slug %}active{% endif %}">
-                  <input type="radio" name="category" value="{{ cat.slug }}"
-                         {% if cat_slug == cat.slug %}checked{% endif %}
+                <label class="check-label {% if cat.slug in cat_slug_list %}active{% endif %}">
+                  <input type="checkbox"
+                         name="category"
+                         value="{{ cat.slug }}"
+                         {% if cat.slug in cat_slug_list %}checked{% endif %}
                          onchange="document.getElementById('filterForm').submit()">
                   {{ cat.name }}
+                  {% if cat.slug in cat_slug_list %}
+                  <span style="margin-left:auto;font-size:11px;color:var(--terra)">✓</span>
+                  {% endif %}
                 </label>
                 {% endfor %}
-                {% if cat_slug %}
-                <a class="cat-clear-link"
-                   href="?{% if query %}q={{ query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">
-                  ✕ Clear category
-                </a>
-                {% endif %}
               </div>
             </div>
 
 
+
             <div class="filter-block">
-  <div class="filter-block-head open" onclick="toggleBlock(this)">
-    <h4>Size</h4>
-    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
-  </div>
+              <div class="filter-block-head open" onclick="toggleBlock(this)">
+                <h4>Size</h4>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+              <div class="filter-block-body">
+                {% for size in all_sizes %}
+                {% if size %}
+                <label class="check-label {% if size in size_list %}active{% endif %}">
+                  <input type="checkbox"
+                         name="size"
+                         value="{{ size }}"
+                         {% if size in size_list %}checked{% endif %}
+                         onchange="document.getElementById('filterForm').submit()">
+                  {{ size }}
+                  {% if size in size_list %}
+                  <span style="margin-left:auto;font-size:11px;color:var(--terra)">✓</span>
+                  {% endif %}
+                </label>
+                {% endif %}
+                {% endfor %}
+              </div>
+            </div>
 
-  <div class="filter-block-body">
-   {% for size in all_sizes %}
-  {% if size %}
-    <label class="cat-radio-label {% if size_selected == size %}active{% endif %}">
-      <input type="radio" name="size" value="{{ size }}"
-             {% if size_selected == size %}checked{% endif %}
-             onchange="document.getElementById('filterForm').submit()">
-      {{ size }}
-    </label>
-  {% endif %}
-{% endfor %}
-
-    {% if size_selected %}
-    <a class="cat-clear-link"
-       href="?{% if query %}q={{ query }}&{% endif %}
-              {% if cat_slug %}category={{ cat_slug }}&{% endif %}
-              {% if price_min %}price_min={{ price_min }}&{% endif %}
-              {% if price_max %}price_max={{ price_max }}&{% endif %}
-              {% if sort_by %}sort={{ sort_by }}{% endif %}">
-      ✕ Clear size
-    </a>
-    {% endif %}
-  </div>
-</div>
 
             <div class="filter-block">
               <div class="filter-block-head open" onclick="toggleBlock(this)">
@@ -537,7 +530,13 @@ a{text-decoration:none;color:inherit}
         <div class="shop-topbar">
           <form method="GET" action="{% url 'product_shop' %}"
                 style="display:contents" id="searchForm">
-            {% if cat_slug  %}<input type="hidden" name="category"  value="{{ cat_slug }}">{% endif %}
+                  {% for c in cat_slug_list %}
+                  <input type="hidden" name="category" value="{{ c }}">
+                  {% endfor %}
+
+                  {% for s in size_list %}
+                  <input type="hidden" name="size" value="{{ s }}">
+                  {% endfor %}            
             {% if price_min %}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
             {% if price_max %}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
 
@@ -571,30 +570,50 @@ a{text-decoration:none;color:inherit}
           </span>
         </div>
 
-        {% if query or cat_slug or price_min or price_max %}
-        <div class="active-filters">
-          {% if query %}
-          <span class="filter-pill">
-            🔍 {{ query }}
-            <a class="filter-pill-x"
-               href="?{% if cat_slug %}category={{ cat_slug }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
-          </span>
-          {% endif %}
-          {% if cat_slug %}
-          <span class="filter-pill">
-            📂 {{ cat_slug }}
-            <a class="filter-pill-x"
-               href="?{% if query %}q={{ query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
-          </span>
-          {% endif %}
-          {% if price_min or price_max %}
-          <span class="filter-pill">
-            ₹ {{ price_min|default:"0" }} – {{ price_max|default:"∞" }}
-            <a class="filter-pill-x"
-               href="?{% if query %}q={{ query }}&{% endif %}{% if cat_slug %}category={{ cat_slug }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
-          </span>
-          {% endif %}
-        </div>
+        {% if query or cat_slug_list or price_min or price_max %}
+
+                    
+            <div class="active-filters">
+
+              {% if query %}
+              <span class="filter-pill">
+                🔍 {{ query }}
+                <a class="filter-pill-x"
+                  href="?{% for c in cat_slug_list %}category={{ c }}&{% endfor %}
+                          {% for s in size_list %}size={{ s }}&{% endfor %}
+                          {% if sort_by %}sort={{ sort_by }}{% endif %}">
+                  ✕
+                </a>
+              </span>
+              {% endif %}
+
+              {% for cat in cat_slug_list %}
+              <span class="filter-pill">
+                📂 {{ cat }}
+                <a class="filter-pill-x"
+                  href="?{% for c in cat_slug_list %}{% if c != cat %}category={{ c }}&{% endif %}{% endfor %}
+                          {% for s in size_list %}size={{ s }}&{% endfor %}
+                          {% if query %}q={{ query }}&{% endif %}
+                          {% if sort_by %}sort={{ sort_by }}{% endif %}">
+                  ✕
+                </a>
+              </span>
+              {% endfor %}
+              {% for s in size_list %}
+              <span class="filter-pill">
+                👟 {{ s }}
+                <a class="filter-pill-x"
+                  href="?{% for size in size_list %}{% if size != s %}size={{ size }}&{% endif %}{% endfor %}
+                          {% for c in cat_slug_list %}category={{ c }}&{% endfor %}
+                          {% if query %}q={{ query }}&{% endif %}
+                          {% if sort_by %}sort={{ sort_by }}{% endif %}">
+                  ✕
+                </a>
+              </span>
+              {% endfor %}
+
+            </div>
+
         {% endif %}
 
         {% if page_obj %}
@@ -622,17 +641,19 @@ a{text-decoration:none;color:inherit}
                   {% if product.total_stock == 0 %}
                     <span class="badge badge-oos">Out of Stock</span>
                   {% endif %}
-                </div>
-                 <form method="POST"
-                      action="{% url 'wishlist_toggle' product.slug %}"
-                      style="position:absolute;top:12px;right:12px;z-index:10;">
-                  {% csrf_token %}
-                  <button class="card-wishlist" type="submit">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                  </button>
-                </form>
+                                    </div>
+                    <form method="POST" action="{% url 'wishlist_toggle' product.slug %}"
+                          style="position:absolute;top:12px;right:12px;z-index:10;">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button class="card-wishlist" type="submit">
+                        <svg fill="{% if product.pk in wishlist_ids %}var(--terra){% else %}none{% endif %}"
+                            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                      </button>
+                    </form>
+
               </div>
             </a>
 
@@ -648,11 +669,11 @@ a{text-decoration:none;color:inherit}
                 {% if product.total_stock == 0 %}
                   <button class="card-add" disabled>Sold Out</button>
                 {% else %}
-                  <form method="POST" action="{% url 'cart_update' product.id %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button type="submit" class="card-add">+ Cart</button>
-                  </form>
+                    <form method="POST" action="{% url 'cart_add' product.slug %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button type="submit" class="card-add">+ Cart</button>
+                    </form>
                 {% endif %}
               </div>
             </div>
@@ -710,7 +731,7 @@ a{text-decoration:none;color:inherit}
           </svg>
           <h3>No products found</h3>
           <p>Try adjusting your search or clearing the filters.</p>
-          <a href="{% url 'product_list' %}" class="btn-terra">Clear all filters</a>
+          <a href="#" class="btn-terra">Clear all filters</a>
         </div>
         {% endif %}
 

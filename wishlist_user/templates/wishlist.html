@@ -1,0 +1,385 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Your Wishlist · Veska{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:#faf8f5; --warm-white:#ffffff; --parchment:#f2ede6;
+  --sand:#e8dfd3;  --blush:#e9d5c8;
+  --terra:#b56744; --terra-deep:#8f4f31; --terra-pale:#f7ede5;
+  --ink:#1e1a17;   --charcoal:#2e2925;
+  --muted:#7a6f66; --muted-lt:#b0a699;
+  --border:#e0d9d0; --border-lt:#ece6de;
+  --success:#3a7d5a; --success-pale:#eaf4ee;
+  --danger:#b53333;  --danger-pale:#fdf0f0;
+  --shadow-xs:0 1px 3px rgba(30,26,23,.06);
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --shadow-md:0 8px 28px rgba(30,26,23,.12);
+  --shadow-lg:0 16px 48px rgba(30,26,23,.16);
+  --radius-sm:6px; --radius-md:10px; --radius-lg:16px; --radius-xl:24px;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+  --head:'Cormorant Garamond',Georgia,serif;
+  --body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+
+.wl-page{min-height:100vh;background:var(--cream);padding-bottom:80px}
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+.wl-hero{background:var(--charcoal);padding:40px 0 36px;position:relative;overflow:hidden}
+.wl-hero::after{content:'SAVED';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-family:var(--head);font-size:120px;font-weight:700;color:rgba(255,255,255,.03);line-height:1;letter-spacing:-3px;pointer-events:none}
+.wl-hero .inner{position:relative;z-index:1}
+.wl-hero h1{font-family:var(--head);font-size:clamp(28px,4vw,44px);font-weight:600;color:#fff;line-height:1.1;margin-bottom:6px}
+.wl-hero h1 em{font-style:italic;color:var(--blush)}
+.wl-hero p{font-size:13px;color:rgba(255,255,255,.45);font-weight:300}
+
+.breadcrumbs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:18px 0 28px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted);transition:color .15s}.breadcrumbs a:hover{color:var(--terra)}
+.breadcrumbs .sep{color:var(--muted-lt);font-size:10px}
+.breadcrumbs .current{color:var(--ink);font-weight:500}
+
+.wl-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px}
+.section-title{font-family:var(--head);font-size:22px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:10px}
+.section-title .count{font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400}
+.btn-add-all{display:inline-flex;align-items:center;gap:8px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);padding:10px 20px;font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition)}
+.btn-add-all:hover{background:var(--terra)}
+.btn-add-all:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed}
+
+.wl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
+
+.wl-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-xs);transition:var(--transition);position:relative}
+.wl-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+
+.wl-card-img{position:relative;aspect-ratio:1;overflow:hidden;background:var(--parchment);display:block}
+.wl-card-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+.wl-card:hover .wl-card-img img{transform:scale(1.04)}
+.wl-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
+.wl-img-empty svg{width:32px;height:32px;opacity:.35}
+
+.btn-wl-remove{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition);color:var(--terra);backdrop-filter:blur(4px);z-index:2}
+.btn-wl-remove:hover{background:var(--danger-pale);border-color:var(--danger);color:var(--danger)}
+.btn-wl-remove svg{width:15px;height:15px}
+
+.oos-badge{position:absolute;bottom:10px;left:10px;background:rgba(30,26,23,.72);color:rgba(255,255,255,.85);font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;padding:3px 9px;border-radius:20px;backdrop-filter:blur(4px)}
+
+.wl-card-body{padding:14px 16px 16px}
+.wl-card-cat{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--terra);margin-bottom:4px}
+.wl-card-name{font-family:var(--head);font-size:17px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:8px}
+.wl-card-name a:hover{color:var(--terra)}
+.wl-card-price{font-family:var(--head);font-size:19px;font-weight:700;color:var(--charcoal);margin-bottom:12px}
+
+.btn-wl-cart{width:100%;padding:10px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-wl-cart:hover:not(:disabled){background:var(--terra)}
+.btn-wl-cart:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed}
+.btn-wl-cart.in-cart{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.2)}
+.btn-wl-cart.in-cart:hover{background:var(--success);color:#fff}
+
+.wl-empty{text-align:center;padding:80px 24px;background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl)}
+.wl-empty svg{width:52px;height:52px;color:var(--muted-lt);margin:0 auto 20px;display:block}
+.wl-empty h3{font-family:var(--head);font-size:28px;font-weight:500;color:var(--charcoal);margin-bottom:10px}
+.wl-empty p{font-size:14px;color:var(--muted);margin-bottom:28px}
+.btn-browse{display:inline-flex;align-items:center;gap:8px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);padding:13px 30px;font-family:var(--body);font-size:14px;font-weight:700;cursor:pointer;transition:var(--transition);text-decoration:none}
+.btn-browse:hover{background:var(--terra)}
+
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--charcoal);color:#fff;border-radius:var(--radius-md);padding:13px 24px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);z-index:99999;opacity:0;transition:opacity .28s ease,transform .28s ease;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.toast-success{background:var(--success)}
+.toast.toast-error{background:var(--danger)}
+
+@keyframes reveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.wl-card{animation:reveal .3s ease both}
+{% for p in products %}.wl-card:nth-child({{ forloop.counter }}){animation-delay:{{ forloop.counter0 }}0ms}{% endfor %}
+</style>
+
+<div class="wl-page">
+
+  <div class="wl-hero">
+    <div class="container">
+      <div class="inner">
+        <h1>My <em>Wishlist</em></h1>
+        <p>{{ products|length }} saved item{{ products|length|pluralize }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <nav class="breadcrumbs">
+      <a href="{% url 'home' %}">Home</a>
+      <span class="sep">›</span>
+      <a href="{% url 'product_shop' %}">Shop</a>
+      <span class="sep">›</span>
+      <span class="current">Wishlist</span>
+    </nav>
+
+    {% if not products %}
+
+     <div class="wl-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      <h3>Your wishlist is empty</h3>
+      <p>Save items you love and come back to them anytime.</p>
+      <a href="{% url 'product_shop' %}" class="btn-browse">Browse Shop</a>
+    </div>
+
+    {% else %}
+
+    {# ── Toolbar ── #}
+    <div class="wl-toolbar" id="wl-toolbar">
+      <div class="section-title">
+        Saved Items
+        <span class="count" id="wl-count-label">
+          {{ products|length }} product{{ products|length|pluralize }}
+        </span>
+      </div>
+
+      <button class="btn-add-all" id="btn-add-all" onclick="addAllToCart()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        Add All to Cart
+      </button>
+    </div>
+
+    {# ── Grid ── #}
+    <div class="wl-grid" id="wl-grid">
+      {% for product in products %}
+      <div class="wl-card" id="wl-card-{{ product.pk }}">
+
+        <a href="{% url 'product_detail' product.slug %}" class="wl-card-img">
+          {% with img=product.primary_image %}
+            {% if img %}
+              <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+              <div class="wl-img-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+                  <rect x="3" y="3" width="18" height="18" rx="3"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          <button class="btn-wl-remove"
+                  onclick="removeFromWishlist(event, '{{ product.slug }}', '{{ product.pk }}')"
+                  aria-label="Remove from wishlist">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+
+          {% if product.total_stock == 0 %}
+            <span class="oos-badge">Out of Stock</span>
+          {% endif %}
+        </a>
+
+        <div class="wl-card-body">
+          <div class="wl-card-cat">{{ product.category }}</div>
+          <div class="wl-card-name">
+            <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
+          </div>
+          <div class="wl-card-price">₹{{ product.price|floatformat:2 }}</div>
+
+          {% if product.total_stock > 0 %}
+            {% if product.pk in cart_product_ids %}
+            <button class="btn-wl-cart in-cart"
+                    id="cart-btn-{{ product.pk }}"
+                    data-slug="{{ product.slug }}"
+                    data-id="{{ product.pk }}"
+                    onclick="goToCart()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              In Cart · View
+            </button>
+            {% else %}
+            <button class="btn-wl-cart"
+                    id="cart-btn-{{ product.pk }}"
+                    data-slug="{{ product.slug }}"
+                    data-id="{{ product.pk }}"
+                    onclick="addToCart(event, this)">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              Add to Cart
+            </button>
+            {% endif %}
+          {% else %}
+          <button class="btn-wl-cart" disabled>Out of Stock</button>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% endif %}
+  </div>
+</div>
+
+<div id="csrf-token" data-token="{{ csrf_token }}" style="display:none"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CSRF      = document.getElementById('csrf-token').dataset.token;
+const CART_URL  = "{% url 'cart_detail' %}";
+const WL_BASE   = "{% url 'wishlist_toggle' slug='SLUG' %}";
+const CART_BASE = "{% url 'cart_add'        slug='SLUG' %}";
+const wlURL     = slug => WL_BASE.replace('SLUG',   slug);
+const cartURL   = slug => CART_BASE.replace('SLUG', slug);
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const t     = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = 'toast' + (type ? ' ' + type : '');
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+async function removeFromWishlist(e, slug, productId) {
+  e.preventDefault();
+  e.stopPropagation();
+  try {
+    const res  = await fetch(wlURL(slug), {
+      method:  'POST',
+      headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    const data = await res.json();
+    if (data.ok && !data.added) {
+      animateRemoveCard(productId);
+      showToast('Removed from wishlist.');
+    }
+  } catch {
+    showToast('Network error. Please try again.', 'toast-error');
+  }
+}
+
+
+async function addToCart(e, btnEl, autoRedirect = true) {
+  if (e) e.preventDefault();
+
+  const slug      = btnEl.dataset.slug;
+  const productId = btnEl.dataset.id;
+
+  btnEl.disabled    = true;
+  btnEl.textContent = 'Adding…';
+
+  try {
+    const res  = await fetch(cartURL(slug), {
+      method:  'POST',
+      headers: {
+        'X-CSRFToken':      CSRF,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type':     'application/x-www-form-urlencoded',
+      },
+      body: 'quantity=1',
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      btnEl.className = 'btn-wl-cart in-cart';
+      btnEl.disabled  = false;
+      btnEl.innerHTML = `
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg> In Cart · View`;
+      btnEl.onclick = () => goToCart();
+
+      showToast(data.msg || 'Added to cart!', 'toast-success');
+
+      if (autoRedirect) {
+        setTimeout(() => { window.location.href = CART_URL; }, 900);
+      }
+    } else {
+      btnEl.disabled    = false;
+      btnEl.textContent = 'Add to Cart';
+      showToast(data.msg || 'Could not add to cart.', 'toast-error');
+    }
+  } catch {
+    btnEl.disabled    = false;
+    btnEl.textContent = 'Add to Cart';
+    showToast('Network error. Please try again.', 'toast-error');
+  }
+}
+
+
+async function addAllToCart() {
+  const addAllBtn = document.getElementById('btn-add-all');
+
+  const buttons = Array.from(
+    document.querySelectorAll('.btn-wl-cart:not(.in-cart):not(:disabled)')
+  );
+
+  if (!buttons.length) {
+    showToast('All available items are already in your cart.');
+    return;
+  }
+
+  addAllBtn.disabled    = true;
+  addAllBtn.textContent = 'Adding…';
+
+  for (const btn of buttons) {
+    await addToCart(null, btn, false);          
+    await new Promise(r => setTimeout(r, 150)); 
+  }
+
+  addAllBtn.disabled = false;
+  addAllBtn.innerHTML = `
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+    </svg> Add All to Cart`;
+
+  showToast('All items added! Heading to cart…', 'toast-success');
+
+  setTimeout(() => { window.location.href = CART_URL; }, 1000);
+}
+
+function goToCart() { window.location.href = CART_URL; }
+
+function animateRemoveCard(productId) {
+  const card = document.getElementById(`wl-card-${productId}`);
+  if (!card) return;
+  card.style.transition = 'opacity .3s, transform .3s';
+  card.style.opacity    = '0';
+  card.style.transform  = 'scale(.95)';
+  setTimeout(() => { card.remove(); updateCountDisplay(); }, 320);
+}
+
+function updateCountDisplay() {
+  const remaining = document.querySelectorAll('.wl-card').length;
+
+  const hero = document.querySelector('.wl-hero p');
+  if (hero) hero.textContent = `${remaining} saved item${remaining !== 1 ? 's' : ''}`;
+
+  const label = document.getElementById('wl-count-label');
+  if (label) label.textContent = `${remaining} product${remaining !== 1 ? 's' : ''}`;
+
+  if (remaining === 0) {
+    document.getElementById('wl-grid')   ?.remove();
+    document.getElementById('wl-toolbar')?.remove();
+    document.querySelector('.container').insertAdjacentHTML('beforeend', `
+      <div class="wl-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <h3>Your wishlist is empty</h3>
+        <p>Save items you love and come back to them anytime.</p>
+        <a href="{% url 'product_shop' %}" class="btn-browse">Browse Shop</a>
+      </div>
+    `);
+  }
+}
+</script>
+{% endblock %}

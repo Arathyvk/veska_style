@@ -11,9 +11,7 @@ from cart_user.models import Cart, Wishlist, MAX_QTY_PER_ITEM
 ITEMS_PER_PAGE = 12
  
  
-# ══════════════════════════════════════════════════════════════════
-#  SESSION HELPERS
-# ══════════════════════════════════════════════════════════════════
+
  
 def _get_cart(request):
     if not request.session.session_key:
@@ -29,18 +27,16 @@ def _get_wishlist(request):
     return wl
  
  
-# ══════════════════════════════════════════════════════════════════
-#  SHOP LISTING
-# ══════════════════════════════════════════════════════════════════
+
  
 def product_shop(request):
     qs = Product.objects.filter(is_active=True).prefetch_related('images', 'variants')
  
     query         = request.GET.get('q', '').strip()
     sort_by       = request.GET.get('sort', 'newest')
-    cat_slug      = request.GET.get('category', '').strip()
-    size_selected = request.GET.get('size') or None
- 
+    cat_slug_list = request.GET.getlist('category')
+    size_list     = request.GET.getlist('size')
+
     try:
         price_min = float(request.GET.get('price_min', ''))
     except (ValueError, TypeError):
@@ -56,10 +52,14 @@ def product_shop(request):
             Q(description__icontains=query) |
             Q(category__iexact=query)
         )
-    if cat_slug:
-        qs = qs.filter(category=cat_slug)
-    if size_selected:
-        qs = qs.filter(variants__size=size_selected, variants__stock__gt=0).distinct()
+    if cat_slug_list:
+        qs = qs.filter(category__in=cat_slug_list)
+
+    if size_list:
+        qs = qs.filter(
+            variants__size__in=size_list,
+            variants__stock__gt=0
+        ).distinct()
     if price_min is not None:
         qs = qs.filter(price__gte=price_min)
     if price_max is not None:
@@ -87,8 +87,8 @@ def product_shop(request):
         'page_obj':       page_obj,
         'query':          query,
         'sort_by':        sort_by,
-        'cat_slug':       cat_slug,
-        'size_selected':  size_selected,
+        'cat_slug_list':  cat_slug_list,
+        'size_list':      size_list,
         'price_min':      price_min,
         'price_max':      price_max,
         'all_sizes':      all_sizes,
@@ -107,12 +107,9 @@ def product_shop(request):
     })
  
  
-# ══════════════════════════════════════════════════════════════════
-#  PRODUCT DETAIL
-# ══════════════════════════════════════════════════════════════════
+
  
 def product_detail(request, slug):
-    # 1. Fetch — hard 404 if never existed, redirect if deactivated
     try:
         product = Product.objects.prefetch_related(
             'images', 'variants', 'reviews'
@@ -127,7 +124,6 @@ def product_detail(request, slug):
         )
         return redirect('product_shop')
  
-    # 2. Images & variants
     images         = list(product.images.order_by('order'))
     variants       = list(product.variants.all().order_by('size'))
     total_stock    = product.total_stock
@@ -140,7 +136,6 @@ def product_detail(request, slug):
     else:
         stock_status, stock_label = 'in_stock', 'In Stock'
  
-    # 3. Reviews
     reviews_qs       = product.reviews.filter(is_approved=True).order_by('-created_at')
     review_count     = reviews_qs.count()
     avg_rating       = 0
@@ -151,13 +146,11 @@ def product_detail(request, slug):
             rating_breakdown[r.rating] += 1
     reviews = list(reviews_qs[:10])
  
-    # 4. Pricing
     discount_percent = product.discount_percent
     original_price   = product.original_price
     savings          = product.savings
     coupon_code      = product.coupon_code or None
  
-    # 5. Highlights
     highlights = product.highlight_list
     if not highlights:
         highlights = [
@@ -203,3 +196,13 @@ def product_detail(request, slug):
         'cart_count':       _get_cart(request).total_items,
     })
  
+
+def shop(request):
+    category = request.GET.get('category')
+    
+    if category:
+        products = Product.objects.filter(category=category)
+    else:
+        products = Product.objects.all()
+
+    return render(request, 'shop.html', {'products': products})

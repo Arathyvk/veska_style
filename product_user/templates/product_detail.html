@@ -146,6 +146,7 @@ a{text-decoration:none;color:inherit}
 }
 .gallery-no-img svg{width:40px;height:40px;opacity:.4}
 
+
 .product-info{}
 
 .info-badge{
@@ -350,6 +351,7 @@ a{text-decoration:none;color:inherit}
   padding-bottom:16px;display:none;
 }
 .accordion-body.open{display:block}
+
 .section{margin-top:64px}
 .section-head{
   display:flex;align-items:center;justify-content:space-between;
@@ -402,6 +404,7 @@ a{text-decoration:none;color:inherit}
   background:var(--warm-white);border:1px solid var(--border);
   border-radius:var(--radius-xl);color:var(--muted);font-size:14px;
 }
+
 
 .related-grid{
   display:grid;
@@ -655,7 +658,7 @@ a{text-decoration:none;color:inherit}
             </button>
             {% endfor %}
           </div>
-          <div class="size-error" id="sizeError">Please select a size to continue.</div>
+          <div class="size-error" id="sizeError" style="display:none"></div>
         </div>
         {% endif %}
 
@@ -674,32 +677,32 @@ a{text-decoration:none;color:inherit}
           {% if stock_status != 'out_of_stock' %}
           <form method="POST"
                 action="{% url 'cart_add' product.slug %}"
-                style="display:contents"
+                style="display:none"
                 id="addCartForm">
             {% csrf_token %}
             <input type="hidden" name="quantity" id="cartQty" value="1">
             <input type="hidden" name="size" id="cartSize" value="">
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="button" class="btn-add-cart" onclick="submitCart()">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-              </svg>
-              Add to Cart
-            </button>
           </form>
           <form method="POST"
                 action="{% url 'cart_add' product.slug %}"
-                style="display:contents"
+                style="display:none"
                 id="buyNowForm">
             {% csrf_token %}
             <input type="hidden" name="quantity" id="buyQty" value="1">
             <input type="hidden" name="size" id="buySize" value="">
             <input type="hidden" name="next" value="{% url 'cart_detail' %}">
-            <button type="button" class="btn-buy-now" onclick="submitBuyNow()">
-              Buy Now
-            </button>
           </form>
+          <button type="button" class="btn-add-cart" onclick="submitCart()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            Add to Cart
+          </button>
+          <button type="button" class="btn-buy-now" onclick="submitBuyNow()">
+            Buy Now
+          </button>
           {% endif %}
 
           <form method="POST"
@@ -784,7 +787,6 @@ a{text-decoration:none;color:inherit}
     </div>
 
 
-  
     <div class="section" id="reviews">
       <div class="section-head">
         <div class="section-title">
@@ -904,7 +906,7 @@ a{text-decoration:none;color:inherit}
     </div>
 
 
-
+  
     {% if related %}
     <div class="section">
       <div class="section-head">
@@ -953,7 +955,9 @@ function goToSlide(idx) {
   if (idx < 0 || idx >= imageUrls.length) return;
   currentSlide = idx;
   document.getElementById('mainImg').src = imageUrls[idx];
+  // dots
   document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+  // thumbs
   document.querySelectorAll('.gallery-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
 }
 function changeSlide(dir) {
@@ -1001,15 +1005,29 @@ function selectSize(btn) {
   document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedSize = btn.dataset.size;
+
   const label = document.getElementById('selectedSizeLabel');
   if (label) label.textContent = selectedSize;
-  document.getElementById('cartSize').value = selectedSize;
-  const stock = parseInt(btn.dataset.stock) || 1;
-  const max = Math.min(stock, 10);
-  document.getElementById('qtyVal').max = max;
-  const qtyInput = document.getElementById('qtyVal');
-  if (parseInt(qtyInput.value) > max) qtyInput.value = max;
-  document.getElementById('sizeError').style.display = 'none';
+
+  const cartSizeEl = document.getElementById('cartSize');
+  const buySizeEl  = document.getElementById('buySize');
+  if (cartSizeEl) cartSizeEl.value = selectedSize;
+  if (buySizeEl)  buySizeEl.value  = selectedSize;
+
+  const stock  = parseInt(btn.dataset.stock) || 1;
+  const maxQty = Math.min(stock, 10);
+  const qtyEl  = document.getElementById('qtyVal');
+  if (qtyEl) {
+    qtyEl.max = maxQty;
+    if (parseInt(qtyEl.value) > maxQty) qtyEl.value = maxQty;
+    const cartQtyEl = document.getElementById('cartQty');
+    const buyQtyEl  = document.getElementById('buyQty');
+    if (cartQtyEl) cartQtyEl.value = qtyEl.value;
+    if (buyQtyEl)  buyQtyEl.value  = qtyEl.value;
+  }
+
+  const sizeErr = document.getElementById('sizeError');
+  if (sizeErr) sizeErr.style.display = 'none';
 }
 
 function adjustQty(dir) {
@@ -1018,53 +1036,88 @@ function adjustQty(dir) {
   let v = parseInt(inp.value) + dir;
   v = Math.max(1, Math.min(v, parseInt(inp.max)));
   inp.value = v;
-  document.getElementById('cartQty').value = v;
+  const cartQtyEl = document.getElementById('cartQty');
+  const buyQtyEl  = document.getElementById('buyQty');
+  if (cartQtyEl) cartQtyEl.value = v;
+  if (buyQtyEl)  buyQtyEl.value  = v;
 }
 
 const hasVariants = {{ variants|length }} > 0;
 
 function validateAndGetData() {
-  if (hasVariants && !selectedSize) {
-    document.getElementById('sizeError').style.display = 'block';
-    document.getElementById('sizeGrid').scrollIntoView({behavior:'smooth', block:'center'});
-    return null;
-  }
-  return { size: selectedSize, qty: parseInt(document.getElementById('qtyVal')?.value || 1) };
+  const qty = parseInt(document.getElementById('qtyVal')?.value || 1);
+
+  const cartQtyEl  = document.getElementById('cartQty');
+  const buyQtyEl   = document.getElementById('buyQty');
+  const cartSizeEl = document.getElementById('cartSize');
+  const buySizeEl  = document.getElementById('buySize');
+  if (cartQtyEl)  cartQtyEl.value  = qty;
+  if (buyQtyEl)   buyQtyEl.value   = qty;
+  if (cartSizeEl) cartSizeEl.value = selectedSize;
+  if (buySizeEl)  buySizeEl.value  = selectedSize;
+  return { size: selectedSize, qty };
 }
 
 async function submitCart() {
   const data = validateAndGetData();
   if (!data) return;
 
-  const form    = document.getElementById('addCartForm');
-  const token   = form.querySelector('[name=csrfmiddlewaretoken]').value;
-  const formData = new FormData();
-  formData.append('quantity', data.qty);
-  formData.append('size',     data.size);
-  formData.append('next',     window.location.pathname);
+  document.getElementById('cartQty').value  = data.qty;
+  document.getElementById('cartSize').value = data.size;
+
+  const form  = document.getElementById('addCartForm');
+  const token = form.querySelector('[name=csrfmiddlewaretoken]').value;
 
   try {
-    const res  = await fetch(form.action, {
+    const fd = new FormData();
+    fd.append('quantity', data.qty);
+    fd.append('size',     data.size);
+    fd.append('next',     window.location.pathname);
+
+    const res = await fetch(form.action, {
       method: 'POST',
       headers: {
-        'X-CSRFToken':     token,
+        'X-CSRFToken':      token,
         'X-Requested-With': 'XMLHttpRequest',
       },
-      body: formData,
+      body: fd,
     });
-    const json = await res.json();
-    if (json.ok) {
-      showToast('🛒 ' + json.msg, 'success');
-      const badge = document.getElementById('cartCountBadge');
-      if (badge) badge.textContent = json.cart_count;
-    } else {
-      showToast(json.msg || 'Could not add to cart.', 'error');
+
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      const json = await res.json();
+      if (json.ok) {
+        showToast('🛒 ' + json.msg, 'success');
+        const badge = document.getElementById('cartCountBadge');
+        if (badge) badge.textContent = json.cart_count;
+        return;
+      } else {
+        showToast(json.msg || 'Could not add to cart.', 'error');
+        return;
+      }
     }
   } catch(e) {
-    document.getElementById('cartQty').value  = data.qty;
-    document.getElementById('cartSize').value = data.size;
-    form.submit();
   }
+
+  const fallbackForm = document.createElement('form');
+  fallbackForm.method = 'POST';
+  fallbackForm.action = form.action;
+
+  const fields = {
+    csrfmiddlewaretoken: token,
+    quantity: data.qty,
+    size:     data.size,
+    next:     window.location.pathname,
+  };
+  for (const [k, v] of Object.entries(fields)) {
+    const inp = document.createElement('input');
+    inp.type  = 'hidden';
+    inp.name  = k;
+    inp.value = v;
+    fallbackForm.appendChild(inp);
+  }
+  document.body.appendChild(fallbackForm);
+  fallbackForm.submit();
 }
 
 function submitBuyNow() {
