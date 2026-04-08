@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 
 from product_admin.models import Product,ProductVariant, ProductReview
-from cart_user.models import Cart, CartItem, Wishlist, MAX_QTY_PER_ITEM
+from .models import Cart, CartItem, Wishlist, MAX_QTY_PER_ITEM
 
 
 
@@ -24,7 +24,6 @@ def _get_wishlist(request):
 
 
 def _cart_subtotal(cart):
-    """Recalculate subtotal fresh from the DB."""
     items = CartItem.objects.filter(cart=cart).select_related('product')
     return sum(float(ci.product.price) * ci.quantity for ci in items)
 
@@ -68,8 +67,6 @@ def submit_review(request, slug):
 
 @require_POST
 def cart_add(request, slug):
-    ajax = _is_ajax(request)
-
     try:
         product = (
             Product.objects
@@ -77,8 +74,6 @@ def cart_add(request, slug):
             .get(slug=slug, is_active=True)
         )
     except Product.DoesNotExist:
-        if ajax:
-            return JsonResponse({'ok': False, 'msg': 'Product is not available.'}, status=404)
         messages.error(request, 'This product is not available.')
         return redirect('product_shop')
 
@@ -88,15 +83,11 @@ def cart_add(request, slug):
         try:
             variant = product.variants.get(size=size)
         except ProductVariant.DoesNotExist:
-            if ajax:
-                return JsonResponse({'ok': False, 'msg': 'Selected size not found.'}, status=400)
             messages.error(request, 'Selected size is not available.')
             return redirect('product_detail', slug=slug)
 
     available = variant.stock if variant else product.total_stock
     if available == 0:
-        if ajax:
-            return JsonResponse({'ok': False, 'msg': 'This item is out of stock.'}, status=400)
         messages.error(request, 'Sorry, this item is out of stock.')
         return redirect('product_detail', slug=slug)
 
@@ -127,13 +118,7 @@ def cart_add(request, slug):
     if capped < new_qty:
         msg += f' (Max {MAX_QTY_PER_ITEM} per item.)'
 
-    if ajax:
-        return JsonResponse({
-            'ok':         True,
-            'msg':        msg,
-            'cart_count': cart.total_items,
-            'item_qty':   capped,
-        })
+    
     messages.success(request, msg)
     return redirect(request.POST.get('next', 'cart_detail'))
 
@@ -141,7 +126,6 @@ def cart_add(request, slug):
 
 @require_POST
 def cart_update(request, item_id):
-    ajax = _is_ajax(request)
     cart = _get_cart(request)
 
     try:
@@ -151,8 +135,7 @@ def cart_update(request, item_id):
             .get(pk=item_id, cart=cart)
         )
     except CartItem.DoesNotExist:
-        if ajax:
-            return JsonResponse({'ok': False, 'msg': 'Item not found.'}, status=404)
+        messages.error(request, 'Cart item not found.')
         return redirect('cart_detail')
 
     action = request.POST.get('action', '')
@@ -170,13 +153,7 @@ def cart_update(request, item_id):
 
     if new_qty <= 0:
         item.delete()
-        if ajax:
-            return JsonResponse({
-                'ok':         True,
-                'removed':    True,
-                'cart_count': cart.total_items,
-                'subtotal':   f'{_cart_subtotal(cart):.2f}',
-            })
+        
         messages.info(request, 'Item removed from cart.')
         return redirect('cart_detail')
 
@@ -188,18 +165,14 @@ def cart_update(request, item_id):
     line_total = float(item.product.price) * capped
     cart_count = CartItem.objects.filter(cart=cart).values_list('quantity', flat=True)
 
-    if ajax:
-        return JsonResponse({
-            'ok':         True,
-            'removed':    False,
-            'item_qty':   capped,
-            'line_total': f'{line_total:.2f}',
-            'cart_count': sum(cart_count),
-            'subtotal':   f'{subtotal:.2f}',
-            'capped':     capped < new_qty,
-        })
-    return redirect('cart_detail')
+    if capped < new_qty:
+            messages.warning(
+                request, 
+                f'Quantity for "{item.product.name}" capped to {capped} due to stock or max limit.'
+            )
 
+    messages.success(request, f'Cart updated — {capped} of "{item.product.name}" in bag.')
+    return redirect('cart_detail')
 
 
 @require_POST
@@ -207,19 +180,6 @@ def cart_remove(request, item_id):
     cart = _get_cart(request)
     CartItem.objects.filter(pk=item_id, cart=cart).delete()
 
-    ajax = _is_ajax(request)
-    if ajax:
-        subtotal   = _cart_subtotal(cart)
-        cart_count = sum(
-            CartItem.objects
-            .filter(cart=cart)
-            .values_list('quantity', flat=True)
-        )
-        return JsonResponse({
-            'ok':         True,
-            'cart_count': cart_count,
-            'subtotal':   f'{subtotal:.2f}',
-        })
     messages.info(request, 'Item removed from cart.')
     return redirect('cart_detail')
 
@@ -259,13 +219,11 @@ def cart_detail(request):
 
 @require_POST
 def wishlist_toggle(request, slug):
-    ajax = _is_ajax(request)
 
     try:
         product = Product.objects.get(slug=slug, is_active=True)
     except Product.DoesNotExist:
-        if ajax:
-            return JsonResponse({'ok': False}, status=404)
+        messages.error(request, 'This product is not available.')
         return redirect('product_shop')
 
     wl = _get_wishlist(request)
@@ -279,8 +237,6 @@ def wishlist_toggle(request, slug):
         added = True
         msg   = f'"{product.name}" saved to wishlist!'
 
-    if ajax:
-        return JsonResponse({'ok': True, 'added': added, 'msg': msg})
     messages.success(request, msg)
     return redirect(request.POST.get('next', 'product_detail'), slug=slug)
 

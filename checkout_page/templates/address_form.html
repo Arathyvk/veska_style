@@ -1,0 +1,196 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}{% if action == 'edit' %}Edit Address{% else %}Add Address{% endif %} · Veska{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;
+  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
+  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
+  --border:#e0d9d0;--danger:#b53333;--danger-pale:#fdf0f0;
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+
+.addr-page{min-height:100vh;padding-bottom:80px;background:var(--cream)}
+.container{max-width:680px;margin:0 auto;padding:0 24px}
+
+.page-hero{background:var(--charcoal);padding:36px 0 32px}
+.page-hero h1{font-family:var(--head);font-size:clamp(24px,4vw,38px);font-weight:600;color:#fff;margin-bottom:4px}
+.page-hero h1 em{font-style:italic;color:#e9d5c8}
+.page-hero p{font-size:12px;color:rgba(255,255,255,.4)}
+
+.breadcrumbs{display:flex;align-items:center;gap:8px;padding:16px 0 20px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
+.breadcrumbs .sep{color:var(--muted-lt);font-size:10px}
+.breadcrumbs .current{color:var(--ink);font-weight:500}
+
+.form-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px 28px;box-shadow:var(--shadow-sm);animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.frow{margin-bottom:18px}
+.frow:last-child{margin-bottom:0}
+.flabel{display:block;font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.flabel .req{color:var(--danger);margin-left:2px}
+.finput,.fselect{
+  width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
+  padding:11px 14px;font-family:var(--body);font-size:14px;
+  background:var(--parchment);color:var(--ink);outline:none;transition:all .18s;
+}
+.finput:focus,.fselect:focus{border-color:var(--terra);background:#fff;box-shadow:0 0 0 3px rgba(181,103,58,.08)}
+.finput.err,.fselect.err{border-color:var(--danger);background:var(--danger-pale)}
+.finput::placeholder{color:var(--muted-lt)}
+.ferror{font-size:11px;color:var(--danger);margin-top:5px}
+.fselect{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%23b0a699' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:500px){.fgrid2,.fgrid3{grid-template-columns:1fr}}
+
+.check-row{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-md);cursor:pointer}
+.check-row input{accent-color:var(--terra);width:16px;height:16px;cursor:pointer}
+.check-row label{font-size:13px;color:var(--ink);cursor:pointer}
+.check-row span{font-size:11px;color:var(--muted-lt);margin-left:auto}
+
+.form-actions{display:flex;gap:12px;padding-top:20px;border-top:1px solid var(--border);margin-top:20px}
+.btn-save{
+  flex:1;padding:13px;background:var(--charcoal);color:#fff;
+  border:none;border-radius:var(--radius-md);font-family:var(--body);
+  font-size:13px;font-weight:600;letter-spacing:.4px;cursor:pointer;transition:background .2s;
+}
+.btn-save:hover{background:var(--terra)}
+.btn-cancel{
+  padding:13px 20px;background:none;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:var(--radius-md);
+  font-family:var(--body);font-size:13px;cursor:pointer;transition:all .2s;text-decoration:none;
+  display:inline-flex;align-items:center;
+}
+.btn-cancel:hover{border-color:var(--terra);color:var(--terra)}
+</style>
+
+<div class="addr-page">
+  <div class="page-hero">
+    <div class="container">
+      <h1>{% if action == 'edit' %}<em>Edit</em> Address{% else %}Add <em>New</em> Address{% endif %}</h1>
+      <p>{% if action == 'edit' %}Update your delivery details{% else %}Save a delivery address for faster checkout{% endif %}</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <nav class="breadcrumbs">
+      <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
+      <a href="{% url 'checkout' %}">Checkout</a><span class="sep">›</span>
+      <span class="current">{% if action == 'edit' %}Edit Address{% else %}Add Address{% endif %}</span>
+    </nav>
+
+    <div class="form-card">
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="frow">
+          <label class="flabel">Full Name <span class="req">*</span></label>
+          <input class="finput {% if errors.full_name %}err{% endif %}"
+                 type="text" name="full_name"
+                 value="{% if data.full_name %}{{ data.full_name }}{% elif address %}{{ address.full_name }}{% endif %}"
+                 placeholder="e.g. full name">
+          {% if errors.full_name %}<div class="ferror">{{ errors.full_name }}</div>{% endif %}
+        </div>
+
+        <div class="frow">
+          <label class="flabel">Phone Number <span class="req">*</span></label>
+          <input class="finput {% if errors.phone %}err{% endif %}"
+                 type="tel" name="phone"
+                 value="{% if data.phone %}{{ data.phone }}{% elif address %}{{ address.phone }}{% endif %}"
+                 placeholder="+91 9876543210">
+          {% if errors.phone %}<div class="ferror">{{ errors.phone }}</div>{% endif %}
+        </div>
+
+        <div class="frow">
+          <label class="flabel">Address Line 1 <span class="req">*</span></label>
+          <input class="finput {% if errors.address_line1 %}err{% endif %}"
+                 type="text" name="address_line1"
+                 value="{% if data.address_line1 %}{{ data.address_line1 }}{% elif address %}{{ address.address_line1 }}{% endif %}"
+                 placeholder="House / Flat / Building no.">
+          {% if errors.address_line1 %}<div class="ferror">{{ errors.address_line1 }}</div>{% endif %}
+        </div>
+
+        <div class="frow">
+          <label class="flabel">Address Line 2</label>
+          <input class="finput" type="text" name="address_line2"
+                 value="{% if data.address_line2 %}{{ data.address_line2 }}{% elif address %}{{ address.address_line2 }}{% endif %}"
+                 placeholder="Street, Area, Landmark (optional)">
+        </div>
+
+        <div class="fgrid3 frow">
+          <div>
+            <label class="flabel">City <span class="req">*</span></label>
+            <input class="finput {% if errors.city %}err{% endif %}"
+                   type="text" name="city"
+                   value="{% if data.city %}{{ data.city }}{% elif address %}{{ address.city }}{% endif %}"
+                   placeholder="City">
+            {% if errors.city %}<div class="ferror">{{ errors.city }}</div>{% endif %}
+          </div>
+          <div>
+            <label class="flabel">State <span class="req">*</span></label>
+            <input class="finput {% if errors.state %}err{% endif %}"
+                   type="text" name="state"
+                   value="{% if data.state %}{{ data.state }}{% elif address %}{{ address.state }}{% endif %}"
+                   placeholder="State">
+            {% if errors.state %}<div class="ferror">{{ errors.state }}</div>{% endif %}
+          </div>
+          <div>
+            <label class="flabel">Pincode <span class="req">*</span></label>
+            <input class="finput {% if errors.pincode %}err{% endif %}"
+                   type="text" name="pincode" maxlength="6" inputmode="numeric"
+                   value="{% if data.pincode %}{{ data.pincode }}{% elif address %}{{ address.pincode }}{% endif %}"
+                   placeholder="6-digit">
+            {% if errors.pincode %}<div class="ferror">{{ errors.pincode }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="frow">
+          <label class="flabel">Country</label>
+<select class="fselect" name="country">
+  {% if countries %}
+    {% for val in countries %}
+      <option value="{{ val }}"
+        {% if data.country == val or address and address.country == val or not address and val == 'India' %}
+        selected
+        {% endif %}
+      >
+        {{ val }}
+      </option>
+    {% endfor %}
+  {% else %}
+    <option disabled>No countries available</option>
+  {% endif %}
+</select>
+        </div>
+
+        <div class="frow">
+          <label class="check-row">
+            <input type="checkbox" name="is_default"
+                   {% if address.is_default %}checked{% endif %}>
+            <span style="font-size:13px;color:var(--ink)">Set as default address</span>
+            <span>Used automatically at checkout</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save">
+            {% if action == 'edit' %}Save Changes{% else %}Save Address{% endif %}
+          </button>
+          <a href="{% url 'checkout' %}" class="btn-cancel">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

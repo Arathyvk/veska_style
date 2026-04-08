@@ -1,8 +1,3 @@
-# ============================================================
-#  cart_user / views.py
-#  Cart · Wishlist · Reviews
-# ============================================================
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http      import JsonResponse
 from django.contrib   import messages
@@ -12,9 +7,6 @@ from product_admin.models import Product, ProductVariant, ProductReview
 from cart_user.models     import Cart, CartItem, Wishlist, MAX_QTY_PER_ITEM
 
 
-# ─────────────────────────────────────────────
-#  Internal helpers
-# ─────────────────────────────────────────────
 
 def _get_cart(request):
     if not request.session.session_key:
@@ -49,9 +41,7 @@ def _cart_ids(request):
     return set(_get_cart(request).cart_items.values_list('product_id', flat=True))
 
 
-# ─────────────────────────────────────────────
-#  Review
-# ─────────────────────────────────────────────
+
 
 @require_POST
 def submit_review(request, slug):
@@ -79,9 +69,7 @@ def submit_review(request, slug):
     return redirect('product_detail', slug=slug)
 
 
-# ─────────────────────────────────────────────
-#  Cart — Add
-# ─────────────────────────────────────────────
+
 
 @require_POST
 def cart_add(request, slug):
@@ -132,7 +120,6 @@ def cart_add(request, slug):
     item.quantity = capped
     item.save()
 
-    # ✅ Auto-remove from wishlist when moved to cart
     _get_wishlist(request).products.remove(product)
 
     msg = (
@@ -154,9 +141,7 @@ def cart_add(request, slug):
     return redirect(request.POST.get('next', 'cart_detail'))
 
 
-# ─────────────────────────────────────────────
-#  Cart — Update quantity
-# ─────────────────────────────────────────────
+
 
 @require_POST
 def cart_update(request, item_id):
@@ -219,9 +204,7 @@ def cart_update(request, item_id):
     return redirect('cart_detail')
 
 
-# ─────────────────────────────────────────────
-#  Cart — Remove item
-# ─────────────────────────────────────────────
+
 
 @require_POST
 def cart_remove(request, item_id):
@@ -237,9 +220,6 @@ def cart_remove(request, item_id):
     return redirect('cart_detail')
 
 
-# ─────────────────────────────────────────────
-#  Cart — Detail page
-# ─────────────────────────────────────────────
 
 def cart_detail(request):
     FREE_SHIPPING = 999
@@ -272,13 +252,10 @@ def cart_detail(request):
     })
 
 
-# ─────────────────────────────────────────────
-#  Wishlist — Toggle  (AJAX + fallback POST)
-# ─────────────────────────────────────────────
+
 
 @require_POST
 def wishlist_toggle(request, slug):
-    ajax = _is_ajax(request)
 
     try:
         product = Product.objects.get(slug=slug, is_active=True)
@@ -298,21 +275,13 @@ def wishlist_toggle(request, slug):
         added = True
         msg   = f'"{product.name}" saved to wishlist!'
 
-    if ajax:
-        return JsonResponse({
-            'ok':             True,
-            'added':          added,
-            'msg':            msg,
-            'wishlist_count': wl.products.count(),
-        })
+   
 
     messages.success(request, msg)
     return redirect(request.POST.get('next', 'product_shop'))
 
 
-# ─────────────────────────────────────────────
-#  Wishlist — Detail page
-# ─────────────────────────────────────────────
+
 
 def wishlist_detail(request):
     wl       = _get_wishlist(request)
@@ -321,16 +290,12 @@ def wishlist_detail(request):
 
     return render(request, 'wishlist.html', {
         'products':         products,
-        'cart_product_ids': _cart_ids(request),     # ✅ shows "In Cart" state
+        'cart_product_ids': _cart_ids(request),    
         'cart_count':       cart.total_items,
         'wishlist_count':   wl.products.count(),
     })
 
 
-# ─────────────────────────────────────────────
-#  Product Shop — listing page
-#  Inject wishlist + cart state for button rendering
-# ─────────────────────────────────────────────
 
 def product_shop(request):
     from django.core.paginator import Paginator
@@ -367,7 +332,6 @@ def product_shop(request):
         'query':                query,
         'category':             category,
         'sort':                 sort,
-        # ✅ Required by wishlist_btn.html include on each product card
         'wishlist_product_ids': _wishlist_ids(request),
         'cart_product_ids':     _cart_ids(request),
         'cart_count':           _get_cart(request).total_items,
@@ -375,10 +339,7 @@ def product_shop(request):
     })
 
 
-# ─────────────────────────────────────────────
-#  Product Detail page
-#  Inject wishlist + cart state for button rendering
-# ─────────────────────────────────────────────
+
 
 def product_detail(request, slug):
     product  = get_object_or_404(Product, slug=slug, is_active=True)
@@ -389,7 +350,6 @@ def product_detail(request, slug):
         'product':              product,
         'reviews':              reviews,
         'variants':             variants,
-        # ✅ Required by wishlist_btn.html include on the detail page
         'wishlist_product_ids': _wishlist_ids(request),
         'cart_product_ids':     _cart_ids(request),
         'cart_count':           _get_cart(request).total_items,

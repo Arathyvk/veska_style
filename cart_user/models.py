@@ -4,8 +4,8 @@ from product_admin.models import Product, ProductVariant
 MAX_QTY_PER_ITEM = 10  
 
 
+
 class Cart(models.Model):
-  
     session_key = models.CharField(max_length=40, unique=True, db_index=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
@@ -13,36 +13,35 @@ class Cart(models.Model):
     def __str__(self):
         return f"Cart [{self.session_key}]"
 
-
     @property
     def items(self):
-        return self.cart_items.select_related('product', 'variant').all()
+        return self.cart_items.select_related('product', 'variant')
 
     @property
     def total_items(self):
-        result = self.cart_items.aggregate(total=models.Sum('quantity'))['total']
-        return result or 0
+        return self.cart_items.aggregate(
+            total=models.Sum('quantity')
+        )['total'] or 0
 
     @property
     def subtotal(self):
-        rows = self.cart_items.select_related('product').all()
-        return sum(float(i.product.price) * i.quantity for i in rows)
+        return sum(item.line_total for item in self.items)
 
     @property
     def is_empty(self):
         return not self.cart_items.exists()
 
     def get_or_create_item(self, product, variant=None, qty=1):
-       
         item, created = CartItem.objects.get_or_create(
-            cart    = self,
-            product = product,
-            variant = variant,
+            cart=self,
+            product=product,
+            variant=variant,
             defaults={'quantity': 0},
         )
-        new_qty = item.quantity + qty
+
         available = variant.stock if variant else product.total_stock
-        new_qty   = min(new_qty, available, MAX_QTY_PER_ITEM)
+        new_qty = min(item.quantity + qty, available, MAX_QTY_PER_ITEM)
+
         item.quantity = new_qty
         item.save()
         return item, created
@@ -51,16 +50,13 @@ class Cart(models.Model):
 class CartItem(models.Model):
     cart     = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_items')
     product  = models.ForeignKey(Product, on_delete=models.CASCADE)
-    variant  = models.ForeignKey(
-        ProductVariant, on_delete=models.SET_NULL,
-        null=True, blank=True
-    )
+    variant  = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('cart', 'product', 'variant')
-        ordering        = ['added_at']
+        ordering = ['added_at']
 
     def __str__(self):
         size = f" ({self.variant.size})" if self.variant else ""
@@ -76,9 +72,7 @@ class CartItem(models.Model):
 
     @property
     def available_stock(self):
-        if self.variant:
-            return self.variant.stock
-        return self.product.total_stock
+        return self.variant.stock if self.variant else self.product.total_stock
 
     @property
     def max_qty(self):
@@ -92,7 +86,9 @@ class CartItem(models.Model):
 
 class Wishlist(models.Model):
     session_key = models.CharField(max_length=40, unique=True, db_index=True)
-    products    = models.ManyToManyField(Product, blank=True)
+    products = models.ManyToManyField(Product, blank=True)
 
     def __str__(self):
         return f"Wishlist [{self.session_key}]"
+
+
