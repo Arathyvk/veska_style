@@ -1,0 +1,475 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Checkout · Veska{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
+  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
+  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
+  --border:#e0d9d0;--border-lt:#ece6de;
+  --success:#3a7d5a;--success-pale:#eaf4ee;
+  --warning:#c47f17;--warning-pale:#fef8ec;
+  --danger:#b53333;--danger-pale:#fdf0f0;
+  --shadow-xs:0 1px 3px rgba(30,26,23,.06);--shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --shadow-md:0 6px 24px rgba(30,26,23,.1);--shadow-lg:0 16px 48px rgba(30,26,23,.14);
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+
+.co-page{padding-bottom:80px;min-height:100vh;background:var(--cream)}
+.container{max-width:1140px;margin:0 auto;padding:0 24px}
+
+/* hero */
+.co-hero{background:var(--charcoal);padding:36px 0 32px;position:relative;overflow:hidden}
+.co-hero::after{content:'CHECKOUT';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-family:var(--head);font-size:90px;font-weight:700;color:rgba(255,255,255,.03);pointer-events:none}
+.co-hero .inner{position:relative;z-index:1}
+.co-hero h1{font-family:var(--head);font-size:clamp(26px,4vw,40px);font-weight:600;color:#fff;margin-bottom:4px}
+.co-hero h1 em{font-style:italic;color:var(--blush)}
+.co-hero p{font-size:12px;color:rgba(255,255,255,.4)}
+
+/* breadcrumbs */
+.breadcrumbs{display:flex;align-items:center;gap:8px;padding:16px 0 20px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
+.breadcrumbs .sep{color:var(--muted-lt);font-size:10px}
+.breadcrumbs .current{color:var(--ink);font-weight:500}
+
+/* progress steps */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.step{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted-lt)}
+.step.active{color:var(--terra)}
+.step.done{color:var(--success)}
+.step-num{width:24px;height:24px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 10px}
+
+/* messages */
+.msg-bar{padding:12px 16px;border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px}
+.msg-bar.error{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
+.msg-bar.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.2)}
+.msg-bar.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.2)}
+
+/* layout */
+.co-grid{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+@media(max-width:860px){.co-grid{grid-template-columns:1fr}}
+
+/* section card */
+.co-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:20px}
+.co-card-head{padding:16px 20px;border-bottom:1px solid var(--border-lt);display:flex;align-items:center;justify-content:space-between}
+.co-card-head h3{font-family:var(--head);font-size:18px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
+.co-card-head h3 svg{width:16px;height:16px;color:var(--terra)}
+.co-card-head a{font-size:12px;color:var(--terra);font-weight:600}
+.co-card-head a:hover{color:var(--terra-deep)}
+.co-card-body{padding:18px 20px}
+
+/* ── ADDRESS CARDS ── */
+.addr-list{display:flex;flex-direction:column;gap:10px}
+.addr-card{
+  border:2px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 16px;cursor:pointer;transition:var(--transition);
+  display:flex;align-items:flex-start;gap:12px;position:relative;
+}
+.addr-card:hover{border-color:var(--terra);background:var(--terra-pale)}
+.addr-card.selected{border-color:var(--terra);background:var(--terra-pale)}
+.addr-radio{
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--border);
+  flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
+  transition:var(--transition);
+}
+.addr-card.selected .addr-radio{border-color:var(--terra);background:var(--terra)}
+.addr-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;display:none}
+.addr-card.selected .addr-radio::after{display:block}
+.addr-info{flex:1;min-width:0}
+.addr-name{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.addr-default-tag{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--terra);color:#fff;padding:2px 6px;border-radius:10px}
+.addr-text{font-size:12.5px;color:var(--muted);line-height:1.6}
+.addr-phone{font-size:12px;color:var(--muted-lt);margin-top:4px}
+.addr-actions{display:flex;gap:8px;margin-top:8px}
+.addr-action-btn{font-size:11px;color:var(--terra);font-weight:600;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+.addr-action-btn:hover{color:var(--terra-deep)}
+
+.no-address{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
+.no-address svg{width:36px;height:36px;margin:0 auto 10px;display:block;color:var(--muted-lt)}
+
+.btn-add-addr{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  width:100%;padding:11px;margin-top:10px;
+  border:1.5px dashed var(--border);border-radius:var(--radius-lg);
+  background:none;color:var(--muted);font-family:var(--body);
+  font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);
+  text-decoration:none;
+}
+.btn-add-addr:hover{border-color:var(--terra);color:var(--terra);background:var(--terra-pale)}
+
+/* ── ORDER ITEMS ── */
+.oi-list{display:flex;flex-direction:column;gap:12px}
+.oi-row{display:flex;gap:12px;align-items:center}
+.oi-img{width:60px;height:72px;border-radius:var(--radius-sm);overflow:hidden;background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
+.oi-img img{width:100%;height:100%;object-fit:cover}
+.oi-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
+.oi-body{flex:1;min-width:0}
+.oi-name{font-family:var(--head);font-size:14px;font-weight:500;color:var(--ink);line-height:1.3;margin-bottom:3px}
+.oi-meta{font-size:11px;color:var(--muted-lt)}
+.oi-price{text-align:right;flex-shrink:0}
+.oi-unit{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
+.oi-total{font-family:var(--head);font-size:16px;font-weight:700;color:var(--charcoal)}
+
+/* notes */
+.notes-field{
+  width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
+  padding:10px 14px;font-family:var(--body);font-size:13px;
+  background:var(--parchment);color:var(--ink);outline:none;
+  resize:vertical;min-height:72px;transition:var(--transition);
+}
+.notes-field:focus{border-color:var(--terra);background:#fff;box-shadow:0 0 0 3px rgba(181,103,58,.08)}
+
+/* ── SUMMARY CARD ── */
+.summary-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px}
+.summary-head{padding:16px 20px 14px;background:linear-gradient(135deg,var(--charcoal) 0%,#3d3630 100%)}
+.summary-head h3{font-family:var(--head);font-size:17px;font-weight:600;color:#fff}
+.summary-body{padding:18px 20px}
+.sum-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;color:var(--muted)}
+.sum-row .val{color:var(--ink);font-weight:500}
+.sum-row.free{color:var(--success)}.sum-row.free .val{color:var(--success);font-weight:600}
+.sum-divider{height:1px;background:var(--border-lt);margin:8px 0}
+.sum-total{display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;font-family:var(--head);font-size:20px;font-weight:700;color:var(--ink)}
+.sum-total .val{color:var(--charcoal)}
+
+/* payment badge */
+.payment-badge{
+  display:flex;align-items:center;gap:10px;
+  background:var(--parchment);border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:12px 14px;margin-top:14px;
+}
+.payment-badge svg{width:18px;height:18px;color:var(--terra);flex-shrink:0}
+.payment-badge .pb-label{font-size:12px;font-weight:600;color:var(--charcoal)}
+.payment-badge .pb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* place order btn */
+.btn-place-order{
+  width:100%;padding:16px;margin-top:16px;
+  background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);
+  font-family:var(--body);font-size:14px;font-weight:700;letter-spacing:.4px;
+  cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn-place-order:hover:not(:disabled){background:var(--terra)}
+.btn-place-order:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed}
+.btn-back-cart{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:10px;margin-top:8px;
+  background:none;border:1.5px solid var(--border);border-radius:var(--radius-md);
+  font-family:var(--body);font-size:12.5px;color:var(--muted);
+  cursor:pointer;transition:var(--transition);text-decoration:none;
+}
+.btn-back-cart:hover{border-color:var(--terra);color:var(--terra)}
+
+/* trust strip */
+.trust-strip{margin-top:16px;padding-top:14px;border-top:1px solid var(--border-lt);display:flex;flex-direction:column;gap:6px}
+.trust-item{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+
+@keyframes reveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.co-card{animation:reveal .35s ease both}
+.co-card:nth-child(2){animation-delay:80ms}
+</style>
+
+<div class="co-page">
+
+  <!-- HERO -->
+  <div class="co-hero">
+    <div class="container">
+      <div class="inner">
+        <h1>Secure <em>Checkout</em></h1>
+        <p>Review your order and complete your purchase</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <nav class="breadcrumbs">
+      <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
+      <a href="{% url 'product_shop' %}">Shop</a><span class="sep">›</span>
+      <a href="{% url 'cart_detail' %}">Cart</a><span class="sep">›</span>
+      <span class="current">Checkout</span>
+    </nav>
+
+    <!-- Progress -->
+    <div class="steps">
+      <div class="step done">
+        <div class="step-num">✓</div> Cart
+      </div>
+      <div class="step-line"></div>
+      <div class="step active">
+        <div class="step-num">2</div> Checkout
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-num">3</div> Confirmed
+      </div>
+    </div>
+
+    {% for message in messages %}
+    <div class="msg-bar {{ message.tags }}">
+      {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}🚫{% else %}⚠️{% endif %}
+      {{ message }}
+    </div>
+    {% endfor %}
+
+    <form method="POST" action="{% url 'place_order' %}" id="checkoutForm">
+      {% csrf_token %}
+      <input type="hidden" name="address_id" id="selectedAddressId"
+             value="{{ selected_addr_id }}">
+
+      <div class="co-grid">
+
+        <!-- LEFT -->
+        <div>
+
+          <!-- DELIVERY ADDRESS -->
+          <div class="co-card">
+            <div class="co-card-head">
+              <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                Delivery Address
+              </h3>
+              <a href="{% url 'address_add' %}">+ Add New</a>
+            </div>
+            <div class="co-card-body">
+
+              {% if addresses %}
+              <div class="addr-list" id="addrList">
+                {% for addr in addresses %}
+                <div class="addr-card {% if addr.pk|stringformat:'s' == selected_addr_id %}selected{% endif %}"
+                     id="addrCard-{{ addr.pk }}"
+                     onclick="selectAddr('{{ addr.pk }}')">
+                  <div class="addr-radio"></div>
+                  <div class="addr-info">
+                    <div class="addr-name">
+                      {{ addr.full_name }}
+                      {% if addr.is_default %}
+                      <span class="addr-default-tag">Default</span>
+                      {% endif %}
+                    </div>
+                    <div class="addr-text">{{ addr.one_line }}</div>
+                    <div class="addr-phone">📞 {{ addr.phone }}</div>
+                    <div class="addr-actions">
+                      <a href="{% url 'address_edit' addr.pk %}" class="addr-action-btn">Edit</a>
+                      {% if not addr.is_default %}
+                      <form method="POST" action="{% url 'address_set_default' addr.pk %}" style="display:inline">
+                        {% csrf_token %}
+                        <button type="submit" class="addr-action-btn">Set as default</button>
+                      </form>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="no-address">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                No saved addresses yet.
+              </div>
+              {% endif %}
+
+              <a href="{% url 'address_add' %}" class="btn-add-addr">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add New Address
+              </a>
+
+            </div>
+          </div>
+
+          <!-- ORDER ITEMS -->
+          <div class="co-card">
+            <div class="co-card-head">
+              <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                Order Items
+                <span style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400">({{ items|length }})</span>
+              </h3>
+              <a href="{% url 'cart_detail' %}">Edit Cart</a>
+            </div>
+            <div class="co-card-body">
+              <div class="oi-list">
+                {% for item in items %}
+                <div class="oi-row">
+                  <div class="oi-img">
+                    {% with img=item.product.primary_image %}
+                      {% if img %}
+                        <img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                      {% else %}
+                        <div class="oi-img-empty">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="22" height="22">
+                            <rect x="3" y="3" width="18" height="18" rx="3"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+                  </div>
+                  <div class="oi-body">
+                    <div class="oi-name">{{ item.product.name }}</div>
+                    <div class="oi-meta">
+                      {% if item.variant and item.variant.size %}Size: {{ item.variant.size }} · {% endif %}
+                      Qty: {{ item.quantity }}
+                    </div>
+                  </div>
+                  <div class="oi-price">
+                    <div class="oi-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
+                    <div class="oi-total">₹{{ item.line_total|floatformat:2 }}</div>
+                  </div>
+                </div>
+                {% if not forloop.last %}
+                <hr style="border:none;border-top:1px solid var(--border-lt)">
+                {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- ORDER NOTES -->
+          <div class="co-card">
+            <div class="co-card-head">
+              <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Order Notes
+                <span style="font-family:var(--body);font-size:12px;color:var(--muted-lt);font-weight:400">(optional)</span>
+              </h3>
+            </div>
+            <div class="co-card-body">
+              <textarea name="notes" class="notes-field"
+                        placeholder="Special delivery instructions, landmark, or any note…"></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: SUMMARY -->
+        <div>
+          <div class="summary-card">
+            <div class="summary-head">
+              <h3>Order Summary</h3>
+            </div>
+            <div class="summary-body">
+
+              <div class="sum-row">
+                <span>Subtotal ({{ items|length }} item{{ items|length|pluralize }})</span>
+                <span class="val">₹{{ subtotal|floatformat:2 }}</span>
+              </div>
+
+              <div class="sum-row {% if shipping == 0 %}free{% endif %}">
+                <span>Shipping</span>
+                <span class="val">{% if shipping == 0 %}FREE{% else %}₹{{ shipping|floatformat:2 }}{% endif %}</span>
+              </div>
+
+              {% if tax_rate_pct > 0 %}
+              <div class="sum-row">
+                <span>GST ({{ tax_rate_pct }}%)</span>
+                <span class="val">₹{{ tax|floatformat:2 }}</span>
+              </div>
+              {% endif %}
+
+              <div class="sum-divider"></div>
+              <div class="sum-total">
+                <span>Total</span>
+                <span class="val">₹{{ total|floatformat:2 }}</span>
+              </div>
+
+              {% if shipping > 0 %}
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">
+                Add ₹{{ free_threshold|floatformat:0 }} worth to get free shipping
+              </div>
+              {% endif %}
+
+              <!-- Payment method -->
+              <div class="payment-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                  <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                <div>
+                  <div class="pb-label">Cash on Delivery</div>
+                  <div class="pb-sub">Pay when your order arrives</div>
+                </div>
+              </div>
+
+              <!-- Place Order -->
+              <button type="submit" class="btn-place-order" id="placeOrderBtn"
+                      {% if not addresses %}disabled{% endif %}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                {% if addresses %}Place Order · ₹{{ total|floatformat:2 }}{% else %}Add an address to continue{% endif %}
+              </button>
+
+              {% if not addresses %}
+              <div style="font-size:11.5px;color:var(--danger);text-align:center;margin-top:8px">
+                Please add a delivery address above to place your order.
+              </div>
+              {% endif %}
+
+              <a href="{% url 'cart_detail' %}" class="btn-back-cart">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                Back to Cart
+              </a>
+
+              <div class="trust-strip">
+                <div class="trust-item">🔒 Secure checkout</div>
+                <div class="trust-item">🚚 Free shipping above ₹999</div>
+                <div class="trust-item">↩️ Easy 30-day returns</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<script>
+function selectAddr(pk) {
+  document.querySelectorAll('.addr-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('addrCard-' + pk);
+  if (card) card.classList.add('selected');
+  document.getElementById('selectedAddressId').value = pk;
+}
+
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+  const addrId = document.getElementById('selectedAddressId').value;
+  if (!addrId) {
+    e.preventDefault();
+    alert('Please select a delivery address to continue.');
+    return;
+  }
+  const btn = document.getElementById('placeOrderBtn');
+  btn.textContent = 'Placing order…';
+  btn.disabled = true;
+});
+</script>
+{% endblock %}
