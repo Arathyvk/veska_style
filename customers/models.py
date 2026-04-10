@@ -9,11 +9,7 @@ class Address(models.Model):
         ('other', 'Other'),
     ]
  
-    user          = models.ForeignKey(
-                        settings.AUTH_USER_MODEL,
-                        on_delete=models.CASCADE,
-                        related_name='addresses'
-                    )
+    user          = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='addresses')
     full_name     = models.CharField(max_length=100)
     phone         = models.CharField(max_length=20)
     address_line1 = models.CharField(max_length=200)

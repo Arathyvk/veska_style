@@ -2,10 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('checkout/',                       views.checkout,           name='checkout'),
+    path('',                       views.checkout,           name='checkout'),
     path('checkout/place-order/',           views.place_order,        name='place_order'),
-    path('checkout/apply-coupon/',          views.apply_coupon,       name='apply_coupon'),
-    path('checkout/remove-coupon/',         views.remove_coupon,      name='remove_coupon'),
+    # path('checkout/apply-coupon/',          views.apply_coupon,       name='apply_coupon'),
+    # path('checkout/remove-coupon/',         views.remove_coupon,      name='remove_coupon'),
 
     path('order/<str:order_number>/success/', views.order_success,    name='order_success'),
     path('order/<str:order_number>/',         views.order_detail,     name='order_detail'),
