@@ -11,7 +11,7 @@
   --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
   --border:#e0d9d0;--border-lt:#ece6de;
   --success:#3a7d5a;--success-pale:#eaf4ee;
-  --shadow-sm:0 2px 8px rgba(30,26,23,.08);--shadow-lg:0 16px 48px rgba(30,26,23,.14);
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
   --radius-md:10px;--radius-lg:16px;--radius-xl:24px;
   --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
 }
@@ -22,119 +22,41 @@ a{text-decoration:none;color:inherit}
 .success-page{min-height:100vh;background:var(--cream);padding-bottom:80px}
 .container{max-width:640px;margin:0 auto;padding:0 24px}
 
-/* ── HERO ILLUSTRATION ── */
-.success-hero{
-  text-align:center;padding:56px 24px 40px;
-  position:relative;
-}
-.success-hero::before{
-  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:280px;height:280px;border-radius:50%;
-  background:radial-gradient(ellipse at center, rgba(181,103,58,.08) 0%, transparent 70%);
-  pointer-events:none;
-}
+.success-hero{text-align:center;padding:56px 24px 40px;position:relative}
+.success-hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:280px;height:280px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(181,103,58,.08) 0%,transparent 70%);pointer-events:none}
 
-/* Animated checkmark */
-.check-wrap{
-  width:90px;height:90px;border-radius:50%;
-  background:var(--success-pale);border:3px solid var(--success);
-  display:flex;align-items:center;justify-content:center;
-  margin:0 auto 24px;
-  animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both;
-}
+.check-wrap{width:90px;height:90px;border-radius:50%;background:var(--success-pale);border:3px solid var(--success);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes popIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
 .check-wrap svg{width:42px;height:42px;color:var(--success)}
-.check-wrap svg path{
-  stroke-dasharray:60;stroke-dashoffset:60;
-  animation:drawCheck .4s .3s ease forwards;
-}
+.check-wrap svg path{stroke-dasharray:60;stroke-dashoffset:60;animation:drawCheck .4s .3s ease forwards}
 @keyframes drawCheck{to{stroke-dashoffset:0}}
 
-.success-eyebrow{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  color:var(--success);background:var(--success-pale);
-  border:1px solid rgba(58,125,90,.2);border-radius:40px;
-  padding:4px 14px;margin-bottom:14px;
-  animation:fadeUp .4s .2s ease both;
-}
-.success-title{
-  font-family:var(--head);font-size:clamp(32px,6vw,52px);font-weight:600;
-  color:var(--ink);line-height:1.08;margin-bottom:12px;
-  animation:fadeUp .4s .25s ease both;
-}
+.success-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--success);background:var(--success-pale);border:1px solid rgba(58,125,90,.2);border-radius:40px;padding:4px 14px;margin-bottom:14px;animation:fadeUp .4s .2s ease both}
+.success-title{font-family:var(--head);font-size:clamp(32px,6vw,52px);font-weight:600;color:var(--ink);line-height:1.08;margin-bottom:12px;animation:fadeUp .4s .25s ease both}
 .success-title em{font-style:italic;color:var(--terra)}
-.success-sub{
-  font-size:14px;color:var(--muted);line-height:1.7;max-width:420px;margin:0 auto 8px;
-  animation:fadeUp .4s .3s ease both;
-}
-.success-order-num{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--parchment);border:1px solid var(--border);
-  border-radius:var(--radius-md);padding:8px 16px;
-  font-size:13px;font-weight:600;color:var(--charcoal);
-  margin-top:10px;
-  animation:fadeUp .4s .35s ease both;
-}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:420px;margin:0 auto 8px;animation:fadeUp .4s .3s ease both}
+.success-order-num{display:inline-flex;align-items:center;gap:8px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-md);padding:8px 16px;font-size:13px;font-weight:600;color:var(--charcoal);margin-top:10px;animation:fadeUp .4s .35s ease both}
 .success-order-num span{color:var(--terra);font-family:monospace;font-size:14px}
-
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 
-/* ── CTA BUTTONS ── */
-.cta-group{
-  display:flex;flex-direction:column;gap:10px;
-  margin-top:28px;
-  animation:fadeUp .4s .45s ease both;
-}
-.btn-primary{
-  display:flex;align-items:center;justify-content:center;gap:9px;
-  padding:15px 24px;background:var(--charcoal);color:#fff;
-  border:none;border-radius:var(--radius-md);
-  font-family:var(--body);font-size:14px;font-weight:600;
-  text-decoration:none;cursor:pointer;transition:all .2s;
-}
+.cta-group{display:flex;flex-direction:column;gap:10px;margin-top:28px;animation:fadeUp .4s .45s ease both}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:9px;padding:15px 24px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s}
 .btn-primary:hover{background:var(--terra)}
-.btn-secondary{
-  display:flex;align-items:center;justify-content:center;gap:9px;
-  padding:13px 24px;background:none;color:var(--muted);
-  border:1.5px solid var(--border);border-radius:var(--radius-md);
-  font-family:var(--body);font-size:13px;font-weight:500;
-  text-decoration:none;cursor:pointer;transition:all .2s;
-}
+.btn-secondary{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;background:none;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;transition:all .2s}
 .btn-secondary:hover{border-color:var(--terra);color:var(--terra)}
 
-/* ── ORDER SUMMARY CARD ── */
-.summary-card{
-  background:var(--warm-white);border:1px solid var(--border);
-  border-radius:var(--radius-xl);overflow:hidden;margin-top:28px;
-  box-shadow:var(--shadow-sm);
-  animation:fadeUp .4s .5s ease both;
-}
-.sc-head{
-  padding:14px 20px;background:linear-gradient(135deg,var(--charcoal) 0%,#3d3630 100%);
-  display:flex;align-items:center;justify-content:space-between;
-}
+.summary-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-top:28px;box-shadow:var(--shadow-sm);animation:fadeUp .4s .5s ease both}
+.sc-head{padding:14px 20px;background:linear-gradient(135deg,var(--charcoal) 0%,#3d3630 100%);display:flex;align-items:center;justify-content:space-between}
 .sc-head h3{font-family:var(--head);font-size:16px;font-weight:600;color:#fff}
-.sc-head .status-badge{
-  font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-  background:var(--success);color:#fff;padding:3px 10px;border-radius:20px;
-}
+.sc-head .status-badge{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--success);color:#fff;padding:3px 10px;border-radius:20px}
 .sc-body{padding:18px 20px}
 
-/* delivery address in card */
-.sc-section-label{
-  font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--muted-lt);margin-bottom:8px;
-}
-.delivery-addr{
-  background:var(--parchment);border-radius:var(--radius-md);
-  padding:12px 14px;margin-bottom:18px;
-}
+.sc-section-label{font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted-lt);margin-bottom:8px}
+.delivery-addr{background:var(--parchment);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:18px}
 .delivery-addr .da-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
 .delivery-addr .da-text{font-size:12.5px;color:var(--muted);line-height:1.6}
 .delivery-addr .da-phone{font-size:12px;color:var(--muted-lt);margin-top:4px}
 
-/* order items mini */
 .oi-mini{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-lt)}
 .oi-mini:last-child{border-bottom:none}
 .oi-mini-img{width:48px;height:58px;border-radius:6px;overflow:hidden;background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
@@ -144,41 +66,32 @@ a{text-decoration:none;color:inherit}
 .oi-mini-meta{font-size:11px;color:var(--muted-lt)}
 .oi-mini-price{font-family:var(--head);font-size:14px;font-weight:700;color:var(--charcoal);flex-shrink:0}
 
-/* price breakdown */
 .price-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;color:var(--muted)}
 .price-row .val{color:var(--ink);font-weight:500}
 .price-row.free .val{color:var(--success);font-weight:600}
+.price-row.discount .val{color:var(--success);font-weight:600}
+.price-row.discount{color:var(--success)}
 .price-divider{height:1px;background:var(--border-lt);margin:8px 0}
 .price-total{display:flex;justify-content:space-between;font-family:var(--head);font-size:19px;font-weight:700;color:var(--ink);padding:8px 0 0}
 .price-total .val{color:var(--charcoal)}
 
-/* payment method row */
-.payment-row{
-  display:flex;align-items:center;gap:10px;
-  background:var(--parchment);border-radius:var(--radius-md);
-  padding:10px 14px;margin-top:14px;
-}
+.savings-badge{display:inline-flex;align-items:center;gap:6px;background:var(--success-pale);border:1px solid rgba(58,125,90,.2);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--success);margin-top:10px}
+
+.payment-row{display:flex;align-items:center;gap:10px;background:var(--parchment);border-radius:var(--radius-md);padding:10px 14px;margin-top:14px}
 .payment-row svg{width:16px;height:16px;color:var(--terra);flex-shrink:0}
 .payment-row span{font-size:12px;font-weight:600;color:var(--charcoal)}
 
-/* confetti particles */
 .confetti-wrap{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden}
 .confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall linear forwards}
-@keyframes confettiFall{
-  0%{transform:translateY(-20px) rotate(0deg);opacity:1}
-  100%{transform:translateY(100vh) rotate(720deg);opacity:0}
-}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
 </style>
 
-<!-- Confetti container -->
 <div class="confetti-wrap" id="confettiWrap"></div>
 
 <div class="success-page">
   <div class="container">
 
-    <!-- HERO -->
     <div class="success-hero">
-
       <div class="check-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 6L9 17l-5-5"/>
@@ -186,10 +99,16 @@ a{text-decoration:none;color:inherit}
       </div>
 
       <div class="success-eyebrow">✓ Order Confirmed</div>
-      <h1 class="success-title">Thank you,<br><em>{{ order.full_name.split.0 }}!</em></h1>
-      <p class="success-sub">
-        Your order has been placed successfully. We'll get it ready and deliver it soon.
-      </p>
+      <h1 class="success-title">Thank you,<br><em>{{ order.full_name }}!</em></h1>
+      <p class="success-sub">Your order has been placed successfully. We'll get it ready and deliver it soon.</p>
+      <p style="font-size:13px;color:var(--muted-lt);margin-top:6px">🚚 Estimated delivery: 3–5 business days</p>
+
+      {% if order.discount_amount > 0 %}
+      <div style="margin-top:12px">
+        <span class="savings-badge">🎉 You saved ₹{{ order.discount_amount|floatformat:2 }} on this order!</span>
+      </div>
+      {% endif %}
+
       <div class="success-order-num">
         Order Number: <span>#{{ order.order_number }}</span>
       </div>
@@ -211,7 +130,6 @@ a{text-decoration:none;color:inherit}
       </div>
     </div>
 
-    <!-- ORDER SUMMARY -->
     <div class="summary-card">
       <div class="sc-head">
         <h3>Order #{{ order.order_number }}</h3>
@@ -219,7 +137,6 @@ a{text-decoration:none;color:inherit}
       </div>
       <div class="sc-body">
 
-        <!-- Delivery address -->
         <div class="sc-section-label">Delivering To</div>
         <div class="delivery-addr">
           <div class="da-name">{{ order.full_name }}</div>
@@ -227,7 +144,6 @@ a{text-decoration:none;color:inherit}
           <div class="da-phone">📞 {{ order.phone }}</div>
         </div>
 
-        <!-- Items -->
         <div class="sc-section-label">Items Ordered</div>
         {% for item in order.items.all %}
         <div class="oi-mini">
@@ -254,27 +170,36 @@ a{text-decoration:none;color:inherit}
         </div>
         {% endfor %}
 
-        <!-- Price breakdown -->
         <div style="margin-top:16px">
           <div class="price-row">
-            <span>Subtotal</span><span class="val">₹{{ order.subtotal|floatformat:2 }}</span>
+            <span>Subtotal</span>
+            <span class="val">₹{{ order.subtotal|floatformat:2 }}</span>
           </div>
+
+          {% if order.discount_amount > 0 %}
+          <div class="price-row discount">
+            <span>
+              Discount
+              {% if order.coupon_code %}
+                <span style="font-size:10px;background:var(--success-pale);border:1px solid rgba(58,125,90,.2);color:var(--success);padding:1px 6px;border-radius:8px;margin-left:4px;font-weight:700;font-family:monospace">{{ order.coupon_code }}</span>
+              {% endif %}
+            </span>
+            <span class="val">− ₹{{ order.discount_amount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+
           <div class="price-row {% if order.shipping_charge == 0 %}free{% endif %}">
             <span>Shipping</span>
             <span class="val">{% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
           </div>
-          {% if order.tax > 0 %}
-          <div class="price-row">
-            <span>Tax</span><span class="val">₹{{ order.tax|floatformat:2 }}</span>
-          </div>
-          {% endif %}
+
           <div class="price-divider"></div>
           <div class="price-total">
-            <span>Total Paid</span><span class="val">₹{{ order.total|floatformat:2 }}</span>
+            <span>Total Paid</span>
+            <span class="val">₹{{ order.total|floatformat:2 }}</span>
           </div>
         </div>
 
-        <!-- Payment -->
         <div class="payment-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
@@ -289,7 +214,6 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
-// Confetti burst on load
 (function() {
   const colors = ['#b56744','#e9d5c8','#3a7d5a','#c47f17','#2e2925','#f7ede5'];
   const wrap   = document.getElementById('confettiWrap');

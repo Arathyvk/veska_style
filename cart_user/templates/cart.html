@@ -471,7 +471,6 @@ a     { text-decoration:none; color:inherit }
               <span class="val" id="total-display">₹{{ order_total|floatformat:2 }}</span>
             </div>
 
-            {# Checkout CTA #}
             {% if can_checkout %}
             <a href="{% url 'checkout' %}" class="btn-checkout">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

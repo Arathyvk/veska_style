@@ -1,77 +1,131 @@
+import uuid
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
-from product_admin.models import Product, ProductVariant
-from users.models import User  
+from django.utils import timezone
 
 
 
-MAX_QTY_PER_ITEM = 10  
+class Coupon(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('flat',    'Flat Amount Off'),
+        ('percent', 'Percentage Off'),
+    ]
+
+    code            = models.CharField(max_length=50, unique=True, db_index=True)
+    discount_type   = models.CharField(max_length=10, choices=DISCOUNT_TYPE_CHOICES, default='flat')
+    value           = models.DecimalField(max_digits=10, decimal_places=2)         
+    min_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    max_discount    = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    is_active       = models.BooleanField(default=True)
+    valid_from      = models.DateTimeField(default=timezone.now)
+    valid_until     = models.DateTimeField(null=True, blank=True)
+    usage_limit     = models.PositiveIntegerField(null=True, blank=True)           
+    times_used      = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-valid_from']
+
+    def __str__(self):
+        return self.code
+
+    def is_valid(self):
+        now = timezone.now()
+        if not self.is_active:
+            return False, 'This coupon is inactive.'
+        if self.valid_until and now > self.valid_until:
+            return False, 'This coupon has expired.'
+        if now < self.valid_from:
+            return False, 'This coupon is not yet active.'
+        if self.usage_limit is not None and self.times_used >= self.usage_limit:
+            return False, 'This coupon has reached its usage limit.'
+        return True, ''
+
+    def calculate_discount(self, subtotal: Decimal) -> Decimal:
+        if subtotal < self.min_order_value:
+            return Decimal('0')
+        if self.discount_type == 'flat':
+            discount = self.value
+        else:
+            discount = (subtotal * self.value / Decimal('100')).quantize(Decimal('0.01'))
+            if self.max_discount:
+                discount = min(discount, self.max_discount)
+        return min(discount, subtotal)
+
+
+
+
+def _order_number():
+    return uuid.uuid4().hex[:12].upper()
 
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('placed', 'Placed'),
-        ('shipped', 'Shipped'),
-        ('delivered', 'Delivered'),
-        ('cancelled', 'Cancelled'),
+        ('pending',    'Pending'),
+        ('confirmed',  'Confirmed'),
+        ('processing', 'Processing'),
+        ('shipped',    'Shipped'),
+        ('delivered',  'Delivered'),
+        ('cancelled',  'Cancelled'),
+    ]
+    PAYMENT_METHOD_CHOICES = [
+        ('cod', 'Cash on Delivery'),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
-    session_key = models.CharField(max_length=40, blank=True, null=True)
+    order_number    = models.CharField(max_length=20, unique=True, default=_order_number, editable=False)
+    user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,null=True, blank=True, related_name='orders')
+    session_key     = models.CharField(max_length=40, null=True, blank=True)
 
-    full_name       = models.CharField(max_length=255)
+    full_name       = models.CharField(max_length=200)
     phone           = models.CharField(max_length=20)
     address_line1   = models.CharField(max_length=255)
-    address_line2   = models.CharField(max_length=255, blank=True, null=True)
+    address_line2   = models.CharField(max_length=255, blank=True)
     city            = models.CharField(max_length=100)
     state           = models.CharField(max_length=100)
-    pincode         = models.CharField(max_length=20)
-    country         = models.CharField(max_length=100)
+    pincode         = models.CharField(max_length=10)
+    country         = models.CharField(max_length=100, default='India')
+    tax             = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    subtotal        = models.DecimalField(max_digits=12, decimal_places=2)
+    coupon_code     = models.CharField(max_length=50, blank=True)
+    discount_type   = models.CharField(max_length=10, blank=True)   
+    discount_value  = models.DecimalField(max_digits=10, decimal_places=2, default=0)  
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)  
+    shipping_charge = models.DecimalField(max_digits=8,  decimal_places=2, default=0)
+    total           = models.DecimalField(max_digits=12, decimal_places=2)
 
-    subtotal        = models.DecimalField(max_digits=10, decimal_places=2)
-    shipping_charge = models.DecimalField(max_digits=10, decimal_places=2)
-    tax             = models.DecimalField(max_digits=10, decimal_places=2)
-    total           = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method  = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cod')
+    status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    notes           = models.TextField(blank=True)
 
-    payment_method  = models.CharField(max_length=50)
-    status          = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pending')
-    notes           = models.TextField(blank=True, null=True)
+    created_at      = models.DateTimeField(auto_now_add=True)
+    updated_at      = models.DateTimeField(auto_now=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
-        if self.user:
-            return f"Order #{self.id} - {self.user.email}"
-        return f"Order #{self.id} - Guest ({self.session_key})"
+        return f'Order #{self.order_number}'
+
+    @property
+    def address_one_line(self):
+        parts = [self.address_line1]
+        if self.address_line2:
+            parts.append(self.address_line2)
+        parts += [self.city, self.state, self.pincode, self.country]
+        return ', '.join(parts)
+
 
 
 class OrderItem(models.Model):
-    order    = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product  = models.ForeignKey(Product, on_delete=models.CASCADE)
-    variant  = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
-    quantity = models.PositiveIntegerField()
-    price    = models.DecimalField(max_digits=10, decimal_places=2)
+    order        = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    product      = models.ForeignKey('product_admin.Product', on_delete=models.SET_NULL, null=True)
+    product_name = models.CharField(max_length=255)
+    product_slug = models.SlugField(max_length=255, blank=True)
+    size         = models.CharField(max_length=50, blank=True)
+    image_url    = models.URLField(blank=True)
+    unit_price   = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity     = models.PositiveIntegerField()
+    line_total   = models.DecimalField(max_digits=12, decimal_places=2)
 
     def __str__(self):
-        return f"{self.product.name} × {self.quantity}"
-
-    @property
-    def line_total(self):
-        return self.price * self.quantity
-    
-
-class Checkout(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    ]
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
+        return f'{self.quantity}× {self.product_name}'
