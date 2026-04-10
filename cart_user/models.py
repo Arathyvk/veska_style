@@ -1,11 +1,13 @@
 from django.db import models
 from product_admin.models import Product, ProductVariant
+from django.conf import settings
 
 MAX_QTY_PER_ITEM = 10  
 
 
 
 class Cart(models.Model):
+    user        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     session_key = models.CharField(max_length=40, unique=True, db_index=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)

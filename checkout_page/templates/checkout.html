@@ -376,7 +376,7 @@ a{text-decoration:none;color:inherit}
                     </form>
                   </div>
                 {% else %}
-                  <form method="POST" action="{% url 'apply_coupon' %}">
+                  <form method="POST" action="#">
                     {% csrf_token %}
                     <div class="coupon-input-row">
                       <input type="text" name="coupon_code" class="coupon-input"

@@ -16,6 +16,5 @@ urlpatterns = [
     path('cart_user/',include('cart_user.urls')),
     path('wishlist_user/',include('wishlist_user.urls')),
     path('checkout/',include('checkout_page.urls')),
-    path('order/',include('order_user.urls')),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
