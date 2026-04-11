@@ -1,4 +1,3 @@
-# checkout_page/views.py  — FULL REWRITE
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -10,7 +9,7 @@ from django.http import HttpResponse
 
 from cart_user.models import Cart, CartItem
 from customers.models import Address
-from .models import Order, OrderItem
+from checkout_page.models import Order, OrderItem
 
 
 FREE_SHIPPING_THRESHOLD = Decimal('999')

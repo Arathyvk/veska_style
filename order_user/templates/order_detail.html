@@ -1,0 +1,487 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Order #{{ order.order_number }} · Veska{% endblock %}
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
+  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
+  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
+  --border:#e0d9d0;--border-lt:#ece6de;
+  --success:#3a7d5a;--success-pale:#eaf4ee;
+  --warning:#c47f17;--warning-pale:#fef8ec;
+  --danger:#b53333;--danger-pale:#fdf0f0;
+  --info:#2563a8;--info-pale:#eff6ff;
+  --shadow-xs:0 1px 3px rgba(30,26,23,.06);--shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --shadow-lg:0 16px 48px rgba(30,26,23,.14);
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+
+.od-page{padding-bottom:80px;min-height:100vh;background:var(--cream)}
+.container{max-width:900px;margin:0 auto;padding:0 24px}
+
+.page-hero{background:var(--charcoal);padding:32px 0 28px;position:relative;overflow:hidden}
+.page-hero::after{content:'#{{ order.order_number }}';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-family:var(--head);font-size:60px;font-weight:700;color:rgba(255,255,255,.03);pointer-events:none;white-space:nowrap}
+.page-hero .inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.page-hero h1{font-family:var(--head);font-size:clamp(22px,3.5vw,34px);font-weight:600;color:#fff}
+.page-hero h1 em{font-style:italic;color:var(--blush)}
+
+.breadcrumbs{display:flex;align-items:center;gap:8px;padding:14px 0 18px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
+.breadcrumbs .sep{color:var(--muted-lt);font-size:10px}.breadcrumbs .current{color:var(--ink);font-weight:500}
+
+.msg-bar{padding:12px 16px;border-radius:var(--radius-md);margin-bottom:14px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px}
+.msg-bar.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.2)}
+.msg-bar.error{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
+.msg-bar.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.2)}
+
+.od-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+@media(max-width:760px){.od-grid{grid-template-columns:1fr}}
+
+.od-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-xs)}
+.od-card-head{padding:14px 18px;border-bottom:1px solid var(--border-lt);display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--parchment)}
+.od-card-head h3{font-family:var(--head);font-size:16px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px}
+.od-card-head h3 svg{width:15px;height:15px;color:var(--terra)}
+.od-card-body{padding:16px 18px}
+
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.status-badge .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.status-pending{background:var(--warning-pale);color:var(--warning)}.status-pending .dot{background:var(--warning)}
+.status-confirmed,.status-processing{background:var(--info-pale);color:var(--info)}.status-confirmed .dot,.status-processing .dot{background:var(--info)}
+.status-shipped{background:#eff6ff;color:#1d4ed8}.status-shipped .dot{background:#1d4ed8}
+.status-delivered{background:var(--success-pale);color:var(--success)}.status-delivered .dot{background:var(--success)}
+.status-cancelled{background:var(--danger-pale);color:var(--danger)}.status-cancelled .dot{background:var(--danger)}
+.status-return_requested{background:var(--warning-pale);color:var(--warning)}.status-return_requested .dot{background:var(--warning)}
+.status-returned{background:var(--parchment);color:var(--muted)}.status-returned .dot{background:var(--muted)}
+
+.timeline{display:flex;flex-direction:column;gap:0;padding:4px 0}
+.tl-step{display:flex;gap:14px;align-items:flex-start;position:relative}
+.tl-step::before{content:'';position:absolute;left:11px;top:24px;width:2px;height:calc(100% + 2px);background:var(--border-lt)}
+.tl-step:last-child::before{display:none}
+.tl-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--warm-white);display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1}
+.tl-dot.active{border-color:var(--terra);background:var(--terra)}
+.tl-dot.done{border-color:var(--success);background:var(--success)}
+.tl-dot svg{width:11px;height:11px;color:#fff}
+.tl-info{padding:2px 0 20px}
+.tl-label{font-size:13px;font-weight:600;color:var(--ink)}
+.tl-sub{font-size:11px;color:var(--muted-lt);margin-top:2px}
+
+.oi-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border-lt)}
+.oi-row:last-child{border-bottom:none;padding-bottom:0}
+.oi-img{width:56px;height:68px;border-radius:var(--radius-sm);overflow:hidden;background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
+.oi-img img{width:100%;height:100%;object-fit:cover}
+.oi-body{flex:1;min-width:0}
+.oi-name{font-family:var(--head);font-size:14px;font-weight:500;color:var(--ink);line-height:1.3;margin-bottom:3px}
+.oi-name a:hover{color:var(--terra)}
+.oi-meta{font-size:11.5px;color:var(--muted-lt);margin-bottom:6px}
+.oi-cancelled-tag{display:inline-flex;align-items:center;gap:4px;background:var(--danger-pale);color:var(--danger);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.3px}
+.oi-price{text-align:right;flex-shrink:0}
+.oi-unit{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
+.oi-total{font-family:var(--head);font-size:15px;font-weight:700;color:var(--charcoal)}
+
+.btn-cancel-item{
+  font-size:11px;color:var(--danger);font-weight:600;background:none;border:none;
+  cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;
+  font-family:var(--body);transition:color .15s;
+}
+.btn-cancel-item:hover{color:#8f2727}
+
+.price-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;color:var(--muted)}
+.price-row .val{color:var(--ink);font-weight:500}
+.price-row.free .val{color:var(--success);font-weight:600}
+.price-divider{height:1px;background:var(--border-lt);margin:8px 0}
+.price-total{display:flex;justify-content:space-between;font-family:var(--head);font-size:20px;font-weight:700;color:var(--ink);padding:8px 0 0}
+.price-total .val{color:var(--charcoal)}
+
+.addr-box{background:var(--parchment);border-radius:var(--radius-md);padding:12px 14px}
+.addr-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.addr-text{font-size:12.5px;color:var(--muted);line-height:1.6}
+.addr-phone{font-size:12px;color:var(--muted-lt);margin-top:4px}
+
+.action-group{display:flex;flex-direction:column;gap:8px}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition);text-decoration:none}
+.btn-primary:hover{background:var(--terra)}
+.btn-danger{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:var(--danger-pale);color:var(--danger);border:1.5px solid rgba(181,51,51,.25);border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-warning{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:var(--warning-pale);color:var(--warning);border:1.5px solid rgba(196,127,23,.25);border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition)}
+.btn-warning:hover{background:var(--warning);color:#fff}
+.btn-outline{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:none;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:var(--body);font-size:12.5px;cursor:pointer;transition:var(--transition);text-decoration:none}
+.btn-outline:hover{border-color:var(--terra);color:var(--terra)}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(30,26,23,.55);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:20px;}
+.modal{position:relative;z-index:10000}
+.modal-overlay.open{display:flex}
+.modal{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:440px;overflow:hidden;box-shadow:var(--shadow-lg);animation:modalIn .25s ease both}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border-lt);display:flex;align-items:center;justify-content:space-between}
+.modal-head h4{font-family:var(--head);font-size:18px;font-weight:600;color:var(--ink)}
+.modal-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--parchment);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--muted);transition:var(--transition)}
+.modal-close:hover{background:var(--danger-pale);color:var(--danger)}
+.modal-body{padding:18px 20px}
+.modal-label{font-size:10.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block}
+.modal-select{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:10px 12px;font-family:var(--body);font-size:13.5px;background:var(--parchment);color:var(--ink);outline:none;margin-bottom:12px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%23b0a699' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.modal-select:focus{border-color:var(--terra);background:#fff}
+.modal-textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:10px 12px;font-family:var(--body);font-size:13px;background:var(--parchment);color:var(--ink);outline:none;resize:vertical;min-height:72px;margin-bottom:4px}
+.modal-textarea:focus{border-color:var(--terra);background:#fff}
+.modal-hint{font-size:11px;color:var(--muted-lt);margin-bottom:14px}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border-lt);display:flex;gap:10px;justify-content:flex-end}
+.modal-cancel-btn{padding:9px 18px;background:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--body);font-size:13px;color:var(--muted);cursor:pointer;transition:var(--transition)}
+.modal-cancel-btn:hover{border-color:var(--terra);color:var(--terra)}
+.modal-submit-btn{padding:9px 20px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition)}
+.modal-submit-btn:hover{background:var(--terra)}
+.modal-submit-btn.danger{background:var(--danger)}.modal-submit-btn.danger:hover{background:#8f2727}
+.modal-submit-btn.warning{background:var(--warning)}.modal-submit-btn.warning:hover{background:#a06010}
+</style>
+
+<div class="modal-overlay" id="cancelOrderModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h4>Cancel Order</h4>
+      <button class="modal-close" onclick="closeModal('cancelOrderModal')">✕</button>
+    </div>
+    <form method="POST" action="{% url 'order_cancel' order.order_number %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <label class="modal-label">Reason for cancellation</label>
+        <select name="cancel_reason" class="modal-select" required>
+          <option value="">— Select a reason —</option>
+          {% for val, label in order.CANCEL_REASON_CHOICES %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <label class="modal-label">Additional details (optional)</label>
+        <textarea name="cancel_reason_other" class="modal-textarea"
+                  placeholder="Any additional details…"></textarea>
+        <div class="modal-hint">This will cancel your entire order and restore all stock.</div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-cancel-btn" onclick="closeModal('cancelOrderModal')">Keep Order</button>
+        <button type="submit" class="modal-submit-btn danger">Yes, Cancel Order</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="returnOrderModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h4>Request Return</h4>
+      <button class="modal-close" onclick="closeModal('returnOrderModal')">✕</button>
+    </div>
+    <form method="POST" action="{% url 'order_return' order.order_number %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <label class="modal-label">Reason for return <span style="color:var(--danger)">*</span></label>
+        <select name="return_reason" class="modal-select" required>
+          <option value="">— Select a reason —</option>
+          {% for val, label in order.RETURN_REASON_CHOICES %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <label class="modal-label">Please describe the issue <span style="color:var(--danger)">*</span></label>
+        <textarea name="return_reason_other" class="modal-textarea" required
+                  placeholder="Describe what went wrong with your order…"></textarea>
+        <div class="modal-hint">Our team will review and contact you within 2-3 business days.</div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-cancel-btn" onclick="closeModal('returnOrderModal')">Cancel</button>
+        <button type="submit" class="modal-submit-btn warning">Submit Return Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% for item in order.items.all %}
+<div class="modal-overlay" id="cancelItemModal-{{ item.pk }}">
+  <div class="modal">
+    <div class="modal-head">
+      <h4>Cancel Item</h4>
+      <button class="modal-close" onclick="closeModal('cancelItemModal-{{ item.pk }}')">✕</button>
+    </div>
+    <form method="POST" action="{% url 'order_item_cancel' order.order_number item.pk %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:14px;padding:10px 12px;background:var(--parchment);border-radius:var(--radius-sm)">
+          {{ item.product_name }}{% if item.size %} — {{ item.size }}{% endif %}
+        </div>
+        <label class="modal-label">Reason</label>
+        <select name="cancel_reason" class="modal-select" required>
+          <option value="">— Select —</option>
+          {% for val, label in order.CANCEL_REASON_CHOICES %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <textarea name="cancel_reason_other" class="modal-textarea"
+                  placeholder="Additional details (optional)…"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-cancel-btn" onclick="closeModal('cancelItemModal-{{ item.pk }}')">Keep Item</button>
+        <button type="submit" class="modal-submit-btn danger">Cancel This Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+ {% endfor %}
+
+<div class="od-page">
+  <div class="page-hero">
+    <div class="container">
+      <div class="inner">
+        <h1>Order <em>#{{ order.order_number }}</em></h1>
+        <span class="status-badge status-{{ order.status }}">
+          <span class="dot"></span> {{ order.get_status_display }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <nav class="breadcrumbs">
+      <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
+      <a href="{% url 'order_list' %}">My Orders</a><span class="sep">›</span>
+      <span class="current">#{{ order.order_number }}</span>
+    </nav>
+
+    {% for message in messages %}
+    <div class="msg-bar {{ message.tags }}">
+      {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}🚫{% else %}⚠️{% endif %}
+      {{ message }}
+    </div>
+    {% endfor %}
+
+    <div class="od-grid">
+
+      <div>
+
+        <div class="od-card">
+          <div class="od-card-head">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Order Timeline
+            </h3>
+            <span style="font-size:12px;color:var(--muted)">{{ order.created_at|date:"d M Y, h:i A" }}</span>
+          </div>
+          <div class="od-card-body">
+            <div class="timeline">
+              {% for step_val, step_label in order.STATUS_CHOICES %}
+              {% if step_val not in excluded_statuses %}
+              {% if order.status in valid_statuses %}
+              <div class="tl-step">
+                <div class="tl-dot {% if order.status == step_val %}active{% elif order.status == 'delivered' or order.status == 'return_requested' or order.status == 'returned' %}done{% elif step_val == 'pending' %}done{% elif step_val == 'confirmed' and order.status in 'confirmed,processing,shipped,delivered' %}done{% elif step_val == 'processing' and order.status in 'processing,shipped,delivered' %}done{% elif step_val == 'shipped' and order.status in 'shipped,delivered' %}done{% elif step_val == 'delivered' and order.status == 'delivered' %}active{% endif %}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div class="tl-info">
+                  <div class="tl-label">{{ step_label }}</div>
+                  {% if order.status == step_val %}
+                  <div class="tl-sub">{{ order.updated_at|date:"d M Y" }}</div>
+                  {% endif %}
+                </div>
+              </div>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {% if order.status == 'cancelled' %}
+              <div class="tl-step">
+                <div class="tl-dot" style="border-color:var(--danger);background:var(--danger)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+                <div class="tl-info">
+                  <div class="tl-label" style="color:var(--danger)">Cancelled</div>
+                  <div class="tl-sub">{{ order.cancelled_at|date:"d M Y" }}{% if order.cancel_reason %} · {{ order.get_cancel_reason_display }}{% endif %}</div>
+                </div>
+              </div>
+              {% endif %}
+              {% if order.status == 'return_requested' or order.status == 'returned' %}
+              <div class="tl-step">
+                <div class="tl-dot" style="border-color:var(--warning);background:var(--warning)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="tl-info">
+                  <div class="tl-label" style="color:var(--warning)">Return Requested</div>
+                  <div class="tl-sub">{{ order.return_requested_at|date:"d M Y" }}{% if order.return_reason %} · {{ order.get_return_reason_display }}{% endif %}</div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="od-card">
+          <div class="od-card-head">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              Items ({{ order.items.count }})
+            </h3>
+          </div>
+          <div class="od-card-body">
+            {% for item in order.items.all %}
+            <div class="oi-row">
+              <div class="oi-img">
+                {% if item.image_url %}
+                  <img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
+                {% else %}
+                  <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="oi-body">
+                <div class="oi-name">
+                  {% if item.product_slug %}
+                  <a href="{% url 'product_detail' item.product_slug %}">{{ item.product_name }}</a>
+                  {% else %}{{ item.product_name }}{% endif %}
+                </div>
+                <div class="oi-meta">
+                  {% if item.size %}Size: {{ item.size }} · {% endif %}Qty: {{ item.quantity }}
+                </div>
+                {% if item.is_cancelled %}
+                <span class="oi-cancelled-tag">🚫 Cancelled{% if item.cancel_reason %} — {{ item.get_cancel_reason_display }}{% endif %}</span>
+                {% elif order.can_cancel %}
+                <button type="button" class="btn-cancel-item"
+                        onclick="openModal('cancelItemModal-{{ item.pk }}')">
+                  Cancel this item
+                </button>
+                {% endif %}
+              </div>
+              <div class="oi-price">
+                <div class="oi-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
+                <div class="oi-total" {% if item.is_cancelled %}style="text-decoration:line-through;color:var(--muted-lt)"{% endif %}>
+                  ₹{{ item.line_total|floatformat:2 }}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="od-card">
+          <div class="od-card-head">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              Delivery Address
+            </h3>
+          </div>
+          <div class="od-card-body">
+            <div class="addr-box">
+              <div class="addr-name">{{ order.full_name }}</div>
+              <div class="addr-text">{{ order.address_one_line }}</div>
+              <div class="addr-phone">📞 {{ order.phone }}</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div>
+
+        <div class="od-card">
+          <div class="od-card-head">
+            <h3>Price Summary</h3>
+          </div>
+          <div class="od-card-body">
+            <div class="price-row"><span>Subtotal</span><span class="val">₹{{ order.subtotal|floatformat:2 }}</span></div>
+            <div class="price-row {% if order.shipping_charge == 0 %}free{% endif %}">
+              <span>Shipping</span>
+              <span class="val">{% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
+            </div>
+            {% if order.discount %}
+            <div class="price-row" style="color:var(--success)"><span>Discount</span><span class="val">−₹{{ order.discount|floatformat:2 }}</span></div>
+            {% endif %}
+            {% if order.tax %}
+            <div class="price-row"><span>Tax</span><span class="val">₹{{ order.tax|floatformat:2 }}</span></div>
+            {% endif %}
+            <div class="price-divider"></div>
+            <div class="price-total"><span>Total</span><span class="val">₹{{ order.total|floatformat:2 }}</span></div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:10px;display:flex;align-items:center;gap:6px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+              {{ order.get_payment_method_display }}
+            </div>
+          </div>
+        </div>
+
+        <div class="od-card">
+          <div class="od-card-head"><h3>Actions</h3></div>
+          <div class="od-card-body">
+            <div class="action-group">
+              <a href="{% url 'order_invoice' order.order_number %}" class="btn-primary">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download Invoice
+              </a>
+
+              {% if order.can_cancel %}
+              <button type="button" class="btn-danger" onclick="openModal('cancelOrderModal')">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r ="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                Cancel Order
+              </button>
+              {% endif %}
+
+              {% if order.can_return %}
+              <button type="button" class="btn-warning" onclick="openModal('returnOrderModal')">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.27"/>
+                </svg>
+                Request Return
+              </button>
+              {% endif %}
+
+              <a href="{% url 'order_list' %}" class="btn-outline">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                Back to Orders
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(o => closeModal(o.id));
+});
+</script>
+{% endblock %}
