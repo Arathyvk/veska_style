@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;font-size:11px;color:#1e1a17;background:#fff;padding:32px 40px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #1e1a17}
+  .brand{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;letter-spacing:-0.5px;color:#1e1a17}
+  .brand-sub{font-size:10px;color:#7a6f66;margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+  .invoice-label{text-align:right}
+  .invoice-label h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#1e1a17}
+  .invoice-label p{font-size:11px;color:#7a6f66;margin-top:2px}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+  .meta-box h4{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0a699;margin-bottom:6px}
+  .meta-box p{font-size:11.5px;color:#1e1a17;line-height:1.6}
+  .meta-box .highlight{font-weight:600;font-size:12px}
+  .status-chip{display:inline-block;background:#eaf4ee;color:#3a7d5a;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.5px;text-transform:uppercase}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  thead tr{background:#1e1a17}
+  th{padding:9px 12px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;text-align:left}
+  th:last-child{text-align:right}
+  td{padding:10px 12px;font-size:11px;border-bottom:1px solid #ece6de;color:#1e1a17;vertical-align:middle}
+  td:last-child{text-align:right;font-weight:600}
+  tr:last-child td{border-bottom:none}
+  tr.cancelled-row td{color:#b0a699;text-decoration:line-through}
+  .totals{margin-left:auto;width:240px}
+  .total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:11px;color:#7a6f66}
+  .total-row .val{color:#1e1a17;font-weight:500}
+  .total-row.grand{border-top:1.5px solid #1e1a17;padding-top:10px;margin-top:6px;font-size:14px;font-weight:700;color:#1e1a17;font-family:'Cormorant Garamond',serif}
+  .total-row.grand .val{font-size:15px}
+  .total-row.free .val{color:#3a7d5a;font-weight:600}
+  .footer{margin-top:32px;padding-top:14px;border-top:1px solid #e0d9d0;display:flex;justify-content:space-between;align-items:center}
+  .footer p{font-size:10px;color:#b0a699}
+  .footer .thank-you{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;color:#b56744}
+  .divider{height:1px;background:#e0d9d0;margin:16px 0}
+  .cancelled-notice{background:#fdf0f0;border:1px solid rgba(181,51,51,.2);border-radius:6px;padding:8px 12px;margin-bottom:16px;font-size:11px;color:#b53333}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div>
+    <div class="brand">VESKA</div>
+    <div class="brand-sub">Women Footwear</div>
+  </div>
+  <div class="invoice-label">
+    <h2>INVOICE</h2>
+    <p>#{{ order.order_number }}</p>
+    <p style="margin-top:4px">{{ order.created_at|date:"d M Y" }}</p>
+  </div>
+</div>
+
+<div class="meta-grid">
+  <div class="meta-box">
+    <h4>Bill To</h4>
+    <p class="highlight">{{ order.full_name }}</p>
+    <p>{{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}</p>
+    <p>{{ order.city }}, {{ order.state }} — {{ order.pincode }}</p>
+    <p>{{ order.country }}</p>
+    <p style="margin-top:4px">📞 {{ order.phone }}</p>
+  </div>
+  <div class="meta-box" style="text-align:right">
+    <h4>Order Info</h4>
+    <p class="highlight">#{{ order.order_number }}</p>
+    <p>Date: {{ order.created_at|date:"d M Y" }}</p>
+    <p>Payment: {{ order.get_payment_method_display }}</p>
+    <p style="margin-top:4px"><span class="status-chip">{{ order.get_status_display }}</span></p>
+  </div>
+</div>
+
+{% if order.status == 'cancelled' %}
+<div class="cancelled-notice">
+  🚫 This order was cancelled on {{ order.cancelled_at|date:"d M Y" }}{% if order.cancel_reason %} — Reason: {{ order.get_cancel_reason_display }}{% endif %}
+</div>
+{% endif %}
+
+<table>
+  <thead>
+    <tr>
+      <th>sl no</th>
+      <th>Product</th>
+      <th>Size</th>
+      <th>Qty</th>
+      <th>Unit Price</th>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in order.items.all %}
+    <tr {% if item.is_cancelled %}class="cancelled-row"{% endif %}>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ item.product_name }}{% if item.is_cancelled %} <span style="font-size:9px;color:#b53333">(Cancelled)</span>{% endif %}</td>
+      <td>{{ item.size|default:"—" }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>₹{{ item.unit_price|floatformat:2 }}</td>
+      <td>₹{{ item.line_total|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="totals">
+  <div class="total-row"><span>Subtotal</span><span class="val">₹{{ order.subtotal|floatformat:2 }}</span></div>
+  <div class="total-row {% if order.shipping_charge == 0 %}free{% endif %}">
+    <span>Shipping</span>
+    <span class="val">{% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
+  </div>
+  {% if order.discount %}<div class="total-row" style="color:#3a7d5a"><span>Discount</span><span class="val">−₹{{ order.discount|floatformat:2 }}</span></div>{% endif %}
+  {% if order.tax %}<div class="total-row"><span>Tax / GST</span><span class="val">₹{{ order.tax|floatformat:2 }}</span></div>{% endif %}
+  <div class="total-row grand"><span>Grand Total</span><span class="val">₹{{ order.total|floatformat:2 }}</span></div>
+</div>
+
+<div class="footer">
+  <p>Generated on {{ order.created_at|date:"d M Y, h:i A" }} · Veska Style</p>
+  <span class="thank-you">Thank you for shopping with us ♥</span>
+</div>
+
+</body>
+</html>
