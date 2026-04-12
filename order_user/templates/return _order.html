@@ -1,0 +1,141 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Return Order · Veska{% endblock %}
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--terra:#b56744;--terra-pale:#f7ede5;
+  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;--border:#e0d9d0;
+  --warning:#c47f17;--warning-pale:#fef8ec;--danger:#b53333;--danger-pale:#fdf0f0;
+  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+  --radius-md:10px;--radius-xl:24px;--transition:all .2s cubic-bezier(.4,0,.2,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+.page{min-height:100vh;padding:40px 0 80px}
+.container{max-width:560px;margin:0 auto;padding:0 24px}
+.page-title{font-family:var(--head);font-size:30px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.page-title em{font-style:italic;color:var(--warning)}
+.breadcrumbs{display:flex;align-items:center;gap:8px;padding:0 0 24px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
+.breadcrumbs .sep{color:var(--muted-lt)}
+.card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);
+  padding:28px;box-shadow:0 2px 8px rgba(30,26,23,.08);animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.info-box{background:var(--warning-pale);border:1px solid rgba(196,127,23,.2);
+  border-radius:var(--radius-md);padding:12px 16px;margin-bottom:22px;
+  display:flex;gap:10px;align-items:flex-start}
+.info-box svg{width:17px;height:17px;color:var(--warning);flex-shrink:0;margin-top:2px}
+.info-box p{font-size:12.5px;color:var(--warning);line-height:1.5}
+.order-summary{background:var(--parchment);border-radius:var(--radius-md);
+  padding:12px 16px;margin-bottom:22px;font-size:13px}
+.order-summary .num{font-family:monospace;font-weight:700;color:var(--terra)}
+.flabel{display:block;font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:7px}
+.required-star{color:var(--danger)}
+.reason-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.reason-chip{padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;
+  color:var(--ink);background:var(--warm-white);cursor:pointer;transition:var(--transition)}
+.reason-chip:hover,.reason-chip.selected{border-color:var(--warning);background:var(--warning-pale);color:var(--warning)}
+textarea.ftextarea{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
+  padding:10px 14px;font-size:13.5px;font-family:var(--body);background:var(--parchment);
+  color:var(--ink);outline:none;resize:vertical;min-height:100px;transition:.2s}
+textarea.ftextarea:focus{border-color:var(--warning);background:#fff;
+  box-shadow:0 0 0 3px rgba(196,127,23,.08)}
+textarea.ftextarea.field-error{border-color:var(--danger);background:var(--danger-pale)}
+.ferror{font-size:12px;color:var(--danger);margin-top:5px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.btn-warn{flex:1;padding:13px;background:var(--warning);color:#fff;border:none;
+  border-radius:var(--radius-md);font-size:13.5px;font-weight:700;cursor:pointer;transition:background .2s}
+.btn-warn:hover{background:#a06810}
+.btn-back{padding:12px 20px;background:none;border:1.5px solid var(--border);border-radius:var(--radius-md);
+  font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:var(--transition);text-decoration:none;display:inline-flex;align-items:center}
+.btn-back:hover{border-color:var(--terra);color:var(--terra)}
+.policy-note{font-size:12px;color:var(--muted-lt);line-height:1.5;margin-top:16px;
+  padding-top:14px;border-top:1px solid var(--border)}
+</style>
+<div class="page">
+  <div class="container">
+    <div class="breadcrumbs">
+      <a href="{% url 'order_list' %}">My Orders</a><span class="sep">›</span>
+      <a href="{% url 'order_detail' order.order_number %}">#{{ order.order_number }}</a><span class="sep">›</span>
+      <span>Return</span>
+    </div>
+
+    <div class="page-title"><em>Return</em> Order</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px">
+      You can return this order within <strong>30 days</strong> of delivery. Our team will reach out within 2–3 business days.
+    </p>
+
+    <div class="card">
+      <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>A reason is <strong>required</strong> to process your return request. Please be as specific as possible to help us improve.</p>
+      </div>
+
+      <div class="order-summary">
+        Order <span class="num">#{{ order.order_number }}</span> ·
+        {{ order.items.count }} item{{ order.items.count|pluralize }} ·
+        ₹{{ order.total|floatformat:2 }}
+      </div>
+
+      <form method="POST" id="returnForm">
+        {% csrf_token %}
+
+        <label class="flabel">
+          Return Reason <span class="required-star">*</span>
+        </label>
+
+        <div class="reason-chips">
+          {% for r in "Defective / damaged,Wrong item received,Size doesn't fit,Quality not as expected,Changed my mind,Other" %}
+          <span class="reason-chip" onclick="pickReason('{{ r }}', this)">{{ r }}</span>
+          {% endfor %}
+        </div>
+
+        <textarea name="return_reason" id="returnReason"
+                  class="ftextarea {% if error %}field-error{% endif %}"
+                  placeholder="Describe the issue in detail — e.g. 'The stitching came apart on the first use' …"
+                  required>{{ request.POST.return_reason|default:'' }}</textarea>
+
+        {% if error %}
+        <div class="ferror">{{ error }}</div>
+        {% endif %}
+
+        <div class="btn-row">
+          <button type="submit" class="btn-warn" onclick="return validateReturn()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px">
+              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.13"/>
+            </svg>
+            Submit Return Request
+          </button>
+          <a href="{% url 'order_detail' order.order_number %}" class="btn-back">Cancel</a>
+        </div>
+
+        <div class="policy-note">
+          🔒 Your return request will be reviewed by our team. Items must be unused and in original packaging for return approval.
+          Refunds are processed within 5–7 business days after pickup.
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function pickReason(text, el) {
+  document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('returnReason').value = text;
+  document.getElementById('returnReason').classList.remove('field-error');
+}
+function validateReturn() {
+  const val = document.getElementById('returnReason').value.trim();
+  if (!val) {
+    document.getElementById('returnReason').classList.add('field-error');
+    document.getElementById('returnReason').focus();
+    return false;
+  }
+  return true;
+}
+</script>
+{% endblock %}
