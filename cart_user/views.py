@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 
 from cart_user.models import Cart, CartItem, MAX_QTY_PER_ITEM
-from product_admin.models import Product, ProductVariant
+from product_admin.models import Product, ProductVariant, ProductImage
 
 
 
