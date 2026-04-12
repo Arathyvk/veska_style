@@ -1,13 +1,8 @@
 from django import forms
-from .models import Product, ProductVariant, CATEGORY_CHOICES
+from product_admin.models import Product, ProductVariant
 
 
 class ProductForm(forms.ModelForm):
-    """
-    Fields match Product model exactly:
-      name, price, color, category, stock, description, is_active
-    Images are handled separately via cropped_images_json (not a form field).
-    """
 
     class Meta:
         model  = Product
@@ -57,21 +52,27 @@ class ProductForm(forms.ModelForm):
 
 
 class ProductVariantForm(forms.ModelForm):
-    """Used only to render the variant row structure in the template."""
     class Meta:
-        model  = ProductVariant
-        fields = ['variant_name', 'size', 'color', 'stock']
+        model = ProductVariant
+        fields = ['size', 'color', 'stock', 'price']  
+
         widgets = {
-            'variant_name': forms.TextInput(attrs={
-                'class': 'finput', 'placeholder': 'Variant name',
-            }),
-            'size': forms.TextInput(attrs={
-                'class': 'finput', 'placeholder': 'Size',
+            'size': forms.Select(attrs={
+                'class': 'finput',
             }),
             'color': forms.TextInput(attrs={
-                'class': 'finput', 'placeholder': 'Color',
+                'class': 'finput',
+                'placeholder': 'Color',
             }),
             'stock': forms.NumberInput(attrs={
-                'class': 'finput', 'placeholder': '0', 'min': '0',
+                'class': 'finput',
+                'placeholder': '0',
+                'min': '0',
+            }),
+            'price': forms.NumberInput(attrs={
+                'class': 'finput',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'min': '0',
             }),
         }

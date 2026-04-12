@@ -1,208 +1,183 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import Http404, JsonResponse
-from django.contrib import messages
+from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
-from django.db.models import Q, Avg
-from django.views.decorators.http import require_POST
- 
-from product_admin.models import Product, ProductVariant, ProductReview, CATEGORY_CHOICES
-from cart_user.models import Cart, Wishlist, MAX_QTY_PER_ITEM
- 
-ITEMS_PER_PAGE = 12
- 
- 
+from django.db.models import Q, Min, Max
 
- 
-def _get_cart(request):
-    if not request.session.session_key:
-        request.session.create()
-    cart, _ = Cart.objects.get_or_create(session_key=request.session.session_key)
-    return cart
- 
- 
-def _get_wishlist(request):
-    if not request.session.session_key:
-        request.session.create()
-    wl, _ = Wishlist.objects.get_or_create(session_key=request.session.session_key)
-    return wl
- 
- 
+from product_admin.models import Product
+from category_admin.models import Category
 
- 
+
+PRODUCTS_PER_PAGE = 12
+
+SORT_OPTIONS = {
+    'price_asc':  ('Price: Low to High', 'price'),
+    'price_desc': ('Price: High to Low', '-price'),
+    'name_asc':   ('Name: A–Z',          'name'),
+    'name_desc':  ('Name: Z–A',          '-name'),
+    'newest':     ('Newest First',       '-created_at'),
+}
+
+
+# ─────────────────────────────────────────────
+#  SHOP / PRODUCT LISTING
+# ─────────────────────────────────────────────
+
 def product_shop(request):
-    qs = Product.objects.filter(is_active=True).prefetch_related('images', 'variants')
- 
-    query         = request.GET.get('q', '').strip()
-    sort_by       = request.GET.get('sort', 'newest')
-    cat_slug_list = request.GET.getlist('category')
-    size_list     = request.GET.getlist('size')
+    # ── Base queryset: only visible products ──
+    qs = Product.objects.filter(
+        is_listed=True,
+        is_blocked=False,
+        category__is_listed=True,
+    ).select_related('category', 'brand').prefetch_related('images')
 
+    # ── 1. Search ──────────────────────────────
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        qs = qs.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(category__name__icontains=search_query) |
+            Q(brand__name__icontains=search_query)
+        )
+
+    # ── 2. Category filter ─────────────────────
+    category_slug = request.GET.get('category', '').strip()
+    selected_category = None
+    if category_slug:
+        selected_category = Category.objects.filter(slug=category_slug, is_listed=True).first()
+        if selected_category:
+            qs = qs.filter(category=selected_category)
+
+    # ── 3. Brand filter ────────────────────────
+    brand_slug = request.GET.get('brand', '').strip()
+    selected_brand = None
+    if brand_slug:
+        selected_brand = Brand.objects.filter(slug=brand_slug, is_listed=True).first()
+        if selected_brand:
+            qs = qs.filter(brand=selected_brand)
+
+    # ── 4. Price range filter ──────────────────
+    price_min_input = request.GET.get('price_min', '').strip()
+    price_max_input = request.GET.get('price_max', '').strip()
+    price_min = None
+    price_max = None
     try:
-        price_min = float(request.GET.get('price_min', ''))
-    except (ValueError, TypeError):
+        if price_min_input:
+            price_min = float(price_min_input)
+            qs = qs.filter(price__gte=price_min)
+    except ValueError:
         price_min = None
     try:
-        price_max = float(request.GET.get('price_max', ''))
-    except (ValueError, TypeError):
+        if price_max_input:
+            price_max = float(price_max_input)
+            qs = qs.filter(price__lte=price_max)
+    except ValueError:
         price_max = None
- 
-    if query:
-        qs = qs.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(category__iexact=query)
-        )
-    if cat_slug_list:
-        qs = qs.filter(category__in=cat_slug_list)
 
-    if size_list:
-        qs = qs.filter(
-            variants__size__in=size_list,
-            variants__stock__gt=0
-        ).distinct()
-    if price_min is not None:
-        qs = qs.filter(price__gte=price_min)
-    if price_max is not None:
-        qs = qs.filter(price__lte=price_max)
- 
-    SORT_MAP = {
-        'price_asc': 'price', 'price_desc': '-price',
-        'name_asc': 'name',   'name_desc': '-name',
-        'newest': '-created_at',
-    }
-    qs = qs.order_by(SORT_MAP.get(sort_by, '-created_at'))
- 
-    all_categories = [{'slug': val, 'name': label} for val, label in CATEGORY_CHOICES]
-    all_sizes      = ['US 6', 'US 7', 'US 8', 'US 9', 'US 10', 'US 11']
- 
-    paginator = Paginator(qs, ITEMS_PER_PAGE)
-    page_obj  = paginator.get_page(request.GET.get('page', 1))
-    params    = request.GET.copy()
-    params.pop('page', None)
- 
-    wl           = _get_wishlist(request)
-    wishlist_ids = set(wl.products.values_list('id', flat=True))
- 
-    return render(request, 'product_shop.html', {
-        'page_obj':       page_obj,
-        'query':          query,
-        'sort_by':        sort_by,
-        'cat_slug_list':  cat_slug_list,
-        'size_list':      size_list,
-        'price_min':      price_min,
-        'price_max':      price_max,
-        'all_sizes':      all_sizes,
-        'all_categories': all_categories,
-        'total':          paginator.count,
-        'params_str':     params.urlencode(),
-        'wishlist_ids':   wishlist_ids,
-        'cart_count':     _get_cart(request).total_items,
-        'sort_options': [
-            ('newest',     'Newest First'),
-            ('price_asc',  'Price: Low to High'),
-            ('price_desc', 'Price: High to Low'),
-            ('name_asc',   'Name: A → Z'),
-            ('name_desc',  'Name: Z → A'),
-        ],
-    })
- 
- 
+    # ── 5. Stock filter ────────────────────────
+    in_stock_only = request.GET.get('in_stock', '') == '1'
+    if in_stock_only:
+        qs = qs.filter(stock__gt=0)
 
- 
-def product_detail(request, slug):
+    # ── 6. Sort ────────────────────────────────
+    sort_key = request.GET.get('sort', 'newest')
+    if sort_key not in SORT_OPTIONS:
+        sort_key = 'newest'
+    _, order_field = SORT_OPTIONS[sort_key]
+    qs = qs.order_by(order_field)
+
+    # ── 7. Pagination ──────────────────────────
+    paginator   = Paginator(qs, PRODUCTS_PER_PAGE)
+    page_number = request.GET.get('page', 1)
     try:
-        product = Product.objects.prefetch_related(
-            'images', 'variants', 'reviews'
-        ).get(slug=slug)
-    except Product.DoesNotExist:
-        raise Http404("Product not found.")
- 
-    if not product.is_active:
-        messages.warning(
-            request,
-            f'"{product.name}" is currently unavailable. Browse our other products below.'
-        )
-        return redirect('product_shop')
- 
-    images         = list(product.images.order_by('order'))
-    variants       = list(product.variants.all().order_by('size'))
-    total_stock    = product.total_stock
-    size_stock_map = {v.size: v.stock for v in variants if v.size}
- 
-    if total_stock == 0:
-        stock_status, stock_label = 'out_of_stock', 'Out of Stock'
-    elif total_stock <= 5:
-        stock_status, stock_label = 'low', f'Only {total_stock} left!'
-    else:
-        stock_status, stock_label = 'in_stock', 'In Stock'
- 
-    reviews_qs       = product.reviews.filter(is_approved=True).order_by('-created_at')
-    review_count     = reviews_qs.count()
-    avg_rating       = 0
-    rating_breakdown = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
-    if review_count:
-        avg_rating = round(reviews_qs.aggregate(avg=Avg('rating'))['avg'] or 0, 1)
-        for r in reviews_qs:
-            rating_breakdown[r.rating] += 1
-    reviews = list(reviews_qs[:10])
- 
-    discount_percent = product.discount_percent
-    original_price   = product.original_price
-    savings          = product.savings
-    coupon_code      = product.coupon_code or None
- 
-    highlights = product.highlight_list
-    if not highlights:
-        highlights = [
-            'Premium quality materials',
-            'Handcrafted with care',
-            'Easy returns within 30 days',
-            'Free shipping on orders above ₹999',
-        ]
- 
-    related = (
-        Product.objects
-        .filter(is_active=True, category=product.category)
-        .exclude(pk=product.pk)
-        .prefetch_related('images')[:6]
-    )
- 
-    wl          = _get_wishlist(request)
-    in_wishlist = wl.products.filter(pk=product.pk).exists()
- 
-    category_display = dict(CATEGORY_CHOICES).get(product.category, product.category)
- 
-    return render(request, 'product_detail.html', {
-        'product':          product,
-        'images':           images,
-        'variants':         variants,
-        'size_stock_map':   size_stock_map,
-        'total_stock':      total_stock,
-        'stock_status':     stock_status,
-        'stock_label':      stock_label,
-        'max_qty':          min(total_stock, MAX_QTY_PER_ITEM) if total_stock else 0,
-        'related':          related,
-        'reviews':          reviews,
-        'avg_rating':       avg_rating,
-        'review_count':     review_count,
-        'rating_breakdown': rating_breakdown,
-        'discount_percent': discount_percent,
-        'original_price':   original_price,
-        'savings':          savings,
-        'coupon_code':      coupon_code,
-        'highlights':       highlights,
-        'category_display': category_display,
-        'in_wishlist':      in_wishlist,
-        'cart_count':       _get_cart(request).total_items,
+        page_number = int(page_number)
+    except (ValueError, TypeError):
+        page_number = 1
+    page_obj = paginator.get_page(page_number)
+
+    # ── Sidebar data ────────────────────────────
+    all_categories = Category.objects.filter(is_listed=True).order_by('name')
+    all_brands     = Brand.objects.filter(is_listed=True).order_by('name')
+
+    # Overall price range for the slider (unfiltered)
+    price_range = Product.objects.filter(
+        is_listed=True, is_blocked=False
+    ).aggregate(min=Min('price'), max=Max('price'))
+    global_price_min = int(price_range['min'] or 0)
+    global_price_max = int(price_range['max'] or 10000)
+
+    # Build query string without 'page' so paginator links preserve other params
+    get_params = request.GET.copy()
+    get_params.pop('page', None)
+    filter_querystring = get_params.urlencode()
+
+    # Check if any filter is active (for "clear filters" button)
+    has_filters = any([
+        search_query, category_slug, brand_slug,
+        price_min_input, price_max_input, in_stock_only,
+    ])
+
+    return render(request, 'product_shop.html', {
+        'page_obj':          page_obj,
+        'products':          page_obj.object_list,
+        'paginator':         paginator,
+
+        # search / filters
+        'search_query':      search_query,
+        'selected_category': selected_category,
+        'selected_brand':    selected_brand,
+        'price_min':         price_min_input,
+        'price_max':         price_max_input,
+        'in_stock_only':     in_stock_only,
+        'has_filters':       has_filters,
+
+        # sort
+        'sort_key':          sort_key,
+        'sort_options':      SORT_OPTIONS,
+
+        # sidebar
+        'all_categories':    all_categories,
+        'all_brands':        all_brands,
+        'global_price_min':  global_price_min,
+        'global_price_max':  global_price_max,
+
+        # pagination query string (preserves all GET params except page)
+        'filter_querystring': filter_querystring,
+
+        'total_count': paginator.count,
     })
- 
 
-def shop(request):
-    category = request.GET.get('category')
-    
-    if category:
-        products = Product.objects.filter(category=category)
-    else:
-        products = Product.objects.all()
 
-    return render(request, 'shop.html', {'products': products})
+# ─────────────────────────────────────────────
+#  PRODUCT DETAIL
+# ─────────────────────────────────────────────
+
+def product_detail(request, slug):
+    product = get_object_or_404(
+        Product,
+        slug=slug,
+        is_listed=True,
+        is_blocked=False,
+    )
+    variants       = product.variants.all()
+    related        = Product.objects.filter(
+                         category=product.category,
+                         is_listed=True,
+                         is_blocked=False,
+                     ).exclude(pk=product.pk)[:4]
+
+    # Check if in cart (for logged-in users)
+    in_cart = False
+    if request.user.is_authenticated:
+        try:
+            from cart_user.models import Cart
+            cart = Cart.objects.get(user=request.user)
+            in_cart = cart.items.filter(product=product).exists()
+        except Exception:
+            pass
+
+    return render(request, 'product_detail.html', {
+        'product':  product,
+        'variants': variants,
+        'related':  related,
+        'in_cart':  in_cart,
+    })
