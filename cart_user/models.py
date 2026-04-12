@@ -3,7 +3,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 
 
-MAX_QTY_PER_ITEM = 10  
+MAX_QTY_PER_ITEM = 10
 
 
 class Cart(models.Model):
@@ -17,36 +17,26 @@ class Cart(models.Model):
     def __str__(self):
         return f'Cart of {self.user}'
 
-
     @property
     def total_items(self):
-        return sum(item.quantity for item in self.items.select_related('product', 'variant'))
+        return sum(i.quantity for i in self.items.all())
 
     @property
     def subtotal(self):
-        return sum(item.line_total for item in self.items.select_related('product', 'variant'))
+        return sum(i.line_total for i in self.items.all())
 
     @property
     def is_empty(self):
         return not self.items.exists()
 
     def get_active_items(self):
-        return self.items.select_related(
-            'product', 'variant'
-        ).filter(
-            product__is_listed=True,
-            product__is_blocked=False,
+        return self.items.select_related('product', 'variant').filter(
+            product__is_active=True
         )
-
-    def has_blocked_items(self):
-        return self.items.exclude(
-            product__is_listed=True,
-            product__is_blocked=False,
-        ).exists()
 
 
 class CartItem(models.Model):
-    cart     = models.ForeignKey(Cart,    on_delete=models.CASCADE, related_name='items')
+    cart     = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product  = models.ForeignKey('product_admin.Product',        on_delete=models.CASCADE)
     variant  = models.ForeignKey('product_admin.ProductVariant', on_delete=models.SET_NULL,
                                  null=True, blank=True)
@@ -59,12 +49,11 @@ class CartItem(models.Model):
     def __str__(self):
         return f'{self.quantity}× {self.product.name}'
 
-
     @property
     def available_stock(self):
         if self.variant:
             return self.variant.stock
-        return self.product.stock
+        return self.product.total_stock
 
     @property
     def is_in_stock(self):
@@ -72,15 +61,7 @@ class CartItem(models.Model):
 
     @property
     def is_available(self):
-        return (
-            self.product.is_listed
-            and not self.product.is_blocked
-            and self.is_in_stock
-        )
-
-    @property
-    def effective_qty(self):
-        return min(self.quantity, self.available_stock)
+        return self.product.is_active and self.is_in_stock
 
     @property
     def unit_price(self):
@@ -90,7 +71,7 @@ class CartItem(models.Model):
 
     @property
     def line_total(self):
-        return self.unit_price * self.effective_qty
+        return self.unit_price * min(self.quantity, self.available_stock)
 
     @property
     def max_allowed(self):

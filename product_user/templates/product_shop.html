@@ -399,7 +399,6 @@ button,input,select,textarea{font-family:var(--body)}
     </span>
     {% endif %}
 
-    {# ── One pill per selected size — clicking ✕ removes only THAT size ── #}
     {% for sel_size in selected_sizes %}
     <span class="filter-pill">
       👟 {{ sel_size }}
@@ -632,7 +631,7 @@ button,input,select,textarea{font-family:var(--body)}
               </div>
 
               {% if product.total_stock > 0 %}
-                <form method="POST" action="#">
+                <form method="POST" action="{% url 'add_to_cart' product.id %}">
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ request.get_full_path }}">
                   <button type="submit" class="btn-card-cart">
