@@ -15,7 +15,7 @@ urlpatterns = [
     path('product_user/',include('product_user.urls')),
     path('cart_user/',include('cart_user.urls')),
     path('wishlist_user/',include('wishlist_user.urls')),
-    path('checkout/',include('checkout_page.urls')),
+    # path('checkout/',include('checkout_page.urls')),
     path('order_user/',include('order_user.urls')),
     path('order_admin/',include('order_admin.urls')),
 
