@@ -21,13 +21,11 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
 a{text-decoration:none;color:inherit}
-button{font-family:var(--body)}
+button,input{font-family:var(--body)}
 
-/* ── PAGE LAYOUT ── */
 .cart-page{min-height:100vh;background:var(--cream);padding-bottom:80px}
 .container{max-width:1100px;margin:0 auto;padding:0 24px}
 
-/* ── HERO ── */
 .cart-hero{background:var(--charcoal);padding:36px 0 30px;position:relative;overflow:hidden}
 .cart-hero::after{content:'CART';position:absolute;right:40px;top:50%;transform:translateY(-50%);
   font-family:var(--head);font-size:120px;font-weight:700;color:rgba(255,255,255,.03);pointer-events:none}
@@ -35,109 +33,95 @@ button{font-family:var(--body)}
 .cart-hero h1 em{font-style:italic;color:var(--blush)}
 .cart-hero p{font-size:12px;color:rgba(255,255,255,.4)}
 
-/* ── BREADCRUMBS ── */
 .breadcrumbs{display:flex;align-items:center;gap:8px;padding:16px 0 22px;font-size:12px;color:var(--muted)}
 .breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
 .breadcrumbs .sep{color:var(--muted-lt)}.breadcrumbs .current{color:var(--ink);font-weight:500}
 
-/* ── MESSAGES ── */
 .msg{padding:12px 16px;border-radius:var(--radius-md);margin-bottom:14px;font-size:13px;
   font-weight:500;display:flex;align-items:center;gap:9px}
 .msg.error  {background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.18)}
 .msg.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.18)}
 .msg.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.18)}
 
-/* ── MAIN GRID ── */
 .cart-grid{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start}
 @media(max-width:860px){.cart-grid{grid-template-columns:1fr}}
 
-/* ── EMPTY STATE ── */
-.empty-state{text-align:center;padding:64px 24px}
-.empty-icon{width:80px;height:80px;border-radius:50%;background:var(--parchment);
-  border:2px solid var(--border);display:flex;align-items:center;justify-content:center;
-  margin:0 auto 20px}
-.empty-icon svg{width:36px;height:36px;color:var(--muted-lt)}
-.empty-state h2{font-family:var(--head);font-size:28px;font-weight:600;color:var(--ink);margin-bottom:8px}
+.empty-state{text-align:center;padding:72px 24px}
+.empty-icon{width:88px;height:88px;border-radius:50%;background:var(--parchment);
+  border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 22px}
+.empty-icon svg{width:38px;height:38px;color:var(--muted-lt)}
+.empty-state h2{font-family:var(--head);font-size:30px;font-weight:600;color:var(--ink);margin-bottom:8px}
 .empty-state h2 em{font-style:italic;color:var(--terra)}
 .empty-state p{font-size:13px;color:var(--muted);margin-bottom:24px}
 .btn-shop{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;
-  background:var(--charcoal);color:#fff;border-radius:var(--radius-md);
-  font-size:13px;font-weight:600;transition:var(--transition)}
+  background:var(--charcoal);color:#fff;border-radius:var(--radius-md);font-size:13px;font-weight:600;transition:var(--transition)}
 .btn-shop:hover{background:var(--terra)}
 
-/* ── SECTION CARD ── */
 .cart-card{background:var(--warm-white);border:1px solid var(--border);
-  border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px;
-  animation:fadeUp .35s ease both}
+  border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px;animation:fadeUp .35s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .cart-card-head{padding:14px 20px;border-bottom:1px solid var(--border-lt);
   display:flex;align-items:center;justify-content:space-between}
 .cart-card-head h3{font-family:var(--head);font-size:17px;font-weight:600;
   color:var(--ink);display:flex;align-items:center;gap:8px}
 .cart-card-head h3 svg{width:15px;height:15px;color:var(--terra)}
-.cart-card-body{padding:0}
 
-/* ── UNAVAILABLE BANNER ── */
 .unavail-banner{background:var(--danger-pale);border-bottom:1px solid rgba(181,51,51,.15);
-  padding:10px 20px;display:flex;align-items:center;gap:9px;
-  font-size:12.5px;color:var(--danger)}
+  padding:11px 20px;display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--danger)}
 
-/* ── CART ITEM ROW ── */
 .item-row{display:flex;gap:14px;align-items:flex-start;padding:16px 20px;
   border-bottom:1px solid var(--border-lt);transition:background .15s;position:relative}
 .item-row:last-child{border-bottom:none}
-.item-row.unavailable{background:var(--danger-pale);opacity:.85}
-.item-row.out-of-stock{background:#fffbf5}
+.item-row.unavailable{background:var(--danger-pale);opacity:.88}
+.item-row.low-stock{background:#fffbf5}
 
-/* product image */
-.item-img{width:76px;height:90px;border-radius:var(--radius-md);overflow:hidden;
+.item-img{width:78px;height:94px;border-radius:var(--radius-md);overflow:hidden;
   background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
 .item-img img{width:100%;height:100%;object-fit:cover}
-.item-img-empty{width:100%;height:100%;display:flex;align-items:center;
-  justify-content:center;color:var(--muted-lt)}
+.item-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
 
-/* item info */
 .item-body{flex:1;min-width:0}
 .item-name{font-family:var(--head);font-size:15px;font-weight:600;color:var(--ink);
   line-height:1.3;margin-bottom:4px}
 .item-name a{color:inherit}.item-name a:hover{color:var(--terra)}
 .item-meta{font-size:11.5px;color:var(--muted-lt);margin-bottom:8px;line-height:1.6}
 
-/* status badges */
 .status-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;
-  border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.3px}
+  border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.3px;margin-bottom:8px}
 .badge-blocked{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
 .badge-oos{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.2)}
 .badge-low{background:#fff8ec;color:#c47f17;border:1px solid rgba(196,127,23,.2)}
 
-/* qty controls */
 .qty-wrap{display:flex;align-items:center;gap:0;margin-top:10px}
-.qty-btn{width:30px;height:30px;border:1.5px solid var(--border);background:var(--parchment);
+.qty-btn{width:32px;height:32px;border:1.5px solid var(--border);background:var(--parchment);
   color:var(--ink);font-size:14px;font-weight:600;cursor:pointer;transition:var(--transition);
-  display:flex;align-items:center;justify-content:center;line-height:1}
+  display:flex;align-items:center;justify-content:center;padding:0}
 .qty-btn:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
 .qty-btn:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
 .qty-btn:hover:not(:disabled){background:var(--terra);border-color:var(--terra);color:#fff}
 .qty-btn:disabled{opacity:.35;cursor:not-allowed}
-.qty-display{width:38px;height:30px;border-top:1.5px solid var(--border);
+.qty-num{width:40px;height:32px;border-top:1.5px solid var(--border);
   border-bottom:1.5px solid var(--border);background:#fff;display:flex;align-items:center;
-  justify-content:center;font-size:13px;font-weight:600;color:var(--ink)}
-.qty-max-note{font-size:10.5px;color:var(--muted-lt);margin-left:8px}
+  justify-content:center;font-size:13px;font-weight:700;color:var(--ink);user-select:none}
+.qty-note{font-size:10.5px;color:var(--muted-lt);margin-left:9px}
 
-/* item price area */
-.item-price-col{text-align:right;flex-shrink:0;min-width:80px}
-.item-unit-price{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
-.item-line-total{font-family:var(--head);font-size:17px;font-weight:700;color:var(--charcoal)}
+.item-price-col{text-align:right;flex-shrink:0;min-width:86px}
+.item-unit{font-size:11px;color:var(--muted-lt);margin-bottom:3px}
+.item-total{font-family:var(--head);font-size:18px;font-weight:700;color:var(--charcoal)}
 
-/* remove button */
-.btn-remove{position:absolute;top:12px;right:16px;width:26px;height:26px;border-radius:50%;
+.btn-remove{position:absolute;top:12px;right:14px;width:28px;height:28px;border-radius:50%;
   background:none;border:1.5px solid var(--border);color:var(--muted-lt);
   display:flex;align-items:center;justify-content:center;cursor:pointer;
   transition:var(--transition);padding:0}
 .btn-remove:hover{background:var(--danger-pale);border-color:var(--danger);color:var(--danger)}
 .btn-remove svg{width:11px;height:11px}
 
-/* ── SUMMARY CARD ── */
+.cart-footer{display:flex;justify-content:flex-end;padding:11px 20px;
+  border-top:1px solid var(--border-lt)}
+.btn-clear{background:none;border:none;font-size:12px;color:var(--muted-lt);
+  cursor:pointer;display:flex;align-items:center;gap:5px;transition:color .15s}
+.btn-clear:hover{color:var(--danger)}
+
 .summary-card{background:var(--warm-white);border:1px solid var(--border);
   border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px;
   animation:fadeUp .35s .1s ease both}
@@ -148,15 +132,17 @@ button{font-family:var(--body)}
 .sum-row .val{color:var(--ink);font-weight:500}
 .sum-divider{height:1px;background:var(--border-lt);margin:8px 0}
 .sum-total{display:flex;justify-content:space-between;padding:8px 0 0;
-  font-family:var(--head);font-size:21px;font-weight:700;color:var(--ink)}
+  font-family:var(--head);font-size:22px;font-weight:700;color:var(--ink)}
 
-/* checkout btn */
 .btn-checkout{width:100%;padding:15px;margin-top:16px;background:var(--charcoal);color:#fff;
   border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:14px;
   font-weight:700;letter-spacing:.4px;cursor:pointer;transition:var(--transition);
   display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none}
 .btn-checkout:hover:not(.disabled){background:var(--terra)}
 .btn-checkout.disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed;pointer-events:none}
+.checkout-blocked{background:var(--danger-pale);border:1px solid rgba(181,51,51,.2);
+  border-radius:var(--radius-md);padding:10px 14px;margin-top:12px;
+  font-size:12px;color:var(--danger);line-height:1.5;text-align:center}
 .btn-continue{display:flex;align-items:center;justify-content:center;gap:6px;
   width:100%;padding:10px;margin-top:8px;background:none;
   border:1.5px solid var(--border);border-radius:var(--radius-md);
@@ -164,19 +150,6 @@ button{font-family:var(--body)}
   cursor:pointer;transition:var(--transition);text-decoration:none}
 .btn-continue:hover{border-color:var(--terra);color:var(--terra)}
 
-/* checkout blocked notice */
-.checkout-blocked{background:var(--danger-pale);border:1px solid rgba(181,51,51,.2);
-  border-radius:var(--radius-md);padding:10px 14px;margin-top:12px;
-  font-size:12px;color:var(--danger);line-height:1.5;text-align:center}
-
-/* cart footer actions */
-.cart-footer{display:flex;justify-content:flex-end;padding:12px 20px;
-  border-top:1px solid var(--border-lt)}
-.btn-clear-cart{background:none;border:none;font-size:12px;color:var(--muted-lt);
-  cursor:pointer;display:flex;align-items:center;gap:5px;transition:color .15s}
-.btn-clear-cart:hover{color:var(--danger)}
-
-/* trust strip */
 .trust-strip{margin-top:16px;padding-top:14px;border-top:1px solid var(--border-lt);
   display:flex;flex-direction:column;gap:5px}
 .trust-item{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
@@ -184,42 +157,27 @@ button{font-family:var(--body)}
 
 <div class="cart-page">
 
-  <!-- HERO -->
   <div class="cart-hero">
     <div class="container">
       <h1>Your <em>Cart</em></h1>
-      <p>
-        {% if cart.total_items == 0 %}
-          No items yet — start shopping
-        {% else %}
-          {{ cart.total_items }} item{{ cart.total_items|pluralize }} in your cart
-        {% endif %}
-      </p>
+      <p>{% if cart.total_items == 0 %}Nothing here yet{% else %}{{ cart.total_items }} item{{ cart.total_items|pluralize }}{% endif %}</p>
     </div>
   </div>
 
   <div class="container">
-
-    <!-- Breadcrumbs -->
     <nav class="breadcrumbs">
-      <a href="{% url 'home' %}">Home</a>
-      <span class="sep">›</span>
-      <a href="{% url 'product_shop' %}">Shop</a>
-      <span class="sep">›</span>
+      <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
+      <a href="{% url 'product_shop' %}">Shop</a><span class="sep">›</span>
       <span class="current">Cart</span>
     </nav>
 
-    <!-- Django messages -->
     {% for message in messages %}
     <div class="msg {{ message.tags }}">
-      {% if message.tags == 'success' %}✅
-      {% elif message.tags == 'error' %}🚫
-      {% else %}⚠️{% endif %}
+      {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}🚫{% else %}⚠️{% endif %}
       {{ message }}
     </div>
     {% endfor %}
 
-    <!-- ────────── EMPTY STATE ────────── -->
     {% if cart.is_empty %}
     <div class="empty-state">
       <div class="empty-icon">
@@ -239,69 +197,48 @@ button{font-family:var(--body)}
     </div>
 
     {% else %}
-
-    <!-- ────────── CART GRID ────────── -->
     <div class="cart-grid">
 
-      <!-- LEFT: ITEMS -->
       <div>
 
-        <!-- Unavailable items warning banner -->
         {% if unavailable_items %}
         <div class="cart-card" style="border-color:rgba(181,51,51,.3)">
           <div class="unavail-banner">
             🚫 <strong>{{ unavailable_items|length }} item{{ unavailable_items|length|pluralize }}</strong>
-            in your cart {% if unavailable_items|length == 1 %}is{% else %}are{% endif %}
-            unavailable and will be excluded from checkout. Please remove {% if unavailable_items|length == 1 %}it{% else %}them{% endif %} or continue without.
+            in your cart {% if unavailable_items|length == 1 %}is{% else %}are{% endif %} unavailable.
+            Please remove to proceed to checkout.
           </div>
-          <div class="cart-card-body">
+          <div>
             {% for item in unavailable_items %}
             <div class="item-row unavailable">
-
-              <!-- Image -->
               <div class="item-img">
-                {% with img=item.product.primary_image %}
+                {% with img=item.product.images.first %}
                   {% if img %}<img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
-                  {% else %}
-                  <div class="item-img-empty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="22" height="22">
-                      <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                  </div>
+                  {% else %}<div class="item-img-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg></div>
                   {% endif %}
                 {% endwith %}
               </div>
-
-              <!-- Info -->
               <div class="item-body">
                 <div class="item-name">{{ item.product.name }}</div>
-                <div class="item-meta">
-                  {% if item.variant and item.variant.size %}Size: {{ item.variant.size }}{% endif %}
-                </div>
+                <div class="item-meta">{% if item.variant and item.variant.size %}Size: {{ item.variant.size }}{% endif %}</div>
                 {% if item.product.is_blocked or not item.product.is_listed %}
                   <span class="status-badge badge-blocked">🚫 Unavailable</span>
-                {% elif not item.is_in_stock %}
+                {% else %}
                   <span class="status-badge badge-oos">Out of stock</span>
                 {% endif %}
               </div>
-
-              <!-- Remove -->
               <form method="POST" action="{% url 'remove_from_cart' item.id %}">
                 {% csrf_token %}
                 <button type="submit" class="btn-remove" title="Remove">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </form>
-
             </div>
             {% endfor %}
           </div>
         </div>
         {% endif %}
 
-        <!-- Available items -->
         {% if available_items %}
         <div class="cart-card">
           <div class="cart-card-head">
@@ -315,100 +252,83 @@ button{font-family:var(--body)}
             <span style="font-size:12px;color:var(--muted)">{{ available_items|length }} item{{ available_items|length|pluralize }}</span>
           </div>
 
-          <div class="cart-card-body">
-            {% for item in available_items %}
-            <div class="item-row {% if item.available_stock <= 3 %}out-of-stock{% endif %}">
+          {% for item in available_items %}
+          <div class="item-row {% if item.available_stock <= 3 %}low-stock{% endif %}">
 
-              <!-- Image -->
-              <div class="item-img">
-                {% with img=item.product.primary_image %}
-                  {% if img %}<img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
-                  {% else %}
-                  <div class="item-img-empty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="22" height="22">
-                      <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                  </div>
-                  {% endif %}
-                {% endwith %}
+            <div class="item-img">
+              {% with img=item.product.images.first %}
+                {% if img %}<img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                {% else %}<div class="item-img-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="item-body">
+              <div class="item-name">
+                <a href="{% url 'product_detail' item.product.slug %}">{{ item.product.name }}</a>
               </div>
+              <div class="item-meta">
+                {% if item.variant and item.variant.size %}Size: {{ item.variant.size }} &nbsp;·&nbsp;{% endif %}
+                ₹{{ item.unit_price|floatformat:2 }} each
+              </div>
+              {% if item.available_stock <= 3 %}
+                <span class="status-badge badge-low">Only {{ item.available_stock }} left</span>
+              {% endif %}
 
-              <!-- Info -->
-              <div class="item-body">
-                <div class="item-name">
-                  <a href="{% url 'product_detail' item.product.slug %}">{{ item.product.name }}</a>
-                </div>
-                <div class="item-meta">
-                  {% if item.variant and item.variant.size %}Size: {{ item.variant.size }} &nbsp;·&nbsp; {% endif %}
-                  ₹{{ item.unit_price|floatformat:2 }} each
-                </div>
+              <div class="qty-wrap">
 
-                <!-- Low stock badge -->
-                {% if item.available_stock <= 3 and item.available_stock > 0 %}
-                  <span class="status-badge badge-low">Only {{ item.available_stock }} left</span>
+                <form method="POST" action="{% url 'update_cart_item' item.id %}" style="display:contents">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="decrement">
+                  <button type="submit" class="qty-btn" title="{% if item.quantity == 1 %}Remove{% else %}Decrease{% endif %}">
+                    {% if item.quantity == 1 %}
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                        <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                      </svg>
+                    {% else %}−{% endif %}
+                  </button>
+                </form>
+
+                <span class="qty-num">{{ item.quantity }}</span>
+
+                <form method="POST" action="{% url 'update_cart_item' item.id %}" style="display:contents">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="increment">
+                  <button type="submit" class="qty-btn"
+                          {% if item.quantity >= item.max_allowed %}disabled title="Max {{ item.max_allowed }}"{% endif %}>+</button>
+                </form>
+
+                {% if item.quantity >= item.max_allowed %}
+                  <span class="qty-note">Max {{ item.max_allowed }}</span>
                 {% endif %}
 
-                <!-- Quantity controls -->
-                <div class="qty-wrap">
-
-                  <!-- Decrement -->
-                  <form method="POST" action="{% url 'update_cart_item' item.id %}" style="display:contents">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="decrement">
-                    <button type="submit" class="qty-btn"
-                            {% if item.quantity <= 1 %}title="Remove item"{% endif %}>
-                      {% if item.quantity <= 1 %}
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                      </svg>
-                      {% else %}−{% endif %}
-                    </button>
-                  </form>
-
-                  <span class="qty-display">{{ item.quantity }}</span>
-
-                  <!-- Increment -->
-                  <form method="POST" action="{% url 'update_cart_item' item.id %}" style="display:contents">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="increment">
-                    <button type="submit" class="qty-btn"
-                            {% if item.quantity >= item.max_allowed %}disabled{% endif %}>+</button>
-                  </form>
-
-                  {% if item.quantity >= item.max_allowed %}
-                    <span class="qty-max-note">Max {{ item.max_allowed }}</span>
-                  {% endif %}
-
-                </div>
               </div>
-
-              <!-- Price -->
-              <div class="item-price-col">
-                <div class="item-unit-price">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
-                <div class="item-line-total">₹{{ item.line_total|floatformat:2 }}</div>
-              </div>
-
-              <!-- Remove × -->
-              <form method="POST" action="{% url 'remove_from_cart' item.id %}">
-                {% csrf_token %}
-                <button type="submit" class="btn-remove" title="Remove">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </form>
-
             </div>
-            {% endfor %}
-          </div>
 
-          <!-- Clear cart footer -->
+            <div class="item-price-col">
+              <div class="item-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
+              <div class="item-total">₹{{ item.line_total|floatformat:2 }}</div>
+            </div>
+
+            <form method="POST" action="{% url 'remove_from_cart' item.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-remove" title="Remove">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </form>
+
+          </div>
+          {% endfor %}
+
           <div class="cart-footer">
             <form method="POST" action="{% url 'clear_cart' %}">
               {% csrf_token %}
-              <button type="submit" class="btn-clear-cart"
+              <button type="submit" class="btn-clear"
                       onclick="return confirm('Remove all items from your cart?')">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11">
                   <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
                   <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
                 </svg>
@@ -416,13 +336,11 @@ button{font-family:var(--body)}
               </button>
             </form>
           </div>
-
         </div>
         {% endif %}
 
-      </div><!-- /left -->
+      </div>
 
-      <!-- RIGHT: SUMMARY -->
       <div>
         <div class="summary-card">
           <div class="summary-head"><h3>Order Summary</h3></div>
@@ -434,9 +352,8 @@ button{font-family:var(--body)}
             </div>
             <div class="sum-row">
               <span>Shipping</span>
-              <span class="val" style="color:var(--muted-lt);font-size:11px">Calculated at checkout</span>
+              <span class="val" style="color:var(--muted-lt);font-size:11px">At checkout</span>
             </div>
-
             <div class="sum-divider"></div>
             <div class="sum-total">
               <span>Subtotal</span>
@@ -444,15 +361,14 @@ button{font-family:var(--body)}
             </div>
 
             {% if unavailable_items %}
-              <!-- Checkout blocked because of unavailable items -->
-              <a href="{% url 'checkout' %}" class="btn-checkout disabled" aria-disabled="true">
+              <a class="btn-checkout disabled" aria-disabled="true">
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
                 Proceed to Checkout
               </a>
               <div class="checkout-blocked">
-                Remove unavailable items above before checking out.
+                Remove unavailable items before checking out.
               </div>
             {% elif available_items %}
               <a href="{% url 'checkout' %}" class="btn-checkout">
@@ -462,9 +378,7 @@ button{font-family:var(--body)}
                 Proceed to Checkout
               </a>
             {% else %}
-              <a href="{% url 'checkout' %}" class="btn-checkout disabled" aria-disabled="true">
-                Proceed to Checkout
-              </a>
+              <a class="btn-checkout disabled" aria-disabled="true">Proceed to Checkout</a>
             {% endif %}
 
             <a href="{% url 'product_shop' %}" class="btn-continue">

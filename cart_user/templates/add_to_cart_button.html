@@ -1,12 +1,5 @@
-{# ─────────────────────────────────────────────────────────────────────
-   Reusable "Add to Cart" button snippet.
-   Include on product_detail.html like:
-       {% include "cart/add_to_cart_button.html" with product=product %}
-   ───────────────────────────────────────────────────────────────────── #}
-
 {% if product.is_blocked or not product.is_listed %}
 
-  {# Blocked / unlisted — show disabled button #}
   <button type="button" disabled
           style="width:100%;padding:14px;background:#e8dfd3;color:#b0a699;
                  border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
@@ -16,7 +9,6 @@
 
 {% elif product.stock <= 0 and not product.variants.exists %}
 
-  {# Simple product with no stock #}
   <button type="button" disabled
           style="width:100%;padding:14px;background:#fef8ec;color:#c47f17;
                  border:1.5px solid rgba(196,127,23,.3);border-radius:10px;
@@ -30,7 +22,6 @@
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ request.path }}">
 
-    {# Variant selector (if product has variants) #}
     {% if product.variants.exists %}
     <div style="margin-bottom:12px">
       <label style="display:block;font-size:10px;font-weight:700;letter-spacing:1.2px;
