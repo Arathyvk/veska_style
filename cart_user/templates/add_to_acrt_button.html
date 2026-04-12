@@ -1,0 +1,113 @@
+{# ─────────────────────────────────────────────────────────────────────
+   Reusable "Add to Cart" button snippet.
+   Include on product_detail.html like:
+       {% include "cart/add_to_cart_button.html" with product=product %}
+   ───────────────────────────────────────────────────────────────────── #}
+
+{% if product.is_blocked or not product.is_listed %}
+
+  {# Blocked / unlisted — show disabled button #}
+  <button type="button" disabled
+          style="width:100%;padding:14px;background:#e8dfd3;color:#b0a699;
+                 border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
+                 font-size:14px;font-weight:600;cursor:not-allowed">
+    Unavailable
+  </button>
+
+{% elif product.stock <= 0 and not product.variants.exists %}
+
+  {# Simple product with no stock #}
+  <button type="button" disabled
+          style="width:100%;padding:14px;background:#fef8ec;color:#c47f17;
+                 border:1.5px solid rgba(196,127,23,.3);border-radius:10px;
+                 font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:not-allowed">
+    Out of Stock
+  </button>
+
+{% else %}
+
+  <form method="POST" action="{% url 'add_to_cart' product.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+
+    {# Variant selector (if product has variants) #}
+    {% if product.variants.exists %}
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:10px;font-weight:700;letter-spacing:1.2px;
+                    text-transform:uppercase;color:#7a6f66;margin-bottom:6px">Select Size</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="variantBtns">
+        {% for v in product.variants.all %}
+        <label style="cursor:pointer">
+          <input type="radio" name="variant_id" value="{{ v.id }}"
+                 {% if forloop.first %}checked{% endif %}
+                 {% if v.stock <= 0 %}disabled{% endif %}
+                 style="display:none" class="variant-radio"
+                 onchange="updateAddBtn(this, {{ v.stock }})">
+          <span class="variant-pill {% if v.stock <= 0 %}oos{% endif %}"
+                style="display:inline-flex;align-items:center;justify-content:center;
+                       width:40px;height:40px;border-radius:8px;font-size:13px;font-weight:600;
+                       border:2px solid {% if v.stock <= 0 %}#e0d9d0{% else %}#e0d9d0{% endif %};
+                       background:{% if v.stock <= 0 %}#f2ede6{% else %}#fff{% endif %};
+                       color:{% if v.stock <= 0 %}#b0a699{% else %}#1e1a17{% endif %};
+                       text-decoration:{% if v.stock <= 0 %}line-through{% else %}none{% endif %};
+                       transition:all .15s"
+                title="{% if v.stock <= 0 %}Out of stock{% else %}{{ v.stock }} in stock{% endif %}">
+            {{ v.size }}
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <button type="submit" id="addToCartBtn"
+            style="width:100%;padding:14px;background:#2e2925;color:#fff;border:none;
+                   border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;
+                   font-weight:700;letter-spacing:.3px;cursor:pointer;transition:background .2s;
+                   display:flex;align-items:center;justify-content:center;gap:9px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+      </svg>
+      Add to Cart
+    </button>
+
+  </form>
+
+  <script>
+  (function(){
+    const radios = document.querySelectorAll('.variant-radio');
+    const btn    = document.getElementById('addToCartBtn');
+    const pills  = document.querySelectorAll('.variant-pill');
+
+    function syncPills(){
+      radios.forEach((r, i) => {
+        pills[i].style.borderColor = r.checked ? '#b56744' : (r.disabled ? '#e0d9d0' : '#e0d9d0');
+        pills[i].style.background  = r.checked ? '#f7ede5' : (r.disabled ? '#f2ede6' : '#fff');
+        pills[i].style.color       = r.disabled ? '#b0a699' : (r.checked ? '#8f4f31' : '#1e1a17');
+      });
+    }
+
+    function updateAddBtn(radio, stock){
+      if(stock <= 0){
+        btn.disabled = true;
+        btn.style.background = '#e8dfd3';
+        btn.style.color      = '#b0a699';
+        btn.style.cursor     = 'not-allowed';
+        btn.querySelector('svg + *') && (btn.innerHTML = btn.innerHTML); 
+        btn.childNodes.forEach(n=>{ if(n.nodeType===3) n.textContent=' Out of Stock'; });
+      } else {
+        btn.disabled = false;
+        btn.style.background = '#2e2925';
+        btn.style.color      = '#fff';
+        btn.style.cursor     = 'pointer';
+      }
+      syncPills();
+    }
+
+    radios.forEach(r => r.addEventListener('change', () => updateAddBtn(r, parseInt(r.value ? r.getAttribute('data-stock') || 99 : 0))));
+    syncPills();
+  })();
+  </script>
+
+{% endif %}

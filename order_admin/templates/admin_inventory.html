@@ -1,0 +1,350 @@
+{% extends "admin_base.html" %}
+{% block page_title %}Inventory & Stock{% endblock %}
+{% block content %}
+<style>
+:root{
+  --bg:#1a1410;--card:#231f1a;--card2:#2c2620;
+  --border:#3a342c;--border2:#4a4038;
+  --rose:#c9967a;--rose2:#e8b49a;
+  --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
+  --green:#4caf7d;--green-pale:rgba(76,175,125,.12);
+  --red:#e05252;--red-pale:rgba(224,82,82,.12);
+  --orange:#e09a52;--orange-pale:rgba(224,154,82,.12);
+  --radius:6px;--head:'Playfair Display',serif;--body:'Jost',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
+a{text-decoration:none;color:inherit}
+
+.page-hd{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.page-hd h2{font-family:var(--head);font-size:30px;font-weight:700}
+.page-hd p{font-size:12px;color:var(--muted);margin-top:3px}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px}
+.stat-icon{width:42px;height:49px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon.ok{background:var(--green-pale)}.stat-icon.ok svg{color:var(--green)}
+.stat-icon.low{background:var(--orange-pale)}.stat-icon.low svg{color:var(--orange)}
+.stat-icon.out{background:var(--red-pale)}.stat-icon.out svg{color:var(--red)}
+.stat-num{font-family:var(--head);font-size:31px;font-weight:700;line-height:1}
+.stat-lbl{font-size:15px;color:var(--muted);margin-top:3px}
+
+.toolbar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search-wrap{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:7px 12px;flex:1;min-width:180px;transition:border .18s}
+.search-wrap:focus-within{border-color:var(--rose)}
+.search-wrap svg{width:13px;height:13px;color:var(--muted);flex-shrink:0}
+.search-wrap input{background:none;border:none;color:var(--text);font-family:var(--body);font-size:15px;outline:none;flex:1;min-width:80px}
+.search-wrap input::placeholder{color:var(--muted)}
+.tf-select{background:var(--card2);border:1px solid var(--border2);color:var(--muted2);font-family:var(--body);font-size:14px;padding:7px 28px 7px 10px;border-radius:var(--radius);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%238a7d72' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border .18s}
+.tf-select:focus{border-color:var(--rose)}
+.tf-select option{background:var(--card2)}
+.btn-s{background:var(--rose);color:#fff;border:none;border-radius:var(--radius);font-family:var(--body);font-size:14px;font-weight:600;padding:7px 16px;cursor:pointer;transition:opacity .15s}
+.btn-s:hover{opacity:.85}
+.btn-clr{background:var(--card2);border:1px solid var(--border2);color:var(--muted2);font-family:var(--body);font-size:12px;padding:7px 12px;border-radius:var(--radius);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn-clr:hover{border-color:var(--rose);color:var(--rose2)}
+
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead tr{background:var(--card2);border-bottom:1px solid var(--border)}
+.tbl th{padding:10px 12px;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);text-align:left;white-space:nowrap}
+.tbl td{padding:11px 12px;border-bottom:1px solid rgba(58,52,44,.45);vertical-align:middle;font-size:20.5px}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(201,150,122,.04)}
+
+.prod-cell{display:flex;align-items:center;gap:10px}
+.prod-thumb{width:40px;height:48px;border-radius:var(--radius);overflow:hidden;background:var(--card2);border:1px solid var(--border2);flex-shrink:0}
+.prod-thumb img{width:100%;height:100%;object-fit:cover}
+.prod-name{font-weight:600;color:var(--text);font-size:18.5px;line-height:1.3}
+.prod-cat{font-size:10.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+.stock-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:10px;font-size:15px;font-weight:700}
+.stock-ok{background:var(--green-pale);color:var(--green)}
+.stock-low{background:var(--orange-pale);color:var(--orange)}
+.stock-out{background:var(--red-pale);color:var(--red)}
+
+.stock-editor{display:flex;align-items:center;gap:6px}
+.stock-input{width:64px;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--body);font-size:13px;padding:5px 8px;border-radius:var(--radius);outline:none;text-align:center;transition:border .15s}
+.stock-input:focus{border-color:var(--rose)}
+.stock-save-btn{background:var(--rose);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;padding:5px 10px;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.stock-save-btn:hover{opacity:.85}
+.stock-save-btn.saved{background:var(--green)}
+
+.variant-list{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+.variant-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(58,52,44,.3)}
+.variant-label{font-size:15px;color:var(--muted2);min-width:48px}
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:5px;padding:14px}
+.pg{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 6px;border-radius:var(--radius);font-size:12px;font-weight:500;border:1px solid var(--border2);background:var(--card2);color:var(--muted2);text-decoration:none;transition:all .15s}
+.pg:hover{border-color:var(--rose);color:var(--rose2)}
+.pg.active{background:var(--rose);border-color:var(--rose);color:#fff;font-weight:700}
+.pg.disabled{opacity:.3;pointer-events:none}
+.pg-info{font-size:11px;color:var(--muted);padding:0 6px}
+
+.empty-box{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-box svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:.3}
+.empty-box h3{font-family:var(--head);font-size:16px;color:var(--muted2);margin-bottom:6px}
+
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12.5px;display:flex;align-items:center;gap:8px;min-width:200px;box-shadow:0 6px 28px rgba(0,0,0,.45);animation:toastIn .25s ease both}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.toast.ok{border-left:3px solid var(--green)}.toast.err{border-left:3px solid var(--red)}
+</style>
+
+<div id="toastWrap" class="toast-wrap"></div>
+
+{% if messages %}
+<div id="serverToasts" class="toast-wrap">
+  {% for msg in messages %}
+  <div class="toast {{ msg.tags }}">
+    <span>{% if msg.tags == 'success' %}✓{% else %}✕{% endif %}</span>{{ msg }}
+  </div>
+  {% endfor %}
+</div>
+<script>setTimeout(()=>{const w=document.getElementById('serverToasts');if(w){w.style.opacity='0';setTimeout(()=>w.remove(),400);}},3500)</script>
+{% endif %}
+
+<div class="page-hd">
+  <div>
+    <h2>Inventory & Stock</h2>
+  </div>
+</div>
+
+{% with products=page_obj.object_list %}
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-icon ok">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div>
+      <div class="stat-num" style="color:var(--green)">{{ total }}</div>
+      <div class="stat-lbl">Total Products</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon low">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div>
+      <div class="stat-num" style="color:var(--orange)">
+        {% with low_count=0 %}{{ low_count }}{% endwith %}
+      </div>
+      <div class="stat-lbl">Low Stock (≤5)</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon out">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </div>
+    <div>
+      <div class="stat-num" style="color:var(--red)">
+        {% with out_count=0 %}{{ out_count }}{% endwith %}
+      </div>
+      <div class="stat-lbl">Out of Stock</div>
+    </div>
+  </div>
+</div>
+{% endwith %}
+
+<form method="GET" action="{% url 'admin_inventory' %}" id="filterForm">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input type="text" name="q" value="{{ query|default:'' }}"
+             placeholder="Product name or category…" autocomplete="off">
+    </div>
+    <select name="stock" class="tf-select" onchange="this.form.submit()">
+      <option value="">All Stock Levels</option>
+      <option value="ok"  {% if stock_filter == 'ok'  %}selected{% endif %}>In Stock (>5)</option>
+      <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Low Stock (1–5)</option>
+      <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>Out of Stock</option>
+    </select>
+    <select name="sort" class="tf-select" onchange="this.form.submit()">
+      <option value="name"       {% if sort == 'name'       %}selected{% endif %}>Name A→Z</option>
+      <option value="stock_asc"  {% if sort == 'stock_asc'  %}selected{% endif %}>Stock: Low→High</option>
+      <option value="stock_desc" {% if sort == 'stock_desc' %}selected{% endif %}>Stock: High→Low</option>
+    </select>
+    <button type="submit" class="btn-s">Search</button>
+    {% if query or stock_filter %}
+    <a href="{% url 'admin_inventory' %}" class="btn-clr">
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Clear
+    </a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="table-wrap">
+  {% if page_obj %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Category</th>
+        <th>Total Stock</th>
+        <th>Base Stock</th>
+        <th>Variants</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in page_obj %}
+      <tr>
+        <td>
+          <div class="prod-cell">
+            <div class="prod-thumb">
+              {% with img=product.primary_image %}
+              {% if img %}
+                <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+              {% else %}
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg>
+                </div>
+              {% endif %}
+              {% endwith %}
+            </div>
+            <div>
+              <div class="prod-name">{{ product.name }}</div>
+              <div class="prod-cat">{{ product.get_category_display }}</div>
+            </div>
+          </div>
+        </td>
+        <td>{{ product.get_category_display }}</td>
+        <td>
+          {% if product.total_stock == 0 %}
+          <span class="stock-badge stock-out">Out of Stock</span>
+          {% elif product.total_stock <= 5 %}
+          <span class="stock-badge stock-low">{{ product.total_stock }} left</span>
+          {% else %}
+          <span class="stock-badge stock-ok">{{ product.total_stock }}</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="stock-editor">
+            <input class="stock-input" type="number" min="0"
+                   value="{{ product.stock }}"
+                   id="base-{{ product.pk }}"
+                   data-original="{{ product.stock }}">
+            <button class="stock-save-btn"
+                    onclick="saveStock('{{ product.pk }}', null, 'base-{{ product.pk }}', this)"
+                    type="button">Save</button>
+          </div>
+        </td>
+        <td>
+          {% if product.variants.exists %}
+          <div class="variant-list">
+            {% for v in product.variants.all %}
+            <div class="variant-row">
+              <span class="variant-label">{{ v.size|default:"—" }}</span>
+              <div class="stock-editor">
+                <input class="stock-input" type="number" min="0"
+                       value="{{ v.stock }}"
+                       id="var-{{ v.pk }}"
+                       data-original="{{ v.stock }}"
+                       style="width:56px">
+                <button class="stock-save-btn"
+                        onclick="saveStock('{{ product.pk }}', '{{ v.pk }}', 'var-{{ v.pk }}', this)"
+                        type="button">Save</button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <span style="color:var(--muted);font-size:15.5px">No variants</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if page_obj.has_other_pages %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}
+    <a class="pg" href="?{{ params_str }}&page={{ page_obj.previous_page_number }}">
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    {% else %}<span class="pg disabled"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></span>{% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}<span class="pg active">{{ num }}</span>
+      {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+        <a class="pg" href="?{{ params_str }}&page={{ num }}">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    <span class="pg-info">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+    <a class="pg" href="?{{ params_str }}&page={{ page_obj.next_page_number }}">
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    {% else %}<span class="pg disabled"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></span>{% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+    <h3>No products found</h3>
+    <p>{% if query or stock_filter %}Try different filters.{% else %}No active products yet.{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+
+async function saveStock(productId, variantId, inputId, btn) {
+  const inp   = document.getElementById(inputId);
+  const stock = parseInt(inp.value);
+  if (isNaN(stock) || stock < 0) { showToast('Invalid stock value.', 'err'); return; }
+
+  btn.disabled    = true;
+  btn.textContent = '…';
+
+  const fd = new FormData();
+  fd.append('stock', stock);
+  fd.append('next',  window.location.pathname + window.location.search);
+  if (variantId) fd.append('variant_id', variantId);
+
+  try {
+    const res  = await fetch(`/admin-panel/stock-update/${productId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+      body: fd,
+    });
+    const data = await res.json();
+    if (data.ok) {
+      btn.textContent = 'Saved';
+      btn.classList.add('saved');
+      inp.dataset.original = stock;
+      showToast(`Stock updated to ${stock}.`, 'ok');
+      setTimeout(() => { btn.textContent = 'Save'; btn.classList.remove('saved'); btn.disabled = false; }, 2000);
+    } else {
+      showToast(data.msg || 'Update failed.', 'err');
+      btn.textContent = 'Save';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    showToast('Network error.', 'err');
+    btn.textContent = 'Save';
+    btn.disabled = false;
+  }
+}
+
+function showToast(msg, type='ok') {
+  const wrap = document.getElementById('toastWrap');
+  const t    = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${type==='ok'?'✓':'✕'}</span>${msg}`;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(), 400); }, 3000);
+}
+</script>
+{% endblock %}

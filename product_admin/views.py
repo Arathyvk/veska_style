@@ -12,7 +12,7 @@ from django.views.decorators.cache  import never_cache
 from django.http                    import JsonResponse
 from django.views.decorators.http   import require_POST
 
-from .models import Product, ProductImage, ProductVariant
+from product_admin.models import Product, ProductImage, ProductVariant
 from .forms  import ProductForm, ProductVariantForm
 
 

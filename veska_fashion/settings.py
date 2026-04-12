@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'wishlist_user',
     'checkout_page',
     'order_user',
+    'order_admin',
     
 ]
 

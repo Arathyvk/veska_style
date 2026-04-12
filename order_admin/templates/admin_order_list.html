@@ -1,0 +1,355 @@
+{% extends "admin_base.html" %}
+{% block page_title %}Order #{{ order.order_number }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'admin_order_list' %}" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:var(--card2);border:1px solid var(--border2);color:var(--muted2);font-size:12px;font-weight:500;padding:7px 14px;border-radius:6px">
+  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  Back to Orders
+</a>
+{% endblock %}
+
+{% block content %}
+<style>
+:root{
+  --bg:#1a1410;--card:#231f1a;--card2:#2c2620;
+  --border:#3a342c;--border2:#4a4038;
+  --rose:#c9967a;--rose2:#e8b49a;
+  --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
+  --green:#4caf7d;--green-pale:rgba(76,175,125,.12);
+  --red:#e05252;--red-pale:rgba(224,82,82,.12);
+  --orange:#e09a52;--orange-pale:rgba(224,154,82,.12);
+  --blue:#5b8dee;--blue-pale:rgba(91,141,238,.12);
+  --radius:6px;--head:'Playfair Display',serif;--body:'Jost',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
+a{text-decoration:none;color:inherit}
+
+.od-hd{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.od-hd h2{font-family:var(--head);font-size:20px;font-weight:700}
+.od-hd p{font-size:11.5px;color:var(--muted);margin-top:3px}
+
+.grid{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.card-head{background:var(--card2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.card-head h3{font-family:var(--head);font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px}
+.card-head h3 svg{width:14px;height:14px;color:var(--rose)}
+.card-body{padding:16px}
+
+/* status badge */
+.sbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.sbadge .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sb-pending{background:var(--orange-pale);color:var(--orange)}.sb-pending .dot{background:var(--orange)}
+.sb-confirmed,.sb-processing{background:var(--blue-pale);color:var(--blue)}.sb-confirmed .dot,.sb-processing .dot{background:var(--blue)}
+.sb-shipped{background:rgba(91,141,238,.2);color:#7aaeff}.sb-shipped .dot{background:#7aaeff}
+.sb-delivered{background:var(--green-pale);color:var(--green)}.sb-delivered .dot{background:var(--green)}
+.sb-cancelled{background:var(--red-pale);color:var(--red)}.sb-cancelled .dot{background:var(--red)}
+.sb-return_requested{background:var(--orange-pale);color:var(--orange)}.sb-return_requested .dot{background:var(--orange)}
+.sb-returned{background:rgba(138,125,114,.1);color:var(--muted)}.sb-returned .dot{background:var(--muted)}
+
+/* info grid */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.info-row{display:flex;flex-direction:column;gap:3px}
+.info-label{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2)}
+.info-val{font-size:13px;color:var(--text)}
+.info-val.mono{font-family:monospace;color:var(--rose2)}
+
+/* order items table */
+.items-tbl{width:100%;border-collapse:collapse}
+.items-tbl th{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.items-tbl th:last-child{text-align:right}
+.items-tbl td{padding:10px 10px;border-bottom:1px solid rgba(58,52,44,.4);vertical-align:middle;font-size:12.5px}
+.items-tbl tr:last-child td{border-bottom:none}
+.item-img{width:40px;height:48px;border-radius:var(--radius);overflow:hidden;background:var(--card2);border:1px solid var(--border2);flex-shrink:0}
+.item-img img{width:100%;height:100%;object-fit:cover}
+.item-name{font-weight:500;color:var(--text);font-size:12.5px}
+.item-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.item-total{font-family:var(--head);font-size:14px;font-weight:600;text-align:right}
+.cancelled-row td{opacity:.45;text-decoration:line-through}
+
+/* price rows */
+.pr-row{display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px;color:var(--muted)}
+.pr-row .v{color:var(--text);font-weight:500}
+.pr-row.grand{border-top:1px solid var(--border);margin-top:6px;padding-top:10px;font-family:var(--head);font-size:17px;font-weight:600;color:var(--text)}
+.pr-row.free .v{color:var(--green);font-weight:600}
+.pr-divider{height:1px;background:var(--border);margin:6px 0}
+
+/* status update form */
+.status-form{display:flex;flex-direction:column;gap:10px}
+.status-select{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--body);font-size:13px;padding:10px 12px;border-radius:var(--radius);outline:none;cursor:pointer;transition:border .18s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%238a7d72' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.status-select:focus{border-color:var(--rose)}
+.status-select option{background:var(--card2)}
+.btn-update{background:linear-gradient(135deg,var(--rose),#a06848);color:#fff;border:none;border-radius:var(--radius);font-family:var(--body);font-size:13px;font-weight:600;padding:11px;cursor:pointer;transition:opacity .18s;width:100%}
+.btn-update:hover{opacity:.88}
+
+/* timeline */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-step{display:flex;gap:12px;position:relative}
+.tl-step::before{content:'';position:absolute;left:9px;top:22px;width:2px;height:calc(100% + 2px);background:var(--border)}
+.tl-step:last-child::before{display:none}
+.tl-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);background:var(--card2);display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1}
+.tl-dot.done{border-color:var(--green);background:var(--green)}
+.tl-dot.active{border-color:var(--rose);background:var(--rose)}
+.tl-dot svg{width:9px;height:9px;color:#fff}
+.tl-info{padding:1px 0 18px}
+.tl-label{font-size:12.5px;font-weight:600;color:var(--text)}
+.tl-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+.addr-box{background:var(--card2);border-radius:var(--radius);padding:12px 14px}
+.addr-name{font-weight:600;margin-bottom:4px}
+.addr-text{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* messages */
+.msg-bar{padding:11px 14px;border-radius:var(--radius);margin-bottom:14px;font-size:12.5px;font-weight:500;display:flex;align-items:center;gap:8px}
+.msg-bar.success{background:var(--green-pale);color:var(--green);border:1px solid rgba(76,175,125,.25)}
+.msg-bar.error{background:var(--red-pale);color:var(--red);border:1px solid rgba(224,82,82,.25)}
+</style>
+
+<div class="od-hd">
+  <div>
+    <h2>Order #{{ order.order_number }}</h2>
+    <p>Placed on {{ order.created_at|date:"d M Y, h:i A" }}</p>
+  </div>
+  <span class="sbadge sb-{{ order.status }}">
+    <span class="dot"></span>{{ order.get_status_display }}
+  </span>
+</div>
+
+{% for message in messages %}
+<div class="msg-bar {{ message.tags }}">
+  {% if message.tags == 'success' %}✓{% else %}✕{% endif %} {{ message }}
+</div>
+{% endfor %}
+
+<div class="grid">
+
+  <!-- LEFT -->
+  <div>
+
+    <!-- Customer Info -->
+    <div class="card">
+      <div class="card-head">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Customer
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-row">
+            <span class="info-label">Name</span>
+            <span class="info-val">{{ order.full_name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Phone</span>
+            <span class="info-val">{{ order.phone }}</span>
+          </div>
+          {% if order.user %}
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-val">{{ order.user.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Account</span>
+            <span class="info-val">Registered User</span>
+          </div>
+          {% else %}
+          <div class="info-row">
+            <span class="info-label">Account</span>
+            <span class="info-val" style="color:var(--muted);font-style:italic">Guest</span>
+          </div>
+          {% endif %}
+        </div>
+        <div style="margin-top:14px">
+          <div class="info-label" style="margin-bottom:6px">Delivery Address</div>
+          <div class="addr-box">
+            <div class="addr-name">{{ order.full_name }}</div>
+            <div class="addr-text">
+              {{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}<br>
+              {{ order.city }}, {{ order.state }} — {{ order.pincode }}<br>
+              {{ order.country }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+          Items ({{ order.items.count }})
+        </h3>
+      </div>
+      <div class="card-body" style="padding:0">
+        <table class="items-tbl">
+          <thead>
+            <tr>
+              <th style="width:48px"></th>
+              <th>Product</th>
+              <th>Size</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr {% if item.is_cancelled %}class="cancelled-row"{% endif %}>
+              <td>
+                <div class="item-img">
+                  {% if item.image_url %}
+                    <img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
+                  {% else %}
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <div class="item-name">{{ item.product_name }}</div>
+                {% if item.is_cancelled %}
+                <div style="font-size:10px;color:var(--red);font-weight:700;margin-top:3px">CANCELLED</div>
+                {% endif %}
+              </td>
+              <td>{{ item.size|default:"—" }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>₹{{ item.unit_price|floatformat:2 }}</td>
+              <td class="item-total">₹{{ item.line_total|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if order.notes %}
+    <div class="card">
+      <div class="card-head">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Order Notes
+        </h3>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--muted);line-height:1.7">{{ order.notes }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div>
+
+    <div class="card">
+      <div class="card-head"><h3>Price Summary</h3></div>
+      <div class="card-body">
+        <div class="pr-row"><span>Subtotal</span><span class="v">₹{{ order.subtotal|floatformat:2 }}</span></div>
+        <div class="pr-row {% if order.shipping_charge == 0 %}free{% endif %}">
+          <span>Shipping</span>
+          <span class="v">{% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
+        </div>
+        {% if order.discount %}
+        <div class="pr-row" style="color:var(--green)"><span>Discount</span><span class="v">−₹{{ order.discount|floatformat:2 }}</span></div>
+        {% endif %}
+        {% if order.tax %}
+        <div class="pr-row"><span>Tax</span><span class="v">₹{{ order.tax|floatformat:2 }}</span></div>
+        {% endif %}
+        <div class="pr-row grand"><span>Total</span><span class="v">₹{{ order.total|floatformat:2 }}</span></div>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          {{ order.get_payment_method_display }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 .49-3.27"/>
+          </svg>
+          Update Status
+        </h3>
+      </div>
+      <div class="card-body">
+        <form method="POST" class="status-form">
+          {% csrf_token %}
+          <select name="status" class="status-select">
+            {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn-update">✓ Update Status</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Timeline</h3></div>
+      <div class="card-body">
+        <div class="timeline">
+          {% for step_val, step_label in status_choices %}
+          {% if step_val not in 'return_requested,returned,cancelled' %}
+          <div class="tl-step">
+            <div class="tl-dot
+              {% if order.status == step_val %}active
+              {% elif step_val == 'pending' %}done
+              {% elif step_val == 'confirmed' and order.status in 'confirmed,processing,shipped,delivered' %}done
+              {% elif step_val == 'processing' and order.status in 'processing,shipped,delivered' %}done
+              {% elif step_val == 'shipped' and order.status in 'shipped,delivered' %}done
+              {% elif step_val == 'delivered' and order.status == 'delivered' %}active
+              {% endif %}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="tl-info">
+              <div class="tl-label">{{ step_label }}</div>
+              {% if order.status == step_val %}
+              <div class="tl-sub">{{ order.updated_at|date:"d M Y" }}</div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+          {% if order.status == 'cancelled' %}
+          <div class="tl-step">
+            <div class="tl-dot" style="border-color:var(--red);background:var(--red)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            <div class="tl-info">
+              <div class="tl-label" style="color:var(--red)">Cancelled</div>
+              {% if order.cancelled_at %}<div class="tl-sub">{{ order.cancelled_at|date:"d M Y" }}</div>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% if order.status == 'return_requested' or order.status == 'returned' %}
+          <div class="tl-step">
+            <div class="tl-dot" style="border-color:var(--orange);background:var(--orange)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="tl-info">
+              <div class="tl-label" style="color:var(--orange)">Return Requested</div>
+              {% if order.return_requested_at %}<div class="tl-sub">{{ order.return_requested_at|date:"d M Y" }}</div>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

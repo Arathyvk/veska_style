@@ -1,96 +1,97 @@
 from django.db import models
-from product_admin.models import Product, ProductVariant
 from django.conf import settings
+from django.core.validators import MinValueValidator
+
 
 MAX_QTY_PER_ITEM = 10  
 
 
-
 class Cart(models.Model):
-    user        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
-    session_key = models.CharField(max_length=40, unique=True, db_index=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    user       = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='cart')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Cart'
 
     def __str__(self):
-        return f"Cart [{self.session_key}]"
+        return f'Cart of {self.user}'
 
-    @property
-    def items(self):
-        return self.cart_items.select_related('product', 'variant')
 
     @property
     def total_items(self):
-        return self.cart_items.aggregate(
-            total=models.Sum('quantity')
-        )['total'] or 0
+        return sum(item.quantity for item in self.items.select_related('product', 'variant'))
 
     @property
     def subtotal(self):
-        return sum(item.line_total for item in self.items)
+        return sum(item.line_total for item in self.items.select_related('product', 'variant'))
 
     @property
     def is_empty(self):
-        return not self.cart_items.exists()
+        return not self.items.exists()
 
-    def get_or_create_item(self, product, variant=None, qty=1):
-        item, created = CartItem.objects.get_or_create(
-            cart=self,
-            product=product,
-            variant=variant,
-            defaults={'quantity': 0},
+    def get_active_items(self):
+        return self.items.select_related(
+            'product', 'variant'
+        ).filter(
+            product__is_listed=True,
+            product__is_blocked=False,
         )
 
-        available = variant.stock if variant else product.total_stock
-        new_qty = min(item.quantity + qty, available, MAX_QTY_PER_ITEM)
-
-        item.quantity = new_qty
-        item.save()
-        return item, created
+    def has_blocked_items(self):
+        return self.items.exclude(
+            product__is_listed=True,
+            product__is_blocked=False,
+        ).exists()
 
 
 class CartItem(models.Model):
-    cart     = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_items')
-    product  = models.ForeignKey(Product, on_delete=models.CASCADE)
-    variant  = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
-    quantity = models.PositiveIntegerField(default=1)
-    added_at = models.DateTimeField(auto_now_add=True)
+    cart     = models.ForeignKey(Cart,    on_delete=models.CASCADE, related_name='items')
+    product  = models.ForeignKey('product_admin.Product',        on_delete=models.CASCADE)
+    variant  = models.ForeignKey('product_admin.ProductVariant', on_delete=models.SET_NULL,
+                                 null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
 
     class Meta:
         unique_together = ('cart', 'product', 'variant')
-        ordering = ['added_at']
+        verbose_name    = 'Cart item'
 
     def __str__(self):
-        size = f" ({self.variant.size})" if self.variant else ""
-        return f"{self.product.name}{size} × {self.quantity}"
+        return f'{self.quantity}× {self.product.name}'
+
+
+    @property
+    def available_stock(self):
+        if self.variant:
+            return self.variant.stock
+        return self.product.stock
+
+    @property
+    def is_in_stock(self):
+        return self.available_stock > 0
+
+    @property
+    def is_available(self):
+        return (
+            self.product.is_listed
+            and not self.product.is_blocked
+            and self.is_in_stock
+        )
+
+    @property
+    def effective_qty(self):
+        return min(self.quantity, self.available_stock)
 
     @property
     def unit_price(self):
+        if self.variant and self.variant.price is not None:
+            return self.variant.price
         return self.product.price
 
     @property
     def line_total(self):
-        return self.unit_price * self.quantity
+        return self.unit_price * self.effective_qty
 
     @property
-    def available_stock(self):
-        return self.variant.stock if self.variant else self.product.total_stock
-
-    @property
-    def max_qty(self):
+    def max_allowed(self):
         return min(self.available_stock, MAX_QTY_PER_ITEM)
-
-    @property
-    def is_available(self):
-        return self.product.is_active and self.available_stock > 0
-
-
-
-class Wishlist(models.Model):
-    session_key = models.CharField(max_length=40, unique=True, db_index=True)
-    products = models.ManyToManyField(Product, blank=True)
-
-    def __str__(self):
-        return f"Wishlist [{self.session_key}]"
-
-
