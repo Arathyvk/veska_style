@@ -1,180 +1,147 @@
 {% extends "user_base.html" %}
 {% load static %}
 {% block title %}My Orders · Veska{% endblock %}
+
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;
-  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;--blush:#e9d5c8;
+  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
+  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
   --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
   --border:#e0d9d0;--border-lt:#ece6de;
   --success:#3a7d5a;--success-pale:#eaf4ee;
   --warning:#c47f17;--warning-pale:#fef8ec;
   --danger:#b53333;--danger-pale:#fdf0f0;
-  --info:#2563a8;--info-pale:#eff6ff;
-  --shadow-xs:0 1px 3px rgba(30,26,23,.06);--shadow-sm:0 2px 8px rgba(30,26,23,.08);
-  --shadow-lg:0 16px 48px rgba(30,26,23,.14);
-  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --info:#185fa5;--info-pale:#e6f1fb;
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --radius-md:10px;--radius-lg:16px;--radius-xl:24px;
   --transition:all .2s cubic-bezier(.4,0,.2,1);
   --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
 a{text-decoration:none;color:inherit}
+button,input,select{font-family:var(--body)}
 
-.orders-page{padding-bottom:80px;min-height:100vh;background:var(--cream)}
+.orders-page{min-height:100vh;padding-bottom:80px;background:var(--cream)}
 .container{max-width:900px;margin:0 auto;padding:0 24px}
 
-/* hero */
-.page-hero{background:var(--charcoal);padding:36px 0 32px;position:relative;overflow:hidden}
-.page-hero::after{content:'ORDERS';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-family:var(--head);font-size:90px;font-weight:700;color:rgba(255,255,255,.03);pointer-events:none}
-.page-hero .inner{position:relative;z-index:1}
+.page-hero{background:var(--charcoal);padding:36px 0 30px;position:relative;overflow:hidden}
+.page-hero::after{content:'ORDERS';position:absolute;right:40px;top:50%;transform:translateY(-50%);
+  font-family:var(--head);font-size:110px;font-weight:700;color:rgba(255,255,255,.03);pointer-events:none}
 .page-hero h1{font-family:var(--head);font-size:clamp(26px,4vw,40px);font-weight:600;color:#fff;margin-bottom:4px}
 .page-hero h1 em{font-style:italic;color:var(--blush)}
 .page-hero p{font-size:12px;color:rgba(255,255,255,.4)}
-
-/* breadcrumbs */
 .breadcrumbs{display:flex;align-items:center;gap:8px;padding:16px 0 20px;font-size:12px;color:var(--muted)}
 .breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
-.breadcrumbs .sep{color:var(--muted-lt);font-size:10px}
-.breadcrumbs .current{color:var(--ink);font-weight:500}
+.breadcrumbs .sep{color:var(--muted-lt)}.breadcrumbs .current{color:var(--ink);font-weight:500}
 
-/* search + filter bar */
-.search-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
-.search-field{
-  display:flex;align-items:center;gap:8px;flex:1;min-width:200px;
-  background:var(--warm-white);border:1.5px solid var(--border);
-  border-radius:40px;padding:9px 16px;box-shadow:var(--shadow-xs);transition:var(--transition);
-}
-.search-field:focus-within{border-color:var(--terra);box-shadow:0 0 0 3px rgba(181,103,58,.1)}
-.search-field svg{width:14px;height:14px;color:var(--muted-lt);flex-shrink:0}
-.search-field input{border:none;background:none;font-family:var(--body);font-size:13.5px;color:var(--ink);outline:none;flex:1}
-.search-field input::placeholder{color:var(--muted-lt)}
-.filter-select{
-  border:1.5px solid var(--border);border-radius:var(--radius-md);
-  padding:9px 32px 9px 14px;font-family:var(--body);font-size:13px;
-  background:var(--warm-white);color:var(--ink);cursor:pointer;outline:none;
-  appearance:none;box-shadow:var(--shadow-xs);
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%23b0a699' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 10px center;
-}
-.filter-select:focus{border-color:var(--terra)}
-.btn-search{
-  background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);
-  font-family:var(--body);font-size:13px;font-weight:600;
-  padding:9px 20px;cursor:pointer;transition:var(--transition);
-}
+.search-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.search-form{display:flex;flex:1;min-width:220px;border:1.5px solid var(--border);
+  border-radius:var(--radius-md);overflow:hidden;background:var(--warm-white);
+  transition:box-shadow .2s}
+.search-form:focus-within{border-color:var(--terra);box-shadow:0 0 0 3px rgba(181,103,58,.1)}
+.search-input{flex:1;border:none;padding:10px 14px;font-size:13px;background:transparent;
+  color:var(--ink);outline:none}
+.search-input::placeholder{color:var(--muted-lt)}
+.btn-search{padding:0 14px;background:var(--charcoal);color:#fff;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;transition:background .2s;display:flex;align-items:center;gap:6px}
 .btn-search:hover{background:var(--terra)}
+.btn-search svg{width:13px;height:13px}
+.btn-clear-search{padding:0 10px;background:none;border:none;color:var(--muted-lt);
+  cursor:pointer;font-size:18px;line-height:1;transition:color .15s}
+.btn-clear-search:hover{color:var(--danger)}
+.status-select{border:1.5px solid var(--border);border-radius:var(--radius-md);
+  padding:10px 32px 10px 12px;font-size:12.5px;background:var(--warm-white);color:var(--ink);
+  outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%23b0a699' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center}
+.status-select:focus{border-color:var(--terra)}
 
-/* result count */
-.result-info{font-size:12.5px;color:var(--muted);margin-bottom:16px}
-.result-info strong{color:var(--ink)}
-
-/* order cards */
-.order-card{
-  background:var(--warm-white);border:1px solid var(--border);
-  border-radius:var(--radius-xl);overflow:hidden;margin-bottom:14px;
-  box-shadow:var(--shadow-xs);transition:var(--transition);
-  animation:reveal .35s ease both;
-}
-.order-card:hover{box-shadow:var(--shadow-sm);border-color:var(--sand)}
-@keyframes reveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-
-.order-card-head{
-  padding:14px 20px;border-bottom:1px solid var(--border-lt);
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
-  background:var(--parchment);
-}
-.order-num{font-family:var(--head);font-size:16px;font-weight:600;color:var(--charcoal)}
-.order-num span{font-family:var(--body);font-size:12px;color:var(--muted-lt);font-weight:400;margin-left:6px}
-.order-date{font-size:12px;color:var(--muted)}
-.order-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-
-/* status badge */
-.status-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;
-  letter-spacing:.3px;text-transform:uppercase;
-}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;
+  border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
 .status-badge .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.status-pending{background:var(--warning-pale);color:var(--warning)}
-.status-pending .dot{background:var(--warning)}
-.status-confirmed,.status-processing,.status-info{background:var(--info-pale);color:var(--info)}
-.status-confirmed .dot,.status-processing .dot{background:var(--info)}
-.status-shipped{background:#eff6ff;color:#1d4ed8}
-.status-shipped .dot{background:#1d4ed8}
-.status-delivered,.status-success{background:var(--success-pale);color:var(--success)}
-.status-delivered .dot{background:var(--success)}
-.status-cancelled,.status-danger{background:var(--danger-pale);color:var(--danger)}
-.status-cancelled .dot{background:var(--danger)}
-.status-return_requested{background:var(--warning-pale);color:var(--warning)}
-.status-return_requested .dot{background:var(--warning)}
-.status-returned,.status-muted{background:var(--parchment);color:var(--muted)}
-.status-returned .dot{background:var(--muted)}
+.st-pending{background:var(--warning-pale);color:var(--warning)}
+.st-pending .dot{background:var(--warning)}
+.st-confirmed,.st-processing{background:var(--info-pale);color:var(--info)}
+.st-confirmed .dot,.st-processing .dot{background:var(--info)}
+.st-shipped{background:var(--parchment);color:var(--terra-deep)}
+.st-shipped .dot{background:var(--terra)}
+.st-delivered{background:var(--success-pale);color:var(--success)}
+.st-delivered .dot{background:var(--success)}
+.st-cancelled{background:var(--danger-pale);color:var(--danger)}
+.st-cancelled .dot{background:var(--danger)}
+.st-return_requested{background:var(--warning-pale);color:var(--warning)}
+.st-return_requested .dot{background:var(--warning)}
+.st-returned{background:#f1efe8;color:#5f5e5a}
+.st-returned .dot{background:#888780}
 
-.order-card-body{padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.order-card{background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px;
+  animation:fadeUp .3s ease both;transition:box-shadow .2s}
+.order-card:hover{box-shadow:var(--shadow-sm)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
-/* mini product thumbs */
-.order-thumbs{display:flex;gap:-8px}
-.order-thumb{
-  width:48px;height:56px;border-radius:var(--radius-sm);
-  overflow:hidden;border:2px solid var(--warm-white);
-  background:var(--parchment);flex-shrink:0;margin-left:-8px;
-}
-.order-thumb:first-child{margin-left:0}
-.order-thumb img{width:100%;height:100%;object-fit:cover}
-.order-thumb-more{
-  width:48px;height:56px;border-radius:var(--radius-sm);
-  background:var(--parchment);border:2px solid var(--warm-white);
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;color:var(--muted);margin-left:-8px;
-}
+.order-card-head{padding:14px 20px;border-bottom:1px solid var(--border-lt);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.order-num{font-family:monospace;font-size:13px;font-weight:700;color:var(--terra)}
+.order-date{font-size:11.5px;color:var(--muted-lt)}
+.order-head-right{display:flex;align-items:center;gap:10px}
 
-.order-info{flex:1;min-width:180px}
-.order-item-names{font-size:13px;color:var(--ink);font-weight:500;line-height:1.5;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.order-qty{font-size:11.5px;color:var(--muted-lt)}
+.order-card-body{padding:14px 20px}
+.order-items-preview{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.item-thumb{width:52px;height:62px;border-radius:8px;overflow:hidden;
+  background:var(--parchment);border:1px solid var(--border-lt);flex-shrink:0}
+.item-thumb img{width:100%;height:100%;object-fit:cover}
+.item-thumb-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
+.item-thumb-more{width:52px;height:62px;border-radius:8px;background:var(--parchment);
+  border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;color:var(--muted)}
 
-.order-total-block{text-align:right;flex-shrink:0}
-.order-total{font-family:var(--head);font-size:20px;font-weight:700;color:var(--charcoal)}
-.order-payment{font-size:11px;color:var(--muted-lt);margin-top:2px}
+.order-meta{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.order-meta strong{color:var(--ink)}
 
-.order-card-foot{
-  padding:12px 20px;border-top:1px solid var(--border-lt);
-  display:flex;align-items:center;justify-content:flex-end;gap:8px;
-}
-.btn-view{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:8px 18px;background:var(--charcoal);color:#fff;
-  border:none;border-radius:var(--radius-md);font-family:var(--body);
-  font-size:12.5px;font-weight:600;cursor:pointer;transition:var(--transition);
-  text-decoration:none;
-}
-.btn-view:hover{background:var(--terra)}
-.btn-outline{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:8px 14px;background:none;color:var(--muted);
-  border:1.5px solid var(--border);border-radius:var(--radius-md);
-  font-family:var(--body);font-size:12px;font-weight:500;
-  cursor:pointer;transition:var(--transition);text-decoration:none;
-}
-.btn-outline:hover{border-color:var(--terra);color:var(--terra)}
+.order-card-foot{padding:12px 20px;border-top:1px solid var(--border-lt);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  background:var(--parchment)}
+.order-total{font-family:var(--head);font-size:18px;font-weight:700;color:var(--charcoal)}
+.order-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-action{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;
+  border-radius:var(--radius-md);font-size:12px;font-weight:600;cursor:pointer;
+  transition:var(--transition);text-decoration:none;border:none;white-space:nowrap}
+.btn-view{background:var(--charcoal);color:#fff}.btn-view:hover{background:var(--terra)}
+.btn-invoice{background:none;border:1.5px solid var(--border);color:var(--muted)}
+.btn-invoice:hover{border-color:var(--terra);color:var(--terra)}
+.btn-cancel-sm{background:none;border:1.5px solid var(--border);color:var(--danger)}
+.btn-cancel-sm:hover{background:var(--danger-pale);border-color:var(--danger)}
+.btn-return-sm{background:none;border:1.5px solid var(--border);color:var(--warning)}
+.btn-return-sm:hover{background:var(--warning-pale);border-color:var(--warning)}
 
-.empty-state{text-align:center;padding:80px 24px;background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl)}
-.empty-state svg{width:52px;height:52px;color:var(--muted-lt);margin:0 auto 18px;display:block}
-.empty-state h3{font-family:var(--head);font-size:26px;font-weight:500;color:var(--charcoal);margin-bottom:10px}
-.empty-state p{font-size:14px;color:var(--muted);margin-bottom:24px}
-.btn-shop{display:inline-flex;align-items:center;gap:8px;background:var(--terra);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:600;padding:12px 24px;text-decoration:none;transition:var(--transition)}
-.btn-shop:hover{background:var(--terra-deep)}
+.empty-state{text-align:center;padding:72px 24px}
+.empty-icon{width:84px;height:84px;border-radius:50%;background:var(--parchment);
+  border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.empty-icon svg{width:36px;height:36px;color:var(--muted-lt)}
+.empty-state h2{font-family:var(--head);font-size:28px;font-weight:600;color:var(--ink);margin-bottom:8px}
+.empty-state h2 em{font-style:italic;color:var(--terra)}
+.empty-state p{font-size:13px;color:var(--muted);margin-bottom:22px}
+.btn-shop{display:inline-flex;align-items:center;gap:7px;padding:12px 26px;
+  background:var(--charcoal);color:#fff;border-radius:var(--radius-md);
+  font-size:13px;font-weight:600;transition:var(--transition)}
+.btn-shop:hover{background:var(--terra)}
+
+.msg{padding:11px 16px;border-radius:var(--radius-md);margin-bottom:14px;font-size:13px;
+  font-weight:500;display:flex;align-items:center;gap:8px}
+.msg.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.18)}
+.msg.error{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.18)}
+.msg.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.18)}
 </style>
 
 <div class="orders-page">
   <div class="page-hero">
     <div class="container">
-      <div class="inner">
-        <h1>My <em>Orders</em></h1>
-        <p>Track, manage and review your purchases</p>
-      </div>
+      <h1>My <em>Orders</em></h1>
+      <p>{{ total_orders }} order{{ total_orders|pluralize }}</p>
     </div>
   </div>
 
@@ -184,111 +151,160 @@ a{text-decoration:none;color:inherit}
       <span class="current">My Orders</span>
     </nav>
 
-    <form method="GET" action="#">
-      <div class="search-bar">
-        <div class="search-field">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-          </svg>
-          <input type="text" name="q" value="{{ query|default:'' }}"
-                 placeholder="Search by order ID or product name…" autocomplete="off">
-        </div>
-        <select name="status" class="filter-select" onchange="this.form.submit()">
-          <option value="">All Statuses</option>
-          {% for val, label in status_choices %}
-          <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-        <button type="submit" class="btn-search">Search</button>
-      </div>
-    </form>
-
-    <div class="result-info">
-      <strong>{{ orders|length }}</strong> order{{ orders|length|pluralize }}
-      {% if query %} matching "<strong>{{ query }}</strong>"{% endif %}
-      {% if status_filter %} · Status: <strong>{{ status_filter|title }}</strong>{% endif %}
-    </div>
-
-    {% if orders %}
-    {% for order in orders %}
-    <div class="order-card">
-      <div class="order-card-head">
-        <div>
-          <div class="order-num">
-            #{{ order.order_number }}
-            <span>{{ order.created_at|date:"d M Y" }}</span>
-          </div>
-        </div>
-        <div class="order-meta">
-          <span class="status-badge status-{{ order.status }}">
-            <span class="dot"></span>
-            {{ order.get_status_display }}
-          </span>
-          <div class="order-date">{{ order.created_at|date:"h:i A" }}</div>
-        </div>
-      </div>
-
-      <div class="order-card-body">
-        <div class="order-thumbs">
-          {% for item in order.items.all|slice:":3" %}
-          <div class="order-thumb">
-            {% if item.image_url %}
-              <img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
-            {% else %}
-              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="18" height="18">
-                  <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
-                </svg>
-              </div>
-            {% endif %}
-          </div>
-          {% endfor %}
-          {% if order.items.count > 3 %}
-          <div class="order-thumb-more">+{{ order.items.count|add:"-3" }}</div>
-          {% endif %}
-        </div>
-
-        <div class="order-info">
-          <div class="order-item-names">
-            {% for item in order.items.all %}{{ item.product_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-          </div>
-          <div class="order-qty">{{ order.items.count }} item{{ order.items.count|pluralize }}</div>
-        </div>
-
-        <div class="order-total-block">
-          <div class="order-total">₹{{ order.total|floatformat:2 }}</div>
-          <div class="order-payment">{{ order.get_payment_method_display }}</div>
-        </div>
-      </div>
-
-      <div class="order-card-foot">
-        <a href="{% url 'order_invoice' order.order_number %}" class="btn-outline">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Invoice
-        </a>
-        <a href="{% url 'order_detail' order.order_number %}" class="btn-view">
-          View Details →
-        </a>
-      </div>
+    {% for message in messages %}
+    <div class="msg {{ message.tags }}">
+      {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}🚫{% else %}⚠️{% endif %}
+      {{ message }}
     </div>
     {% endfor %}
 
+    <form method="GET" action="{% url 'order_list' %}" class="search-bar">
+      <div class="search-form">
+        <input type="text" name="q" id="searchInput" class="search-input"
+               value="{{ search_query }}" placeholder="Search by order ID, product name…"
+               autocomplete="off">
+        {% if search_query %}
+          <button type="button" class="btn-clear-search" onclick="clearSearch()">✕</button>
+        {% endif %}
+        <button type="submit" class="btn-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Search
+        </button>
+      </div>
+      <select name="status" class="status-select" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+
+    {% if orders %}
+      {% for order in orders %}
+      <div class="order-card">
+
+      <div class="order-card-head">
+          <div>
+            <div class="order-num">#{{ order.order_number }}</div>
+            <div class="order-date">Placed on {{ order.created_at|date:"d M Y, g:i A" }}</div>
+          </div>
+          <div class="order-head-right">
+            <span class="status-badge st-{{ order.status }}">
+              <span class="dot"></span>
+              {{ order.get_status_display }}
+            </span>
+          </div>
+        </div>
+
+        <div class="order-card-body">
+          <div class="order-items-preview">
+            {% for item in order.items.all|slice:":3" %}
+            <div class="item-thumb">
+              {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
+              {% else %}
+                <div class="item-thumb-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="20" height="20">
+                    <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+            {% if order.items.count > 3 %}
+            <div class="item-thumb-more">+{{ order.items.count|add:"-3" }}</div>
+            {% endif %}
+          </div>
+
+          <div class="order-meta">
+            <span>
+              {{ order.items.count }} item{{ order.items.count|pluralize }}
+            </span>
+            <span>
+              📍 {{ order.city }}, {{ order.state }}
+            </span>
+            <span>
+              💳 {{ order.get_payment_method_display }}
+            </span>
+            {% if order.coupon_code %}
+            <span>🏷️ {{ order.coupon_code }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="order-card-foot">
+          <div>
+            <div style="font-size:11px;color:var(--muted-lt);margin-bottom:2px">Order Total</div>
+            <div class="order-total">₹{{ order.total|floatformat:2 }}</div>
+          </div>
+          <div class="order-actions">
+            <a href="{% url 'order_detail' order.order_number %}" class="btn-action btn-view">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              View Details
+            </a>
+            <a href="{% url 'download_invoice' order.order_number %}" class="btn-action btn-invoice">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Invoice
+            </a>
+            {% if order.can_cancel %}
+            <a href="{% url 'cancel_order' order.order_number %}" class="btn-action btn-cancel-sm">
+              Cancel
+            </a>
+            {% endif %}
+            {% if order.can_return %}
+            <a href="{% url 'return_order' order.order_number %}" class="btn-action btn-return-sm">
+              Return
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+
     {% else %}
     <div class="empty-state">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
-        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-        <line x1="3" y1="6" x2="21" y2="6"/>
-        <path d="M16 10a4 4 0 0 1-8 0"/>
-      </svg>
-      <h3>No orders yet</h3>
-      <p>{% if query %}No orders match your search.{% else %}You haven't placed any orders yet.{% endif %}</p>
-      <a href="{% url 'product_shop' %}" class="btn-shop">Start Shopping</a>
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <h2>No orders <em>found</em></h2>
+      <p>
+        {% if search_query or status_filter %}
+          No orders match your search. Try different keywords.
+        {% else %}
+          You haven't placed any orders yet. Start shopping!
+        {% endif %}
+      </p>
+      <a href="{% url 'product_shop' %}" class="btn-shop">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Browse Shop
+      </a>
     </div>
     {% endif %}
 
   </div>
 </div>
+
+<script>
+function clearSearch() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('q');
+  window.location.href = url.toString();
+}
+</script>
 {% endblock %}
