@@ -397,14 +397,12 @@ button,input,textarea{font-family:var(--body)}
             {% if user.is_authenticated %}Add to Cart{% else %}Login to Add{% endif %}
           </button>
 
-          {# Buy Now — same form, different action value, redirects to cart #}
           <button type="submit" name="action" value="buy_now" class="btn-buy-now"
                   onclick="return validateSizeBuyNow()">
             Buy Now
           </button>
 
-          {# Wishlist — separate form so it doesn't mix with cart POST #}
-          <form method="POST" action="#" style="display:contents">
+          <form method="POST" action="{% url 'wishlist_toggle' product.slug %}" style="display:contents">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <button type="submit" class="btn-wishlist {% if in_wishlist %}wishlisted{% endif %}">
