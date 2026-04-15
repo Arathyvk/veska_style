@@ -573,7 +573,6 @@ button, input, select, textarea { font-family: var(--body); }
         {% for product in products %}
         <div class="pcard">
           <div style="position:relative">
-            <!-- Product image link -->
             <a href="{% url 'product_detail' product.slug %}" class="pc-img-wrap">
               {% with img=product.images.first %}
                 {% if img %}<img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
@@ -584,7 +583,6 @@ button, input, select, textarea { font-family: var(--body); }
                 {% if product.discount_percent > 0 %}<span class="badge badge-sale">{{ product.discount_percent }}% OFF</span>{% endif %}
               </div>
             </a>
-            <!-- Wishlist -->
             <div class="wl-wrap">
               {% if user.is_authenticated %}
               <form method="POST" action="{% url 'wishlist_toggle' product.slug %}">
@@ -598,7 +596,6 @@ button, input, select, textarea { font-family: var(--body); }
               {% endif %}
             </div>
           </div>
-          <!-- Body -->
           <div class="pc-body">
             <div class="pc-cat">{{ product.get_category_display }}</div>
             <div class="pc-name"><a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a></div>
@@ -612,12 +609,22 @@ button, input, select, textarea { font-family: var(--body); }
                 {% endif %}
               </div>
               {% if product.total_stock > 0 %}
-              <form method="POST" action="{% url 'cart_add' product.slug %}">
-                {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="btn-add">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Add
-                </button>
-              </form>
+                <form method="POST" action="{% url 'add_to_cart' product.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  
+                  <select name="variant_id">
+                    {% for v in product.variants.all %}
+                      {% if v.stock > 0 %}
+                        <option value="{{ v.id }}">
+                          {{ v.size }} {% if v.color %}- {{ v.color }}{% endif %}
+                        </option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+
+                  <button type="submit" class="btn-add">Add</button>
+                </form>
               {% else %}<span class="btn-add oos">Out of Stock</span>{% endif %}
             </div>
           </div>
@@ -625,7 +632,6 @@ button, input, select, textarea { font-family: var(--body); }
         {% endfor %}
       </div>
 
-      <!-- Pagination -->
       {% if paginator.num_pages > 1 %}
       <nav class="vs-pagination">
         {% if page_obj.has_previous %}

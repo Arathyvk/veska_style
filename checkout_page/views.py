@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from coupon_admin.models import Coupon
 
 from cart_user.models import Cart
 from order_user.models import Order, OrderItem
@@ -247,3 +248,53 @@ def place_order(request):
 def order_success(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
     return render(request, 'order_success.html', {'order': order})
+
+ 
+ 
+def _get_session_coupon(request):
+    code = request.session.get('applied_coupon')
+    if not code:
+        return None
+    try:
+        return Coupon.objects.get(code__iexact=code, is_active=True)
+    except Coupon.DoesNotExist:
+        request.session.pop('applied_coupon', None)
+        return None
+ 
+ 
+@require_POST
+@login_required(login_url='login')
+def apply_coupon(request):
+    code = request.POST.get('coupon_code', '').strip().upper()
+    if not code:
+        messages.error(request, 'Please enter a coupon code.')
+        return redirect('checkout')
+ 
+    try:
+        coupon = Coupon.objects.get(code__iexact=code)
+    except Coupon.DoesNotExist:
+        messages.error(request, f'"{code}" is not a valid coupon code.')
+        return redirect('checkout')
+ 
+    from cart_user.models import Cart
+    cart     = Cart.objects.get_or_create(user=request.user)[0]
+    items    = list(cart.items)
+    subtotal = Decimal(str(float(cart.subtotal)))
+ 
+    ok, discount, reason = coupon.validate_all(subtotal, items, request.user)
+    if not ok:
+        messages.error(request, reason)
+        return redirect('checkout')
+ 
+    request.session['applied_coupon'] = coupon.code
+    messages.success(request, f'Coupon "{coupon.code}" applied! You save ₹{discount:.2f}.')
+    return redirect('checkout')
+ 
+ 
+@require_POST
+@login_required(login_url='login')
+def remove_coupon(request):
+    request.session.pop('applied_coupon', None)
+    messages.success(request, 'Coupon removed.')
+    return redirect('checkout')
+ 
