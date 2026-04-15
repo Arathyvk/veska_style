@@ -63,7 +63,7 @@ def product_shop(request):
         )
 
     if selected_category:
-        qs = qs.filter(category=selected_category)
+        qs = qs.filter(category__name__iexact=selected_category)
 
     if selected_sizes:
         qs = qs.filter(

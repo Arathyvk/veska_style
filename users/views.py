@@ -3,7 +3,7 @@ import re
 from django.contrib import messages
 from django.shortcuts import render,redirect
 from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
 
@@ -361,3 +361,12 @@ def reset_password(request):
     return render(request, "reset_password.html")
  
 
+from allauth.socialaccount.models import SocialApp
+from django.contrib.sites.models import Site
+
+
+def debug_social(request):
+    site = Site.objects.get(id=1)
+    apps = SocialApp.objects.filter(sites=site)
+
+    return HttpResponse(f"Apps: {apps}")

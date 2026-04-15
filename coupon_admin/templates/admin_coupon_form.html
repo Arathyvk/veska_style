@@ -1,0 +1,250 @@
+{% extends "admin_base.html" %}
+{% block title %}{% if action == 'edit' %}Edit{% else %}New{% endif %} Coupon · Admin · Veska{% endblock %}
+{% block content %}
+<style>
+:root{--bg:#1a1714;--card:#252118;--card2:#2e2925;--card3:#342e28;--border:#3a342c;--border2:#4a4038;--text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;--terra:#c9967a;--terra2:#e8b49a;--terra-pale:rgba(201,150,122,.12);--green:#4caf7d;--red:#e05252;--radius:6px;--radius-lg:10px;--radius-xl:14px;--head:'Georgia',serif;--body:system-ui,sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
+a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:var(--body)}
+.wrap{padding:24px 28px 60px;max-width:1000px;margin:0 auto}
+.back-lnk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:18px;transition:.15s}
+.back-lnk:hover{color:var(--terra2)}
+.pg-hd{margin-bottom:22px}
+.pg-hd h1{font-family:var(--head);font-size:22px;font-weight:700;color:var(--text)}
+.pg-hd p{font-size:12px;color:var(--muted);margin-top:3px}
+.form-grid{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+@media(max-width:760px){.form-grid{grid-template-columns:1fr}}
+.fsec{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px}
+.fh{background:var(--card2);border-bottom:1px solid var(--border);padding:11px 16px}
+.fh h3{font-size:13.5px;font-weight:700;color:var(--text)}
+.fb{padding:16px}
+.frow{margin-bottom:14px}.frow:last-child{margin-bottom:0}
+.flbl{display:block;font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-bottom:6px}
+.flbl .req{color:var(--red);margin-left:2px}
+.fhint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+.finput,.fselect,.ftextarea{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:9px 11px;font-size:13px;outline:none;transition:.15s}
+.finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--terra)}
+.finput::placeholder,.ftextarea::placeholder{color:var(--muted)}
+.finput.err,.fselect.err{border-color:var(--red)}
+.fselect{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%238a7d72' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.fselect option{background:var(--card2)}
+.ftextarea{resize:vertical;min-height:64px}
+.ferr{font-size:11px;color:var(--red);margin-top:4px;display:flex;align-items:center;gap:4px}
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ms-wrap{border:1.5px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden}
+.ms-wrap:focus-within{border-color:var(--terra)}
+.ms-search{width:100%;background:var(--card2);border:none;border-bottom:1px solid var(--border);color:var(--text);padding:7px 10px;font-size:12.5px;outline:none}
+.ms-search::placeholder{color:var(--muted)}
+.ms-list{max-height:160px;overflow-y:auto;padding:6px;background:var(--card2)}
+.ms-item{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:4px;cursor:pointer;transition:.1s}
+.ms-item:hover{background:var(--terra-pale)}
+.ms-item input{accent-color:var(--terra);width:13px;height:13px;cursor:pointer;flex-shrink:0}
+.ms-item label{font-size:12.5px;color:var(--muted2);cursor:pointer;flex:1}
+.cond-sec{display:none}.cond-sec.show{display:block}
+.trow{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.trow-lbl{font-size:13px;font-weight:500;color:var(--text)}
+.trow-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.tgl{position:relative;width:40px;height:22px;flex-shrink:0}
+.tgl input{opacity:0;width:0;height:0;position:absolute}
+.tgl-track{position:absolute;inset:0;background:var(--border2);border-radius:11px;cursor:pointer;transition:.2s}
+.tgl-track::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tgl input:checked + .tgl-track{background:var(--terra)}
+.tgl input:checked + .tgl-track::after{transform:translateX(18px)}
+.btn-save{width:100%;padding:12px;background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-lg);font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s;letter-spacing:.2px}
+.btn-save:hover{background:var(--terra2)}
+.stat-box{background:var(--card2);border-radius:var(--radius-lg);padding:11px 13px;margin-top:10px}
+.stat-num{font-family:var(--head);font-size:22px;font-weight:700;color:var(--terra2)}
+.stat-lbl{font-size:11px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <a href="{% url 'admin_coupon_list' %}" class="back-lnk">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Coupons
+  </a>
+  <div class="pg-hd">
+    <h1>{% if action == 'edit' %}Edit Coupon{% else %}New Coupon{% endif %}</h1>
+    <p>{% if action == 'edit' %}Update coupon rules{% else %}Set discount conditions{% endif %}</p>
+  </div>
+
+  <form method="POST" id="couponForm">
+    {% csrf_token %}
+    <div class="form-grid">
+
+      <div>
+        <div class="fsec">
+          <div class="fh"><h3>Coupon Details</h3></div>
+          <div class="fb">
+            <div class="frow">
+              <label class="flbl">Code <span class="req">*</span></label>
+              <input class="finput {% if errors.code %}err{% endif %}" name="code"
+                     placeholder="e.g. SAVE10" value="{{ coupon.code|default:'' }}"
+                     oninput="this.value=this.value.toUpperCase()"
+                     style="font-family:monospace;font-size:15px;font-weight:700;letter-spacing:1px">
+              {% if errors.code %}<div class="ferr">⚠ {{ errors.code }}</div>{% endif %}
+            </div>
+            <div class="frow">
+              <label class="flbl">Description</label>
+              <input class="finput" name="description" placeholder="Internal note"
+                     value="{{ coupon.description|default:'' }}">
+              <div class="fhint">Only visible to admins</div>
+            </div>
+            <div class="fgrid2">
+              <div class="frow">
+                <label class="flbl">Discount Type <span class="req">*</span></label>
+                <select class="fselect {% if errors.discount_type %}err{% endif %}"
+                        name="discount_type" id="discountType" onchange="updateDiscUI()">
+                  <option value="">— Select —</option>
+                  <option value="percent" {% if coupon.discount_type == 'percent' %}selected{% endif %}>Percentage (%)</option>
+                  <option value="flat"    {% if coupon.discount_type == 'flat'    %}selected{% endif %}>Fixed Amount (₹)</option>
+                </select>
+                {% if errors.discount_type %}<div class="ferr">⚠ {{ errors.discount_type }}</div>{% endif %}
+              </div>
+              <div class="frow">
+                <label class="flbl" id="valueLbl">Value <span class="req">*</span></label>
+                <input class="finput {% if errors.value %}err{% endif %}" type="number"
+                       step="0.01" min="0.01" name="value" id="valueInput"
+                       placeholder="e.g. 10" value="{{ coupon.value|default:'' }}">
+                {% if errors.value %}<div class="ferr">⚠ {{ errors.value }}</div>{% endif %}
+              </div>
+            </div>
+            <div class="frow cond-sec" id="maxDiscRow">
+              <label class="flbl">Max Discount (₹)</label>
+              <input class="finput" type="number" step="0.01" min="0" name="max_discount"
+                     placeholder="Leave blank = no cap" value="{{ coupon.max_discount|default:'' }}">
+              <div class="fhint">Cap the maximum rupee discount for % coupons</div>
+            </div>
+            <div class="frow">
+              <label class="flbl">Minimum Order Amount (₹)</label>
+              <input class="finput" type="number" step="0.01" min="0" name="min_order_value"
+                     placeholder="0 = no minimum" value="{{ coupon.min_order_value|default:'0' }}">
+            </div>
+          </div>
+        </div>
+
+        <div class="fsec">
+          <div class="fh"><h3>Applicable To</h3></div>
+          <div class="fb">
+            <div class="frow">
+              <label class="flbl">Apply To</label>
+              <select class="fselect" name="apply_to" id="applyTo" onchange="updateApplyUI()">
+                <option value="all"      {% if coupon.apply_to == 'all'      or not coupon %}selected{% endif %}>All Products</option>
+                <option value="category" {% if coupon.apply_to == 'category'               %}selected{% endif %}>Specific Categories</option>
+                <option value="product"  {% if coupon.apply_to == 'product'                %}selected{% endif %}>Specific Products</option>
+              </select>
+            </div>
+            <div class="frow cond-sec" id="catSec">
+              <label class="flbl">Select Categories</label>
+              <div class="ms-wrap">
+                <div class="ms-list">
+                  {% for val, label in all_categories %}
+                  <div class="ms-item">
+                    <input type="checkbox" name="categories" value="{{ val }}" id="cat-{{ val }}"
+                           {% if val in selected_cats %}checked{% endif %}>
+                    <label for="cat-{{ val }}">{{ label }}</label>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <div class="frow cond-sec" id="prodSec">
+              <label class="flbl">Select Products</label>
+              <div class="ms-wrap">
+                <input type="text" class="ms-search" placeholder="Filter products…"
+                       oninput="filterProds(this.value)">
+                <div class="ms-list" id="prodList">
+                  {% for p in all_products %}
+                  <div class="ms-item" data-name="{{ p.name|lower }}">
+                    <input type="checkbox" name="products" value="{{ p.id }}" id="p-{{ p.id }}"
+                           {% if p.id in selected_products %}checked{% endif %}>
+                    <label for="p-{{ p.id }}">{{ p.name }} <span style="color:var(--muted);font-size:10.5px">({{ p.get_category_display }})</span></label>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="fsec">
+          <div class="fh"><h3>Validity</h3></div>
+          <div class="fb">
+            <div class="frow">
+              <label class="flbl">Valid From <span class="req">*</span></label>
+              <input class="finput" type="datetime-local" name="valid_from" value="{{ valid_from_str }}">
+            </div>
+            <div class="frow">
+              <label class="flbl">Valid Until</label>
+              <input class="finput" type="datetime-local" name="valid_until" value="{{ valid_until_str }}">
+              <div class="fhint">Leave blank = never expires</div>
+            </div>
+            <div class="trow" style="border-top:1px solid var(--border);margin-top:10px;padding-top:12px">
+              <div>
+                <div class="trow-lbl">Active</div>
+                <div class="trow-sub">Inactive coupons can't be applied</div>
+              </div>
+              <label class="tgl">
+                <input type="checkbox" name="is_active" {% if coupon.is_active or not coupon %}checked{% endif %}>
+                <span class="tgl-track"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="fsec">
+          <div class="fh"><h3>Usage Limits</h3></div>
+          <div class="fb">
+            <div class="frow">
+              <label class="flbl">Total Usage Limit</label>
+              <input class="finput" type="number" min="1" name="usage_limit"
+                     placeholder="Leave blank = unlimited" value="{{ coupon.usage_limit|default:'' }}">
+            </div>
+            <div class="frow">
+              <label class="flbl">Per-User Limit <span class="req">*</span></label>
+              <input class="finput" type="number" min="1" name="per_user_limit"
+                     value="{{ coupon.per_user_limit|default:'1' }}">
+              <div class="fhint">How many times a single user can use this coupon</div>
+            </div>
+            {% if coupon %}
+            <div class="stat-box">
+              <div class="stat-num">{{ coupon.times_used }}</div>
+              <div class="stat-lbl">times used total</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+=        <button type="submit" class="btn-save">
+          {% if action == 'edit' %}✓ Update Coupon{% else %}+ Create Coupon{% endif %}
+        </button>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<script>
+function updateDiscUI(){
+  const t=document.getElementById('discountType').value;
+  const lbl=document.getElementById('valueLbl');
+  const row=document.getElementById('maxDiscRow');
+  const inp=document.getElementById('valueInput');
+  if(t==='percent'){lbl.innerHTML='Percentage (%) <span class="req">*</span>';inp.placeholder='e.g. 10 (= 10%)';inp.max=100;row.classList.add('show')}
+  else if(t==='flat'){lbl.innerHTML='Amount (₹) <span class="req">*</span>';inp.placeholder='e.g. 100 (= ₹100 off)';inp.removeAttribute('max');row.classList.remove('show')}
+  else{row.classList.remove('show')}
+}
+function updateApplyUI(){
+  const v=document.getElementById('applyTo').value;
+  document.getElementById('catSec').classList.toggle('show',v==='category');
+  document.getElementById('prodSec').classList.toggle('show',v==='product');
+}
+function filterProds(q){
+  document.querySelectorAll('#prodList .ms-item').forEach(el=>{
+    el.style.display=el.dataset.name.includes(q.toLowerCase())?'':'none';
+  });
+}
+document.addEventListener('DOMContentLoaded',()=>{updateDiscUI();updateApplyUI()});
+</script>
+{% endblock %}

@@ -1,7 +1,6 @@
-<!-- {% extends "user_base.html" %}
+{% extends "user_base.html" %}
 {% load static %}
 {% block title %}Checkout · Veska{% endblock %}
-
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -13,8 +12,9 @@
   --success:#3a7d5a;--success-pale:#eaf4ee;
   --warning:#c47f17;--warning-pale:#fef8ec;
   --danger:#b53333;--danger-pale:#fdf0f0;
-  --shadow-xs:0 1px 3px rgba(30,26,23,.06);--shadow-sm:0 2px 8px rgba(30,26,23,.08);
-  --shadow-md:0 6px 24px rgba(30,26,23,.1);
+  --shadow-xs:0 1px 3px rgba(30,26,23,.06);
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --shadow-lg:0 16px 48px rgba(30,26,23,.14);
   --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
   --transition:all .2s cubic-bezier(.4,0,.2,1);
   --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
@@ -22,138 +22,119 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
 a{text-decoration:none;color:inherit}
-
 .co-page{padding-bottom:80px;min-height:100vh;background:var(--cream)}
-.container{max-width:1140px;margin:0 auto;padding:0 24px}
+.container{max-width:1080px;margin:0 auto;padding:0 24px}
 
-.co-hero{background:var(--charcoal);padding:36px 0 32px;position:relative;overflow:hidden}
-.co-hero::after{content:'CHECKOUT';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-family:var(--head);font-size:90px;font-weight:700;color:rgba(255,255,255,.03);pointer-events:none}
+.co-hero{background:var(--charcoal);padding:36px 0 30px;position:relative;overflow:hidden}
+.co-hero::after{content:'CHECKOUT';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-family:var(--head);font-size:70px;font-weight:700;color:rgba(255,255,255,.03);white-space:nowrap;pointer-events:none}
 .co-hero .inner{position:relative;z-index:1}
-.co-hero h1{font-family:var(--head);font-size:clamp(26px,4vw,40px);font-weight:600;color:#fff;margin-bottom:4px}
+.co-hero h1{font-family:var(--head);font-size:clamp(22px,3.5vw,36px);font-weight:600;color:#fff;margin-bottom:4px}
 .co-hero h1 em{font-style:italic;color:var(--blush)}
 .co-hero p{font-size:12px;color:rgba(255,255,255,.4)}
 
-.breadcrumbs{display:flex;align-items:center;gap:8px;padding:16px 0 20px;font-size:12px;color:var(--muted)}
-.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
-.breadcrumbs .sep{color:var(--muted-lt);font-size:10px}
-.breadcrumbs .current{color:var(--ink);font-weight:500}
+.breadcrumbs{display:flex;align-items:center;gap:8px;padding:14px 0 18px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}.breadcrumbs .sep{color:var(--muted-lt);font-size:10px}.breadcrumbs .current{color:var(--ink);font-weight:500}
 
-.steps{display:flex;align-items:center;gap:0;margin-bottom:28px}
-.step{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted-lt)}
-.step.active{color:var(--terra)}.step.done{color:var(--success)}
-.step-num{width:24px;height:24px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
-.step-line{flex:1;height:1px;background:var(--border);margin:0 10px}
+.steps{display:flex;align-items:center;margin-bottom:22px;gap:0}
+.step{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted-lt)}
+.step.done{color:var(--success)}.step.active{color:var(--terra)}
+.step-num{width:24px;height:24px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;background:transparent}
+.step.done .step-num{background:var(--success);border-color:var(--success);color:#fff}
+.step.active .step-num{background:var(--terra);border-color:var(--terra);color:#fff}
+.step-line{flex:1;height:1.5px;background:var(--border-lt);margin:0 10px;max-width:60px}
 
-.msg-bar{padding:12px 16px;border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px}
-.msg-bar.error{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
+.msg-bar{padding:11px 16px;border-radius:var(--radius-md);margin-bottom:12px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px}
 .msg-bar.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.2)}
+.msg-bar.error{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
 .msg-bar.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.2)}
 
-.co-grid{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+.co-grid{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
 @media(max-width:860px){.co-grid{grid-template-columns:1fr}}
 
-.co-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:20px;animation:reveal .35s ease both}
-.co-card:nth-child(2){animation-delay:80ms}
-@keyframes reveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.co-card-head{padding:16px 20px;border-bottom:1px solid var(--border-lt);display:flex;align-items:center;justify-content:space-between}
-.co-card-head h3{font-family:var(--head);font-size:18px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
-.co-card-head h3 svg{width:16px;height:16px;color:var(--terra)}
-.co-card-head a{font-size:12px;color:var(--terra);font-weight:600}
-.co-card-body{padding:18px 20px}
+.co-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-xs)}
+.co-card-head{padding:13px 18px;background:var(--parchment);border-bottom:1px solid var(--border-lt);display:flex;align-items:center;justify-content:space-between}
+.co-card-head h3{font-family:var(--head);font-size:17px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
+.co-card-head h3 svg{width:15px;height:15px;color:var(--terra)}
+.co-card-head .hd-link{font-size:12px;color:var(--terra);font-weight:600;display:flex;align-items:center;gap:5px}
+.co-card-head .hd-link:hover{color:var(--terra-deep)}
+.co-card-body{padding:16px 18px}
 
-/* addresses */
-.addr-list{display:flex;flex-direction:column;gap:10px}
-.addr-card{border:2px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;cursor:pointer;transition:var(--transition);display:flex;align-items:flex-start;gap:12px;position:relative}
-.addr-card:hover{border-color:var(--terra);background:var(--terra-pale)}
-.addr-card.selected{border-color:var(--terra);background:var(--terra-pale)}
-.addr-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
-.addr-card.selected .addr-radio{border-color:var(--terra);background:var(--terra)}
-.addr-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;display:none}
-.addr-card.selected .addr-radio::after{display:block}
+.addr-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.addr-option{border:2px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:var(--transition)}
+.addr-option.selected,.addr-option:has(input:checked){border-color:var(--terra);background:var(--terra-pale)}
+.addr-option label{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer;width:100%}
+.addr-option input[type=radio]{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.addr-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:var(--transition);background:var(--warm-white)}
+.addr-option.selected .addr-radio,.addr-option:has(input:checked) .addr-radio{border-color:var(--terra);background:var(--terra)}
+.addr-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;opacity:0;transition:opacity .15s}
+.addr-option.selected .addr-radio::after,.addr-option:has(input:checked) .addr-radio::after{opacity:1}
 .addr-info{flex:1;min-width:0}
-.addr-name{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;display:flex;align-items:center;gap:8px}
-.addr-default-tag{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--terra);color:#fff;padding:2px 6px;border-radius:10px}
+.addr-name{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.default-tag{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--terra);color:#fff;padding:2px 7px;border-radius:10px}
 .addr-text{font-size:12.5px;color:var(--muted);line-height:1.6}
-.addr-phone{font-size:12px;color:var(--muted-lt);margin-top:4px}
-.addr-actions{display:flex;gap:8px;margin-top:8px}
-.addr-action-btn{font-size:11px;color:var(--terra);font-weight:600;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
-.addr-action-btn:hover{color:var(--terra-deep)}
-.no-address{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
-.btn-add-addr{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:11px;margin-top:10px;border:1.5px dashed var(--border);border-radius:var(--radius-lg);background:none;color:var(--muted);font-family:var(--body);font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);text-decoration:none}
+.addr-phone{font-size:11.5px;color:var(--muted-lt);margin-top:3px}
+.addr-actions{display:flex;gap:12px;margin-top:8px}
+.addr-act-btn{font-size:11.5px;color:var(--terra);font-weight:600;background:none;border:none;cursor:pointer;padding:0;font-family:var(--body);text-decoration:underline;text-underline-offset:2px}
+.addr-act-btn:hover{color:var(--terra-deep)}
+.btn-add-addr{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:11px;background:none;color:var(--muted);border:1.5px dashed var(--border);border-radius:var(--radius-lg);font-family:var(--body);font-size:13px;cursor:pointer;transition:var(--transition);text-decoration:none}
 .btn-add-addr:hover{border-color:var(--terra);color:var(--terra);background:var(--terra-pale)}
+.no-addr-state{text-align:center;padding:24px;color:var(--muted);font-size:13px}
 
-/* order items */
-.oi-list{display:flex;flex-direction:column;gap:12px}
-.oi-row{display:flex;gap:12px;align-items:center}
-.oi-img{width:60px;height:72px;border-radius:var(--radius-sm);overflow:hidden;background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
+.oi-row{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--border-lt)}
+.oi-row:last-child{border-bottom:none;padding-bottom:0}
+.oi-img{width:54px;height:66px;border-radius:var(--radius-sm);overflow:hidden;background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
 .oi-img img{width:100%;height:100%;object-fit:cover}
 .oi-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
 .oi-body{flex:1;min-width:0}
-.oi-name{font-family:var(--head);font-size:14px;font-weight:500;color:var(--ink);line-height:1.3;margin-bottom:3px}
-.oi-meta{font-size:11px;color:var(--muted-lt)}
-.oi-price{text-align:right;flex-shrink:0}
-.oi-unit{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
-.oi-total{font-family:var(--head);font-size:16px;font-weight:700;color:var(--charcoal)}
+.oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted-lt);margin-bottom:3px}
+.oi-name{font-family:var(--head);font-size:14px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
+.oi-meta{font-size:11.5px;color:var(--muted-lt)}
+.oi-price-col{text-align:right;flex-shrink:0;min-width:70px}
+.oi-unit-price{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
+.oi-line-total{font-family:var(--head);font-size:16px;font-weight:700;color:var(--charcoal)}
 
-/* notes */
-.notes-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:10px 14px;font-family:var(--body);font-size:13px;background:var(--parchment);color:var(--ink);outline:none;resize:vertical;min-height:72px;transition:var(--transition)}
-.notes-field:focus{border-color:var(--terra);background:#fff;box-shadow:0 0 0 3px rgba(181,103,58,.08)}
+.notes-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:10px 14px;font-family:var(--body);font-size:13px;background:var(--parchment);color:var(--ink);outline:none;resize:vertical;min-height:68px;transition:var(--transition)}
+.notes-field:focus{border-color:var(--terra);background:#fff;box-shadow:0 0 0 3px rgba(181,103,58,.07)}
+.notes-field::placeholder{color:var(--muted-lt)}
 
-/* ── SUMMARY CARD ── */
-.summary-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px}
-.summary-head{padding:16px 20px 14px;background:linear-gradient(135deg,var(--charcoal) 0%,#3d3630 100%)}
-.summary-head h3{font-family:var(--head);font-size:17px;font-weight:600;color:#fff}
-.summary-body{padding:18px 20px}
-
+.summary-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px;box-shadow:var(--shadow-sm)}
+.sum-head{padding:16px 20px;background:linear-gradient(135deg,var(--charcoal) 0%,#3d3630 100%)}
+.sum-head h3{font-family:var(--head);font-size:17px;font-weight:600;color:#fff}
+.sum-body{padding:18px 20px}
 .sum-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;color:var(--muted)}
 .sum-row .val{color:var(--ink);font-weight:500}
-.sum-row.free{color:var(--success)}.sum-row.free .val{color:var(--success);font-weight:600}
-.sum-row.discount{color:var(--success)}.sum-row.discount .val{color:var(--success);font-weight:600}
-.sum-divider{height:1px;background:var(--border-lt);margin:8px 0}
-.sum-total{display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;font-family:var(--head);font-size:20px;font-weight:700;color:var(--ink)}
+.sum-row.free .val{color:var(--success);font-weight:600}
+.sum-row.saving .val{color:var(--success);font-weight:600}
+.sum-row.tax-row{border-top:1px dashed var(--border-lt);margin-top:4px;padding-top:10px}
+.sum-divider{height:1px;background:var(--border);margin:8px 0}
+.sum-total{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--head);font-size:22px;font-weight:700;color:var(--ink);padding:8px 0 0}
 .sum-total .val{color:var(--charcoal)}
 
-/* ── COUPON SECTION ── */
-.coupon-box{margin-top:14px;padding-top:14px;border-top:1px solid var(--border-lt)}
-.coupon-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.coupon-input-row{display:flex;gap:8px}
-.coupon-input{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:9px 12px;font-family:var(--body);font-size:13px;background:var(--parchment);color:var(--ink);outline:none;text-transform:uppercase;letter-spacing:.5px;transition:var(--transition)}
-.coupon-input:focus{border-color:var(--terra);background:#fff;box-shadow:0 0 0 3px rgba(181,103,58,.08)}
-.coupon-input::placeholder{text-transform:none;letter-spacing:0}
-.btn-coupon{padding:9px 16px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:12px;font-weight:600;cursor:pointer;transition:var(--transition);white-space:nowrap}
-.btn-coupon:hover{background:var(--terra)}
+.free-ship-hint{margin-top:10px;padding:9px 12px;background:var(--success-pale);border-radius:var(--radius-sm);font-size:11.5px;color:var(--success);font-weight:500;display:flex;align-items:center;gap:6px}
+.free-ship-track{margin-top:8px;height:5px;background:var(--sand);border-radius:3px;overflow:hidden}
+.free-ship-fill{height:100%;background:var(--success);border-radius:3px;transition:width .5s ease}
 
-.coupon-applied{display:flex;align-items:center;justify-content:space-between;background:var(--success-pale);border:1px solid rgba(58,125,90,.25);border-radius:var(--radius-md);padding:10px 12px}
-.coupon-applied-info{display:flex;align-items:center;gap:8px}
-.coupon-applied-code{font-size:12px;font-weight:700;color:var(--success);letter-spacing:.5px;font-family:monospace}
-.coupon-applied-desc{font-size:11px;color:var(--success);opacity:.8}
-.btn-remove-coupon{background:none;border:none;color:var(--success);cursor:pointer;font-size:14px;opacity:.7;padding:0 2px;line-height:1;transition:opacity .15s}
-.btn-remove-coupon:hover{opacity:1}
-
-/* payment badge */
-.payment-badge{display:flex;align-items:center;gap:10px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;margin-top:14px}
+.payment-badge{display:flex;align-items:center;gap:11px;background:var(--parchment);border:1px solid var(--border-lt);border-radius:var(--radius-md);padding:12px 14px;margin-top:14px}
 .payment-badge svg{width:18px;height:18px;color:var(--terra);flex-shrink:0}
-.payment-badge .pb-label{font-size:12px;font-weight:600;color:var(--charcoal)}
-.payment-badge .pb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.pb-label{font-size:13px;font-weight:600;color:var(--charcoal);margin-bottom:2px}
+.pb-sub{font-size:11px;color:var(--muted)}
 
-.btn-place-order{width:100%;padding:16px;margin-top:16px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:14px;font-weight:700;letter-spacing:.4px;cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:10px}
-.btn-place-order:hover:not(:disabled){background:var(--terra)}
-.btn-place-order:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed}
-.btn-back-cart{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;margin-top:8px;background:none;border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:var(--body);font-size:12.5px;color:var(--muted);cursor:pointer;transition:var(--transition);text-decoration:none}
+.btn-place-order{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:16px;margin-top:16px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:14px;font-weight:700;letter-spacing:.4px;cursor:pointer;transition:var(--transition)}
+.btn-place-order:hover{background:var(--terra)}
+.btn-place-order:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed;pointer-events:none}
+.btn-back-cart{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;margin-top:9px;background:none;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:var(--body);font-size:13px;cursor:pointer;transition:var(--transition);text-decoration:none}
 .btn-back-cart:hover{border-color:var(--terra);color:var(--terra)}
-
-.trust-strip{margin-top:16px;padding-top:14px;border-top:1px solid var(--border-lt);display:flex;flex-direction:column;gap:6px}
+.trust-strip{margin-top:16px;padding-top:14px;border-top:1px solid var(--border-lt);display:flex;flex-direction:column;gap:7px}
 .trust-item{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.no-addr-note{background:var(--danger-pale);border:1px solid rgba(181,51,51,.2);border-radius:var(--radius-md);padding:10px 13px;margin-top:12px;font-size:12px;color:var(--danger);line-height:1.6}
 </style>
 
 <div class="co-page">
   <div class="co-hero">
-    <div class="container">
-      <div class="inner">
-        <h1>Secure <em>Checkout</em></h1>
-        <p>Review your order and complete your purchase</p>
-      </div>
-    </div>
+    <div class="container"><div class="inner">
+      <h1>Secure <em>Checkout</em></h1>
+      <p>Review your order and complete your purchase</p>
+    </div></div>
   </div>
 
   <div class="container">
@@ -165,11 +146,11 @@ a{text-decoration:none;color:inherit}
     </nav>
 
     <div class="steps">
-      <div class="step done"><div class="step-num">✓</div> Cart</div>
+      <div class="step done"><div class="step-num">✓</div><span>Cart</span></div>
       <div class="step-line"></div>
-      <div class="step active"><div class="step-num">2</div> Checkout</div>
+      <div class="step active"><div class="step-num">2</div><span>Checkout</span></div>
       <div class="step-line"></div>
-      <div class="step"><div class="step-num">3</div> Confirmed</div>
+      <div class="step"><div class="step-num">3</div><span>Confirmed</span></div>
     </div>
 
     {% for message in messages %}
@@ -179,65 +160,103 @@ a{text-decoration:none;color:inherit}
     </div>
     {% endfor %}
 
+
+{% if coupon %}
+<div style="display:flex;align-items:center;justify-content:space-between;background:var(--success-pale);border:1px solid rgba(58,125,90,.2);border-radius:var(--radius-md);padding:10px 13px;margin:12px 0">
+  <div>
+    <div style="font-size:12px;font-weight:700;color:var(--success)">🏷️ {{ coupon.code }}</div>
+    <div style="font-size:11px;color:var(--success);margin-top:2px">Saving ₹{{ discount|floatformat:2 }}</div>
+  </div>
+  <form method="POST" action="{% url 'remove_coupon' %}">
+    {% csrf_token %}
+    <button type="submit" style="background:none;border:none;color:var(--success);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--body);text-decoration:underline">Remove</button>
+  </form>
+</div>
+<div class="sum-row" style="color:var(--success)">
+  <span>Discount ({{ coupon.code }})</span>
+  <span class="val" style="color:var(--success)">−₹{{ discount|floatformat:2 }}</span>
+</div>
+{% else %}
+<div style="margin:12px 0;padding-top:12px;border-top:1px solid var(--border-lt)">
+  <div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:7px">Coupon Code</div>
+  <form method="POST" action="{% url 'apply_coupon' %}">
+    {% csrf_token %}
+    <div style="display:flex;gap:7px">
+      <input type="text" name="coupon_code" placeholder="Enter code…"
+             autocomplete="off" oninput="this.value=this.value.toUpperCase()"
+             style="flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:.5px;background:var(--parchment);color:var(--ink);outline:none;transition:.18s"
+             onfocus="this.style.borderColor='var(--terra)'" onblur="this.style.borderColor='var(--border)'">
+      <button type="submit"
+              style="background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--body);font-size:12.5px;font-weight:600;padding:9px 15px;cursor:pointer;transition:.2s;white-space:nowrap"
+              onmouseover="this.style.background='var(--terra)'"
+              onmouseout="this.style.background='var(--charcoal)'">Apply</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+
+
     <form method="POST" action="{% url 'place_order' %}" id="checkoutForm">
       {% csrf_token %}
-      <input type="hidden" name="address_id" id="selectedAddressId" value="{{ selected_addr_id }}">
+      <input type="hidden" name="address_id" id="selectedAddrId" value="{{ selected_id }}">
 
       <div class="co-grid">
+
         <div>
 
           <div class="co-card">
             <div class="co-card-head">
               <h3>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                 </svg>
                 Delivery Address
               </h3>
-              <a href="{% url 'address_add' %}">+ Add New</a>
+              <a href="{% url 'address_add' %}?next=checkout" class="hd-link">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add New
+              </a>
             </div>
             <div class="co-card-body">
               {% if addresses %}
-              <div class="addr-list" id="addrList">
+              <div class="addr-list">
                 {% for addr in addresses %}
-                <div class="addr-card {% if addr.pk|stringformat:'s' == selected_addr_id %}selected{% endif %}"
+                <div class="addr-option {% if addr.pk|stringformat:'s' == selected_id %}selected{% endif %}"
                      id="addrCard-{{ addr.pk }}"
                      onclick="selectAddr('{{ addr.pk }}')">
-                  <div class="addr-radio"></div>
-                  <div class="addr-info">
-                    <div class="addr-name">
-                      {{ addr.full_name }}
-                      {% if addr.is_default %}<span class="addr-default-tag">Default</span>{% endif %}
+                  <label>
+                    <input type="radio" name="_addr_radio" value="{{ addr.pk }}"
+                           {% if addr.pk|stringformat:'s' == selected_id %}checked{% endif %}>
+                    <div class="addr-radio"></div>
+                    <div class="addr-info">
+                      <div class="addr-name">
+                        {{ addr.full_name }}
+                        {% if addr.is_default %}<span class="default-tag">Default</span>{% endif %}
+                      </div>
+                      <div class="addr-text">{{ addr.one_line }}</div>
+                      <div class="addr-phone">📞 {{ addr.phone }}</div>
+                      <div class="addr-actions">
+                        <a href="{% url 'address_edit' addr.pk %}" class="addr-act-btn"
+                           onclick="event.stopPropagation()">Edit</a>
+                        {% if not addr.is_default %}
+                        <form method="POST" action="{% url 'address_set_default' addr.pk %}"
+                              style="display:inline" onclick="event.stopPropagation()">
+                          {% csrf_token %}
+                          <button type="submit" class="addr-act-btn">Set as Default</button>
+                        </form>
+                        {% endif %}
+                      </div>
                     </div>
-                    <div class="addr-text">{{ addr.one_line }}</div>
-                    <div class="addr-phone">📞 {{ addr.phone }}</div>
-                    <div class="addr-actions">
-                      <a href="{% url 'address_edit' addr.pk %}" class="addr-action-btn">Edit</a>
-                      {% if not addr.is_default %}
-                      <form method="POST" action="{% url 'address_set_default' addr.pk %}" style="display:inline">
-                        {% csrf_token %}
-                        <button type="submit" class="addr-action-btn">Set as default</button>
-                      </form>
-                      {% endif %}
-                    </div>
-                  </div>
+                  </label>
                 </div>
                 {% endfor %}
               </div>
               {% else %}
-              <div class="no-address">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="width:36px;height:36px;margin:0 auto 10px;display:block;color:var(--muted-lt)">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-                No saved addresses yet.
-              </div>
+              <div class="no-addr-state">No saved addresses yet. Add one to continue.</div>
               {% endif %}
-              <a href="{% url 'address_add' %}" class="btn-add-addr">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
+              <a href="{% url 'address_add' %}?next=checkout" class="btn-add-addr">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add New Address
               </a>
             </div>
@@ -253,60 +272,56 @@ a{text-decoration:none;color:inherit}
                 Order Items
                 <span style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400">({{ items|length }})</span>
               </h3>
-              <a href="{% url 'cart_detail' %}">Edit Cart</a>
+              <a href="{% url 'cart_detail' %}" class="hd-link">Edit Cart</a>
             </div>
             <div class="co-card-body">
-              <div class="oi-list">
-                {% for item in items %}
-                <div class="oi-row">
-                  <div class="oi-img">
-                    {% with img=item.product.primary_image %}
-                      {% if img %}
-                        <img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
-                      {% else %}
-                        <div class="oi-img-empty">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="22" height="22">
-                            <rect x="3" y="3" width="18" height="18" rx="3"/>
-                            <polyline points="21 15 16 10 5 21"/>
-                          </svg>
-                        </div>
-                      {% endif %}
-                    {% endwith %}
-                  </div>
-                  <div class="oi-body">
-                    <div class="oi-name">{{ item.product.name }}</div>
-                    <div class="oi-meta">
-                      {% if item.variant and item.variant.size %}Size: {{ item.variant.size }} · {% endif %}
-                      Qty: {{ item.quantity }}
-                    </div>
-                  </div>
-                  <div class="oi-price">
-                    <div class="oi-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
-                    <div class="oi-total">₹{{ item.line_total|floatformat:2 }}</div>
+              {% for item in items %}
+              <div class="oi-row">
+                <div class="oi-img">
+                 {% with img=item.product.productimage_set.first %}
+                    {% if img and img.image %}
+                      <img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                    {% else %}
+                      <div class="oi-img-empty">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+                          <rect x="3" y="3" width="18" height="18" rx="3"/>
+                          <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+                </div>
+                <div class="oi-body">
+                  <div class="oi-cat">{{ item.product.get_category_display }}</div>
+                  <div class="oi-name">{{ item.product.name }}</div>
+                  <div class="oi-meta">
+                    {% if item.variant and item.variant.size %}Size: {{ item.variant.size }} · {% endif %}
+                    Qty: {{ item.quantity }}
+                    {% if item.product.original_price and item.product.original_price > item.product.price %}
+                      · <span style="color:var(--success);font-weight:600">{{ item.product.discount_percent }}% off</span>
+                    {% endif %}
                   </div>
                 </div>
-                {% if not forloop.last %}
-                <hr style="border:none;border-top:1px solid var(--border-lt)">
-                {% endif %}
-                {% endfor %}
+                <div class="oi-price-col">
+                  <div class="oi-unit-price">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
+                  <div class="oi-line-total">₹{{ item.line_total|floatformat:2 }}</div>
+                </div>
               </div>
+              {% endfor %}
             </div>
           </div>
 
           <div class="co-card">
             <div class="co-card-head">
               <h3>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 Order Notes
-                <span style="font-family:var(--body);font-size:12px;color:var(--muted-lt);font-weight:400">(optional)</span>
+                <span style="font-family:var(--body);font-size:11.5px;color:var(--muted-lt);font-weight:400">(optional)</span>
               </h3>
             </div>
             <div class="co-card-body">
               <textarea name="notes" class="notes-field"
-                        placeholder="Special delivery instructions, landmark, or any note…"></textarea>
+                        placeholder="Delivery instructions, landmark, special requests…"></textarea>
             </div>
           </div>
 
@@ -314,78 +329,50 @@ a{text-decoration:none;color:inherit}
 
         <div>
           <div class="summary-card">
-            <div class="summary-head">
-              <h3>Order Summary</h3>
-            </div>
-            <div class="summary-body">
+            <div class="sum-head"><h3>Order Summary</h3></div>
+            <div class="sum-body">
 
               <div class="sum-row">
                 <span>Subtotal ({{ items|length }} item{{ items|length|pluralize }})</span>
                 <span class="val">₹{{ subtotal|floatformat:2 }}</span>
               </div>
 
-              {% if discount_amount > 0 %}
-              <div class="sum-row discount">
-                <span>
-                  Discount
-                  {% if coupon %}
-                    <span style="font-size:10px;background:var(--success-pale);border:1px solid rgba(58,125,90,.2);color:var(--success);padding:1px 6px;border-radius:8px;margin-left:4px;font-weight:700;letter-spacing:.3px;font-family:monospace">{{ coupon.code }}</span>
-                  {% endif %}
-                </span>
-                <span class="val">− ₹{{ discount_amount|floatformat:2 }}</span>
+              {% if shipping == 0 %}
+              <div class="sum-row free">
+                <span>Shipping</span><span class="val">FREE</span>
+              </div>
+              {% else %}
+              <div class="sum-row">
+                <span>Shipping</span><span class="val">₹{{ shipping|floatformat:2 }}</span>
               </div>
               {% endif %}
 
-              <div class="sum-row {% if shipping == 0 %}free{% endif %}">
-                <span>Shipping</span>
-                <span class="val">{% if shipping == 0 %}FREE{% else %}₹{{ shipping|floatformat:2 }}{% endif %}</span>
+              {% if tax_rate_pct > 0 %}
+              <div class="sum-row tax-row">
+                <span>GST ({{ tax_rate_pct }}%)</span>
+                <span class="val">₹{{ tax|floatformat:2 }}</span>
               </div>
+              {% endif %}
 
               <div class="sum-divider"></div>
               <div class="sum-total">
-                <span>Total</span>
-                <span class="val">₹{{ total|floatformat:2 }}</span>
+                <span>Total</span><span class="val">₹{{ total|floatformat:2 }}</span>
               </div>
 
               {% if shipping > 0 %}
-              <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">
-                Add ₹{{ free_threshold|floatformat:0 }} worth to get free shipping
+              <div style="margin-top:12px">
+                {% with remaining=free_threshold|add:subtotal|add:"-999" %}
+                <div class="free-ship-hint">
+                  🚚 Add ₹{{ free_threshold|floatformat:0|add:"-"|add:subtotal|floatformat:0 }} more for free shipping
+                </div>
+                {% endwith %}
+                <div class="free-ship-track">
+                  <div class="free-ship-fill" style="width:{% widthratio subtotal free_threshold 100 %}%"></div>
+                </div>
               </div>
+              {% else %}
+              <div class="free-ship-hint">🎉 You've unlocked free shipping!</div>
               {% endif %}
-
-              <div class="coupon-box">
-                <div class="coupon-label">Have a coupon?</div>
-                {% if coupon %}
-                  <div class="coupon-applied">
-                    <div class="coupon-applied-info">
-                      <span style="font-size:16px">🏷️</span>
-                      <div>
-                        <div class="coupon-applied-code">{{ coupon.code }}</div>
-                        <div class="coupon-applied-desc">
-                          {% if coupon.discount_type == 'flat' %}
-                            ₹{{ coupon.value|floatformat:0 }} off
-                          {% else %}
-                            {{ coupon.value|floatformat:0 }}% off{% if coupon.max_discount %} (max ₹{{ coupon.max_discount|floatformat:0 }}){% endif %}
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-                    <form method="POST" action="{% url 'remove_coupon' %}">
-                      {% csrf_token %}
-                      <button type="submit" class="btn-remove-coupon" title="Remove coupon">✕</button>
-                    </form>
-                  </div>
-                {% else %}
-                  <form method="POST" action="#">
-                    {% csrf_token %}
-                    <div class="coupon-input-row">
-                      <input type="text" name="coupon_code" class="coupon-input"
-                             placeholder="Enter coupon code" maxlength="50" autocomplete="off">
-                      <button type="submit" class="btn-coupon">Apply</button>
-                    </div>
-                  </form>
-                {% endif %}
-              </div>
 
               <div class="payment-badge">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -398,31 +385,31 @@ a{text-decoration:none;color:inherit}
                 </div>
               </div>
 
-              <button type="submit" class="btn-place-order" id="placeOrderBtn"
+              <button type="submit" class="btn-place-order"
+                      id="placeOrderBtn"
                       {% if not addresses %}disabled{% endif %}>
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
-                {% if addresses %}Place Order · ₹{{ total|floatformat:2 }}{% else %}Add an address to continue{% endif %}
+                Place Order · ₹{{ total|floatformat:2 }}
               </button>
 
               {% if not addresses %}
-              <div style="font-size:11.5px;color:var(--danger);text-align:center;margin-top:8px">
-                Please add a delivery address above to place your order.
+              <div class="no-addr-note">
+                Please add a delivery address above to continue.
               </div>
               {% endif %}
 
               <a href="{% url 'cart_detail' %}" class="btn-back-cart">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 Back to Cart
               </a>
 
               <div class="trust-strip">
-                <div class="trust-item">🔒 Secure checkout</div>
+                <div class="trust-item">🔒 Your data is secure &amp; encrypted</div>
                 <div class="trust-item">🚚 Free shipping above ₹999</div>
                 <div class="trust-item">↩️ Easy 30-day returns</div>
+                <div class="trust-item">📞 24/7 customer support</div>
               </div>
 
             </div>
@@ -436,21 +423,31 @@ a{text-decoration:none;color:inherit}
 
 <script>
 function selectAddr(pk) {
-  document.querySelectorAll('.addr-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('selectedAddrId').value = pk;
+
+  document.querySelectorAll('.addr-option').forEach(el => {
+    el.classList.remove('selected');
+    const radio = el.querySelector('input[type=radio]');
+    if (radio) radio.checked = false;
+  });
+
   const card = document.getElementById('addrCard-' + pk);
-  if (card) card.classList.add('selected');
-  document.getElementById('selectedAddressId').value = pk;
+  if (card) {
+    card.classList.add('selected');
+    const radio = card.querySelector('input[type=radio]');
+    if (radio) radio.checked = true;
+  }
+
+  const btn = document.getElementById('placeOrderBtn');
+  if (btn) btn.disabled = false;
 }
+
 document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-  const addrId = document.getElementById('selectedAddressId').value;
+  const addrId = document.getElementById('selectedAddrId').value;
   if (!addrId) {
     e.preventDefault();
     alert('Please select a delivery address to continue.');
-    return;
   }
-  const btn = document.getElementById('placeOrderBtn');
-  btn.textContent = 'Placing order…';
-  btn.disabled = true;
 });
 </script>
-{% endblock %} -->
+{% endblock %}

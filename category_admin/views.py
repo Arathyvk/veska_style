@@ -5,8 +5,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.views.decorators.cache import never_cache
 
-from .models import Category
-from .forms import CategoryForm
+from category_admin.models import Category
+from .forms  import CategoryForm
 
 
 def is_admin(user):
@@ -49,11 +49,16 @@ def category_add(request):
     if not is_admin(request.user):
         return redirect('admin_login')
 
-    form = CategoryForm()
+    form = CategoryForm(request.POST or None)
+
     if request.method == 'POST':
-        form = CategoryForm(request.POST)
         if form.is_valid():
-            category = form.save()
+            try:
+                category = form.save()
+            except Exception as e:
+                print("ERROR:", e)
+                messages.error(request, str(e))
+
             messages.success(request, f'"{category.name}" added successfully!')
             return redirect('category_list')
         else:
