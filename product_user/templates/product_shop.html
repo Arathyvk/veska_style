@@ -1,681 +1,647 @@
 {% extends "user_base.html" %}
 {% load static %}
-{% block title %}Shop · Veska{% endblock %}
+{% block title %}Shop – All Products · Veska{% endblock %}
 
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
 <style>
-:root{
-  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
-  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
-  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
-  --border:#e0d9d0;--border-lt:#ece6de;
-  --success:#3a7d5a;--success-pale:#eaf4ee;
-  --warning:#c47f17;--warning-pale:#fef8ec;
-  --danger:#b53333;--danger-pale:#fdf0f0;
+:root {
+  --cream:#faf8f5; --warm-white:#ffffff; --parchment:#f2ede6;
+  --sand:#e8dfd3; --blush:#e9d5c8;
+  --terra:#b56744; --terra-deep:#8f4f31; --terra-pale:#f7ede5;
+  --ink:#1e1a17; --charcoal:#2e2925;
+  --muted:#7a6f66; --muted-lt:#b0a699;
+  --border:#e0d9d0; --border-lt:#ece6de;
   --shadow-xs:0 1px 3px rgba(30,26,23,.06);
   --shadow-sm:0 2px 8px rgba(30,26,23,.08);
-  --shadow-md:0 6px 24px rgba(30,26,23,.10);
-  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:20px;
+  --shadow-md:0 6px 24px rgba(30,26,23,.1);
+  --shadow-lg:0 16px 48px rgba(30,26,23,.14);
+  --radius-sm:6px; --radius-md:10px;
+  --radius-lg:16px; --radius-xl:24px;
   --transition:all .2s cubic-bezier(.4,0,.2,1);
   --head:'Cormorant Garamond',Georgia,serif;
   --body:'DM Sans',sans-serif;
 }
-/* full-page reset inside content block */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--body); background: var(--cream); color: var(--ink); }
-a { text-decoration: none; color: inherit; }
-button, input, select, textarea { font-family: var(--body); }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
 
-/* ── HERO ───────────────────────────────────────── */
-.vs-hero {
-  background: var(--charcoal);
-  padding: 40px 0 34px;
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  display: block;
-}
-.vs-hero::after {
-  content: 'SHOP';
-  position: absolute; right: 40px; top: 50%;
-  transform: translateY(-50%);
-  font-family: var(--head); font-size: 140px; font-weight: 700;
-  color: rgba(255,255,255,.025); pointer-events: none; white-space: nowrap;
-}
-.vs-hero-inner {
-  position: relative; z-index: 1;
-  max-width: 1280px; margin: 0 auto; padding: 0 28px;
-}
-.vs-hero h1 {
-  font-family: var(--head); font-size: clamp(28px,4vw,46px);
-  font-weight: 600; color: #fff; margin-bottom: 6px; line-height: 1.1;
-}
-.vs-hero h1 em { font-style: italic; color: var(--blush); }
-.vs-hero p { font-size: 12px; color: rgba(255,255,255,.4); }
+.shop-page{padding-bottom:80px;background:var(--cream);min-height:100vh}
+.container{max-width:1300px;margin:0 auto;padding:0 24px}
 
-/* ── MAIN WRAPPER ───────────────────────────────── */
-.vs-wrap {
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 28px;
-  background: var(--cream);
+.shop-shell{
+  display:grid;grid-template-columns:280px 1fr;
+  gap:32px;align-items:start;padding-top:32px;
 }
+@media(max-width:960px){.shop-shell{grid-template-columns:1fr}}
 
-/* ── BREADCRUMBS ────────────────────────────────── */
-.vs-bread {
-  display: flex; align-items: center; gap: 8px;
-  padding: 14px 0 16px; font-size: 12px; color: var(--muted);
+.filter-sidebar{
+  background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);overflow:hidden;
+  box-shadow:var(--shadow-sm);position:sticky;top:24px;
 }
-.vs-bread a { color: var(--muted); }
-.vs-bread a:hover { color: var(--terra); }
-.vs-bread .sep { color: var(--muted-lt); }
-.vs-bread .cur { color: var(--ink); font-weight: 500; }
+.fs-header{
+  padding:22px 24px 20px 24px;
+  background:linear-gradient(135deg,var(--charcoal) 0%,#3d3630 100%);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.fs-header h3{
+  font-family:var(--head);font-size:18px;font-weight:600;
+  color:#fff;display:flex;align-items:center;gap:10px;
+  margin:0;
+}
+.fs-header h3 svg{width:16px;height:16px;color:var(--terra)}
+.fs-clear-all{
+  font-size:11px;color:rgba(255,255,255,.7);font-weight:500;
+  text-decoration:none;padding:5px 12px;border-radius:30px;
+  border:1px solid rgba(255,255,255,.2);transition:var(--transition);
+}
+.fs-clear-all:hover{background:rgba(255,255,255,.1);color:#fff}
 
-/* ── SEARCH BAR ─────────────────────────────────── */
-.vs-search-wrap { margin-bottom: 14px; }
-.vs-search {
-  display: flex;
-  border: 1.5px solid var(--border); border-radius: var(--radius-md);
-  overflow: hidden; background: var(--warm-white);
-  transition: box-shadow .2s, border-color .2s;
+.filter-block{border-bottom:1px solid var(--border-lt)}
+.filter-block:last-child{border-bottom:none}
+.filter-block-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px;cursor:pointer;user-select:none;transition:background .15s;
 }
-.vs-search:focus-within {
-  box-shadow: 0 0 0 3px rgba(181,103,58,.10); border-color: var(--terra);
+.filter-block-head:hover{background:var(--parchment)}
+.filter-block-head h4{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--charcoal);
+  margin:0;
 }
-.vs-search input[type=text] {
-  flex: 1; border: none; padding: 11px 14px; font-size: 13.5px;
-  background: transparent; color: var(--ink); outline: none; min-width: 0;
-}
-.vs-search input[type=text]::placeholder { color: var(--muted-lt); }
-.vs-search .btn-clr {
-  padding: 0 12px; background: none; border: none;
-  color: var(--muted-lt); cursor: pointer; font-size: 16px; flex-shrink: 0;
-}
-.vs-search .btn-clr:hover { color: var(--danger); }
-.vs-search .btn-srch {
-  padding: 0 22px; background: var(--charcoal); color: #fff; border: none;
-  cursor: pointer; font-size: 13px; font-weight: 600;
-  display: flex; align-items: center; gap: 7px; white-space: nowrap; flex-shrink: 0;
-  transition: background .2s;
-}
-.vs-search .btn-srch:hover { background: var(--terra); }
-.vs-search .btn-srch svg { width: 14px; height: 14px; }
+.filter-block-head svg{width:14px;height:14px;color:var(--muted-lt);transition:transform .22s}
+.filter-block-head.open svg{transform:rotate(180deg)}
+.filter-block-body{padding:4px 20px 22px 24px}
 
-/* ── FILTER PILLS ───────────────────────────────── */
-.vs-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
-.fpill {
-  display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px;
-  background: var(--terra-pale); border: 1px solid rgba(181,103,58,.25);
-  border-radius: 20px; font-size: 11.5px; font-weight: 600; color: var(--terra);
+.check-label{
+  display:flex;align-items:center;gap:12px;
+  padding:8px 12px;border-radius:var(--radius-sm);
+  cursor:pointer;transition:var(--transition);
+  font-size:13px;color:var(--muted);font-weight:400;
+  user-select:none;margin-bottom:2px;
 }
-.fpill a { color: var(--terra); font-size: 14px; opacity: .6; }
-.fpill a:hover { opacity: 1; }
-.fpill-clr {
-  display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px;
-  background: var(--danger-pale); border: 1px solid rgba(181,51,51,.2);
-  border-radius: 20px; font-size: 11.5px; font-weight: 600; color: var(--danger);
+.check-label:hover{background:var(--terra-pale);color:var(--ink)}
+.check-label.active{background:var(--terra-pale);color:var(--terra-deep);font-weight:600}
+.check-label input[type=checkbox],
+.check-label input[type=radio]{
+  accent-color:var(--terra);width:15px;height:15px;flex-shrink:0;cursor:pointer;
 }
-.fpill-clr:hover { background: #f5d5d5; }
+.cat-clear-link{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:12px;margin-left:12px;
+  font-size:11px;color:var(--terra);font-weight:600;
+  text-decoration:none;transition:color .15s;
+}
+.cat-clear-link:hover{color:var(--terra-deep)}
 
-/* ── MOBILE FILTER BTN ──────────────────────────── */
-.vs-mob-btn {
-  display: none; align-items: center; justify-content: center; gap: 7px;
-  width: 100%; padding: 10px 16px; margin-bottom: 14px;
-  background: var(--warm-white); border: 1.5px solid var(--border);
-  border-radius: var(--radius-md); font-size: 13px; cursor: pointer; color: var(--ink);
+.price-inputs{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+.price-field{flex:1;position:relative}
+.price-field .sym{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  font-size:12px;color:var(--muted);pointer-events:none;
+  font-weight:500;
+}
+.price-field input{
+  width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
+  padding:10px 10px 10px 28px;font-size:13px;font-family:var(--body);
+  background:var(--parchment);color:var(--ink);outline:none;transition:var(--transition);
+}
+.price-field input:focus{border-color:var(--terra);background:var(--warm-white);box-shadow:0 0 0 3px rgba(181,103,58,.1)}
+.price-sep{font-size:13px;color:var(--muted-lt);flex-shrink:0}
+.btn-apply{
+  width:100%;padding:12px;background:var(--charcoal);color:#fff;
+  border:none;border-radius:var(--radius-md);font-family:var(--body);
+  font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;
+  cursor:pointer;transition:var(--transition);margin-top:4px;
+}
+.btn-apply:hover{background:var(--terra)}
+
+.shop-topbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.search-field{
+  display:flex;align-items:center;gap:10px;
+  background:var(--warm-white);border:1.5px solid var(--border);
+  border-radius:40px;padding:10px 18px;flex:1;max-width:380px;
+  box-shadow:var(--shadow-xs);transition:var(--transition);
+}
+.search-field:focus-within{border-color:var(--terra);box-shadow:0 0 0 3px rgba(181,103,58,.1)}
+.search-field svg{width:14px;height:14px;color:var(--muted-lt);flex-shrink:0}
+.search-field input{border:none;background:none;font-family:var(--body);font-size:13.5px;color:var(--ink);outline:none;flex:1}
+.search-field input::placeholder{color:var(--muted-lt)}
+.search-clear-btn{background:none;border:none;color:var(--muted-lt);font-size:14px;cursor:pointer;padding:0;display:flex;align-items:center;transition:color .15s;line-height:1}
+.search-clear-btn:hover{color:var(--terra)}
+.sort-field{
+  border:1.5px solid var(--border);border-radius:var(--radius-md);
+  padding:10px 38px 10px 14px;font-family:var(--body);font-size:13px;
+  background:var(--warm-white);color:var(--ink);cursor:pointer;outline:none;
+  box-shadow:var(--shadow-xs);appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%23b0a699' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;transition:var(--transition);
+}
+.sort-field:focus{border-color:var(--terra)}
+.result-count{font-size:12.5px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.result-count strong{color:var(--ink);font-weight:600}
+
+.active-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.filter-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 12px;border-radius:40px;
+  background:var(--terra-pale);border:1px solid var(--blush);
+  font-size:12px;color:var(--terra-deep);font-weight:500;
+}
+.filter-pill-x{
+  color:var(--terra);text-decoration:none;font-size:12px;line-height:1;
+  opacity:.7;transition:opacity .15s;
+}
+.filter-pill-x:hover{opacity:1}
+
+.product-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px;
+}
+@media(max-width:600px){.product-grid{grid-template-columns:repeat(2,1fr);gap:12px}}
+
+.product-card{
+  background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;position:relative;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),box-shadow .3s;cursor:pointer;
+}
+.product-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);border-color:var(--sand)}
+.product-card.oos{opacity:.65}
+
+.card-img{position:relative;aspect-ratio:4/5;overflow:hidden;background:var(--parchment)}
+.card-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.4,0,.2,1)}
+.product-card:hover .card-img img{transform:scale(1.07)}
+.card-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(30,26,23,.35) 0%,transparent 50%);opacity:0;transition:opacity .3s}
+.product-card:hover .card-img::after{opacity:1}
+.card-no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--muted-lt);font-size:11px}
+.card-no-img svg{width:30px;height:30px;opacity:.3}
+.card-badges{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:5px;z-index:1}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.badge-oos{background:rgba(30,26,23,.7);color:#fff;backdrop-filter:blur(4px)}
+
+.card-wishlist{
+  position:absolute;top:12px;right:12px;z-index:2;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,.85);backdrop-filter:blur(6px);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:var(--transition);opacity:0;
+}
+.product-card:hover .card-wishlist{opacity:1}
+.card-wishlist:hover{background:#fff;border-color:var(--terra)}
+.card-wishlist svg{width:14px;height:14px;color:var(--muted)}
+.card-wishlist:hover svg{color:var(--terra)}
+
+.card-body{padding:16px 16px 18px}
+.card-cat{font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--terra);margin-bottom:6px}
+.card-name{
+  font-family:var(--head);font-size:15px;font-weight:500;
+  line-height:1.35;color:var(--ink);margin-bottom:12px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-name a{color:inherit;text-decoration:none}
+.card-name a:hover{color:var(--terra)}
+.card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-price{display:flex;align-items:baseline;gap:7px}
+.card-price .now{font-size:17px;font-weight:700;color:var(--charcoal);font-family:var(--head);letter-spacing:-.3px}
+.card-add{
+  flex-shrink:0;background:var(--charcoal);color:#fff;border:none;
+  border-radius:var(--radius-md);font-family:var(--body);font-size:11.5px;
+  font-weight:600;padding:9px 14px;letter-spacing:.3px;cursor:pointer;
+  transition:var(--transition);white-space:nowrap;
+}
+.card-add:hover{background:var(--terra)}
+.card-add:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed}
+
+.sb-section { margin-bottom: 20px; }
+.sb-section-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0 4px 8px 4px; }
+.sb-section-header h4 { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--charcoal); margin:0; }
+.sb-section-header svg { width:13px; height:13px; color:var(--muted-lt); transition:transform .22s; }
+.sb-section-header.open svg { transform:rotate(180deg); }
+.sb-section-body { margin-top:12px; }
+
+.sb-link { display:block; padding:8px 12px; font-size:13px; border-radius:var(--radius-sm); transition:var(--transition); color:var(--muted); }
+.sb-link:hover { background:var(--terra-pale); color:var(--ink); }
+.sb-link.active { font-weight:600; color:var(--terra-deep); background:var(--terra-pale); }
+
+.size-grid { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+.size-pill { padding:7px 14px; border:1.5px solid var(--border); border-radius:40px; font-size:12px; font-weight:500; transition:var(--transition); cursor:pointer; background:var(--warm-white); color:var(--charcoal); }
+.size-option { display:inline-flex; cursor:pointer; }
+.size-option input { position:absolute; opacity:0; width:0; height:0; }
+.size-option input:checked + .size-pill { background:var(--terra); border-color:var(--terra); color:#fff; }
+
+.price-inputs { display:flex; gap:10px; margin-bottom:12px; }
+.price-inputs input { flex:1; padding:10px 12px; border:1.5px solid var(--border); border-radius:var(--radius-md); font-size:13px; font-family:var(--body); background:var(--warm-white); outline:none; transition:var(--transition); }
+.price-inputs input:focus { border-color:var(--terra); box-shadow:0 0 0 3px rgba(181,103,58,.1); }
+
+.price-hint { font-size:11px; color:var(--muted-lt); margin-top:8px; margin-bottom:12px; text-align:right; }
+
+.sb-actions { padding:16px 20px 20px 20px; border-top:1px solid var(--border-lt); margin-top:8px; display:flex; flex-direction:column; gap:12px; }
+.btn-apply { width:100%; padding:12px; background:var(--charcoal); color:#fff; border:none; border-radius:var(--radius-md); font-family:var(--body); font-size:12px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; cursor:pointer; transition:var(--transition); }
+.btn-apply:hover { background:var(--terra); }
+
+.sb-clear, .sb-reset { font-size:11px; text-decoration:none; color:var(--terra); font-weight:600; transition:color .15s; display:inline-block; margin-top:8px; }
+.sb-clear:hover, .sb-reset:hover { color:var(--terra-deep); text-decoration:underline; }
+
+.stock-toggle { display:flex; align-items:center; gap:12px; cursor:pointer; padding:4px 0; }
+.stock-toggle input { width:16px; height:16px; accent-color:var(--terra); cursor:pointer; }
+.toggle-label { font-size:13px; font-weight:500; color:var(--charcoal); user-select:none; }
+
+
+.size-pill.active {
+  background: var(--terra);
+  border-color: var(--terra);
+  color: #fff;
+}
+.size-pill {
+  display: inline-block;
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 40px;
+  font-size: 12px;
+  font-weight: 500;
   transition: var(--transition);
-}
-.vs-mob-btn:hover { border-color: var(--terra); color: var(--terra); }
-
-/* ── SHOP GRID  ─────────────────────────────────── */
-.vs-layout {
-  display: grid;
-  grid-template-columns: 248px 1fr;
-  gap: 24px;
-  align-items: start;
-  padding-bottom: 80px;
-  width: 100%;
-}
-
-/* ── SIDEBAR ────────────────────────────────────── */
-.vs-sidebar {
-  position: sticky; top: 20px;
-  width: 100%;
+  cursor: pointer;
   background: var(--warm-white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
+  color: var(--charcoal);
+  text-decoration: none;
 }
-.sb-hd {
-  padding: 14px 16px;
-  background: linear-gradient(135deg, var(--charcoal) 0%, #3d3630 100%);
-  display: flex; align-items: center; justify-content: space-between;
+.size-pill:hover {
+  background: var(--terra-pale);
+  border-color: var(--terra);
 }
-.sb-hd h3 {
-  font-family: var(--head); font-size: 16px; font-weight: 600; color: #fff;
-  display: flex; align-items: center; gap: 7px;
-}
-.sb-hd h3 svg { width: 14px; height: 14px; color: var(--blush); flex-shrink: 0; }
-.sb-clr-all {
-  font-size: 10.5px; color: rgba(255,255,255,.55); font-weight: 500;
-  padding: 3px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,.2);
-  white-space: nowrap; transition: var(--transition);
-}
-.sb-clr-all:hover { background: rgba(255,255,255,.1); color: #fff; }
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:48px;flex-wrap:wrap}
+.pg-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 8px;border-radius:var(--radius-sm);font-size:13.5px;font-family:var(--body);font-weight:500;border:1.5px solid var(--border);background:var(--warm-white);color:var(--muted);text-decoration:none;transition:var(--transition);cursor:pointer}
+.pg-btn:hover{border-color:var(--terra);color:var(--terra);background:var(--terra-pale)}
+.pg-btn.active{background:var(--charcoal);border-color:var(--charcoal);color:#fff;font-weight:700}
+.pg-btn.disabled{opacity:.3;pointer-events:none}
+.pg-label{font-size:12px;color:var(--muted);padding:0 4px}
 
-.sb-sec { border-bottom: 1px solid var(--border-lt); }
-.sb-sec:last-child { border-bottom: none; }
-.sb-sec-hd {
-  padding: 12px 16px; cursor: pointer; user-select: none;
-  display: flex; align-items: center; justify-content: space-between;
-  transition: background .15s;
-}
-.sb-sec-hd:hover { background: var(--parchment); }
-.sb-sec-hd h4 {
-  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
-  text-transform: uppercase; color: var(--charcoal);
-}
-.sb-sec-hd svg { width: 12px; height: 12px; color: var(--muted-lt); transition: transform .2s; flex-shrink: 0; }
-.sb-sec-hd.open svg { transform: rotate(180deg); }
-.sb-sec-body { padding: 6px 12px 14px; }
+.empty-state{text-align:center;padding:80px 24px;background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl)}
+.empty-state svg{width:48px;height:48px;color:var(--muted-lt);margin:0 auto 20px;display:block}
+.empty-state h3{font-family:var(--head);font-size:26px;font-weight:500;color:var(--charcoal);margin-bottom:10px}
+.empty-state p{font-size:14px;color:var(--muted);margin-bottom:28px}
+.btn-terra{display:inline-flex;align-items:center;gap:8px;background:var(--terra);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:600;padding:12px 24px;text-decoration:none;cursor:pointer;transition:var(--transition)}
+.btn-terra:hover{background:var(--terra-deep)}
 
-.cat-item {
-  display: flex; align-items: center; padding: 7px 8px;
-  border-radius: var(--radius-sm); font-size: 13px; color: var(--muted);
-  transition: var(--transition);
-}
-.cat-item:hover { background: var(--terra-pale); color: var(--terra); }
-.cat-item.active {
-  background: var(--terra-pale); color: var(--terra); font-weight: 600;
-  border-left: 3px solid var(--terra); padding-left: 5px;
-}
+@keyframes cardReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.product-card{animation:cardReveal .35s ease both}
+.product-card:nth-child(1){animation-delay:0ms}.product-card:nth-child(2){animation-delay:50ms}
+.product-card:nth-child(3){animation-delay:100ms}.product-card:nth-child(4){animation-delay:150ms}
+.product-card:nth-child(5){animation-delay:200ms}.product-card:nth-child(6){animation-delay:250ms}
+.product-card:nth-child(7){animation-delay:300ms}.product-card:nth-child(8){animation-delay:350ms}
 
-.size-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; padding: 2px 0; }
-.sz-label { cursor: pointer; display: block; }
-.sz-label input { display: none; }
-.sz-pill {
-  display: flex; align-items: center; justify-content: center;
-  padding: 7px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  font-size: 11.5px; font-weight: 500; color: var(--muted); background: var(--warm-white);
-  transition: var(--transition); text-align: center;
-}
-.sz-label input:checked + .sz-pill { border-color: var(--terra); background: var(--terra); color: #fff; font-weight: 700; }
-.sz-label:hover .sz-pill { border-color: var(--terra); color: var(--terra); }
-.sz-label input:checked + .sz-pill:hover { background: var(--terra-deep); }
-
-.pr-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-.pr-input {
-  width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  padding: 8px 10px; font-size: 12.5px; background: var(--parchment);
-  color: var(--ink); outline: none; transition: .15s;
-}
-.pr-input:focus { border-color: var(--terra); background: #fff; }
-.pr-hint { font-size: 10.5px; color: var(--muted-lt); margin-bottom: 8px; }
-
-.stk-toggle { display: flex; align-items: center; gap: 10px; padding: 6px 2px; cursor: pointer; }
-.stk-toggle input { display: none; }
-.stk-track {
-  width: 36px; height: 20px; border-radius: 10px; background: var(--sand);
-  position: relative; transition: background .2s; flex-shrink: 0;
-}
-.stk-track::after {
-  content: ''; position: absolute; top: 2px; left: 2px;
-  width: 16px; height: 16px; border-radius: 50%; background: #fff;
-  transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.15);
-}
-.stk-toggle input:checked ~ .stk-track { background: var(--success); }
-.stk-toggle input:checked ~ .stk-track::after { transform: translateX(16px); }
-.stk-toggle span { font-size: 13px; color: var(--ink); }
-
-.btn-apply {
-  width: 100%; padding: 10px; background: var(--charcoal); color: #fff; border: none;
-  border-radius: var(--radius-md); font-size: 13px; font-weight: 600;
-  cursor: pointer; transition: background .2s; letter-spacing: .3px;
-}
-.btn-apply:hover { background: var(--terra); }
-
-/* ── TOP BAR ────────────────────────────────────── */
-.top-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
-}
-.res-cnt { font-size: 13px; color: var(--muted); }
-.res-cnt strong { color: var(--ink); font-weight: 600; }
-.srt-sel {
-  border: 1.5px solid var(--border); border-radius: var(--radius-md);
-  padding: 8px 32px 8px 12px; font-size: 13px;
-  background: var(--warm-white); color: var(--ink);
-  outline: none; cursor: pointer; appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%23b0a699' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 10px center;
-  box-shadow: var(--shadow-xs);
-}
-.srt-sel:focus { border-color: var(--terra); }
-
-/* ── PRODUCT GRID ───────────────────────────────── */
-.prod-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 18px;
-}
-
-/* ── PRODUCT CARD ───────────────────────────────── */
-.pcard {
-  background: var(--warm-white); border: 1px solid var(--border);
-  border-radius: var(--radius-xl); overflow: hidden;
-  transition: transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s;
-  animation: pcFade .35s ease both;
-}
-.pcard:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
-@keyframes pcFade { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
-
-.pc-img-wrap {
-  position: relative; display: block; width: 100%;
-  aspect-ratio: 4/5; overflow: hidden; background: var(--parchment);
-}
-.pc-img-wrap img {
-  width: 100%; height: 100%; object-fit: cover;
-  display: block; transition: transform .4s ease;
-}
-.pcard:hover .pc-img-wrap img { transform: scale(1.05); }
-.pc-img-empty {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center; color: var(--muted-lt);
-}
-
-.pc-badges {
-  position: absolute; top: 10px; left: 10px;
-  display: flex; flex-direction: column; gap: 4px; z-index: 2;
-}
-.badge {
-  display: inline-block; padding: 3px 8px; border-radius: 10px;
-  font-size: 9.5px; font-weight: 700; letter-spacing: .3px; backdrop-filter: blur(4px);
-}
-.badge-oos { background: rgba(30,26,23,.65); color: #fff; }
-.badge-low { background: var(--warning-pale); color: var(--warning); border: 1px solid rgba(196,127,23,.25); }
-.badge-sale { background: var(--success-pale); color: var(--success); border: 1px solid rgba(58,125,90,.2); }
-
-.wl-wrap { position: absolute; top: 10px; right: 10px; z-index: 3; }
-.wl-btn {
-  width: 34px; height: 34px; border-radius: 50%; border: none;
-  background: rgba(255,255,255,.92); color: var(--terra); font-size: 18px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--shadow-sm); transition: var(--transition);
-}
-.wl-btn:hover { background: var(--terra); color: #fff; transform: scale(1.08); }
-.wl-btn.on { background: var(--terra); color: #fff; }
-
-.pc-body { padding: 13px 14px 15px; }
-.pc-cat { font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-lt); margin-bottom: 4px; }
-.pc-name {
-  font-family: var(--head); font-size: 15px; font-weight: 600; color: var(--ink);
-  line-height: 1.25; margin-bottom: 5px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.pc-name a { color: inherit; }
-.pc-name a:hover { color: var(--terra); }
-.pc-color { font-size: 11px; color: var(--muted-lt); margin-bottom: 8px; }
-.pc-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
-.pc-price { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; min-width: 0; }
-.pc-now { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--charcoal); }
-.pc-was { font-size: 12px; color: var(--muted-lt); text-decoration: line-through; }
-.pc-off { font-size: 9.5px; font-weight: 700; color: var(--success); background: var(--success-pale); padding: 1px 5px; border-radius: 4px; }
-.btn-add {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  padding: 8px 12px; background: var(--charcoal); color: #fff; border: none;
-  border-radius: var(--radius-md); font-size: 11.5px; font-weight: 600;
-  cursor: pointer; transition: var(--transition); white-space: nowrap; flex-shrink: 0;
-}
-.btn-add:hover { background: var(--terra); }
-.btn-add.oos { background: var(--sand); color: var(--muted-lt); cursor: not-allowed; pointer-events: none; }
-.btn-add svg { width: 13px; height: 13px; flex-shrink: 0; }
-
-/* ── NO RESULTS ─────────────────────────────────── */
-.no-res {
-  text-align: center; padding: 64px 24px;
-  background: var(--warm-white); border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-}
-.no-res svg { width: 52px; height: 52px; color: var(--muted-lt); margin: 0 auto 16px; display: block; }
-.no-res h3 { font-family: var(--head); font-size: 26px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
-.no-res h3 em { font-style: italic; color: var(--terra); }
-.no-res p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-.btn-rst {
-  display: inline-flex; align-items: center; gap: 7px; padding: 11px 22px;
-  background: var(--charcoal); color: #fff; border-radius: var(--radius-md);
-  font-size: 13px; font-weight: 600; transition: var(--transition);
-}
-.btn-rst:hover { background: var(--terra); }
-
-/* ── PAGINATION ─────────────────────────────────── */
-.vs-pagination {
-  display: flex; align-items: center; justify-content: center;
-  gap: 5px; padding: 32px 0 12px; flex-wrap: wrap;
-}
-.pg-lnk {
-  display: flex; align-items: center; justify-content: center;
-  min-width: 36px; height: 36px; padding: 0 10px;
-  border-radius: var(--radius-sm); border: 1.5px solid var(--border);
-  font-size: 13px; font-weight: 500; color: var(--ink);
-  background: var(--warm-white); transition: var(--transition);
-}
-.pg-lnk:hover { border-color: var(--terra); color: var(--terra); background: var(--terra-pale); }
-.pg-lnk.active { background: var(--charcoal); border-color: var(--charcoal); color: #fff; font-weight: 700; }
-.pg-lnk.off { opacity: .3; pointer-events: none; }
-.pg-info { font-size: 12px; color: var(--muted); padding: 0 6px; }
-
-/* ── RESPONSIVE ─────────────────────────────────── */
-@media (max-width: 960px) {
-  .vs-layout { grid-template-columns: 1fr; }
-  .vs-mob-btn { display: flex; }
-  .vs-sidebar {
-    display: none; position: fixed;
-    left: 0; right: 0; bottom: 0; top: auto;
-    z-index: 300; max-height: 88vh; overflow-y: auto;
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    border: none; box-shadow: 0 -8px 40px rgba(30,26,23,.25);
-  }
-  .vs-sidebar.open { display: block; }
-}
-.vs-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.45); z-index: 299;
-}
-.vs-overlay.open { display: block; }
-.sb-mob-hd {
-  display: none; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid var(--border-lt);
-}
-.sb-mob-hd h4 { font-family: var(--head); font-size: 17px; font-weight: 600; }
-.sb-mob-hd button {
-  background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted);
-  width: 32px; height: 32px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-}
-.sb-mob-hd button:hover { background: var(--parchment); }
-@media (max-width: 960px) { .sb-mob-hd { display: flex; } }
+@media(max-width:960px){.filter-sidebar{position:static}.shop-topbar{flex-wrap:wrap}.search-field{max-width:100%}}
 </style>
 
-<!-- HERO — full width -->
-<div class="vs-hero">
-  <div class="vs-hero-inner">
-    <h1>Our <em>Collection</em></h1>
-    <p>{% if search_query %}Results for "{{ search_query }}" · {% elif selected_category %}{{ selected_category }} · {% endif %}{{ total_count }} product{{ total_count|pluralize }}</p>
-  </div>
-</div>
+<div class="shop-page">
+  <div class="container">
+<div class="shop-shell">
 
-<!-- PAGE BODY -->
-<div class="vs-wrap">
 
-  <!-- Breadcrumbs -->
-  <nav class="vs-bread">
-    <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
-    {% if selected_category %}
-      <a href="{% url 'product_shop' %}">Shop</a><span class="sep">›</span>
-      <span class="cur">{{ selected_category }}</span>
-    {% else %}
-      <span class="cur">Shop</span>
+<aside class="vs-sidebar" id="vsSidebar">
+
+  <div class="sb-hd">
+    <h3>
+      Filters
+    </h3>
+
+    {% if has_filters %}
+      <a href="{% url 'product_shop' %}" class="sb-clear-all">Clear All</a>
     {% endif %}
-  </nav>
-
-  <!-- Search -->
-  <div class="vs-search-wrap">
-    <form method="GET" action="{% url 'product_shop' %}" class="vs-search">
-      {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
-      {% if price_min %}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
-      {% if price_max %}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
-      {% if in_stock_only %}<input type="hidden" name="in_stock" value="1">{% endif %}
-      {% for sz in selected_sizes %}<input type="hidden" name="size" value="{{ sz }}">{% endfor %}
-      {% if sort_key != 'newest' %}<input type="hidden" name="sort" value="{{ sort_key }}">{% endif %}
-      <input type="text" name="q" value="{{ search_query }}" placeholder="Search products, categories, colors…" autocomplete="off">
-      {% if search_query %}<button type="button" class="btn-clr" onclick="clearSearch()">✕</button>{% endif %}
-      <button type="submit" class="btn-srch">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Search
-      </button>
-    </form>
   </div>
 
-  <!-- Active filter pills -->
-  {% if has_filters %}
-  <div class="vs-pills">
-    {% if search_query %}<span class="fpill">🔍 "{{ search_query }}" <a href="?{% if selected_category %}category={{ selected_category }}&{% endif %}{% for sz in selected_sizes %}size={{ sz }}&{% endfor %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if in_stock_only %}in_stock=1&{% endif %}sort={{ sort_key }}">✕</a></span>{% endif %}
-    {% if selected_category %}<span class="fpill">📁 {{ selected_category }} <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% for sz in selected_sizes %}size={{ sz }}&{% endfor %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if in_stock_only %}in_stock=1&{% endif %}sort={{ sort_key }}">✕</a></span>{% endif %}
-    {% for sel in selected_sizes %}<span class="fpill">👟 {{ sel }} <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% for o in selected_sizes %}{% if o != sel %}size={{ o }}&{% endif %}{% endfor %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if in_stock_only %}in_stock=1&{% endif %}sort={{ sort_key }}">✕</a></span>{% endfor %}
-    {% if price_min or price_max %}<span class="fpill">💰 ₹{{ price_min|default:"0" }}–₹{{ price_max|default:"∞" }} <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% for sz in selected_sizes %}size={{ sz }}&{% endfor %}{% if in_stock_only %}in_stock=1&{% endif %}sort={{ sort_key }}">✕</a></span>{% endif %}
-    {% if in_stock_only %}<span class="fpill">✅ In Stock <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% for sz in selected_sizes %}size={{ sz }}&{% endfor %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}sort={{ sort_key }}">✕</a></span>{% endif %}
-    <a href="{% url 'product_shop' %}" class="fpill-clr">✕ Clear all</a>
-  </div>
+  <form method="GET" action="{% url 'product_shop' %}" class="sb-form">
+
+    {# Preserve search + sort #}
+    {% if search_query %}
+      <input type="hidden" name="q" value="{{ search_query }}">
+    {% endif %}
+    {% if sort_key %}
+      <input type="hidden" name="sort" value="{{ sort_key }}">
+    {% endif %}
+
+    <div class="sb-section">
+      <div class="sb-section-header open" onclick="toggleSec(this)">
+        <h4>Category</h4>
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <div class="sb-section-body">
+
+        {% for val, label in category_choices %}
+        <label class="check-label">
+          <input type="checkbox"
+                 name="category"
+                 value="{{ val }}"
+                 {% if val in selected_categories %}checked{% endif %}
+                 onchange="this.form.submit()">
+          {{ label }}
+        </label>
+        {% endfor %}
+
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-header open" onclick="toggleSec(this)">
+        <h4>Size</h4>
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <div class="sb-section-body">
+
+        <div class="size-grid">
+          {% for val, label in size_choices %}
+          <label class="size-option">
+            <input type="checkbox"
+                   name="size"
+                   value="{{ val }}"
+                   {% if val in selected_sizes %}checked{% endif %}
+                   onchange="this.form.submit()">
+
+            <span class="size-pill {% if val in selected_sizes %}active{% endif %}">
+              {{ label }}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-header open" onclick="toggleSec(this)">
+        <h4>Price Range</h4>
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <div class="sb-section-body">
+        <div class="price-inputs">
+          <input type="number" name="price_min" placeholder="Min ₹"
+                 value="{{ price_min }}" min="0">
+          <input type="number" name="price_max" placeholder="Max ₹"
+                 value="{{ price_max }}" min="0">
+        </div>
+
+        <p class="price-hint">
+          ₹{{ global_price_min }} – ₹{{ global_price_max }}
+        </p>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-header open" onclick="toggleSec(this)">
+        <h4>Availability</h4>
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <div class="sb-section-body">
+        <label class="stock-toggle">
+          <input type="checkbox"
+                 name="in_stock"
+                 value="1"
+                 {% if in_stock_only %}checked{% endif %}
+                 onchange="this.form.submit()">
+          <span class="toggle-label">In Stock Only</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sb-actions">
+      <button type="submit" class="btn-apply">Apply Filters</button>
+
+      {% if has_filters %}
+        <a href="{% url 'product_shop' %}" class="sb-reset">Reset Filters</a>
+      {% endif %}
+    </div>
+
+  </form>
+</aside>
+      <div class="shop-main">
+
+        <div class="shop-topbar">
+          <form method="GET" action="{% url 'product_shop' %}" style="display:contents" id="searchForm">
+            {% for cat in cat_slug_list %}<input type="hidden" name="category" value="{{ cat }}">{% endfor %}
+            {% for sz  in size_list    %}<input type="hidden" name="size"     value="{{ sz  }}">{% endfor %}
+            {% if price_min %}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
+            {% if price_max %}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
+
+            <div class="search-field">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input type="text" name="q" id="searchInput"
+                     value="{{ query|default:'' }}"
+                     placeholder="Search styles…"
+                     autocomplete="off"
+                     oninput="toggleClear(this)">
+              <button type="button" class="search-clear-btn {% if query %}visible{% else %}hidden{% endif %}"
+                      id="clearBtn" onclick="clearSearch()">✕</button>
+            </div>
+
+          <select name="sort" class="sort-field" onchange="this.form.submit()">
+            {% for val, data in sort_options %}
+            <option value="{{ val }}" {% if sort_key == val %}selected{% endif %}>
+              {{ data.0 }}
+            </option>
+            {% endfor %}
+          </select>
+          </form>
+
+          <span class="result-count">
+            {% if query %}Results for "<strong>{{ query }}</strong>" — {% endif %}
+            <strong>{{ total }}</strong> product{{ total|pluralize }}
+          </span>
+        </div>
+
+{% if query or cat_slug_list or size_list or price_min or price_max %}
+<div class="active-filters">
+
+  {% if query %}
+  <span class="filter-pill">
+    🔍 {{ query }}
+    <a class="filter-pill-x"
+       href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_key %}sort={{ sort_key }}{% endif %}">✕</a>
+  </span>
   {% endif %}
 
-  <!-- Mobile filter button -->
-  <button class="vs-mob-btn" onclick="openSb()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-    Filters {% if has_filters %}&nbsp;<span style="background:var(--terra);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px">ON</span>{% endif %}
-  </button>
-  <div class="vs-overlay" id="vsOverlay" onclick="closeSb()"></div>
+  {# One pill per selected category #}
+  {% for selected_cat_slug in cat_slug_list %}
+  <span class="filter-pill">
+    📂 
+    {# Convert slug to display name #}
+    {% for val, label in category_choices %}
+      {% if val == selected_cat_slug %}
+        {{ label }}
+      {% endif %}
+    {% endfor %}
+    <a class="filter-pill-x"
+       href="?{% for cat in cat_slug_list %}{% if cat != selected_cat_slug %}category={{ cat }}&{% endif %}{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_key %}sort={{ sort_key }}{% endif %}">✕</a>
+  </span>
+  {% endfor %}
 
-  <!-- GRID -->
-  <div class="vs-layout">
+  {# One pill per selected size #}
+  {% for selected_size_val in size_list %}
+  <span class="filter-pill">
+    📐 
+    {# Convert size value to display label #}
+    {% for val, label in size_choices %}
+      {% if val == selected_size_val %}
+        {{ label }}
+      {% endif %}
+    {% endfor %}
+    <a class="filter-pill-x"
+       href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}{% if sz != selected_size_val %}size={{ sz }}&{% endif %}{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_key %}sort={{ sort_key }}{% endif %}">✕</a>
+  </span>
+  {% endfor %}
 
-    <!-- SIDEBAR -->
-    <aside class="vs-sidebar" id="vsSidebar">
-      <div class="sb-mob-hd"><h4>Filters</h4><button onclick="closeSb()">✕</button></div>
+  {% if price_min or price_max %}
+  <span class="filter-pill">
+    💰 ₹ {{ price_min|default:"0" }} – {{ price_max|default:"∞" }}
+    <a class="filter-pill-x"
+       href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if sort_key %}sort={{ sort_key }}{% endif %}">✕</a>
+  </span>
+  {% endif %}
 
-      <div class="sb-hd">
-        <h3>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-          Filter
-        </h3>
-        {% if has_filters %}<a href="{% url 'product_shop' %}" class="sb-clr-all">Clear all</a>{% endif %}
-      </div>
+</div>
+{% endif %}
+        {% if page_obj %}
+        <div class="product-grid">
+          {% for product in page_obj %}
+          <article class="product-card {% if product.total_stock == 0 %}oos{% endif %}">
 
-      <form method="GET" action="{% url 'product_shop' %}">
-        {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
-        {% if sort_key %}<input type="hidden" name="sort" value="{{ sort_key }}">{% endif %}
-
-        <!-- Category -->
-        <div class="sb-sec">
-          <div class="sb-sec-hd open" onclick="toggleSec(this)">
-            <h4>Category</h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div class="sb-sec-body">
-            <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% for sz in selected_sizes %}size={{ sz }}&{% endfor %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if in_stock_only %}in_stock=1&{% endif %}sort={{ sort_key }}" class="cat-item {% if not selected_category %}active{% endif %}">All Categories</a>
-            {% for val, label in category_choices %}
-            <a href="?{% if search_query %}q={{ search_query }}&{% endif %}category={{ val }}{% for sz in selected_sizes %}&size={{ sz }}{% endfor %}{% if price_min %}&price_min={{ price_min }}{% endif %}{% if price_max %}&price_max={{ price_max }}{% endif %}{% if in_stock_only %}&in_stock=1{% endif %}&sort={{ sort_key }}" class="cat-item {% if selected_category == val %}active{% endif %}">{{ label }}</a>
-            {% endfor %}
-          </div>
-        </div>
-
-        <!-- Size -->
-        <div class="sb-sec">
-          <div class="sb-sec-hd open" onclick="toggleSec(this)">
-            <h4>Size</h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div class="sb-sec-body">
-            <div class="size-grid">
-              {% for val, label in size_choices %}
-              <label class="sz-label">
-                <input type="checkbox" name="size" value="{{ val }}" {% if val in selected_sizes %}checked{% endif %}>
-                <div class="sz-pill">{{ label }}</div>
-              </label>
-              {% endfor %}
-            </div>
-            {% if selected_sizes %}
-            <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if in_stock_only %}in_stock=1&{% endif %}sort={{ sort_key }}" style="display:block;margin-top:8px;font-size:11px;color:var(--terra);font-weight:600;text-decoration:underline">✕ Clear sizes</a>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- Price Range -->
-        <div class="sb-sec">
-          <div class="sb-sec-hd open" onclick="toggleSec(this)">
-            <h4>Price Range</h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div class="sb-sec-body">
-            <div class="pr-inputs">
-              <input type="number" name="price_min" class="pr-input" placeholder="Min ₹" min="0" value="{{ price_min }}">
-              <input type="number" name="price_max" class="pr-input" placeholder="Max ₹" min="0" value="{{ price_max }}">
-            </div>
-            <div class="pr-hint">Range: ₹{{ global_price_min }} – ₹{{ global_price_max }}</div>
-            {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
-          </div>
-        </div>
-
-        <!-- Availability -->
-        <div class="sb-sec">
-          <div class="sb-sec-hd open" onclick="toggleSec(this)">
-            <h4>Availability</h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div class="sb-sec-body">
-            <label class="stk-toggle">
-              <input type="checkbox" name="in_stock" value="1" {% if in_stock_only %}checked{% endif %} onchange="this.form.submit()">
-              <div class="stk-track"></div>
-              <span>In Stock Only</span>
-            </label>
-          </div>
-        </div>
-
-        <div style="padding:14px 12px">
-          <button type="submit" class="btn-apply">Apply Filters</button>
-          {% if has_filters %}<a href="{% url 'product_shop' %}" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:2px">Clear all filters</a>{% endif %}
-        </div>
-      </form>
-    </aside>
-
-    <!-- MAIN -->
-    <main>
-      <!-- Top bar -->
-      <div class="top-bar">
-        <div class="res-cnt">
-          {% if total_count == 0 %}No products found
-          {% else %}Showing <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong> of <strong>{{ total_count }}</strong> product{{ total_count|pluralize }}{% endif %}
-        </div>
-        <form method="GET" action="{% url 'product_shop' %}">
-          {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
-          {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
-          {% if price_min %}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
-          {% if price_max %}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
-          {% if in_stock_only %}<input type="hidden" name="in_stock" value="1">{% endif %}
-          {% for sz in selected_sizes %}<input type="hidden" name="size" value="{{ sz }}">{% endfor %}
-          <select name="sort" class="srt-sel" onchange="this.form.submit()">
-            {% for key, val in sort_options.items %}<option value="{{ key }}" {% if sort_key == key %}selected{% endif %}>{{ val.0 }}</option>{% endfor %}
-          </select>
-        </form>
-      </div>
-
-      {% if products %}
-      <div class="prod-grid">
-        {% for product in products %}
-        <div class="pcard">
-          <div style="position:relative">
-            <a href="{% url 'product_detail' product.slug %}" class="pc-img-wrap">
-              {% with img=product.images.first %}
-                {% if img %}<img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
-                {% else %}<div class="pc-img-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="40" height="40"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>{% endif %}
-              {% endwith %}
-              <div class="pc-badges">
-                {% if product.total_stock == 0 %}<span class="badge badge-oos">Out of Stock</span>{% elif product.total_stock <= 5 %}<span class="badge badge-low">Only {{ product.total_stock }} left</span>{% endif %}
-                {% if product.discount_percent > 0 %}<span class="badge badge-sale">{{ product.discount_percent }}% OFF</span>{% endif %}
+            <a href="{% url 'product_detail' product.slug %}">
+              <div class="card-img">
+                {% with img=product.primary_image %}
+                  {% if img %}
+                    <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+                  {% else %}
+                    <div class="card-no-img">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                      No image
+                    </div>
+                  {% endif %}
+                {% endwith %}
+                <div class="card-badges">
+                  {% if product.total_stock == 0 %}
+                    <span class="badge badge-oos">Out of Stock</span>
+                  {% endif %}
+                </div>
               </div>
             </a>
-            <div class="wl-wrap">
-              {% if user.is_authenticated %}
-              <form method="POST" action="{% url 'wishlist_toggle' product.slug %}">
-                {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="wl-btn {% if product in user.wishlist.products.all %}on{% endif %}" title="Wishlist">
-                  {% if product in user.wishlist.products.all %}♥{% else %}♡{% endif %}
-                </button>
-              </form>
-              {% else %}
-              <a href="{% url 'login' %}?next={{ request.get_full_path }}" class="wl-btn" title="Login to save">♡</a>
-              {% endif %}
-            </div>
-          </div>
-          <div class="pc-body">
-            <div class="pc-cat">{{ product.get_category_display }}</div>
-            <div class="pc-name"><a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a></div>
-            {% if product.color %}<div class="pc-color">{{ product.color }}</div>{% endif %}
-            <div class="pc-foot">
-              <div class="pc-price">
-                <span class="pc-now">₹{{ product.price|floatformat:0 }}</span>
-                {% if product.original_price and product.original_price > product.price %}
-                  <span class="pc-was">₹{{ product.original_price|floatformat:0 }}</span>
-                  <span class="pc-off">{{ product.discount_percent }}% off</span>
+
+            <form method="POST" action="{% url 'wishlist_toggle' product.slug %}"
+                  style="position:absolute;top:12px;right:12px;z-index:10;">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button class="card-wishlist" type="submit">
+                <svg fill="{% if product.pk in wishlist_ids %}var(--terra){% else %}none{% endif %}"
+                     stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </form>
+
+            <div class="card-body">
+              <div class="card-cat">{{ product.category }}</div>
+              <div class="card-name">
+                <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
+              </div>
+              <div class="card-footer">
+                <div class="card-price">
+                  <span class="now">₹{{ product.price|floatformat:2 }}</span>
+                </div>
+                {% if product.total_stock == 0 %}
+                  <button class="card-add" disabled>Sold Out</button>
+                {% else %}
+                  <form method="POST" action="{% url 'add_to_cart' product.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="card-add">+ Cart</button>
+                  </form>
                 {% endif %}
               </div>
-              {% if product.total_stock > 0 %}
-                <form method="POST" action="{% url 'add_to_cart' product.id %}">
-                  {% csrf_token %}
-                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                  
-                  <select name="variant_id">
-                    {% for v in product.variants.all %}
-                      {% if v.stock > 0 %}
-                        <option value="{{ v.id }}">
-                          {{ v.size }} {% if v.color %}- {{ v.color }}{% endif %}
-                        </option>
-                      {% endif %}
-                    {% endfor %}
-                  </select>
-
-                  <button type="submit" class="btn-add">Add</button>
-                </form>
-              {% else %}<span class="btn-add oos">Out of Stock</span>{% endif %}
             </div>
-          </div>
+
+          </article>
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
 
-      {% if paginator.num_pages > 1 %}
-      <nav class="vs-pagination">
-        {% if page_obj.has_previous %}
-          <a href="?{{ filter_querystring }}&page={{ page_obj.previous_page_number }}" class="pg-lnk">← Prev</a>
-        {% else %}
-          <span class="pg-lnk off">← Prev</span>
-        {% endif %}
-
-        {% for num in paginator.page_range %}
-          {% if num == page_obj.number %}
-            <span class="pg-lnk active">{{ num }}</span>
-          {% elif num == 1 or num == paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
-            <a href="?{{ filter_querystring }}&page={{ num }}" class="pg-lnk">{{ num }}</a>
-          {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
-            <span style="padding:0 4px;color:var(--muted-lt)">…</span>
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+          {% if page_obj.has_previous %}
+          <a class="pg-btn" href="?{{ params_str }}&page={{ page_obj.previous_page_number }}">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </a>
+          {% else %}
+          <span class="pg-btn disabled">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </span>
           {% endif %}
-        {% endfor %}
 
-        <span class="pg-info">{{ page_obj.number }} / {{ paginator.num_pages }}</span>
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <span class="pg-btn active">{{ num }}</span>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+              <a class="pg-btn" href="?{{ params_str }}&page={{ num }}">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
 
-        {% if page_obj.has_next %}
-          <a href="?{{ filter_querystring }}&page={{ page_obj.next_page_number }}" class="pg-lnk">Next →</a>
-        {% else %}
-          <span class="pg-lnk off">Next →</span>
+          <span class="pg-label">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+          {% if page_obj.has_next %}
+          <a class="pg-btn" href="?{{ params_str }}&page={{ page_obj.next_page_number }}">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          {% else %}
+          <span class="pg-btn disabled">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+          {% endif %}
+        </div>
         {% endif %}
-      </nav>
-      {% endif %}
 
-      {% else %}
-      <div class="no-res">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-        <h3>No products <em>found</em></h3>
-        <p>{% if search_query %}No results for "{{ search_query }}".{% else %}No products match your filters.{% endif %}</p>
-        <a href="{% url 'product_shop' %}" class="btn-rst">Clear all filters</a>
+        {% else %}
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <h3>No products found</h3>
+          <p>Try adjusting your search or clearing the filters.</p>
+          <a href="{% url 'product_shop' %}" class="btn-terra">Clear all filters</a>
+        </div>
+        {% endif %}
+
       </div>
-      {% endif %}
-    </main>
+    </div>
   </div>
 </div>
 
 <script>
-function clearSearch(){const u=new URL(window.location.href);u.searchParams.delete('q');u.searchParams.delete('page');window.location.href=u.toString()}
-function openSb(){document.getElementById('vsSidebar').classList.add('open');document.getElementById('vsOverlay').classList.add('open');document.body.style.overflow='hidden'}
-function closeSb(){document.getElementById('vsSidebar').classList.remove('open');document.getElementById('vsOverlay').classList.remove('open');document.body.style.overflow=''}
-function toggleSec(h){h.classList.toggle('open');const b=h.nextElementSibling;if(b)b.style.display=b.style.display==='none'?'':'none'}
+function toggleClear(inp) {
+  document.getElementById('clearBtn').style.display = inp.value ? 'flex' : 'none';
+}
+function clearSearch() {
+  const inp = document.getElementById('searchInput');
+  inp.value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  inp.closest('form').submit();
+}
+function toggleBlock(head) {
+  head.classList.toggle('open');
+  const body = head.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+function toggleSec(header) {
+  header.classList.toggle('open');
+  const body = header.nextElementSibling;
+  if(body) {
+    body.style.display = body.style.display === 'none' ? 'block' : 'none';
+  }
+}
 </script>
 {% endblock %}

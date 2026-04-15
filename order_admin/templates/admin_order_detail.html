@@ -15,7 +15,6 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .pg-hd h1{font-family:var(--head);font-size:22px;font-weight:700;color:var(--text)}
 .pg-hd p{font-size:12px;color:var(--muted);margin-top:3px}
 
-/* STATUS BADGES */
 .sb{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:700}
 .sb .dot{width:5px;height:5px;border-radius:50%}
 .sb-pending{background:var(--orange-pale);color:var(--orange)}.sb-pending .dot{background:var(--orange)}
@@ -26,18 +25,15 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .sb-return_requested{background:var(--orange-pale);color:var(--orange)}.sb-return_requested .dot{background:var(--orange)}
 .sb-returned{background:rgba(138,125,114,.12);color:var(--muted2)}.sb-returned .dot{background:var(--muted2)}
 
-/* GRID */
 .det-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
 @media(max-width:860px){.det-grid{grid-template-columns:1fr}}
 
-/* CARDS */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px}
 .ch{padding:12px 17px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .ch h3{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px}
 .ch h3 svg{width:13px;height:13px;color:var(--terra)}
 .cb{padding:16px 17px}
 
-/* ITEMS TABLE */
 .itbl{width:100%;border-collapse:collapse}
 .itbl th{padding:9px 12px;font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);text-align:left;background:var(--card2)}
 .itbl td{padding:11px 12px;border-bottom:1px solid rgba(58,52,44,.4);vertical-align:middle;font-size:12.5px}
@@ -48,20 +44,17 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .item-name{font-weight:600;color:var(--text);font-size:12.5px}
 .item-link{font-size:11px;color:var(--terra);margin-top:2px;display:block}
 
-/* PRICE ROWS */
 .pr{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;color:var(--muted);border-bottom:1px solid rgba(58,52,44,.3)}
 .pr:last-child{border-bottom:none}
 .pr .v{color:var(--text);font-weight:500}
 .pr.dis{color:var(--green)}.pr.dis .v{color:var(--green)}
 .pr-total{display:flex;justify-content:space-between;font-family:var(--head);font-size:19px;font-weight:700;color:var(--text);padding-top:10px}
 
-/* INFO ROWS */
 .ir{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid rgba(58,52,44,.3)}
 .ir:last-child{border-bottom:none}
 .ir-lbl{color:var(--muted)}
 .ir-val{color:var(--text);font-weight:600;text-align:right}
 
-/* STATUS CHANGE */
 .sc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px}
 .sc-head{padding:12px 17px;background:linear-gradient(135deg,#2e2925,#3a332c);display:flex;align-items:center;gap:8px}
 .sc-head h3{font-size:13.5px;font-weight:700;color:var(--text)}
@@ -77,7 +70,6 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .btn-update{width:100%;padding:11px;background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-lg);font-size:13px;font-weight:700;cursor:pointer;transition:.18s}
 .btn-update:hover{background:var(--terra2)}
 
-/* USER AVATAR */
 .u-avatar{width:38px;height:38px;border-radius:50%;background:var(--terra-pale);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--terra);flex-shrink:0}
 .addr-box{background:var(--card2);border-radius:var(--radius-lg);padding:11px 13px;font-size:12.5px;line-height:1.6;color:var(--muted2)}
 .addr-name{font-weight:700;color:var(--text);margin-bottom:3px}
@@ -98,9 +90,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
   </div>
 
   <div class="det-grid">
-    <!-- LEFT -->
     <div>
-      <!-- ORDER ITEMS -->
       <div class="card">
         <div class="ch"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Items ({{ order.items.count }})</h3></div>
         <div style="padding:0">
@@ -136,7 +126,6 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
         </div>
       </div>
 
-      <!-- PRICE BREAKDOWN -->
       <div class="card">
         <div class="ch"><h3>Price Summary</h3></div>
         <div class="cb">
@@ -148,7 +137,6 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
         </div>
       </div>
 
-      <!-- ADDRESS -->
       <div class="card">
         <div class="ch"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Delivery Address</h3></div>
         <div class="cb">
@@ -172,9 +160,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
       {% endif %}
     </div>
 
-    <!-- RIGHT -->
     <div>
-      <!-- STATUS CHANGE -->
       <div class="sc-card">
         <div class="sc-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--terra2)" stroke-width="2.5"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/></svg><h3>Update Status</h3></div>
         <div class="sc-body">
@@ -195,16 +181,31 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
         </div>
       </div>
 
-      <!-- CUSTOMER -->
       <div class="card">
         <div class="ch"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Customer</h3></div>
         <div class="cb">
-          {% if order.user %}
-          <div style="display:flex;gap:11px;align-items:center;margin-bottom:13px">
-            <div class="u-avatar">{{ order.user.get_full_name|first|upper|default:order.user.username|first|upper }}</div>
-            <div><div style="font-weight:700;font-size:13.5px;color:var(--text)">{{ order.user.get_full_name|default:order.user.username }}</div><div style="font-size:11.5px;color:var(--muted)">{{ order.user.email }}</div></div>
-          </div>
-          {% endif %}
+{% if order.user %}
+  {% with name=order.user.get_full_name|default:order.user.email|default:"User" %}
+
+    <div style="display:flex;gap:11px;align-items:center;margin-bottom:13px">
+
+      <div class="u-avatar">
+        {{ name|default:"U"|slice:":1"|upper }}
+      </div>
+
+      <div>
+        <div style="font-weight:700;font-size:13.5px;color:var(--text)">
+          {{ name }}
+        </div>
+        <div style="font-size:11.5px;color:var(--muted)">
+          {{ order.user.email|default:"-" }}
+        </div>
+      </div>
+
+    </div>
+
+  {% endwith %}
+{% endif %}
           <div class="ir"><span class="ir-lbl">Name</span><span class="ir-val">{{ order.full_name }}</span></div>
           <div class="ir"><span class="ir-lbl">Phone</span><span class="ir-val">{{ order.phone }}</span></div>
           <div class="ir"><span class="ir-lbl">City</span><span class="ir-val">{{ order.city }}, {{ order.state }}</span></div>
@@ -212,7 +213,6 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
         </div>
       </div>
 
-      <!-- ORDER INFO -->
       <div class="card">
         <div class="ch"><h3>Order Info</h3></div>
         <div class="cb">
