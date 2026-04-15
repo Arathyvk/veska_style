@@ -3,6 +3,7 @@ import uuid
 import os
 from django.utils.text import slugify
 from PIL import Image as PILImage
+from category_admin.models import Category
 
 
 CATEGORY_CHOICES = [
@@ -21,11 +22,13 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=300, unique=True, blank=True)
     description = models.TextField(blank=True)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)    
     color = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     original_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.PositiveIntegerField(default=0)
+    is_listed = models.BooleanField(default=True)
+    is_blocked = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -46,6 +49,10 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+  
+    @property
+    def primary_image(self):
+        return self.images.first()
 
     @property
     def total_stock(self):

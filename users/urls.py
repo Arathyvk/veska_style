@@ -15,6 +15,8 @@ urlpatterns = [
     path("reset-password/",views.reset_password,name="reset_password"),
     path('newadmin/', include('admin_side.urls')),
 
+    path('debug/', views.debug_social, name='debug_social'),
+
 
 
 ]

@@ -46,11 +46,9 @@ INSTALLED_APPS = [
 
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',
-
-    
+    'allauth.socialaccount',    
+   
     'allauth.socialaccount.providers.google',
-
     'cloudinary',
     'cloudinary_storage',
 
@@ -65,10 +63,11 @@ INSTALLED_APPS = [
     'checkout_page',
     'order_user',
     'order_admin',
+    'coupon_admin',
     
 ]
 
-SITE_ID = 1
+SITE_ID = 2
 
 
 cloudinary.config(
@@ -93,6 +92,8 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = [
     'users.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
@@ -215,7 +216,7 @@ AUTH_USER_MODEL = 'users.User'
 
 
 ACCOUNT_ADAPTER         = 'core.adapters.AccountAdapter'
-SOCIALACCOUNT_ADAPTER   = 'core.adapters.SocialAccountAdapter'
+
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 

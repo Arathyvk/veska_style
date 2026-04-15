@@ -669,29 +669,30 @@ function addVariantRow() {
 }
 
 function renderVariantRows() {
-  const sizeOptions = ['','US 6','US 7','US 8','US 9','US 10','US 11']
-    .map(s => `<option value="${s}" ${v.size===s?'selected':''}>${s||'— Size —'}</option>`)
-    .join('');
-
   document.getElementById('new-variant-list').innerHTML = variantRows.map((v,i) => `
     <div class="variant-row">
-      <input class="finput" placeholder="Variant name" value="${v.name}"
+      <input class="finput" placeholder="Variant name" value="${v.name || ''}"
              oninput="variantRows[${i}].name=this.value;syncVariantsJSON()">
+
       <select class="fselect finput" style="padding:6px 9px"
               onchange="variantRows[${i}].size=this.value;syncVariantsJSON()">
         ${['','US 6','US 7','US 8','US 9','US 10','US 11']
-          .map(s=>`<option value="${s}" ${v.size===s?'selected':''}>${s||'— Size —'}</option>`)
+          .map(s => `<option value="${s}" ${v.size===s?'selected':''}>${s||'— Size —'}</option>`)
           .join('')}
       </select>
-      <input class="finput" placeholder="Color" value="${v.color}"
+
+      <input class="finput" placeholder="Color" value="${v.color || ''}"
              oninput="variantRows[${i}].color=this.value;syncVariantsJSON()">
-      <input class="finput" type="number" min="0" placeholder="Stock" value="${v.stock}"
+
+      <input class="finput" type="number" min="0" placeholder="Stock" value="${v.stock || 0}"
              oninput="variantRows[${i}].stock=+this.value;syncVariantsJSON()">
+
       <button type="button" class="vdel-btn" onclick="removeVariantRow(${i})">✕</button>
-    </div>`).join('');
+    </div>
+  `).join('');
+
   syncVariantsJSON();
 }
-
 function removeVariantRow(i) { variantRows.splice(i,1); renderVariantRows(); }
 function syncVariantsJSON()  { document.getElementById('new_variants_json').value = JSON.stringify(variantRows); }
 
