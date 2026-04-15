@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q, Min, Max, Avg
+from urllib3 import request
 
 from product_admin.models import Product, ProductReview
 
@@ -45,7 +46,7 @@ def product_shop(request):
     )
 
     search_query      = request.GET.get('q', '').strip()
-    selected_category = request.GET.get('category', '').strip()
+    selected_categories = request.GET.getlist('category')    
     selected_sizes    = request.GET.getlist('size')  
     price_min_input   = request.GET.get('price_min', '').strip()
     price_max_input   = request.GET.get('price_max', '').strip()
@@ -62,8 +63,8 @@ def product_shop(request):
             Q(color__icontains=search_query)
         )
 
-    if selected_category:
-        qs = qs.filter(category__name__iexact=selected_category)
+    if selected_categories:
+        qs = qs.filter(category__name__in=selected_categories)
 
     if selected_sizes:
         qs = qs.filter(
@@ -108,7 +109,7 @@ def product_shop(request):
     filter_querystring = params.urlencode()  
     has_filters = any([
         search_query,
-        selected_category,
+        selected_categories,
         selected_sizes,         
         price_min_input,
         price_max_input,
@@ -122,7 +123,7 @@ def product_shop(request):
         'total_count':        paginator.count,
 
         'search_query':       search_query,
-        'selected_category':  selected_category,
+        'selected_categories':  selected_categories,
         'selected_sizes':     selected_sizes,
         'price_min':          price_min_input,
         'price_max':          price_max_input,
@@ -130,7 +131,7 @@ def product_shop(request):
         'has_filters':        has_filters,
 
         'sort_key':           sort_key,
-        'sort_options':       SORT_OPTIONS,
+        'sort_options':       SORT_OPTIONS.items(),
 
         'category_choices':   CATEGORY_CHOICES,
         'size_choices':       SIZE_CHOICES,
