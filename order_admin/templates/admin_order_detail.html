@@ -73,6 +73,13 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .u-avatar{width:38px;height:38px;border-radius:50%;background:var(--terra-pale);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--terra);flex-shrink:0}
 .addr-box{background:var(--card2);border-radius:var(--radius-lg);padding:11px 13px;font-size:12.5px;line-height:1.6;color:var(--muted2)}
 .addr-name{font-weight:700;color:var(--text);margin-bottom:3px}
+.item-pag{display:flex;align-items:center;justify-content:space-between;padding:12px 0 0;border-top:1px solid rgba(58,52,44,.4);gap:12px;flex-wrap:wrap}
+.item-pag-info{font-size:12px;color:var(--muted)}
+.item-pag-links{display:flex;align-items:center;gap:4px}
+.ipg{display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;border-radius:var(--radius);border:1px solid var(--border2);font-size:12px;font-weight:500;color:var(--muted2);background:var(--card2);text-decoration:none}
+.ipg:hover{border-color:var(--terra);color:var(--terra2)}
+.ipg.active{background:var(--terra);border-color:var(--terra);color:#1a1714;font-weight:700}
+.ipg.off{opacity:.3;pointer-events:none}
 </style>
 
 <div class="wrap">
@@ -97,7 +104,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
           <table class="itbl">
             <thead><tr><th>Product</th><th>Size</th><th>Qty</th><th>Unit</th><th>Total</th><th>Status</th></tr></thead>
             <tbody>
-              {% for item in order.items.all %}
+              {% for item in items %}
               <tr>
                 <td>
                   <div class="item-name-cell">
@@ -124,6 +131,37 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
             </tbody>
           </table>
         </div>
+
+        {% if items_page_obj.paginator.num_pages > 1 %}
+          <div class="item-pag">
+            <div class="item-pag-info">
+              Showing <strong>{{ items_page_obj.start_index }}–{{ items_page_obj.end_index }}</strong> of
+              <strong>{{ items_page_obj.paginator.count }}</strong>
+              item{{ items_page_obj.paginator.count|pluralize }}
+            </div>
+            <div class="item-pag-links">
+              {% if items_page_obj.has_previous %}
+                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ items_page_obj.previous_page_number }}" class="ipg">‹ Prev</a>
+              {% else %}
+                <span class="ipg off">‹ Prev</span>
+              {% endif %}
+
+              {% for num in items_page_obj.paginator.page_range %}
+                {% if num == items_page_obj.number %}
+                  <span class="ipg active">{{ num }}</span>
+                {% elif num > items_page_obj.number|add:"-3" and num < items_page_obj.number|add:"3" %}
+                  <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ num }}" class="ipg">{{ num }}</a>
+                {% endif %}
+              {% endfor %}
+
+              {% if items_page_obj.has_next %}
+                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ items_page_obj.next_page_number }}" class="ipg">Next ›</a>
+              {% else %}
+                <span class="ipg off">Next ›</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
       </div>
 
       <div class="card">

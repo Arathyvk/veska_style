@@ -15,6 +15,7 @@ from category_admin.models import Category
 
 ORDERS_PER_PAGE    = 20
 INVENTORY_PER_PAGE = 20
+ORDER_ITEMS_PER_PAGE = 10
 LOW_STOCK_THRESHOLD = 5
 
 ORDER_STATUS_CHOICES = [
@@ -52,7 +53,7 @@ def admin_order_list(request):
     )
 
     q = request.GET.get('q', '').strip()
-    if q:
+    if q: 
         qs = qs.filter(
             Q(order_number__icontains=q) |
             Q(full_name__icontains=q) |
@@ -136,13 +137,30 @@ def admin_order_list(request):
 @staff_member_required(login_url='admin:login')
 def order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
-    items = order.items.all()
+    # Paginate items inside a single order (admins may need to browse long orders).
+    items_qs = order.items.all().order_by('id')
+
+    paginator = Paginator(items_qs, ORDER_ITEMS_PER_PAGE)
+    page_num = request.GET.get('items_page', 1)
+    try:
+        page_num = int(page_num)
+    except (ValueError, TypeError):
+        page_num = 1
+
+    items_page_obj = paginator.get_page(page_num)
+
+    get = request.GET.copy()
+    get.pop('items_page', None)
+    filter_qs = get.urlencode()
 
     allowed_statuses = STATUS_FLOW.get(order.status, [])
 
     return render(request, 'admin_order_detail.html', {
         'order':            order,
-        'items':            items,
+        'items':            items_page_obj.object_list,
+        'items_page_obj':  items_page_obj,
+        'items_paginator':  paginator,
+        'filter_qs':        filter_qs,
         'allowed_statuses': allowed_statuses,
         'status_choices':   ORDER_STATUS_CHOICES,
         'status_labels':    dict(ORDER_STATUS_CHOICES),
