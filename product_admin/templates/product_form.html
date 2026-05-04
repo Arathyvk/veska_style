@@ -41,7 +41,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .flabel .req{color:var(--rose2);margin-left:2px}
 .finput,.fselect,.ftextarea{
   width:100%;background:var(--card2);border:1px solid var(--border2);
-  color:var(--text);font-family:var(--body);font-size:20px;
+  color:var(--text);font-family:var(--body);font-size:17px;
   padding:20px 12px;border-radius:var(--radius);outline:none;transition:border .18s;
 }
 .finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--rose)}
@@ -54,22 +54,51 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .fselect option{background:#2c2620}
 .ftextarea{resize:vertical;min-height:90px;line-height:1.6}
 .fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .ferror{font-size:11px;color:var(--red);margin-top:4px}
 .fhint{font-size:16.5px;color:var(--muted);margin-top:4px;line-height:1.5}
 
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0}
-.toggle-label{font-size:15.5px;font-weight:500}
-.toggle-sub{font-size:14px;color:var(--muted);margin-top:2px}
+/* ── Toggle rows ── */
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 0;border-bottom:1px solid var(--border);
+}
+.toggle-row:last-child{border-bottom:none;padding-bottom:0}
+.toggle-row:first-child{padding-top:0}
+.toggle-info{flex:1;min-width:0;padding-right:16px}
+.toggle-label{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:3px}
+.toggle-sub{font-size:11.5px;color:var(--muted);line-height:1.5}
+
+/* status pill shown next to toggle label */
+.toggle-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:2px 8px;border-radius:20px;margin-left:8px;
+  transition:all .2s;
+}
+.toggle-pill.on {background:rgba(76,175,125,.15);color:var(--green);border:1px solid rgba(76,175,125,.3)}
+.toggle-pill.off{background:rgba(224,82,82,.1);color:var(--red);border:1px solid rgba(224,82,82,.25)}
+
 .toggle-wrap{position:relative;width:44px;height:24px;flex-shrink:0}
 .toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
-.toggle-track{position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;transition:background .2s}
-.toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle-track{
+  position:absolute;inset:0;border-radius:12px;cursor:pointer;
+  transition:background .2s;background:var(--border2);
+}
+.toggle-track::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:18px;height:18px;border-radius:50%;background:#fff;
+  transition:transform .2s;
+}
 .toggle-wrap input:checked + .toggle-track{background:var(--rose)}
 .toggle-wrap input:checked + .toggle-track::after{transform:translateX(20px)}
 
+/* colour variants per toggle meaning */
+.toggle-wrap.t-active input:checked + .toggle-track   {background:var(--rose)}
+.toggle-wrap.t-homepage input:checked + .toggle-track {background:#5b9cf6}
+.toggle-wrap.t-shop input:checked + .toggle-track     {background:var(--green)}
+
 .upload-zone{
-  border:2px dashed var(--border2);border-radius:10px;padding: 97px 47px;
+  border:2px dashed var(--border2);border-radius:10px;padding:97px 47px;
   text-align:center;cursor:pointer;transition:all .2s;background:rgba(42,38,32,.5);
 }
 .upload-zone:hover,.upload-zone.drag{border-color:var(--rose);background:rgba(201,150,122,.05)}
@@ -144,12 +173,6 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
   box-shadow:0 3px 14px rgba(201,150,122,.3);
 }
 .btn-save:hover{opacity:.88}
-.btn-draft{
-  background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
-  font-size:12px;font-weight:500;padding:11px 16px;
-  border-radius:var(--radius);cursor:pointer;transition:all .15s;font-family:var(--body);
-}
-.btn-draft:hover{border-color:var(--rose);color:var(--rose2)}
 
 .crop-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(5px);
@@ -187,9 +210,6 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .toast-wrap{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
 .toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 15px;font-size:12.5px;display:flex;align-items:center;gap:9px;min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45)}
 .toast.ok{border-left:3px solid var(--green)}.toast.err{border-left:3px solid var(--red)}.toast.warn{border-left:3px solid var(--orange)}
-
-.badge-draft{display:inline-block;background:rgba(224,154,82,.12);border:1px solid rgba(224,154,82,.3);color:var(--orange);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px}
-.site-footer{text-align:center;padding:15px;font-size:14px;color:var(--muted);border-top:1px solid var(--border);margin-top:47pc;max-width:139pc} 
 </style>
 
 {% if messages %}
@@ -207,7 +227,6 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 <div style="margin-bottom:18px">
   <h2 style="font-family:var(--head);font-size:2pc;font-weight:700">
     {% if action == 'edit' %}Edit Product{% else %}Add New Product{% endif %}
-    {% if product and not product.is_active %}{% endif %}
   </h2>
   <p style="font-size:16px;color:var(--muted);margin-top:3px">
     {% if action == 'edit' %}Update product details, images and variants{% else %}Fill in details · upload at least 3 images · add variants{% endif %}
@@ -224,6 +243,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 
   <div class="form-shell">
 
+    <!-- ── LEFT COLUMN ── -->
     <div>
 
       <div class="fsec">
@@ -282,13 +302,13 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
         </div>
       </div>
 
+      <!-- VARIANTS -->
       <div class="fsec">
         <div class="fsec-head">
           <h3>Variants</h3>
           <span style="font-size:14px;color:var(--muted)">Size · Color · Stock per variant</span>
         </div>
         <div class="fsec-body">
-
           {% if product and product.variants.all %}
           <div id="existing-variant-list">
             {% for v in product.variants.all %}
@@ -307,7 +327,6 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
           {% endif %}
 
           <div class="variant-list" id="new-variant-list"></div>
-
           <button type="button" class="btn-add-variant" onclick="addVariantRow()">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -319,25 +338,81 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
       </div>
 
     </div>
+
+    <!-- ── RIGHT COLUMN ── -->
     <div>
 
+      <!-- ════════════════════════════════════════
+           PUBLISH SETTINGS — three toggles
+           ════════════════════════════════════════ -->
       <div class="fsec">
         <div class="fsec-head"><h3>Publish Settings</h3></div>
-        <div class="fsec-body" style="padding:12px 18px">
+        <div class="fsec-body" style="padding:14px 18px">
+
+          <!-- Toggle 1: Active / Published (master switch) -->
           <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Active / Published</div>
-              <div class="toggle-sub">Off = draft (hidden from storefront)</div>
+            <div class="toggle-info">
+              <div class="toggle-label">
+                Active / Published
+                <span class="toggle-pill {% if action == 'add' or product.is_active %}on{% else %}off{% endif %}"
+                      id="pill-active">
+                  {% if action == 'add' or product.is_active %}ON{% else %}OFF{% endif %}
+                </span>
+              </div>
+              <div class="toggle-sub">Master switch — turns the product on or off everywhere</div>
             </div>
-            <label class="toggle-wrap">
+            <label class="toggle-wrap t-active">
               <input type="checkbox" name="is_active" id="toggle-active"
-                     {% if action == 'add' or product.is_active %}checked{% endif %}>
+                     {% if action == 'add' or product.is_active %}checked{% endif %}
+                     onchange="syncPill(this,'pill-active')">
               <span class="toggle-track"></span>
             </label>
           </div>
+
+          <!-- Toggle 2: Show on Landing Page (Homepage) -->
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">
+                Show on Homepage
+                <span class="toggle-pill {% if product.is_featured %}on{% else %}off{% endif %}"
+                      id="pill-featured">
+                  {% if product.is_featured %}ON{% else %}OFF{% endif %}
+                </span>
+              </div>
+              <div class="toggle-sub">Featured section on the landing page</div>
+            </div>
+            <label class="toggle-wrap t-homepage">
+              <input type="checkbox" name="is_featured" id="toggle-featured"
+                     {% if product.is_featured %}checked{% endif %}
+                     onchange="syncPill(this,'pill-featured')">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+
+          <!-- Toggle 3: Show on Shop Page -->
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">
+                Show on Shop Page
+                <span class="toggle-pill {% if action == 'add' or product.is_shop_active %}on{% else %}off{% endif %}"
+                      id="pill-shop">
+                  {% if action == 'add' or product.is_shop_active %}ON{% else %}OFF{% endif %}
+                </span>
+              </div>
+              <div class="toggle-sub">Visible in the /shop product listing</div>
+            </div>
+            <label class="toggle-wrap t-shop">
+              <input type="checkbox" name="is_shop_active" id="toggle-shop"
+                     {% if action == 'add' or product.is_shop_active %}checked{% endif %}
+                     onchange="syncPill(this,'pill-shop')">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+
         </div>
       </div>
 
+      <!-- PRODUCT IMAGES -->
       <div class="fsec">
         <div class="fsec-head">
           <h3>Product Images</h3>
@@ -399,6 +474,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
   </div>
 </form>
 
+<!-- CROP MODAL (unchanged from original) -->
 <div class="crop-overlay" id="crop-overlay">
   <div class="crop-modal">
     <div class="crop-modal-head">
@@ -442,82 +518,64 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
   </div>
 </div>
 
-
 <div class="toast-wrap" id="live-toasts"></div>
 
 <script>
-const pendingImgs   = [];
-let   cropIndex     = null;
-let   cropSrc       = null;
-let   removedExIds  = [];
-let   deletedVarIds = [];
-let   variantRows   = [];
-let   dragIdx       = null;
-let   cropDrag      = { on:false };
-let   cropZoom      = 1;
+/* ── pill sync ── */
+function syncPill(checkbox, pillId) {
+  const pill = document.getElementById(pillId);
+  if (!pill) return;
+  pill.textContent = checkbox.checked ? 'ON' : 'OFF';
+  pill.className   = 'toggle-pill ' + (checkbox.checked ? 'on' : 'off');
+}
+
+/* ── image upload / crop (unchanged) ── */
+const pendingImgs = [];
+let cropIndex = null, cropSrc = null, removedExIds = [], deletedVarIds = [], variantRows = [], dragIdx = null, cropDrag = {on:false}, cropZoom = 1;
 
 document.getElementById('upload-zone').addEventListener('drop', e => {
-  e.preventDefault();
-  document.getElementById('upload-zone').classList.remove('drag');
+  e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag');
 });
-
 function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-zone').classList.remove('drag');
+  e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag');
   const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
   handleFiles(files);
 }
-
 function handleFiles(files) {
   Array.from(files).forEach(file => {
     const reader = new FileReader();
-    reader.onload = ev => {
-      pendingImgs.push({ dataURL: ev.target.result, original: ev.target.result });
-      openCrop(pendingImgs.length - 1);
-    };
+    reader.onload = ev => { pendingImgs.push({ dataURL: ev.target.result, original: ev.target.result }); openCrop(pendingImgs.length - 1); };
     reader.readAsDataURL(file);
   });
 }
-
 function renderImgGrid() {
   const grid = document.getElementById('img-grid');
   const bar  = document.getElementById('img-count-bar');
   const txt  = document.getElementById('img-count-text');
   const n    = pendingImgs.length;
-
   grid.innerHTML = pendingImgs.map((img, i) => `
-    <div class="img-item ${i===0?'primary-img':''}" data-idx="${i}"
-         draggable="true"
-         ondragstart="dragIdx=${i}"
-         ondragover="event.preventDefault()"
-         ondrop="dropImg(event,${i})"
-         ondragend="dragIdx=null">
+    <div class="img-item ${i===0?'primary-img':''}" data-idx="${i}" draggable="true"
+         ondragstart="dragIdx=${i}" ondragover="event.preventDefault()"
+         ondrop="dropImg(event,${i})" ondragend="dragIdx=null">
       <img src="${img.dataURL}" alt="">
       <span class="img-num">${i+1}</span>
       ${i===0?'<span class="img-primary-lbl">PRIMARY</span>':''}
       <div class="img-overlay">
-        <button type="button" class="ovr-btn crop" onclick="reCrop(${i})" title="Re-crop">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path d="M6.13 1L6 16a2 2 0 002 2h15"/><path d="M1 6.13L16 6a2 2 0 012 2v15"/>
-          </svg>
+        <button type="button" class="ovr-btn crop" onclick="reCrop(${i})">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6.13 1L6 16a2 2 0 002 2h15"/><path d="M1 6.13L16 6a2 2 0 012 2v15"/></svg>
         </button>
-        <button type="button" class="ovr-btn del" onclick="removeImg(${i})" title="Remove">✕</button>
+        <button type="button" class="ovr-btn del" onclick="removeImg(${i})">✕</button>
       </div>
     </div>`).join('');
-
   if (n > 0) {
     bar.style.display = 'flex';
     if (n >= 3) { txt.textContent = `${n} image${n>1?'s':''} ✓`; txt.className = 'img-count-text ok'; }
     else        { txt.textContent = `${n} — need ${3-n} more`;    txt.className = 'img-count-text warn'; }
-  } else {
-    bar.style.display = 'none';
-  }
+  } else { bar.style.display = 'none'; }
   syncJSON();
 }
-
 function removeImg(i) { pendingImgs.splice(i, 1); renderImgGrid(); }
 function reCrop(i)    { cropIndex = i; openCrop(i, true); }
-
 function dropImg(e, i) {
   e.preventDefault();
   if (dragIdx === null || dragIdx === i) return;
@@ -525,29 +583,22 @@ function dropImg(e, i) {
   pendingImgs.splice(i, 0, moved);
   renderImgGrid();
 }
-
 function removeExistingImg(pk, btn) {
   removedExIds.push(pk);
   document.getElementById('removed_image_ids').value = JSON.stringify(removedExIds);
   const el = document.getElementById('eximg-' + pk);
   if (el) el.style.cssText = 'opacity:.3;pointer-events:none;filter:grayscale(1)';
   const remaining = document.querySelectorAll('.ex-thumb:not([style*="opacity"])').length;
-  document.getElementById('existing-count-msg').textContent =
-    `${remaining} saved image${remaining!==1?'s':''}`;
+  document.getElementById('existing-count-msg').textContent = `${remaining} saved image${remaining!==1?'s':''}`;
   showToast('Image marked for removal — save to confirm', 'warn');
 }
-
 function syncJSON() {
-  document.getElementById('cropped_images_json').value =
-    JSON.stringify(pendingImgs.map(img => img.dataURL));
+  document.getElementById('cropped_images_json').value = JSON.stringify(pendingImgs.map(img => img.dataURL));
 }
-
 function openCrop(idx, reCropMode = false) {
-  cropIndex = idx;
-  cropSrc   = pendingImgs[idx].original || pendingImgs[idx].dataURL;
+  cropIndex = idx; cropSrc = pendingImgs[idx].original || pendingImgs[idx].dataURL;
   const img = document.getElementById('crop-img');
-  img.src = cropSrc;
-  img.style.transform = 'scale(1)';
+  img.src = cropSrc; img.style.transform = 'scale(1)';
   document.getElementById('zoom-range').value = 100;
   document.getElementById('zoom-lbl').textContent = '1.0×';
   cropZoom = 1;
@@ -555,37 +606,30 @@ function openCrop(idx, reCropMode = false) {
   img.onload = () => { resetCropBox(); setupCropDrag(); };
   if (img.complete) { resetCropBox(); setupCropDrag(); }
 }
-
 function closeCrop() {
   document.getElementById('crop-overlay').classList.remove('open');
-  if (cropIndex !== null && pendingImgs[cropIndex] && !pendingImgs[cropIndex]._cropped) {
-    pendingImgs.splice(cropIndex, 1);
-  }
+  if (cropIndex !== null && pendingImgs[cropIndex] && !pendingImgs[cropIndex]._cropped) pendingImgs.splice(cropIndex, 1);
   renderImgGrid();
 }
-
 function resetCropBox() {
-  const area   = document.getElementById('crop-area');
-  const sel    = document.getElementById('crop-sel');
+  const area = document.getElementById('crop-area');
+  const sel  = document.getElementById('crop-sel');
   const aspect = parseFloat(document.getElementById('aspect-sel').value) || 1;
   const aW = area.clientWidth, aH = area.clientHeight;
-  let   sw = Math.min(aW * 0.7, aH * 0.7);
-  let   sh = aspect === 0 ? sw : sw / aspect;
+  let sw = Math.min(aW * 0.7, aH * 0.7);
+  let sh = aspect === 0 ? sw : sw / aspect;
   if (sh > aH * 0.85) { sh = aH * 0.85; sw = aspect === 0 ? sh : sh * aspect; }
   sel.style.cssText = `width:${sw}px;height:${sh}px;left:${(aW-sw)/2}px;top:${(aH-sh)/2}px`;
 }
-
 function applyZoom(v) {
   cropZoom = v / 100;
   document.getElementById('zoom-lbl').textContent = cropZoom.toFixed(1) + '×';
   document.getElementById('crop-img').style.transform = `scale(${cropZoom})`;
 }
-
 function setupCropDrag() {
-  const sel     = document.getElementById('crop-sel');
-  const area    = document.getElementById('crop-area');
+  const sel = document.getElementById('crop-sel');
+  const area = document.getElementById('crop-area');
   const handles = sel.querySelectorAll('.crop-handle');
-
   const onMove = e => {
     if (!cropDrag.on) return;
     const pt = e.touches ? e.touches[0] : e;
@@ -599,7 +643,7 @@ function setupCropDrag() {
     } else {
       const dx = pt.clientX - aR.left - cropDrag.sx;
       const dy = pt.clientY - aR.top  - cropDrag.sy;
-      const d  = cropDrag.type;
+      const d = cropDrag.type;
       let l = cropDrag.l, t = cropDrag.t, w = cropDrag.w, h = cropDrag.h;
       if (d.includes('e')) w = Math.max(50, cropDrag.w + dx);
       if (d.includes('s')) h = Math.max(50, cropDrag.h + dy);
@@ -610,42 +654,29 @@ function setupCropDrag() {
       sel.style.cssText = `left:${l}px;top:${t}px;width:${Math.min(w,aR.width-l)}px;height:${Math.min(h,aR.height-t)}px`;
     }
   };
-
   sel.onmousedown = e => {
     if (e.target.classList.contains('crop-handle')) return;
-    const sR = sel.getBoundingClientRect();
-    const aR = area.getBoundingClientRect();
-    cropDrag = { on:true, type:'move', ox:e.clientX-sR.left, oy:e.clientY-sR.top,
-                 w:sR.width, h:sR.height };
+    const sR = sel.getBoundingClientRect(); const aR = area.getBoundingClientRect();
+    cropDrag = { on:true, type:'move', ox:e.clientX-sR.left, oy:e.clientY-sR.top, w:sR.width, h:sR.height };
     e.preventDefault();
   };
-
   handles.forEach(h => h.onmousedown = e => {
-    const sR = sel.getBoundingClientRect();
-    const aR = area.getBoundingClientRect();
-    cropDrag = { on:true, type:h.dataset.dir,
-                 sx:e.clientX-aR.left, sy:e.clientY-aR.top,
-                 l:sR.left-aR.left, t:sR.top-aR.top, w:sR.width, h:sR.height };
+    const sR = sel.getBoundingClientRect(); const aR = area.getBoundingClientRect();
+    cropDrag = { on:true, type:h.dataset.dir, sx:e.clientX-aR.left, sy:e.clientY-aR.top, l:sR.left-aR.left, t:sR.top-aR.top, w:sR.width, h:sR.height };
     e.preventDefault(); e.stopPropagation();
   });
-
   document.onmousemove = onMove;
   document.onmouseup   = () => { cropDrag.on = false; };
 }
-
 function applyCrop() {
   const img  = document.getElementById('crop-img');
   const sel  = document.getElementById('crop-sel');
-  const area = document.getElementById('crop-area');
   const iR   = img.getBoundingClientRect();
   const sR   = sel.getBoundingClientRect();
   const scX  = img.naturalWidth  / iR.width;
   const scY  = img.naturalHeight / iR.height;
-  const cx   = (sR.left - iR.left) * scX;
-  const cy   = (sR.top  - iR.top ) * scY;
-  const cw   = sR.width  * scX;
-  const ch   = sR.height * scY;
-
+  const cx   = (sR.left - iR.left) * scX; const cy = (sR.top  - iR.top ) * scY;
+  const cw   = sR.width  * scX;           const ch = sR.height * scY;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 600;
   const ctx = canvas.getContext('2d');
@@ -663,39 +694,28 @@ function applyCrop() {
   tmp.src = cropSrc;
 }
 
-function addVariantRow() {
-  variantRows.push({ name:'', size:'', color:'', stock:0 });
-  renderVariantRows();
-}
-
+/* ── variants ── */
+function addVariantRow() { variantRows.push({ name:'', size:'', color:'', stock:0 }); renderVariantRows(); }
 function renderVariantRows() {
   document.getElementById('new-variant-list').innerHTML = variantRows.map((v,i) => `
     <div class="variant-row">
       <input class="finput" placeholder="Variant name" value="${v.name || ''}"
              oninput="variantRows[${i}].name=this.value;syncVariantsJSON()">
-
       <select class="fselect finput" style="padding:6px 9px"
               onchange="variantRows[${i}].size=this.value;syncVariantsJSON()">
         ${['','US 6','US 7','US 8','US 9','US 10','US 11']
-          .map(s => `<option value="${s}" ${v.size===s?'selected':''}>${s||'— Size —'}</option>`)
-          .join('')}
+          .map(s => `<option value="${s}" ${v.size===s?'selected':''}>${s||'— Size —'}</option>`).join('')}
       </select>
-
       <input class="finput" placeholder="Color" value="${v.color || ''}"
              oninput="variantRows[${i}].color=this.value;syncVariantsJSON()">
-
       <input class="finput" type="number" min="0" placeholder="Stock" value="${v.stock || 0}"
              oninput="variantRows[${i}].stock=+this.value;syncVariantsJSON()">
-
       <button type="button" class="vdel-btn" onclick="removeVariantRow(${i})">✕</button>
-    </div>
-  `).join('');
-
+    </div>`).join('');
   syncVariantsJSON();
 }
 function removeVariantRow(i) { variantRows.splice(i,1); renderVariantRows(); }
 function syncVariantsJSON()  { document.getElementById('new_variants_json').value = JSON.stringify(variantRows); }
-
 function deleteExistingVariant(pk, btn) {
   deletedVarIds.push(pk);
   document.getElementById('deleted_variant_ids').value = JSON.stringify(deletedVarIds);
@@ -703,40 +723,22 @@ function deleteExistingVariant(pk, btn) {
   if (row) row.style.cssText = 'opacity:.3;pointer-events:none;filter:grayscale(1)';
 }
 
-function saveDraft() {
-  document.getElementById('save_as_draft').value = '1';
-  document.getElementById('toggle-active').checked = false;
-  showToast('Saving as draft…', 'warn');
-  document.getElementById('product-form').submit();
-}
-const isEdit = "{{ action }}" === "edit";  
-
+/* ── form submit ── */
+const isEdit = "{{ action }}" === "edit";
 document.getElementById('product-form').addEventListener('submit', function(e) {
   const isDraft = document.getElementById('save_as_draft').value === '1';
-
   if (!isDraft) {
     if (!isEdit) {
-      if (pendingImgs.length < 3) {
-        e.preventDefault();
-        showToast('Please upload at least 3 product images', 'err');
-        return;
-      }
+      if (pendingImgs.length < 3) { e.preventDefault(); showToast('Please upload at least 3 product images', 'err'); return; }
     } else {
       const exCount  = document.querySelectorAll('.ex-thumb:not([style*="opacity"])').length;
       const newCount = pendingImgs.length;
-
-      if (exCount + newCount < 3) {
-        e.preventDefault();
-        showToast('Product must have at least 3 images total', 'err');
-        return;
-      }
+      if (exCount + newCount < 3) { e.preventDefault(); showToast('Product must have at least 3 images total', 'err'); return; }
     }
   }
-
   syncJSON();
   const btn = document.getElementById('save-btn');
-  btn.textContent = 'Saving…';
-  btn.disabled = true;
+  btn.textContent = 'Saving…'; btn.disabled = true;
 });
 
 function showToast(msg, type='ok') {

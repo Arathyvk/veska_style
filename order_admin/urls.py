@@ -10,4 +10,7 @@ urlpatterns = [
      path('inventory/<int:product_id>/',views.inventory_detail,name='admin_inventory_detail'),
      path('inventory/<int:product_id>/stock/',views.inventory_update_stock,name='admin_inventory_update_stock'),
      path('inventory/<int:product_id>/status/',views.inventory_toggle_status,name='admin_inventory_toggle_status'),
+     path('<int:order_id>/items/<int:item_id>/return/',views.return_request, name='return_request'),
+
+
 ]

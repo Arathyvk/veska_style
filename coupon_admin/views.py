@@ -6,8 +6,12 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q
+from datetime import datetime
+from django.utils import timezone as tz
 from django.http import JsonResponse
-from coupon_admin.models import Coupon, CouponUsage
+
+
+from coupon_admin.models import Coupon
 from product_admin.models import Product
 from product_admin.views import is_admin
 
@@ -112,8 +116,7 @@ def _coupon_form(request, coupon):
 
         def parse_dt(s):
             if not s: return None
-            from datetime import datetime
-            from django.utils import timezone as tz
+
             try:
                 dt = datetime.strptime(s, '%Y-%m-%dT%H:%M')
                 return tz.make_aware(dt)
@@ -145,7 +148,6 @@ def _coupon_form(request, coupon):
 
     def fmt_dt(dt):
         if not dt: return ''
-        from django.utils import timezone as tz
         return tz.localtime(dt).strftime('%Y-%m-%dT%H:%M')
 
     selected_products = list(coupon.products.values_list('id', flat=True)) if coupon else []

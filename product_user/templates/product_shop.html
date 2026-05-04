@@ -12,12 +12,13 @@
   --ink:#1e1a17; --charcoal:#2e2925;
   --muted:#7a6f66; --muted-lt:#b0a699;
   --border:#e0d9d0; --border-lt:#ece6de;
+  --success:#3a7d5a; --success-pale:#eaf4ee;
+  --warning:#c47f17; --warning-pale:#fef8ec;
   --shadow-xs:0 1px 3px rgba(30,26,23,.06);
   --shadow-sm:0 2px 8px rgba(30,26,23,.08);
   --shadow-md:0 6px 24px rgba(30,26,23,.1);
   --shadow-lg:0 16px 48px rgba(30,26,23,.14);
-  --radius-sm:6px; --radius-md:10px;
-  --radius-lg:16px; --radius-xl:24px;
+  --radius-sm:6px; --radius-md:10px; --radius-lg:16px; --radius-xl:24px;
   --transition:all .2s cubic-bezier(.4,0,.2,1);
   --head:'Cormorant Garamond',Georgia,serif;
   --body:'DM Sans',sans-serif;
@@ -28,33 +29,29 @@ a{text-decoration:none;color:inherit}
 
 .shop-page{padding-bottom:80px;background:var(--cream);min-height:100vh}
 .container{max-width:1300px;margin:0 auto;padding:0 24px}
-
-.shop-shell{
-  display:grid;grid-template-columns:280px 1fr;
-  gap:32px;align-items:start;padding-top:32px;
-}
+.shop-shell{display:grid;grid-template-columns:256px 1fr;gap:32px;align-items:start;padding-top:32px}
 @media(max-width:960px){.shop-shell{grid-template-columns:1fr}}
 
+/* ── SIDEBAR ── */
 .filter-sidebar{
   background:var(--warm-white);border:1px solid var(--border);
   border-radius:var(--radius-xl);overflow:hidden;
   box-shadow:var(--shadow-sm);position:sticky;top:24px;
 }
 .fs-header{
-  padding:22px 24px 20px 24px;
+  padding:20px 22px 18px;
   background:linear-gradient(135deg,var(--charcoal) 0%,#3d3630 100%);
   display:flex;align-items:center;justify-content:space-between;
 }
 .fs-header h3{
-  font-family:var(--head);font-size:18px;font-weight:600;
-  color:#fff;display:flex;align-items:center;gap:10px;
-  margin:0;
+  font-family:var(--head);font-size:17px;font-weight:600;
+  color:#fff;display:flex;align-items:center;gap:9px;
 }
-.fs-header h3 svg{width:16px;height:16px;color:var(--terra)}
+.fs-header h3 svg{width:15px;height:15px;color:var(--terra)}
 .fs-clear-all{
-  font-size:11px;color:rgba(255,255,255,.7);font-weight:500;
-  text-decoration:none;padding:5px 12px;border-radius:30px;
-  border:1px solid rgba(255,255,255,.2);transition:var(--transition);
+  font-size:10.5px;color:rgba(255,255,255,.6);font-weight:500;
+  text-decoration:none;padding:4px 10px;border-radius:20px;
+  border:1px solid rgba(255,255,255,.15);transition:var(--transition);
 }
 .fs-clear-all:hover{background:rgba(255,255,255,.1);color:#fff}
 
@@ -62,58 +59,44 @@ a{text-decoration:none;color:inherit}
 .filter-block:last-child{border-bottom:none}
 .filter-block-head{
   display:flex;align-items:center;justify-content:space-between;
-  padding:16px 24px;cursor:pointer;user-select:none;transition:background .15s;
+  padding:14px 22px;cursor:pointer;user-select:none;transition:background .15s;
 }
 .filter-block-head:hover{background:var(--parchment)}
-.filter-block-head h4{
-  font-size:10px;font-weight:700;letter-spacing:1.5px;
-  text-transform:uppercase;color:var(--charcoal);
-  margin:0;
-}
-.filter-block-head svg{width:14px;height:14px;color:var(--muted-lt);transition:transform .22s}
+.filter-block-head h4{font-size:9.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--charcoal)}
+.filter-block-head svg{width:13px;height:13px;color:var(--muted-lt);transition:transform .22s}
 .filter-block-head.open svg{transform:rotate(180deg)}
-.filter-block-body{padding:4px 20px 22px 24px}
+.filter-block-body{padding:6px 14px 16px}
 
 .check-label{
-  display:flex;align-items:center;gap:12px;
-  padding:8px 12px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;border-radius:var(--radius-sm);
   cursor:pointer;transition:var(--transition);
-  font-size:13px;color:var(--muted);font-weight:400;
-  user-select:none;margin-bottom:2px;
+  font-size:13px;color:var(--muted);font-weight:400;user-select:none;
 }
 .check-label:hover{background:var(--terra-pale);color:var(--ink)}
 .check-label.active{background:var(--terra-pale);color:var(--terra-deep);font-weight:600}
-.check-label input[type=checkbox],
-.check-label input[type=radio]{
-  accent-color:var(--terra);width:15px;height:15px;flex-shrink:0;cursor:pointer;
-}
-.cat-clear-link{
-  display:inline-flex;align-items:center;gap:5px;
-  margin-top:12px;margin-left:12px;
-  font-size:11px;color:var(--terra);font-weight:600;
-  text-decoration:none;transition:color .15s;
-}
-.cat-clear-link:hover{color:var(--terra-deep)}
+.check-label input[type=checkbox]{accent-color:var(--terra);width:14px;height:14px;flex-shrink:0;cursor:pointer}
 
-.price-inputs{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+.stock-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-in   {background:var(--success)}
+.dot-low  {background:var(--warning)}
+.dot-out  {background:#b53333}
+
+.price-inputs{display:flex;gap:8px;align-items:center;margin-bottom:12px}
 .price-field{flex:1;position:relative}
-.price-field .sym{
-  position:absolute;left:12px;top:50%;transform:translateY(-50%);
-  font-size:12px;color:var(--muted);pointer-events:none;
-  font-weight:500;
-}
+.price-field .sym{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none}
 .price-field input{
   width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
-  padding:10px 10px 10px 28px;font-size:13px;font-family:var(--body);
+  padding:9px 10px 9px 26px;font-size:13px;font-family:var(--body);
   background:var(--parchment);color:var(--ink);outline:none;transition:var(--transition);
 }
-.price-field input:focus{border-color:var(--terra);background:var(--warm-white);box-shadow:0 0 0 3px rgba(181,103,58,.1)}
+.price-field input:focus{border-color:var(--terra);background:var(--warm-white)}
 .price-sep{font-size:13px;color:var(--muted-lt);flex-shrink:0}
 .btn-apply{
-  width:100%;padding:12px;background:var(--charcoal);color:#fff;
+  width:100%;padding:10px;background:var(--charcoal);color:#fff;
   border:none;border-radius:var(--radius-md);font-family:var(--body);
   font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;
-  cursor:pointer;transition:var(--transition);margin-top:4px;
+  cursor:pointer;transition:var(--transition);
 }
 .btn-apply:hover{background:var(--terra)}
 
@@ -149,21 +132,16 @@ a{text-decoration:none;color:inherit}
   background:var(--terra-pale);border:1px solid var(--blush);
   font-size:12px;color:var(--terra-deep);font-weight:500;
 }
-.filter-pill-x{
-  color:var(--terra);text-decoration:none;font-size:12px;line-height:1;
-  opacity:.7;transition:opacity .15s;
-}
+.filter-pill-x{color:var(--terra);text-decoration:none;font-size:12px;line-height:1;opacity:.7;transition:opacity .15s}
 .filter-pill-x:hover{opacity:1}
 
-.product-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px;
-}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px}
 @media(max-width:600px){.product-grid{grid-template-columns:repeat(2,1fr);gap:12px}}
 
 .product-card{
   background:var(--warm-white);border:1px solid var(--border);
   border-radius:var(--radius-lg);overflow:hidden;position:relative;
-  transition:transform .3s cubic-bezier(.4,0,.2,1),box-shadow .3s;cursor:pointer;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),box-shadow .3s;
 }
 .product-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);border-color:var(--sand)}
 .product-card.oos{opacity:.65}
@@ -171,8 +149,6 @@ a{text-decoration:none;color:inherit}
 .card-img{position:relative;aspect-ratio:4/5;overflow:hidden;background:var(--parchment)}
 .card-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.4,0,.2,1)}
 .product-card:hover .card-img img{transform:scale(1.07)}
-.card-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(30,26,23,.35) 0%,transparent 50%);opacity:0;transition:opacity .3s}
-.product-card:hover .card-img::after{opacity:1}
 .card-no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--muted-lt);font-size:11px}
 .card-no-img svg{width:30px;height:30px;opacity:.3}
 .card-badges{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:5px;z-index:1}
@@ -189,19 +165,31 @@ a{text-decoration:none;color:inherit}
 .product-card:hover .card-wishlist{opacity:1}
 .card-wishlist:hover{background:#fff;border-color:var(--terra)}
 .card-wishlist svg{width:14px;height:14px;color:var(--muted)}
-.card-wishlist:hover svg{color:var(--terra)}
+.card-wishlist:hover svg,.card-wishlist.wishlisted svg{color:var(--terra)}
 
-.card-body{padding:16px 16px 18px}
-.card-cat{font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--terra);margin-bottom:6px}
+.card-body{padding:14px 16px 16px}
+.card-cat{font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--terra);margin-bottom:5px}
 .card-name{
   font-family:var(--head);font-size:15px;font-weight:500;
-  line-height:1.35;color:var(--ink);margin-bottom:12px;
+  line-height:1.35;color:var(--ink);margin-bottom:10px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
-.card-name a{color:inherit;text-decoration:none}
-.card-name a:hover{color:var(--terra)}
+.card-name a{color:inherit}.card-name a:hover{color:var(--terra)}
+.card-sizes{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+.size-badge{
+  font-size:10px;padding:3px 7px;border-radius:4px;
+  background:var(--parchment);border:1px solid var(--border);color:var(--muted);
+}
+
+.stock-label{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:600;margin-bottom:10px;
+}
+.stock-label.in {color:var(--success)}
+.stock-label.low{color:var(--warning)}
+.stock-label.out{color:#b53333}
+
 .card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.card-price{display:flex;align-items:baseline;gap:7px}
 .card-price .now{font-size:17px;font-weight:700;color:var(--charcoal);font-family:var(--head);letter-spacing:-.3px}
 .card-add{
   flex-shrink:0;background:var(--charcoal);color:#fff;border:none;
@@ -212,69 +200,14 @@ a{text-decoration:none;color:inherit}
 .card-add:hover{background:var(--terra)}
 .card-add:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed}
 
-.sb-section { margin-bottom: 20px; }
-.sb-section-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0 4px 8px 4px; }
-.sb-section-header h4 { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--charcoal); margin:0; }
-.sb-section-header svg { width:13px; height:13px; color:var(--muted-lt); transition:transform .22s; }
-.sb-section-header.open svg { transform:rotate(180deg); }
-.sb-section-body { margin-top:12px; }
-
-.sb-link { display:block; padding:8px 12px; font-size:13px; border-radius:var(--radius-sm); transition:var(--transition); color:var(--muted); }
-.sb-link:hover { background:var(--terra-pale); color:var(--ink); }
-.sb-link.active { font-weight:600; color:var(--terra-deep); background:var(--terra-pale); }
-
-.size-grid { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
-.size-pill { padding:7px 14px; border:1.5px solid var(--border); border-radius:40px; font-size:12px; font-weight:500; transition:var(--transition); cursor:pointer; background:var(--warm-white); color:var(--charcoal); }
-.size-option { display:inline-flex; cursor:pointer; }
-.size-option input { position:absolute; opacity:0; width:0; height:0; }
-.size-option input:checked + .size-pill { background:var(--terra); border-color:var(--terra); color:#fff; }
-
-.price-inputs { display:flex; gap:10px; margin-bottom:12px; }
-.price-inputs input { flex:1; padding:10px 12px; border:1.5px solid var(--border); border-radius:var(--radius-md); font-size:13px; font-family:var(--body); background:var(--warm-white); outline:none; transition:var(--transition); }
-.price-inputs input:focus { border-color:var(--terra); box-shadow:0 0 0 3px rgba(181,103,58,.1); }
-
-.price-hint { font-size:11px; color:var(--muted-lt); margin-top:8px; margin-bottom:12px; text-align:right; }
-
-.sb-actions { padding:16px 20px 20px 20px; border-top:1px solid var(--border-lt); margin-top:8px; display:flex; flex-direction:column; gap:12px; }
-.btn-apply { width:100%; padding:12px; background:var(--charcoal); color:#fff; border:none; border-radius:var(--radius-md); font-family:var(--body); font-size:12px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; cursor:pointer; transition:var(--transition); }
-.btn-apply:hover { background:var(--terra); }
-
-.sb-clear, .sb-reset { font-size:11px; text-decoration:none; color:var(--terra); font-weight:600; transition:color .15s; display:inline-block; margin-top:8px; }
-.sb-clear:hover, .sb-reset:hover { color:var(--terra-deep); text-decoration:underline; }
-
-.stock-toggle { display:flex; align-items:center; gap:12px; cursor:pointer; padding:4px 0; }
-.stock-toggle input { width:16px; height:16px; accent-color:var(--terra); cursor:pointer; }
-.toggle-label { font-size:13px; font-weight:500; color:var(--charcoal); user-select:none; }
-
-
-.size-pill.active {
-  background: var(--terra);
-  border-color: var(--terra);
-  color: #fff;
-}
-.size-pill {
-  display: inline-block;
-  padding: 7px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: 40px;
-  font-size: 12px;
-  font-weight: 500;
-  transition: var(--transition);
-  cursor: pointer;
-  background: var(--warm-white);
-  color: var(--charcoal);
-  text-decoration: none;
-}
-.size-pill:hover {
-  background: var(--terra-pale);
-  border-color: var(--terra);
-}
 .pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:48px;flex-wrap:wrap}
-.pg-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 8px;border-radius:var(--radius-sm);font-size:13.5px;font-family:var(--body);font-weight:500;border:1.5px solid var(--border);background:var(--warm-white);color:var(--muted);text-decoration:none;transition:var(--transition);cursor:pointer}
+.pg-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 8px;border-radius:var(--radius-sm);font-size:13.5px;font-family:var(--body);font-weight:500;border:1.5px solid var(--border);background:var(--warm-white);color:var(--muted);text-decoration:none;transition:var(--transition)}
 .pg-btn:hover{border-color:var(--terra);color:var(--terra);background:var(--terra-pale)}
 .pg-btn.active{background:var(--charcoal);border-color:var(--charcoal);color:#fff;font-weight:700}
 .pg-btn.disabled{opacity:.3;pointer-events:none}
-.pg-label{font-size:12px;color:var(--muted);padding:0 4px}
+.pg-ellipsis{font-size:14px;color:var(--muted-lt);padding:0 2px;align-self:center}
+.pg-info{font-size:11.5px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.pg-info-line{text-align:center;font-size:12px;color:var(--muted);margin-top:14px}
 
 .empty-state{text-align:center;padding:80px 24px;background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl)}
 .empty-state svg{width:48px;height:48px;color:var(--muted-lt);margin:0 auto 20px;display:block}
@@ -285,138 +218,127 @@ a{text-decoration:none;color:inherit}
 
 @keyframes cardReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .product-card{animation:cardReveal .35s ease both}
-.product-card:nth-child(1){animation-delay:0ms}.product-card:nth-child(2){animation-delay:50ms}
-.product-card:nth-child(3){animation-delay:100ms}.product-card:nth-child(4){animation-delay:150ms}
-.product-card:nth-child(5){animation-delay:200ms}.product-card:nth-child(6){animation-delay:250ms}
-.product-card:nth-child(7){animation-delay:300ms}.product-card:nth-child(8){animation-delay:350ms}
-
-@media(max-width:960px){.filter-sidebar{position:static}.shop-topbar{flex-wrap:wrap}.search-field{max-width:100%}}
+{% for i in "12345678" %}.product-card:nth-child({{ forloop.counter }}){animation-delay:{{ forloop.counter0|add:0 }}0ms}{% endfor %}
 </style>
 
 <div class="shop-page">
   <div class="container">
-<div class="shop-shell">
+    <div class="shop-shell">
 
+      <aside>
+        <form method="GET" action="{% url 'product_shop' %}" id="filterForm">
 
-<aside class="vs-sidebar" id="vsSidebar">
+          {% if sort_by  %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
+          {% if query    %}<input type="hidden" name="q"    value="{{ query }}">{% endif %}
+          {% if price_min%}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
+          {% if price_max%}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
 
-  <div class="sb-hd">
-    <h3>
-      Filters
-    </h3>
+          <div class="filter-sidebar">
 
-    {% if has_filters %}
-      <a href="{% url 'product_shop' %}" class="sb-clear-all">Clear All</a>
-    {% endif %}
-  </div>
+            <div class="fs-header">
+              <h3>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+                </svg>
+                Filter
+              </h3>
+              {% if has_filters %}
+              <a class="fs-clear-all" href="{% url 'product_shop' %}{% if sort_by %}?sort={{ sort_by }}{% endif %}">Clear all</a>
+              {% endif %}
+            </div>
 
-  <form method="GET" action="{% url 'product_shop' %}" class="sb-form">
+            <div class="filter-block">
+              <div class="filter-block-head open" onclick="toggleBlock(this)">
+                <h4>Category</h4>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="filter-block-body">
+                {% for val, label in all_categories %}
+                <label class="check-label {% if val in cat_slug_list %}active{% endif %}">
+                  <input type="checkbox" name="category" value="{{ val }}"
+                         {% if val in cat_slug_list %}checked{% endif %}
+                         onchange="document.getElementById('filterForm').submit()">
+                  {{ label }}
+                  {% if val in cat_slug_list %}
+                    <span style="margin-left:auto;font-size:11px;color:var(--terra)">✓</span>
+                  {% endif %}
+                </label>
+                {% endfor %}
+              </div>
+            </div>
 
-    {# Preserve search + sort #}
-    {% if search_query %}
-      <input type="hidden" name="q" value="{{ search_query }}">
-    {% endif %}
-    {% if sort_key %}
-      <input type="hidden" name="sort" value="{{ sort_key }}">
-    {% endif %}
+            <div class="filter-block">
+              <div class="filter-block-head open" onclick="toggleBlock(this)">
+                <h4>Size</h4>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="filter-block-body">
+                {% for size in all_sizes %}
+                <label class="check-label {% if size in size_list %}active{% endif %}">
+                  <input type="checkbox" name="size" value="{{ size }}"
+                         {% if size in size_list %}checked{% endif %}
+                         onchange="document.getElementById('filterForm').submit()">
+                  {{ size }}
+                  {% if size in size_list %}
+                    <span style="margin-left:auto;font-size:11px;color:var(--terra)">✓</span>
+                  {% endif %}
+                </label>
+                {% endfor %}
+              </div>
+            </div>
 
-    <div class="sb-section">
-      <div class="sb-section-header open" onclick="toggleSec(this)">
-        <h4>Category</h4>
-        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
+            <div class="filter-block">
+              <div class="filter-block-head open" onclick="toggleBlock(this)">
+                <h4>Availability</h4>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="filter-block-body">
+                <label class="check-label {% if not stock_filter %}active{% endif %}">
+                  <input type="radio" name="stock" value=""
+                         {% if not stock_filter %}checked{% endif %}
+                         onchange="document.getElementById('filterForm').submit()">
+                  All
+                </label>
+                {% for val, label in stock_choices %}
+                <label class="check-label {% if stock_filter == val %}active{% endif %}">
+                  <input type="radio" name="stock" value="{{ val }}"
+                         {% if stock_filter == val %}checked{% endif %}
+                         onchange="document.getElementById('filterForm').submit()">
+                  <span class="stock-dot
+                    {% if val == 'in_stock' %}dot-in
+                    {% elif val == 'low_stock' %}dot-low
+                    {% else %}dot-out{% endif %}"></span>
+                  {{ label }}
+                </label>
+                {% endfor %}
+              </div>
+            </div>
 
-      <div class="sb-section-body">
+            <div class="filter-block">
+              <div class="filter-block-head open" onclick="toggleBlock(this)">
+                <h4>Price Range</h4>
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="filter-block-body">
+                <div class="price-inputs">
+                  <div class="price-field">
+                    <span class="sym">₹</span>
+                    <input type="number" name="price_min" placeholder="Min" value="{{ price_min|default:'' }}" min="0">
+                  </div>
+                  <span class="price-sep">—</span>
+                  <div class="price-field">
+                    <span class="sym">₹</span>
+                    <input type="number" name="price_max" placeholder="Max" value="{{ price_max|default:'' }}" min="0">
+                  </div>
+                </div>
+                <button type="submit" class="btn-apply">Apply</button>
+              </div>
+            </div>
 
-        {% for val, label in category_choices %}
-        <label class="check-label">
-          <input type="checkbox"
-                 name="category"
-                 value="{{ val }}"
-                 {% if val in selected_categories %}checked{% endif %}
-                 onchange="this.form.submit()">
-          {{ label }}
-        </label>
-        {% endfor %}
+          </div>
+        </form>
+      </aside>
 
-      </div>
-    </div>
-
-    <div class="sb-section">
-      <div class="sb-section-header open" onclick="toggleSec(this)">
-        <h4>Size</h4>
-        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-
-      <div class="sb-section-body">
-
-        <div class="size-grid">
-          {% for val, label in size_choices %}
-          <label class="size-option">
-            <input type="checkbox"
-                   name="size"
-                   value="{{ val }}"
-                   {% if val in selected_sizes %}checked{% endif %}
-                   onchange="this.form.submit()">
-
-            <span class="size-pill {% if val in selected_sizes %}active{% endif %}">
-              {{ label }}
-            </span>
-          </label>
-          {% endfor %}
-        </div>
-
-      </div>
-    </div>
-
-    <div class="sb-section">
-      <div class="sb-section-header open" onclick="toggleSec(this)">
-        <h4>Price Range</h4>
-        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-
-      <div class="sb-section-body">
-        <div class="price-inputs">
-          <input type="number" name="price_min" placeholder="Min ₹"
-                 value="{{ price_min }}" min="0">
-          <input type="number" name="price_max" placeholder="Max ₹"
-                 value="{{ price_max }}" min="0">
-        </div>
-
-        <p class="price-hint">
-          ₹{{ global_price_min }} – ₹{{ global_price_max }}
-        </p>
-      </div>
-    </div>
-
-    <div class="sb-section">
-      <div class="sb-section-header open" onclick="toggleSec(this)">
-        <h4>Availability</h4>
-        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-
-      <div class="sb-section-body">
-        <label class="stock-toggle">
-          <input type="checkbox"
-                 name="in_stock"
-                 value="1"
-                 {% if in_stock_only %}checked{% endif %}
-                 onchange="this.form.submit()">
-          <span class="toggle-label">In Stock Only</span>
-        </label>
-      </div>
-    </div>
-
-    <div class="sb-actions">
-      <button type="submit" class="btn-apply">Apply Filters</button>
-
-      {% if has_filters %}
-        <a href="{% url 'product_shop' %}" class="sb-reset">Reset Filters</a>
-      {% endif %}
-    </div>
-
-  </form>
-</aside>
       <div class="shop-main">
 
         <div class="shop-topbar">
@@ -425,6 +347,7 @@ a{text-decoration:none;color:inherit}
             {% for sz  in size_list    %}<input type="hidden" name="size"     value="{{ sz  }}">{% endfor %}
             {% if price_min %}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
             {% if price_max %}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
+            {% if stock_filter %}<input type="hidden" name="stock" value="{{ stock_filter }}">{% endif %}
 
             <div class="search-field">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -434,18 +357,17 @@ a{text-decoration:none;color:inherit}
                      value="{{ query|default:'' }}"
                      placeholder="Search styles…"
                      autocomplete="off"
-                     oninput="toggleClear(this)">
-              <button type="button" class="search-clear-btn {% if query %}visible{% else %}hidden{% endif %}"
-                      id="clearBtn" onclick="clearSearch()">✕</button>
+                     oninput="sanitizeAndToggleClear(this)">
+              <button type="button" class="search-clear-btn" id="clearBtn"
+                      style="display:{% if query %}flex{% else %}none{% endif %}"
+                      onclick="clearSearch()">✕</button>
             </div>
 
-          <select name="sort" class="sort-field" onchange="this.form.submit()">
-            {% for val, data in sort_options %}
-            <option value="{{ val }}" {% if sort_key == val %}selected{% endif %}>
-              {{ data.0 }}
-            </option>
-            {% endfor %}
-          </select>
+            <select name="sort" class="sort-field" onchange="this.form.submit()">
+              {% for val, label in sort_options %}
+              <option value="{{ val }}" {% if sort_by == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
           </form>
 
           <span class="result-count">
@@ -454,57 +376,50 @@ a{text-decoration:none;color:inherit}
           </span>
         </div>
 
-{% if query or cat_slug_list or size_list or price_min or price_max %}
-<div class="active-filters">
+        {% if query or cat_slug_list or size_list or price_min or price_max or stock_filter %}
+        <div class="active-filters">
+          {% if query %}
+          <span class="filter-pill">
+             {{ query }}
+            <a class="filter-pill-x"
+               href="?{% for sz in size_list %}size={{ sz }}&{% endfor %}{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+          </span>
+          {% endif %}
 
-  {% if query %}
-  <span class="filter-pill">
-    🔍 {{ query }}
-    <a class="filter-pill-x"
-       href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_key %}sort={{ sort_key }}{% endif %}">✕</a>
-  </span>
-  {% endif %}
+          {% for selected_cat in cat_slug_list %}
+          <span class="filter-pill">
+            {{ selected_cat }}
+            <a class="filter-pill-x"
+               href="?{% for other in cat_slug_list %}{% if other != selected_cat %}category={{ other }}&{% endif %}{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+          </span>
+          {% endfor %}
 
-  {# One pill per selected category #}
-  {% for selected_cat_slug in cat_slug_list %}
-  <span class="filter-pill">
-    📂 
-    {# Convert slug to display name #}
-    {% for val, label in category_choices %}
-      {% if val == selected_cat_slug %}
-        {{ label }}
-      {% endif %}
-    {% endfor %}
-    <a class="filter-pill-x"
-       href="?{% for cat in cat_slug_list %}{% if cat != selected_cat_slug %}category={{ cat }}&{% endif %}{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_key %}sort={{ sort_key }}{% endif %}">✕</a>
-  </span>
-  {% endfor %}
+          {% for selected_size in size_list %}
+          <span class="filter-pill">
+            {{ selected_size }}
+            <a class="filter-pill-x"
+               href="?{% for other in size_list %}{% if other != selected_size %}size={{ other }}&{% endif %}{% endfor %}{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+          </span>
+          {% endfor %}
 
-  {# One pill per selected size #}
-  {% for selected_size_val in size_list %}
-  <span class="filter-pill">
-    📐 
-    {# Convert size value to display label #}
-    {% for val, label in size_choices %}
-      {% if val == selected_size_val %}
-        {{ label }}
-      {% endif %}
-    {% endfor %}
-    <a class="filter-pill-x"
-       href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}{% if sz != selected_size_val %}size={{ sz }}&{% endif %}{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_key %}sort={{ sort_key }}{% endif %}">✕</a>
-  </span>
-  {% endfor %}
+          {% if price_min or price_max %}
+          <span class="filter-pill">
+            ₹ {{ price_min|default:"0" }} – {{ price_max|default:"∞" }}
+            <a class="filter-pill-x"
+               href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+          </span>
+          {% endif %}
 
-  {% if price_min or price_max %}
-  <span class="filter-pill">
-    💰 ₹ {{ price_min|default:"0" }} – {{ price_max|default:"∞" }}
-    <a class="filter-pill-x"
-       href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if sort_key %}sort={{ sort_key }}{% endif %}">✕</a>
-  </span>
-  {% endif %}
+          {% if stock_filter %}
+          <span class="filter-pill">
+             {% for val, label in stock_choices %}{% if val == stock_filter %}{{ label }}{% endif %}{% endfor %}
+            <a class="filter-pill-x"
+               href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+          </span>
+          {% endif %}
+        </div>
+        {% endif %}
 
-</div>
-{% endif %}
         {% if page_obj %}
         <div class="product-grid">
           {% for product in page_obj %}
@@ -512,7 +427,7 @@ a{text-decoration:none;color:inherit}
 
             <a href="{% url 'product_detail' product.slug %}">
               <div class="card-img">
-                {% with img=product.primary_image %}
+                {% with img=product.images.first %}
                   {% if img %}
                     <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
                   {% else %}
@@ -538,7 +453,7 @@ a{text-decoration:none;color:inherit}
                   style="position:absolute;top:12px;right:12px;z-index:10;">
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ request.get_full_path }}">
-              <button class="card-wishlist" type="submit">
+              <button class="card-wishlist {% if product.pk in wishlist_ids %}wishlisted{% endif %}" type="submit">
                 <svg fill="{% if product.pk in wishlist_ids %}var(--terra){% else %}none{% endif %}"
                      stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -551,17 +466,44 @@ a{text-decoration:none;color:inherit}
               <div class="card-name">
                 <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
               </div>
+
+              {% if product.variants.all %}
+              <div class="card-sizes">
+                {% for variant in product.variants.all %}
+                  {% if variant.stock > 0 %}
+                    <span class="size-badge">{{ variant.size }}</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              {% if product.total_stock > 5 %}
+                <div class="stock-label in">
+                  <span class="stock-dot dot-in"></span> In Stock
+                </div>
+              {% elif product.total_stock > 0 %}
+                <div class="stock-label low">
+                  <span class="stock-dot dot-low"></span> Low Stock
+                </div>
+              {% else %}
+                <div class="stock-label out">
+                  <span class="stock-dot dot-out"></span> Out of Stock
+                </div>
+              {% endif %}
+
               <div class="card-footer">
                 <div class="card-price">
                   <span class="now">₹{{ product.price|floatformat:2 }}</span>
                 </div>
                 {% if product.total_stock == 0 %}
+
                   <button class="card-add" disabled>Sold Out</button>
                 {% else %}
-                  <form method="POST" action="{% url 'add_to_cart' product.id %}">
+
+                  <form method="POST" action="{% url 'cart_add' product.slug %}">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button type="submit" class="card-add">+ Cart</button>
+                    <button type="submit" class="card-add">Add to Cart</button>
                   </form>
                 {% endif %}
               </div>
@@ -573,8 +515,10 @@ a{text-decoration:none;color:inherit}
 
         {% if page_obj.has_other_pages %}
         <div class="pagination">
+
           {% if page_obj.has_previous %}
-          <a class="pg-btn" href="?{{ params_str }}&page={{ page_obj.previous_page_number }}">
+          <a class="pg-btn"
+            href="?{% if params_str %}{{ params_str }}&{% endif %}page={{ page_obj.previous_page_number }}">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           </a>
           {% else %}
@@ -583,18 +527,19 @@ a{text-decoration:none;color:inherit}
           </span>
           {% endif %}
 
-          {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-              <span class="pg-btn active">{{ num }}</span>
-            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
-              <a class="pg-btn" href="?{{ params_str }}&page={{ num }}">{{ num }}</a>
+          {% for p in page_range %}
+            {% if p is None %}
+              <span class="pg-ellipsis">…</span>
+            {% elif p == page_obj.number %}
+              <span class="pg-btn active">{{ p }}</span>
+            {% else %}
+              <a class="pg-btn" href="?{% if params_str %}{{ params_str }}&{% endif %}page={{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
 
-          <span class="pg-label">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-
           {% if page_obj.has_next %}
-          <a class="pg-btn" href="?{{ params_str }}&page={{ page_obj.next_page_number }}">
+          <a class="pg-btn"
+              href="?{% if params_str %}{{ params_str }}&{% endif %}page={{ page_obj.next_page_number }}">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
           </a>
           {% else %}
@@ -602,17 +547,43 @@ a{text-decoration:none;color:inherit}
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
           </span>
           {% endif %}
+
         </div>
+
+        <p class="pg-info-line">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          &nbsp;·&nbsp;
+          {{ total }} product{{ total|pluralize }}
+        </p>
         {% endif %}
 
         {% else %}
         <div class="empty-state">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
           </svg>
           <h3>No products found</h3>
-          <p>Try adjusting your search or clearing the filters.</p>
-          <a href="{% url 'product_shop' %}" class="btn-terra">Clear all filters</a>
+          {% if query %}
+            <p>No results for "<strong>{{ query }}</strong>". Check your spelling or try a different word.</p>
+          {% elif cat_slug_list or size_list or price_min or price_max or stock_filter %}
+            <p>No products match your current filters. Try removing one or more filters.</p>
+          {% else %}
+            <p>No products are available right now. Check back soon.</p>
+          {% endif %}
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px">
+            {% if has_filters %}
+            <a href="{% url 'product_shop' %}" class="btn-terra">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Clear all filters
+            </a>
+            {% endif %}
+            {% if query %}
+            <a href="{% url 'product_shop' %}" class="btn-terra" style="background:var(--charcoal)">
+              Browse all products
+            </a>
+            {% endif %}
+          </div>
         </div>
         {% endif %}
 
@@ -622,8 +593,9 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
-function toggleClear(inp) {
-  document.getElementById('clearBtn').style.display = inp.value ? 'flex' : 'none';
+function sanitizeAndToggleClear(inp) {
+  inp.value = inp.value.replace(/[^a-zA-Z\u0900-\u097F\s']/g, '');
+  document.getElementById('clearBtn').style.display = inp.value.trim() ? 'flex' : 'none';
 }
 function clearSearch() {
   const inp = document.getElementById('searchInput');
@@ -635,13 +607,6 @@ function toggleBlock(head) {
   head.classList.toggle('open');
   const body = head.nextElementSibling;
   body.style.display = body.style.display === 'none' ? '' : 'none';
-}
-function toggleSec(header) {
-  header.classList.toggle('open');
-  const body = header.nextElementSibling;
-  if(body) {
-    body.style.display = body.style.display === 'none' ? 'block' : 'none';
-  }
 }
 </script>
 {% endblock %}

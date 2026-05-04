@@ -5,174 +5,164 @@ from django.views.decorators.http import require_POST
 
 from cart_user.models import Cart, CartItem, MAX_QTY_PER_ITEM
 from product_admin.models import Product, ProductVariant
+from wishlist_user.models import Wishlist 
 
+ITEMS_PER_PAGE   = 12
+MAX_QTY_PER_ITEM = 10
+FREE_SHIPPING    = 999
+SHIPPING_FEE     = 79
 
-
-def _get_or_create_cart(user):
-    cart, _ = Cart.objects.get_or_create(user=user)
+ 
+def _get_cart(request):
+    if not request.session.session_key:
+        request.session.create()
+    if request.user.is_authenticated:
+        cart, _ = Cart.objects.get_or_create(
+            user=request.user,
+            defaults={'session_key': request.session.session_key}
+        )
+        return cart
+    cart, _ = Cart.objects.get_or_create(
+        session_key=request.session.session_key, user=None
+    )
     return cart
 
 
-
-
-@login_required
-def cart_detail(request):
-    cart  = _get_or_create_cart(request.user)
-    items = list(
-        cart.items
-        .select_related('product', 'variant')
-        .prefetch_related('product__images')
-        .order_by('id')
-    )
-
-    available_items   = [i for i in items if i.is_available]
-    unavailable_items = [i for i in items if not i.is_available]
-    subtotal          = sum(i.line_total for i in available_items)
-
-    return render(request, 'cart_detail.html', {
-        'cart':              cart,
-        'items':             items,
-        'available_items':   available_items,
-        'unavailable_items': unavailable_items,
-        'subtotal':          subtotal,
-        'MAX_QTY':           MAX_QTY_PER_ITEM,
-    })
-
+ 
+def _get_wishlist(request):
+    if not request.user.is_authenticated:
+        return None
+    wl, _ = Wishlist.objects.get_or_create(user=request.user)
+    return wl
+ 
+ 
+def _wishlist_ids(request):
+    wl = _get_wishlist(request)
+    if wl is None:
+        return set()
+    return set(wl.products.values_list('id', flat=True))
+ 
 
 
 
 @require_POST
-@login_required
-def add_to_cart(request, product_id):
-    product = get_object_or_404(Product, id=product_id, is_active=True)
-    _do_add(request, product, variant=None, quantity=1)
-    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or 'product_shop'
-    return redirect(next_url)
-
-
-
-@require_POST
-@login_required
-def cart_add_by_slug(request, slug):
+def cart_add(request, slug):
     product = get_object_or_404(Product, slug=slug, is_active=True)
-
-    try:
-        quantity = max(1, int(request.POST.get('quantity', 1)))
-    except (ValueError, TypeError):
-        quantity = 1
-
+ 
+    if product.total_stock == 0:
+        messages.error(request, f'"{product.name}" is out of stock.')
+        return redirect(request.POST.get('next', 'product_shop'))
+ 
     size    = request.POST.get('size', '').strip()
     variant = None
     if size:
         variant = ProductVariant.objects.filter(product=product, size=size).first()
-        if not variant:
-            messages.error(request, f'Size "{size}" is not available.')
-            return redirect('product_detail', slug=slug)
-
-    _do_add(request, product, variant=variant, quantity=quantity)
-    next_url = request.POST.get('next') or 'product_detail'
-    if next_url == 'product_detail':
-        return redirect('product_detail', slug=slug)
-    return redirect(next_url)
-
-
-
-def _do_add(request, product, variant, quantity):
-    stock = variant.stock if variant else product.total_stock
-    if stock <= 0:
-        messages.error(request, f'"{product.name}" is out of stock.')
-        return
-
-    cart    = _get_or_create_cart(request.user)
-    max_qty = min(stock, MAX_QTY_PER_ITEM)
-
+        if variant and variant.stock == 0:
+            messages.error(request, f'Size {size} is out of stock.')
+            return redirect(request.POST.get('next', 'product_detail'), slug=slug)
+ 
     try:
-        item     = CartItem.objects.get(cart=cart, product=product, variant=variant)
-        new_qty  = item.quantity + quantity
-        if item.quantity >= max_qty:
-            messages.warning(
-                request,
-                f'Maximum allowed quantity ({max_qty}) already in your cart for "{product.name}".'
-            )
-            return
-        item.quantity = min(new_qty, max_qty)
-        item.save(update_fields=['quantity'])
-        messages.success(request, f'"{product.name}" quantity updated to {item.quantity}.')
+        qty = max(1, int(request.POST.get('quantity', 1)))
+    except (ValueError, TypeError):
+        qty = 1
+ 
+    cart = _get_cart(request)
+    item, created = CartItem.objects.get_or_create(
+        cart=cart, product=product, variant=variant,
+        defaults={'quantity': 0},
+    )
+    available = variant.stock if variant else product.total_stock
+    new_qty   = item.quantity + qty
+    capped    = min(new_qty, available, MAX_QTY_PER_ITEM)
+    item.quantity = capped
+    item.save()
+ 
+    wl = _get_wishlist(request)
+    if wl:
+        wl.products.remove(product)
+ 
+    if created:
+        messages.success(request, f'"{product.name}" added to cart!')
+    else:
+        messages.success(request, f'Cart updated — {capped} × {product.name}.')
+    if capped < new_qty:
+        messages.warning(request, f'Max {MAX_QTY_PER_ITEM} per item allowed.')
+ 
+    return redirect(request.POST.get('next', 'product_shop'))
+ 
 
-    except CartItem.DoesNotExist:
-        CartItem.objects.create(
-            cart=cart, product=product,
-            variant=variant, quantity=min(quantity, max_qty)
-        )
-        messages.success(request, f'"{product.name}" added to your cart.')
+ 
+def cart_detail(request):
+    cart  = _get_cart(request)
+    items = list(cart.items.all())
+ 
+    blocked_items  = [i for i in items if not i.is_available]
+    ok_items       = [i for i in items if i.is_available]
+    can_checkout   = bool(ok_items) and not blocked_items
+ 
+    subtotal       = cart.subtotal
+    shipping       = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
+    order_total    = subtotal + shipping
+    remaining_free = max(0, FREE_SHIPPING - subtotal)
 
-
-
-
-
+    return render(request, 'cart_detail.html', {
+        'cart':               cart,
+        'items':              items,
+        'unavailable_items':  blocked_items,  
+        'available_items':    ok_items,        
+        'can_checkout':       can_checkout,
+        'subtotal':           subtotal,
+        'shipping':           shipping,
+        'order_total':        order_total,
+        'remaining_free':     remaining_free,
+        'max_qty':            MAX_QTY_PER_ITEM,
+    })
+    
 
 @require_POST
-@login_required
-def remove_from_cart(request, item_id):
-    item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-    name = item.product.name
-    item.delete()
-    messages.success(request, f'"{name}" removed from your cart.')
-    return redirect('cart_detail')
-
-
-
-
-
-@require_POST
-@login_required
-def update_cart_item(request, item_id):
-    item    = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-    action  = request.POST.get('action')
-    stock   = item.available_stock
-    max_qty = min(stock, MAX_QTY_PER_ITEM)
-
-    if action == 'increment':
-        if item.quantity >= max_qty:
-            messages.warning(request, f'Maximum quantity ({max_qty}) reached.')
-        else:
-            item.quantity += 1
-            item.save(update_fields=['quantity'])
-
-    elif action == 'decrement':
-        if item.quantity <= 1:
-            name = item.product.name
-            item.delete()
-            messages.success(request, f'"{name}" removed from your cart.')
-            return redirect('cart_detail')
-        item.quantity -= 1
-        item.save(update_fields=['quantity'])
-
-    elif action == 'set':
+def cart_update(request, item_id):
+    cart = _get_cart(request)
+    item = get_object_or_404(CartItem, pk=item_id, cart=cart)
+ 
+    action = request.POST.get('action', '')
+    if action == 'increase':
+        new_qty = item.quantity + 1
+    elif action == 'decrease':
+        new_qty = item.quantity - 1
+    elif action == 'remove':
+        item.delete()
+        messages.info(request, 'Item removed.')
+        return redirect('cart_detail')
+    else:
         try:
-            new_qty = int(request.POST.get('quantity', 1))
+            new_qty = int(request.POST.get('quantity', item.quantity))
         except (ValueError, TypeError):
-            messages.error(request, 'Invalid quantity.')
-            return redirect('cart_detail')
-        if new_qty < 1:
-            name = item.product.name
-            item.delete()
-            messages.success(request, f'"{name}" removed from your cart.')
-            return redirect('cart_detail')
-        if new_qty > max_qty:
-            messages.warning(request, f'Quantity capped at {max_qty}.')
-            new_qty = max_qty
-        item.quantity = new_qty
-        item.save(update_fields=['quantity'])
-
+            new_qty = item.quantity
+ 
+    if new_qty <= 0:
+        item.delete()
+        messages.info(request, 'Item removed from cart.')
+        return redirect('cart_detail')
+ 
+    available     = item.available_stock
+    capped        = min(new_qty, available, MAX_QTY_PER_ITEM)
+    item.quantity = capped
+    item.save()
     return redirect('cart_detail')
-
-
-
+ 
 
 @require_POST
-@login_required
-def clear_cart(request):
-    _get_or_create_cart(request.user).items.all().delete()
-    messages.success(request, 'Your cart has been cleared.')
+def cart_remove(request, item_id):
+    cart = _get_cart(request)
+    CartItem.objects.filter(pk=item_id, cart=cart).delete()
+    messages.success(request, 'Item removed from cart.')
     return redirect('cart_detail')
+ 
+ 
+@require_POST
+def cart_clear(request):
+    cart = _get_cart(request)
+    cart.items.all().delete()
+    messages.success(request, "Cart cleared.")
+    return redirect('cart_detail')
+  

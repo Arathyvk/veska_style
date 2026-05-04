@@ -6,7 +6,7 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model  = Product
-        fields = ['name', 'price', 'color', 'category', 'stock', 'description', 'is_active']
+        fields = ['name', 'price', 'color', 'category', 'stock', 'description', 'is_active', 'is_featured']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class'      : 'finput',

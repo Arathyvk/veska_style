@@ -33,7 +33,7 @@
                  {% if forloop.first %}checked{% endif %}
                  {% if v.stock <= 0 %}disabled{% endif %}
                  style="display:none" class="variant-radio"
-                 onchange="updateAddBtn(this, {{ v.stock }})">
+                 onchange="updateAddBtn(this, '{{ v.stock }}')">
           <span class="variant-pill {% if v.stock <= 0 %}oos{% endif %}"
                 style="display:inline-flex;align-items:center;justify-content:center;
                        width:40px;height:40px;border-radius:8px;font-size:13px;font-weight:600;

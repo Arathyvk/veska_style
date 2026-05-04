@@ -31,6 +31,9 @@ class Product(models.Model):
     is_blocked = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_featured = models.BooleanField(default=False)
+    is_shop_active = models.BooleanField(default=True)  
+
 
     class Meta:
         ordering = ['-created_at']

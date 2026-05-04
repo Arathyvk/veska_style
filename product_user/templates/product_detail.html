@@ -233,7 +233,7 @@ button,input,textarea{font-family:var(--body)}
   <div class="messages-stack">
     {% for message in messages %}
     <div class="msg-bar {{ message.tags }}">
-      {% if message.tags == 'success' %}✅{% elif message.tags == 'warning' %}⚠️{% elif message.tags == 'error' %}🚫{% else %}ℹ️{% endif %}
+      {% if message.tags == 'success' %}{% elif message.tags == 'warning' %}{% elif message.tags == 'error' %}{% else %}{% endif %}
       {{ message }}
     </div>
     {% endfor %}
@@ -336,7 +336,7 @@ button,input,textarea{font-family:var(--body)}
 
       {% if stock_status == 'out_of_stock' %}
       <div class="soldout-notice">
-        <div class="so-title">🚫 Currently out of stock</div>
+        <div class="so-title"> Currently out of stock</div>
         <div class="so-body">
           Browse similar items in
           <a href="{% url 'product_shop' %}?category={{ product.category }}" style="color:var(--terra)">{{ category_display }}</a>.
@@ -345,11 +345,10 @@ button,input,textarea{font-family:var(--body)}
       {% endif %}
 
       {% if stock_status != 'out_of_stock' %}
-      <form method="POST" action="#" class="add-cart-form" id="addCartForm">
+      <form method="POST" action="{% url 'cart_add' product.slug %}" class="add-cart-form" id="addCartForm">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.get_full_path }}">
 
-        {# SIZE SELECTOR (if variants exist) #}
         {% if variants %}
         <div style="margin-bottom:20px">
           <div class="selector-label">
@@ -367,7 +366,6 @@ button,input,textarea{font-family:var(--body)}
             </button>
             {% endfor %}
           </div>
-          {# Hidden input populated by JS when a size is clicked #}
           <input type="hidden" name="size" id="sizeInput" value="">
           <div id="sizeError" style="font-size:12px;color:var(--danger);display:none;margin-top:-12px;margin-bottom:12px">
             Please select a size.
@@ -375,7 +373,6 @@ button,input,textarea{font-family:var(--body)}
         </div>
         {% endif %}
 
-        {# QTY SELECTOR #}
         <div class="qty-row">
           <div class="qty-ctrl">
             <button type="button" class="qty-btn-ui" onclick="adjustQty(-1)">−</button>
@@ -386,8 +383,11 @@ button,input,textarea{font-family:var(--body)}
           <span class="qty-label">Max {{ max_qty }} per order</span>
         </div>
 
-        {# BUTTONS #}
         <div class="cta-row">
+          
+          <form method="POST" action="{% url 'cart_add' product.slug %}">
+            {% csrf_token %}
+
           <button type="submit" name="action" value="add_cart" class="btn-add-cart"
                   onclick="return validateSize()">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -396,6 +396,7 @@ button,input,textarea{font-family:var(--body)}
             </svg>
             {% if user.is_authenticated %}Add to Cart{% else %}Login to Add{% endif %}
           </button>
+          </form>
 
           <button type="submit" name="action" value="buy_now" class="btn-buy-now"
                   onclick="return validateSizeBuyNow()">

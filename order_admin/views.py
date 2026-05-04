@@ -5,16 +5,20 @@ from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, F
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from datetime import timedelta
 
 from order_user.models import Order, OrderItem
 
 from product_admin.models import Product, ProductVariant
 from category_admin.models import Category
+from order_user.models import Order, OrderItem, ReturnRequest, ReturnProofImage, RETURN_DAYS, NON_RETURNABLE_CATEGORIES
 
 
 
 ORDERS_PER_PAGE    = 20
 INVENTORY_PER_PAGE = 20
+ORDER_ITEMS_PER_PAGE = 10
 LOW_STOCK_THRESHOLD = 5
 
 ORDER_STATUS_CHOICES = [
@@ -53,15 +57,20 @@ def admin_order_list(request):
 
     q = request.GET.get('q', '').strip()
     if q:
-        qs = qs.filter(
-            Q(order_number__icontains=q) |
+        filters = Q(
             Q(full_name__icontains=q) |
-            Q(phone__icontains=q) |
             Q(user__email__icontains=q) |
-            Q(user__username__icontains=q) |
             Q(city__icontains=q) |
             Q(items__product_name__icontains=q)
-        ).distinct()
+        )
+
+        if q.isdigit():
+            filters |= Q(order_number=q) | Q(phone=q)
+        else:
+            filters |= Q(order_number__icontains=q) | Q(phone__icontains=q)
+
+        qs = qs.filter(filters).distinct()
+
 
     status_filter = request.GET.get('status', '').strip()
     if status_filter:
@@ -136,13 +145,29 @@ def admin_order_list(request):
 @staff_member_required(login_url='admin:login')
 def order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
-    items = order.items.all()
+    items_qs = order.items.all().order_by('id')
+
+    paginator = Paginator(items_qs, ORDER_ITEMS_PER_PAGE)
+    page_num = request.GET.get('items_page', 1)
+    try:
+        page_num = int(page_num)
+    except (ValueError, TypeError):
+        page_num = 1
+
+    items_page_obj = paginator.get_page(page_num)
+
+    get = request.GET.copy()
+    get.pop('items_page', None)
+    filter_qs = get.urlencode()
 
     allowed_statuses = STATUS_FLOW.get(order.status, [])
 
     return render(request, 'admin_order_detail.html', {
         'order':            order,
-        'items':            items,
+        'items':            items_page_obj.object_list,
+        'items_page_obj':  items_page_obj,
+        'items_paginator':  paginator,
+        'filter_qs':        filter_qs,
         'allowed_statuses': allowed_statuses,
         'status_choices':   ORDER_STATUS_CHOICES,
         'status_labels':    dict(ORDER_STATUS_CHOICES),
@@ -277,7 +302,6 @@ def inventory_list(request):
 
     has_filters = any([q, cat_filter, stock_filter, status_filter])
 
-    # ── Paginate
     paginator = Paginator(qs, INVENTORY_PER_PAGE)
     page_num  = request.GET.get('page', 1)
     try:
@@ -382,3 +406,96 @@ def inventory_toggle_status(request, product_id):
     if next_url == 'list':
         return redirect('admin_inventory_list')
     return redirect('admin_inventory_detail', product_id=product_id)
+
+
+@login_required
+def return_request(request, order_id, item_id):
+    
+    order      = get_object_or_404(Order,     pk=order_id, user=request.user)
+    order_item = get_object_or_404(OrderItem, pk=item_id,  order=order)
+ 
+    if order.status != 'delivered':
+        messages.error(request, 'Returns can only be requested for delivered orders.')
+        return redirect('order_detail', order_id=order_id)
+ 
+    existing_return = ReturnRequest.objects.filter(
+        order_item=order_item, user=request.user
+    ).first()
+ 
+    is_returnable_category = (
+        order_item.product.category.lower() not in NON_RETURNABLE_CATEGORIES
+    )
+ 
+    return_deadline  = order.delivered_at + timedelta(days=RETURN_DAYS)
+    deadline_expired = timezone.now() > return_deadline
+    days_left        = max(0, (return_deadline - timezone.now()).days)
+ 
+    if request.method == 'POST':
+ 
+        if existing_return:
+            messages.error(request, 'A return request already exists for this item.')
+            return redirect('return_request', order_id=order_id, item_id=item_id)
+ 
+        if not is_returnable_category:
+            messages.error(request, 'This item is not eligible for return.')
+            return redirect('order_detail', order_id=order_id)
+ 
+        if deadline_expired:
+            messages.error(request, 'The return window for this item has closed.')
+            return redirect('order_detail', order_id=order_id)
+ 
+        return_reason = request.POST.get('return_reason', '').strip()
+        return_notes  = request.POST.get('return_notes', '').strip()
+        confirmed     = request.POST.get('confirm_conditions')
+ 
+        if not return_reason:
+            messages.error(request, 'Please select a return reason.')
+        elif not confirmed:
+            messages.error(request, 'Please confirm the return conditions.')
+        else:
+            needs_proof = return_reason in ('defective', 'wrong_item', 'not_as_described')
+            proof_files = request.FILES.getlist('proof_images')
+ 
+            if needs_proof and not proof_files:
+                messages.error(request, 'Please upload proof images for this return reason.')
+            else:
+                ret = ReturnRequest.objects.create(
+                    user         = request.user,
+                    order        = order,
+                    order_item   = order_item,
+                    return_reason= return_reason,
+                    return_notes = return_notes,
+                    status       = 'pending',
+                )
+ 
+                for f in proof_files[:5]:
+                    if f.size <= 5 * 1024 * 1024:   
+                        ReturnProofImage.objects.create(return_request=ret, image=f)
+ 
+                messages.success(
+                    request,
+                    'Your return request has been submitted. '
+                    'We\'ll review it within 2–3 business days.'
+                )
+                return redirect('return_request', order_id=order_id, item_id=item_id)
+ 
+ 
+    conditions = {
+        'unused':             True,
+        'original_packaging': True,
+        'not_damaged':        True,
+    }
+ 
+    return render(request, 'return_request.html', {
+        'order':                   order,
+        'order_item':              order_item,
+        'existing_return':         existing_return,
+        'is_returnable_category':  is_returnable_category,
+        'deadline_expired':        deadline_expired,
+        'return_deadline':         return_deadline,
+        'return_days':             RETURN_DAYS,
+        'days_left':               days_left,
+        'conditions':              conditions,
+        'form':                    request.POST,   
+    })
+ 

@@ -35,48 +35,44 @@ def _get_wishlist(request):
         return None
     wl, _ = Wishlist.objects.get_or_create(user=request.user)
     return wl
+ 
+ 
+def _wishlist_ids(request):
+    wl = _get_wishlist(request)
+    if wl is None:
+        return set()
+    return set(wl.products.values_list('id', flat=True))
+ 
 
 
+ 
+@require_POST
+def wishlist_toggle(request, slug):
+    if not request.user.is_authenticated:
+        messages.info(request, 'Please log in to save items to your wishlist.')
+        return redirect('login')
+ 
+    product = get_object_or_404(Product, slug=slug, is_active=True)
+    wl      = _get_wishlist(request)
+ 
+    if wl.products.filter(pk=product.pk).exists():
+        wl.products.remove(product)
+        messages.info(request, f'"{product.name}" removed from wishlist.')
+    else:
+        wl.products.add(product)
+        messages.success(request, f'"{product.name}" saved to wishlist!')
+ 
+    return redirect(request.POST.get('next', 'product_shop'))
+ 
+
+ 
 @login_required(login_url='login')
 def wishlist_detail(request):
     wl       = _get_wishlist(request)
-    products = wl.products.filter(is_active=True).prefetch_related('images','variants') if wl else []
+    products = wl.products.filter(is_active=True).prefetch_related('images', 'variants')
     cart     = _get_cart(request)
-    cart_ids = cart.items.values_list('product_id', flat=True)
+    cart_product_ids = set(cart.items.values_list('product_id', flat=True))
     return render(request, 'wishlist.html', {
-        'products': products, 'cart_product_ids': cart_ids,
+        'products':         products,
+        'cart_product_ids': cart_product_ids,
     })
- 
- 
-@require_POST
-@login_required(login_url='login')
-def wishlist_toggle(request, slug):
-    product = get_object_or_404(Product, slug=slug, is_active=True)
-    wl      = _get_wishlist(request)
-    if wl.products.filter(pk=product.pk).exists():
-        wl.products.remove(product)
-        messages.success(request, f'"{product.name}" removed from wishlist.')
-    else:
-        wl.products.add(product)
-        messages.success(request, f'"{product.name}" added to wishlist.')
-    return redirect(request.POST.get('next') or 'wishlist_detail')
- 
- 
-@require_POST
-@login_required(login_url='login')
-def wishlist_move_to_cart(request, slug):
-    product = get_object_or_404(Product, slug=slug, is_active=True)
-    wl      = _get_wishlist(request)
-    cart    = _get_cart(request)
-    available = product.total_stock
-    if available == 0:
-        messages.error(request, f'"{product.name}" is out of stock.')
-        return redirect('wishlist_detail')
-    item, created = CartItem.objects.get_or_create(
-        cart=cart, product=product, variant=None, defaults={'quantity': 0}
-    )
-    item.quantity = min(item.quantity + 1, available, 10)
-    item.save()
-    wl.products.remove(product)
-    messages.success(request, f'"{product.name}" moved to cart.')
-    return redirect('wishlist_detail')
