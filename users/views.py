@@ -10,6 +10,7 @@ from django.views.decorators.cache import never_cache
 
 from .models import User
 from django.core.exceptions import ValidationError
+from product_admin.models import Product
  
 from core.otp import gen_otp, send_otp_email, is_otp_expired, save_otp_to_session, get_otp_from_session, clear_otp_from_session
 
@@ -17,14 +18,25 @@ from core.otp import gen_otp, send_otp_email, is_otp_expired, save_otp_to_sessio
 def is_valid_email(email):
     return re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email)
 
-
 def home_view(request):
-    name = f"{request.user.first_name} {request.user.last_name}" if request.user.is_authenticated else ""
-    context = {
-        "name" : name,
-    }    
-    
-    return render(request, "landing.html", context)
+    name = (
+        f"{request.user.first_name} {request.user.last_name}"
+        if request.user.is_authenticated else ""
+    )
+ 
+
+    featured_products = (
+        Product.objects
+        .filter(is_active=True, is_featured=True)
+        .prefetch_related('images')
+        .order_by('-created_at')[:8]
+    )
+ 
+    return render(request, "landing.html", {
+        "name":     name,
+        "products": featured_products,
+    })
+
 
 @never_cache
 def login_view(request):

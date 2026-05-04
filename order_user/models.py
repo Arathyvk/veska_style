@@ -185,3 +185,60 @@ class OrderItem(models.Model):
             self.status == 'active' and
             self.order.status in ('pending', 'confirmed', 'processing')
         )
+    
+
+RETURN_DAYS = 7         
+LOW_STOCK   = 5
+ 
+NON_RETURNABLE_CATEGORIES = [
+    'hygiene', 'innerwear', 'personalised', 'final_sale',
+]
+ 
+RETURN_REASONS = [
+    ('wrong_size',       'Wrong size received'),
+    ('wrong_item',       'Wrong item received'),
+    ('defective',        'Defective / damaged product'),
+    ('not_as_described', 'Not as described'),
+    ('changed_mind',     'Changed my mind'),
+    ('quality_issue',    'Quality not as expected'),
+    ('other',            'Other'),
+]
+ 
+RETURN_STATUS = [
+    ('pending',   'Pending'),
+    ('approved',  'Approved'),
+    ('rejected',  'Rejected'),
+    ('completed', 'Completed'),
+]
+ 
+ 
+class ReturnRequest(models.Model):
+    user             = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                         on_delete=models.CASCADE,
+                                         related_name='return_requests')
+    order            = models.ForeignKey('order_user.Order',
+                                         on_delete=models.CASCADE,
+                                         related_name='return_requests')
+    order_item       = models.ForeignKey('order_user.OrderItem',
+                                         on_delete=models.CASCADE,
+                                         related_name='return_requests')
+    return_reason    = models.CharField(max_length=30, choices=RETURN_REASONS)
+    return_notes     = models.TextField(blank=True)
+    status           = models.CharField(max_length=15, choices=RETURN_STATUS, default='pending')
+    rejection_reason = models.TextField(blank=True)
+    created_at       = models.DateTimeField(auto_now_add=True)
+    updated_at       = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        ordering = ['-created_at']
+ 
+    def __str__(self):
+        return f"Return #{self.pk} — Order #{self.order_id} — {self.status}"
+ 
+ 
+class ReturnProofImage(models.Model):
+    return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE,
+                                       related_name='proof_images')
+    image          = models.ImageField(upload_to='return_proofs/')
+    uploaded_at    = models.DateTimeField(auto_now_add=True)
+     

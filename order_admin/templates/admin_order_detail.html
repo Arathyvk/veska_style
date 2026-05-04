@@ -8,14 +8,14 @@
 body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
 a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:var(--body)}
 
-.wrap{padding:24px 28px 60px;max-width:1100px;margin:0 auto}
+.wrap{padding:24px 28px 60px;max-width:104pc;margin:0 auto}
 .back-lnk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:18px;transition:color .15s}
 .back-lnk:hover{color:var(--terra2)}
-.pg-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.pg-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:14px}
 .pg-hd h1{font-family:var(--head);font-size:22px;font-weight:700;color:var(--text)}
-.pg-hd p{font-size:12px;color:var(--muted);margin-top:3px}
+.pg-hd p{font-size:14px;color:var(--muted);margin-top:3px}
 
-.sb{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:700}
+.sb{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700}
 .sb .dot{width:5px;height:5px;border-radius:50%}
 .sb-pending{background:var(--orange-pale);color:var(--orange)}.sb-pending .dot{background:var(--orange)}
 .sb-confirmed,.sb-processing{background:var(--blue-pale);color:var(--blue)}.sb-confirmed .dot,.sb-processing .dot{background:var(--blue)}
@@ -35,16 +35,16 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .cb{padding:16px 17px}
 
 .itbl{width:100%;border-collapse:collapse}
-.itbl th{padding:9px 12px;font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);text-align:left;background:var(--card2)}
-.itbl td{padding:11px 12px;border-bottom:1px solid rgba(58,52,44,.4);vertical-align:middle;font-size:12.5px}
+.itbl th{padding:9px 12px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);text-align:left;background:var(--card2)}
+.itbl td{padding:11px 12px;border-bottom:1px solid rgba(58,52,44,.4);vertical-align:middle;font-size:14px}
 .itbl tr:last-child td{border-bottom:none}
 .item-img{width:44px;height:54px;border-radius:var(--radius);overflow:hidden;background:var(--card2);border:1px solid var(--border);flex-shrink:0}
 .item-img img{width:100%;height:100%;object-fit:cover}
 .item-name-cell{display:flex;gap:10px;align-items:center}
-.item-name{font-weight:600;color:var(--text);font-size:12.5px}
-.item-link{font-size:11px;color:var(--terra);margin-top:2px;display:block}
+.item-name{font-weight:600;color:var(--text);font-size:14px}
+.item-link{font-size:14px;color:var(--terra);margin-top:2px;display:block}
 
-.pr{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;color:var(--muted);border-bottom:1px solid rgba(58,52,44,.3)}
+.pr{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;color:var(--muted);border-bottom:1px solid rgba(58,52,44,.3)}
 .pr:last-child{border-bottom:none}
 .pr .v{color:var(--text);font-weight:500}
 .pr.dis{color:var(--green)}.pr.dis .v{color:var(--green)}
@@ -71,7 +71,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .btn-update:hover{background:var(--terra2)}
 
 .u-avatar{width:38px;height:38px;border-radius:50%;background:var(--terra-pale);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--terra);flex-shrink:0}
-.addr-box{background:var(--card2);border-radius:var(--radius-lg);padding:11px 13px;font-size:12.5px;line-height:1.6;color:var(--muted2)}
+.addr-box{background:var(--card2);border-radius:var(--radius-lg);padding:11px 13px;font-size:14px;line-height:1.6;color:var(--muted2)}
 .addr-name{font-weight:700;color:var(--text);margin-bottom:3px}
 .item-pag{display:flex;align-items:center;justify-content:space-between;padding:12px 0 0;border-top:1px solid rgba(58,52,44,.4);gap:12px;flex-wrap:wrap}
 .item-pag-info{font-size:12px;color:var(--muted)}
@@ -90,7 +90,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 
   <div class="pg-hd">
     <div>
-      <h1>Order #{{ order.order_number }}</h1>
+      <h1>Order {{ order.order_number }}</h1>
       <p>Placed {{ order.created_at|date:"d M Y, g:i A" }} · {{ order.get_payment_method_display }}</p>
     </div>
     <span class="sb sb-{{ order.status }}"><span class="dot"></span>{{ order.get_status_display }}</span>
@@ -112,8 +112,16 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
                       {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
                       {% else %}<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg></div>{% endif %}
                     </div>
-                    <div><div class="item-name">{{ item.product_name }}</div>{% if item.product_slug %}<a href="/shop/{{ item.product_slug }}/" class="item-link" target="_blank">View ↗</a>{% endif %}</div>
-                  </div>
+                        <div>
+                          <div class="item-name">{{ item.product_name }}</div>
+
+                          {% if item.product_slug %}
+                            <a href="{% url 'product_detail' item.product_slug %}" class="item-link" target="_blank">
+                              View ↗
+                            </a>
+                          {% endif %}
+                        </div>                  
+                        </div>
                 </td>
                 <td>{{ item.size|default:"—" }}</td>
                 <td style="font-weight:600">{{ item.quantity }}</td>
@@ -123,7 +131,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
                   {% if item.is_cancelled %}
                     <span style="background:var(--red-pale);color:var(--red);padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">Cancelled</span>
                   {% else %}
-                    <span style="background:var(--green-pale);color:var(--green);padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">Active</span>
+                    <span style="background:var(--green-pale);color:var(--green);padding:2px 7px;border-radius:8px;font-size:14px;font-weight:700">Active</span>
                   {% endif %}
                 </td>
               </tr>
@@ -262,6 +270,37 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
           {% if order.return_requested_at %}<div class="ir"><span class="ir-lbl">Return Req.</span><span class="ir-val" style="color:var(--orange)">{{ order.return_requested_at|date:"d M Y" }}</span></div>{% endif %}
         </div>
       </div>
+    </div>
+  </div>
+   <div class="table-footer">
+    <span class="page-info">
+      Page {{ products.number }} of {{ products.paginator.num_pages }}
+      &nbsp;·&nbsp;
+      {{ products.paginator.count }} product{{ products.paginator.count|pluralize }}
+    </span>
+    <div class="pagination">
+      {% if products.has_previous %}
+      <a href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+         class="pg-btn">Prev</a>
+      {% else %}
+      <span class="pg-btn disabled">Prev</span>
+      {% endif %}
+
+      {% for num in products.paginator.page_range %}
+        {% if num == products.number %}
+          <span class="pg-num active">{{ num }}</span>
+        {% elif num >= products.number|add:"-2" and num <= products.number|add:"2" %}
+          <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+             class="pg-num">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if products.has_next %}
+      <a href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+         class="pg-btn">Next</a>
+      {% else %}
+      <span class="pg-btn disabled">Next</span>
+      {% endif %}
     </div>
   </div>
 </div>

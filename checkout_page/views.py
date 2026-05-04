@@ -276,7 +276,6 @@ def apply_coupon(request):
         messages.error(request, f'"{code}" is not a valid coupon code.')
         return redirect('checkout')
  
-    from cart_user.models import Cart
     cart     = Cart.objects.get_or_create(user=request.user)[0]
     items    = list(cart.items)
     subtotal = Decimal(str(float(cart.subtotal)))

@@ -4,93 +4,188 @@
 
 {% block content %}
 <style>
-:root{--white:#fff;--parchment:#f2ede6;--terra:#b56744;--terra-pale:#f7ede5;--terra-deep:#8f4f31;
-  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;--border:#e0d9d0;--border-lt:#ece6de;
-  --success:#3a7d5a;--success-pale:#eaf4ee;--warning:#c47f17;--warning-pale:#fef8ec;
-  --danger:#b53333;--danger-pale:#fdf0f0;
-  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
-  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:20px;
-  --transition:all .2s cubic-bezier(.4,0,.2,1);--head:'Georgia',serif;--body:'Inter',system-ui,sans-serif}
+:root{
+  --bg:#1a1410;--card:#231f1a;--card2:#2c2620;
+  --border:#3a342c;--border2:#4a4038;
+  --rose:#c9967a;--rose2:#e8b49a;
+  --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
+  --green:#4caf7d;--red:#e05252;--orange:#e09a52;
+  --radius:6px;
+  --head:'Playfair Display',serif;--body:'Jost',sans-serif;
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--body);background:#f5f4f2;color:var(--ink);font-size:14px}
+html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
 a{text-decoration:none;color:inherit}
 button,input{font-family:var(--body)}
 
+/* ── layout ── */
 .page-wrap{padding:28px 32px 60px;max-width:960px;margin:0 auto}
-.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-bottom:18px;transition:color .15s}
-.back-link:hover{color:var(--terra)}
 
-/* HEADER */
-.prod-header{display:flex;gap:18px;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap}
-.prod-header-img{width:80px;height:96px;border-radius:10px;overflow:hidden;background:var(--parchment);
-  border:1px solid var(--border);flex-shrink:0}
+/* ── back link ── */
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;font-size:13px;
+  color:var(--muted2);margin-bottom:20px;transition:color .15s;
+}
+.back-link:hover{color:var(--rose2)}
+
+/* ── product header ── */
+.prod-header{
+  display:flex;gap:18px;align-items:flex-start;
+  margin-bottom:24px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:20px;
+}
+.prod-header-img{
+  width:80px;height:96px;border-radius:8px;overflow:hidden;
+  background:var(--card2);border:1px solid var(--border2);flex-shrink:0;
+}
 .prod-header-img img{width:100%;height:100%;object-fit:cover}
-.prod-header-info h1{font-family:var(--head);font-size:24px;font-weight:700;color:var(--charcoal);margin-bottom:4px}
-.prod-header-info p{font-size:13px;color:var(--muted);margin-bottom:10px}
+.prod-header-info h1{
+  font-family:var(--head);font-size:22px;font-weight:700;
+  color:var(--text);margin-bottom:4px;
+}
+.prod-header-info p{font-size:13px;color:var(--muted2);margin-bottom:10px}
 .prod-badges{display:flex;gap:7px;flex-wrap:wrap}
-.pb{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
-.pb-listed{background:var(--success-pale);color:var(--success)}
-.pb-unlisted{background:#f1efe8;color:#5f5e5a}
-.pb-blocked{background:var(--danger-pale);color:var(--danger)}
-.pb-price{background:var(--terra-pale);color:var(--terra-deep)}
+.pb{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;
+}
+.pb-listed {background:rgba(76,175,125,.15);color:var(--green);border:1px solid rgba(76,175,125,.3)}
+.pb-unlisted{background:rgba(138,125,114,.12);color:var(--muted2);border:1px solid var(--border2)}
+.pb-blocked {background:rgba(224,82,82,.12);color:var(--red);border:1px solid rgba(224,82,82,.3)}
+.pb-price   {background:rgba(201,150,122,.15);color:var(--rose2);border:1px solid rgba(201,150,122,.3)}
+.pb-stock   {background:var(--card2);color:var(--muted2);border:1px solid var(--border2)}
 
-/* CARDS */
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:18px}
-.card-head{padding:14px 20px;border-bottom:1px solid var(--border-lt);display:flex;align-items:center;justify-content:space-between}
-.card-head h3{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px}
-.card-head h3 svg{width:14px;height:14px;color:var(--terra)}
+/* ── cards ── */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;margin-bottom:18px;
+}
+.card-head{
+  padding:13px 20px;border-bottom:1px solid var(--border2);
+  background:var(--card2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-head h3{
+  font-size:15px;font-weight:700;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.card-head h3 svg{width:14px;height:14px;color:var(--rose)}
 .card-body{padding:20px}
 
-/* STATUS TOGGLES */
-.toggle-grid{display:flex;gap:16px;flex-wrap:wrap}
-.toggle-item{display:flex;align-items:center;gap:10px;background:var(--parchment);
-  border-radius:var(--radius-md);padding:12px 16px;flex:1;min-width:160px}
-.toggle-label{font-size:13px;font-weight:600;color:var(--ink);flex:1}
-.toggle-desc{font-size:11px;color:var(--muted-lt)}
+/* ── visibility toggles ── */
+.toggle-grid{display:flex;gap:14px;flex-wrap:wrap}
+.toggle-item{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:8px;padding:14px 18px;flex:1;min-width:180px;
+  transition:border-color .2s;
+}
+.toggle-item:hover{border-color:var(--border)}
+.toggle-info{flex:1}
+.toggle-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.toggle-desc{font-size:11px;color:var(--muted2)}
 .toggle-btn{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
-.toggle-btn input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:22px;cursor:pointer;transition:.2s}
-.toggle-slider:before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;
-  background:#fff;left:3px;bottom:3px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-input:checked + .toggle-slider{background:var(--success)}
-input:checked + .toggle-slider:before{transform:translateX(18px)}
-.blocked-toggle input:checked + .toggle-slider{background:var(--danger)}
+.toggle-btn input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--border2);
+  border-radius:22px;cursor:pointer;transition:.2s;
+}
+.toggle-slider:before{
+  content:'';position:absolute;width:16px;height:16px;border-radius:50%;
+  background:var(--muted2);left:3px;bottom:3px;transition:.2s;
+}
+input:checked + .toggle-slider{background:var(--green)}
+input:checked + .toggle-slider:before{background:#fff;transform:translateX(18px)}
+.blocked-toggle input:checked + .toggle-slider{background:var(--red)}
 
-/* SIMPLE STOCK */
-.simple-stock-form{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.big-stock-input{width:110px;border:2px solid var(--border);border-radius:var(--radius-md);
-  padding:10px 14px;font-size:16px;font-weight:700;text-align:center;outline:none;transition:.15s}
-.big-stock-input:focus{border-color:var(--terra);box-shadow:0 0 0 3px rgba(181,103,58,.1)}
-.btn-save-stock{padding:11px 24px;background:var(--charcoal);color:#fff;border:none;
-  border-radius:var(--radius-md);font-size:13px;font-weight:700;cursor:pointer;transition:background .2s}
-.btn-save-stock:hover{background:var(--terra)}
-.stock-note{font-size:12px;color:var(--muted-lt)}
+/* ── stock form (no variants) ── */
+.simple-stock-form{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.stock-field-label{
+  font-size:10px;font-weight:700;letter-spacing:.9px;
+  text-transform:uppercase;color:var(--muted2);margin-bottom:7px;
+}
+.big-stock-input{
+  width:110px;border:1.5px solid var(--border2);border-radius:var(--radius);
+  padding:10px 14px;font-size:18px;font-weight:700;text-align:center;
+  outline:none;transition:.15s;background:var(--card2);color:var(--text);
+}
+.big-stock-input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(201,150,122,.12)}
+.btn-save-stock{
+  padding:11px 24px;background:var(--rose);color:#fff;border:none;
+  border-radius:var(--radius);font-size:13px;font-weight:700;
+  cursor:pointer;transition:opacity .2s;
+}
+.btn-save-stock:hover{opacity:.85}
+.stock-note{font-size:12px;padding-bottom:2px}
+.stock-note .in {color:var(--green);font-weight:600}
+.stock-note .low{color:var(--orange);font-weight:600}
+.stock-note .out{color:var(--red);font-weight:600}
 
-/* VARIANT TABLE */
+/* ── variants table ── */
 .var-table{width:100%;border-collapse:collapse}
-.var-table th{padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:.7px;
-  text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);text-align:left;
-  background:var(--parchment)}
-.var-table td{padding:12px 14px;border-bottom:1px solid var(--border-lt);vertical-align:middle;font-size:13px}
+.var-table th{
+  padding:10px 16px;font-size:10px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--muted2);
+  border-bottom:1px solid var(--border);text-align:left;
+  background:var(--card2);
+}
+.var-table td{
+  padding:13px 16px;border-bottom:1px solid rgba(58,52,44,.5);
+  vertical-align:middle;font-size:14px;
+}
 .var-table tr:last-child td{border-bottom:none}
-.size-pill{display:inline-block;padding:3px 10px;background:var(--parchment);
-  border:1px solid var(--border);border-radius:8px;font-weight:700;font-size:13px}
-.var-stock-input{width:80px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  padding:7px 10px;font-size:14px;font-weight:700;text-align:center;outline:none;transition:.15s}
-.var-stock-input:focus{border-color:var(--terra)}
-.btn-var-save{padding:7px 14px;background:var(--charcoal);color:#fff;border:none;
-  border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;transition:background .2s}
-.btn-var-save:hover{background:var(--terra)}
-.stock-label-in{color:var(--success);font-weight:700}
-.stock-label-low{color:var(--warning);font-weight:700}
-.stock-label-out{color:var(--danger);font-weight:700}
+.var-table tr:hover td{background:rgba(201,150,122,.04)}
 
-/* MSG */
-.msg{padding:11px 16px;border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;
-  font-weight:500;display:flex;align-items:center;gap:8px}
-.msg.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.18)}
-.msg.error{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.18)}
+.size-pill{
+  display:inline-block;padding:3px 12px;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:6px;font-weight:700;font-size:13px;color:var(--text);
+}
+.var-stock-input{
+  width:80px;border:1.5px solid var(--border2);border-radius:var(--radius);
+  padding:7px 10px;font-size:14px;font-weight:700;text-align:center;
+  outline:none;transition:.15s;background:var(--card2);color:var(--text);
+}
+.var-stock-input:focus{border-color:var(--rose)}
+.btn-var-save{
+  padding:7px 16px;background:var(--rose);color:#fff;border:none;
+  border-radius:var(--radius);font-size:12px;font-weight:600;
+  cursor:pointer;transition:opacity .2s;
+}
+.btn-var-save:hover{opacity:.85}
+.stock-in {color:var(--green);font-weight:700}
+.stock-low{color:var(--orange);font-weight:700}
+.stock-out{color:var(--red);font-weight:700}
+
+/* ── toast messages ── */
+.messages-wrap{
+  position:fixed;bottom:22px;right:22px;z-index:999;
+  display:flex;flex-direction:column;gap:8px;
+}
+.msg-toast{
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:11px 15px;font-size:12.5px;display:flex;align-items:center;gap:9px;
+  min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45);
+}
+.msg-toast.success{border-left:3px solid var(--green)}
+.msg-toast.error  {border-left:3px solid var(--red)}
+.msg-toast.warning{border-left:3px solid var(--orange)}
 </style>
+
+{% if messages %}
+<div class="messages-wrap" id="msg-wrap">
+  {% for msg in messages %}
+  <div class="msg-toast {{ msg.tags }}">
+    <span style="font-size:15px">
+      {% if msg.tags == 'success' %}✓{% elif msg.tags == 'error' %}✕{% else %}⚠{% endif %}
+    </span>
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+<script>setTimeout(()=>{ const w=document.getElementById('msg-wrap'); if(w){w.style.opacity='0';setTimeout(()=>w.remove(),400);} }, 3500)</script>
+{% endif %}
 
 <div class="page-wrap">
 
@@ -101,20 +196,14 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
     Back to Inventory
   </a>
 
-  {% for message in messages %}
-  <div class="msg {{ message.tags }}">
-    {% if message.tags == 'success' %}✅{% else %}🚫{% endif %}
-    {{ message }}
-  </div>
-  {% endfor %}
-
-  <!-- PRODUCT HEADER -->
+  <!-- product header card -->
   <div class="prod-header">
     <div class="prod-header-img">
       {% with img=product.images.first %}
-        {% if img %}<img src="{{ img.image.url }}" alt="{{ product.name }}">
+        {% if img %}
+          <img src="{{ img.image.url }}" alt="{{ product.name }}">
         {% else %}
-          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)">
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted2)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="28" height="28">
               <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
             </svg>
@@ -122,27 +211,26 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
         {% endif %}
       {% endwith %}
     </div>
+
     <div class="prod-header-info">
       <h1>{{ product.name }}</h1>
-      <p>{{ product.category.name|default:"No category" }}</p>
+      <p>{{ product.category|default:"No category" }}</p>
       <div class="prod-badges">
-        {% if product.is_listed and not product.is_blocked %}
-          <span class="pb pb-listed">✓ Listed</span>
-        {% elif not product.is_listed %}
-          <span class="pb pb-unlisted">Unlisted</span>
+        {% if product.is_active and not product.is_blocked %}
+          <span class="pb pb-listed">✓ Active</span>
+        {% elif not product.is_active %}
+          <span class="pb pb-unlisted">Inactive</span>
         {% endif %}
         {% if product.is_blocked %}
-          <span class="pb pb-blocked">🚫 Blocked</span>
+          <span class="pb pb-blocked">⛔ Blocked</span>
         {% endif %}
         <span class="pb pb-price">₹{{ product.price|floatformat:0 }}</span>
-        <span class="pb" style="background:var(--parchment);color:var(--muted)">
-          Total stock: {{ product.effective_stock }}
-        </span>
+        <span class="pb pb-stock">Stock: {{ product.total_stock }}</span>
       </div>
     </div>
   </div>
 
-  <!-- VISIBILITY STATUS -->
+  <!-- visibility toggles -->
   <div class="card">
     <div class="card-head">
       <h3>
@@ -155,12 +243,11 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
     <div class="card-body">
       <div class="toggle-grid">
 
-        <!-- Listed toggle -->
         <form method="POST" action="{% url 'admin_inventory_toggle_status' product.pk %}"
               class="toggle-item">
           {% csrf_token %}
           <input type="hidden" name="action" value="toggle_listed">
-          <div>
+          <div class="toggle-info">
             <div class="toggle-label">Listed</div>
             <div class="toggle-desc">Show on shop page</div>
           </div>
@@ -171,12 +258,11 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
           </label>
         </form>
 
-        <!-- Blocked toggle -->
         <form method="POST" action="{% url 'admin_inventory_toggle_status' product.pk %}"
               class="toggle-item">
           {% csrf_token %}
           <input type="hidden" name="action" value="toggle_blocked">
-          <div>
+          <div class="toggle-info">
             <div class="toggle-label">Blocked</div>
             <div class="toggle-desc">Prevent purchase</div>
           </div>
@@ -191,9 +277,8 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
     </div>
   </div>
 
-  <!-- STOCK MANAGEMENT -->
+  <!-- variant stock OR simple stock -->
   {% if variants %}
-  <!-- Variant stock table -->
   <div class="card">
     <div class="card-head">
       <h3>
@@ -201,7 +286,10 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
           <rect x="2" y="7" width="20" height="14" rx="2"/>
           <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
         </svg>
-        Variant Stock ({{ variants.count }} size{{ variants.count|pluralize }})
+        Variant Stock &nbsp;
+        <span style="font-family:var(--body);font-size:12px;font-weight:400;color:var(--muted2)">
+          {{ variants.count }} size{{ variants.count|pluralize }}
+        </span>
       </h3>
     </div>
     <div style="padding:0">
@@ -218,18 +306,20 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
           {% for variant in variants %}
           <tr>
             <td><span class="size-pill">{{ variant.size }}</span></td>
-            <td style="font-weight:600">
-              {% if variant.price %}₹{{ variant.price|floatformat:0 }}
-              {% else %}<span style="color:var(--muted-lt)">₹{{ product.price|floatformat:0 }} (default)</span>
+            <td style="font-weight:600;color:var(--rose2)">
+              {% if variant.price %}
+                ₹{{ variant.price|floatformat:0 }}
+              {% else %}
+                <span style="color:var(--muted2)">₹{{ product.price|floatformat:0 }} (default)</span>
               {% endif %}
             </td>
             <td>
               {% if variant.stock == 0 %}
-                <span class="stock-label-out">0 — Out of Stock</span>
-              {% elif variant.stock <= LOW_STOCK %}
-                <span class="stock-label-low">{{ variant.stock }} — Low</span>
+                <span class="stock-out">0 — Out of Stock</span>
+              {% elif variant.stock <= low_stock_threshold %}
+                <span class="stock-low">{{ variant.stock }} — Low</span>
               {% else %}
-                <span class="stock-label-in">{{ variant.stock }}</span>
+                <span class="stock-in">{{ variant.stock }}</span>
               {% endif %}
             </td>
             <td>
@@ -253,7 +343,6 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
   </div>
 
   {% else %}
-  <!-- Simple product stock -->
   <div class="card">
     <div class="card-head">
       <h3>
@@ -269,28 +358,24 @@ input:checked + .toggle-slider:before{transform:translateX(18px)}
             class="simple-stock-form">
         {% csrf_token %}
         <div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">
-            Current Stock
-          </div>
+          <div class="stock-field-label">Current Stock</div>
           <input type="number" name="stock" class="big-stock-input"
                  value="{{ product.stock }}" min="0">
         </div>
-        <div style="padding-top:24px">
+        <div>
           <button type="submit" class="btn-save-stock"
                   onclick="return confirm('Update stock for {{ product.name }}?')">
             Save Stock
           </button>
         </div>
-        <div style="padding-top:26px">
-          <div class="stock-note">
-            {% if product.stock == 0 %}
-              <span style="color:var(--danger);font-weight:600">⚠ Out of stock</span>
-            {% elif product.stock <= LOW_STOCK %}
-              <span style="color:var(--warning);font-weight:600">⚠ Low stock</span>
-            {% else %}
-              <span style="color:var(--success)">✓ In stock</span>
-            {% endif %}
-          </div>
+        <div class="stock-note" style="padding-bottom:4px">
+          {% if product.stock == 0 %}
+            <span class="out">⚠ Out of stock</span>
+          {% elif product.stock <= low_stock_threshold %}
+            <span class="low">⚠ Low stock ({{ product.stock }} left)</span>
+          {% else %}
+            <span class="in">✓ In stock ({{ product.stock }} units)</span>
+          {% endif %}
         </div>
       </form>
     </div>

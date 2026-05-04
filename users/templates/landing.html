@@ -338,75 +338,31 @@ main {
     <div class="section-title">
       <h2>Featured Products</h2>
     </div>
-    <div class="product-grid">
-
-      <div class="product-card">
-        <div class="brand-logo">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" alt="Adidas">
-        </div>
-        <div class="product-image">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771502748/samba-og-shoes_gb4p6p.avif" alt="Samba OG Shoes">
-          <div class="qv-pill">Quick View</div>
-        </div>
-        <h3>Samba OG Shoes</h3>
-        <p class="price">₹2,999</p>
-        <a class="add-btn" href="#">Add to Bag →</a>
-      </div>
-
-      <div class="product-card">
-        <div class="brand-logo">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771526405/download_drqnca.jpg" alt="Brand">
-        </div>
-        <div class="product-image">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1772714574/eFcUWijj_55fc9ec59673453ab7568755528baa49_vf87k6.jpg" alt="Ankle-Strap Block Heels">
-          <div class="qv-pill">Quick View</div>
-        </div>
-        <h3>Ankle-Strap Block Heels</h3>
-        <p class="price">₹2,599</p>
-        <a class="add-btn" href="#">Add to Bag →</a>
-      </div>
-
-      <div class="product-card">
-        <div class="brand-logo">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771527889/download_3_jifzca.png" alt="Puma">
-        </div>
-        <div class="product-image">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771581378/377045_16_sv01_ydliuc.jpg" alt="Puma Flyer Runner">
-          <div class="qv-pill">Quick View</div>
-        </div>
-        <h3>Puma Flyer Runner</h3>
-        <p class="price">₹4,585</p>
-        <a class="add-btn" href="#">Add to Bag →</a>
-      </div>
-
-      <div class="product-card">
-        <div class="brand-logo">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771528131/download_4_bz12ua.png" alt="Brand">
-        </div>
-        <div class="product-image">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771581106/MP000000018260214_437Wx649H_202307080000321_fdxr73.avif" alt="Strappy Block Heel Sandals">
-          <div class="qv-pill">Quick View</div>
-        </div>
-        <h3>Strappy Block Heel Sandals</h3>
-        <p class="price">₹999</p>
-        <a class="add-btn" href="#">Add to Bag →</a>
-      </div>
-
-
-      <div class="product-card">
-        <div class="brand-logo">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771528131/download_4_bz12ua.png" alt="Brand">
-        </div>
-        <div class="product-image">
-          <img src="https://res.cloudinary.com/djet6cpft/image/upload/v1771528066/VA-6041-101-20-1522_kjyfnt.webp" alt="Strappy Block Heel Sandals">
-          <div class="qv-pill">Quick View</div>
-        </div>
-        <h3>Strappy Block Heel Sandals</h3>
-        <p class="price">₹999</p>
-        <a class="add-btn" href="#">Add to Bag →</a>
-      </div>
-
+<div class="product-grid">
+  {% for product in products %}
+  <div class="product-card">
+    <div class="product-image">
+      {% with img=product.images.first %}
+        {% if img %}
+          <img src="{{ img.image.url }}" alt="{{ product.name }}">
+        {% else %}
+          <div style="width:100%;height:260px;display:flex;align-items:center;
+                      justify-content:center;color:#b0a699">No image</div>
+        {% endif %}
+      {% endwith %}
     </div>
+    <h3>{{ product.name }}</h3>
+    <p class="price">₹{{ product.price }}</p>
+    <a class="add-btn" href="{% url 'product_detail' product.slug %}">
+      View Details →
+    </a>
+  </div>
+  {% empty %}
+  <p style="color:var(--muted);grid-column:1/-1;text-align:center">
+    No featured products yet.
+  </p>
+  {% endfor %}
+</div>
   </div>
 </section>
 

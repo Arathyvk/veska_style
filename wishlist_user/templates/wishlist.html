@@ -80,7 +80,7 @@
           <div class="wcard-name"><a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a></div>
           <div class="wcard-price">₹{{ product.price|floatformat:2 }}</div>
           <div class="wcard-actions">
-            <form method="POST" action="{% url 'wishlist_move_to_cart' product.slug %}" style="flex:1">
+            <form method="POST" action="{% url 'wishlist_toggle' product.slug %}" style="flex:1">
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ request.get_full_path }}">
               <button type="submit" class="btn-move" {% if product.total_stock == 0 %}disabled{% endif %}>
