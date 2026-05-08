@@ -82,10 +82,12 @@ def login_view(request):
 
         request.session.set_expiry(1209600 if request.POST.get("remember") else 0)
 
+        old_session_key = request.session.session_key
+
         login(request, user)
 
         session_cart=Cart.objects.filter(
-            session_key = request.session.session_key
+            session_key = old_session_key
         ).first()
 
         user_cart,_ = Cart.objects.get_or_create(user=user)
@@ -95,7 +97,7 @@ def login_view(request):
                 user_item, created = user_cart.items.get_or_create(
                     product=item.product,
                     variant=item.variant,
-                    default={'quantity':item.quantity}
+                    defaults={'quantity':item.quantity}
                 )
 
                 if not created:
