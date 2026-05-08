@@ -23,27 +23,43 @@ CATEGORY_CHOICES = [
 
 @login_required(login_url='admin_login')
 def admin_coupon_list(request):
+
     if not is_admin(request.user):
         return redirect('admin_login')
 
-    qs = Coupon.objects.all()
-    q  = request.GET.get('q', '').strip()
+    qs = Coupon.objects.all().order_by('-id')
+
+    q = request.GET.get('q', '').strip()
+
     if q:
-        qs = qs.filter(Q(code__icontains=q) | Q(description__icontains=q))
+        qs = qs.filter(
+            Q(code__icontains=q) |
+            Q(description__icontains=q)
+        )
 
     active_f = request.GET.get('active', '')
+
     if active_f == '1':
         qs = qs.filter(is_active=True)
+
     elif active_f == '0':
         qs = qs.filter(is_active=False)
 
     paginator = Paginator(qs, 15)
-    page_obj  = paginator.get_page(request.GET.get('page', 1))
-    params    = request.GET.copy(); params.pop('page', None)
+
+    page_obj = paginator.get_page(
+        request.GET.get('page', 1)
+    )
+
+    params = request.GET.copy()
+    params.pop('page', None)
 
     return render(request, 'admin_coupon_list.html', {
-        'page_obj': page_obj, 'query': q, 'active_filter': active_f,
-        'params_str': params.urlencode(), 'now': timezone.now(),
+        'page_obj': page_obj,
+        'query': q,
+        'active_filter': active_f,
+        'params_str': params.urlencode(),
+        'now': timezone.now(),
         'total_count': paginator.count,
     })
 

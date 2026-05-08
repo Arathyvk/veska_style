@@ -1,0 +1,421 @@
+{% extends "user_base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #faf7f2; --sand: #ede8df; --stone: #b8a99a;
+    --bark: #7a5c4a; --espresso: #2e1d13; --ink: #1a1008;
+    --accent: #a0726a; --btn: #8c5c52; --btn-hover: #7a4d44;
+    --border: #d6c9be; --input-bg: #f7f4f1;
+    --error-bg: #fdf0ee; --error-border: #e07b6a; --error-text: #8b2e1e;
+    --success-bg: #f0faf4; --success-border: #6fba8a; --success-text: #1e6b38;
+  }
+  body { background: var(--cream); font-family: 'Jost', sans-serif; color: var(--espresso); }
+
+  /* ── HERO ── */
+  .contact-hero {
+    background: linear-gradient(135deg, #2e1d13 0%, #5a3828 60%, #7a5c4a 100%);
+    padding: 70px 24px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-hero::before {
+    content: 'CONTACT';
+    position: absolute;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(60px, 12vw, 120px);
+    font-weight: 700;
+    color: rgba(255,255,255,.04);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .hero-label {
+    font-size: .68rem; letter-spacing: .3em; text-transform: uppercase;
+    color: rgba(255,255,255,.5); margin-bottom: 12px;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 400; color: #fff;
+    letter-spacing: .04em; line-height: 1.2;
+  }
+  .hero-title em { font-style: italic; color: #ddb08a; }
+  .hero-sub {
+    font-size: .88rem; color: rgba(255,255,255,.6);
+    margin-top: 12px; max-width: 440px; margin-inline: auto;
+    line-height: 1.7;
+  }
+
+  /* ── BREADCRUMB ── */
+  .breadcrumb {
+    max-width: 1100px; margin: 0 auto;
+    padding: 16px 24px;
+    font-size: .75rem; color: var(--stone);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .breadcrumb a { color: var(--stone); text-decoration: none; transition: color .2s; }
+  .breadcrumb a:hover { color: var(--btn); }
+  .breadcrumb span { color: var(--stone); }
+
+  /* ── MAIN LAYOUT ── */
+  .contact-wrap {
+    max-width: 1100px; margin: 0 auto;
+    padding: 48px 24px 80px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(46,29,19,.06);
+  }
+  .form-card-head {
+    padding: 24px 32px 20px;
+    border-bottom: 1px solid var(--sand);
+  }
+  .form-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 500;
+    color: var(--espresso);
+  }
+  .form-card-sub {
+    font-size: .78rem; color: var(--stone);
+    margin-top: 4px;
+  }
+  .form-card-body { padding: 28px 32px 32px; }
+
+  /* Messages */
+  .alert {
+    padding: 12px 16px; border-radius: 8px;
+    font-size: .82rem; margin-bottom: 22px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .alert-success {
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    color: var(--success-text);
+  }
+  .alert-error {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    color: var(--error-text);
+  }
+
+  /* Form fields */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-label {
+    font-size: .68rem; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--bark);
+  }
+  .req { color: var(--error-text); margin-left: 2px; }
+  .form-input, .form-textarea {
+    width: 100%; padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    font-family: 'Jost', sans-serif;
+    font-size: .88rem; color: var(--espresso);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--stone); }
+  .form-input:focus, .form-textarea:focus {
+    border-color: var(--bark);
+    box-shadow: 0 0 0 3px rgba(122,92,74,.08);
+    background: #fff;
+  }
+  .form-input.is-err { border-color: var(--error-border); background: var(--error-bg); }
+  .form-textarea { resize: vertical; min-height: 130px; line-height: 1.65; }
+  .field-err {
+    font-size: .68rem; color: var(--error-text);
+    margin-top: 3px;
+  }
+
+  .btn-send {
+    width: 100%; padding: 13px;
+    background: var(--espresso); color: var(--cream);
+    border: none; border-radius: 6px;
+    font-family: 'Jost', sans-serif;
+    font-size: .78rem; font-weight: 500;
+    letter-spacing: .2em; text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+    margin-top: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-send:hover { background: var(--ink); }
+  .btn-send:active { transform: scale(.98); }
+
+  /* ── SIDEBAR INFO ── */
+  .contact-info { display: flex; flex-direction: column; gap: 24px; }
+
+  .info-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+    box-shadow: 0 2px 12px rgba(46,29,19,.05);
+  }
+  .info-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem; font-weight: 500;
+    color: var(--espresso); margin-bottom: 16px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--sand);
+  }
+
+  .info-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    margin-bottom: 16px;
+  }
+  .info-item:last-child { margin-bottom: 0; }
+  .info-icon {
+    width: 38px; height: 38px; border-radius: 8px;
+    background: var(--sand);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--bark);
+  }
+  .info-label {
+    font-size: .68rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--stone);
+    font-weight: 600; margin-bottom: 3px;
+  }
+  .info-value {
+    font-size: .85rem; color: var(--espresso);
+    line-height: 1.5;
+  }
+  .info-value a { color: var(--btn); text-decoration: none; }
+  .info-value a:hover { color: var(--espresso); }
+
+  /* Hours */
+  .hours-row {
+    display: flex; justify-content: space-between;
+    font-size: .82rem; padding: 7px 0;
+    border-bottom: 1px solid var(--sand);
+    color: var(--espresso);
+  }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-day { color: var(--stone); font-size: .78rem; }
+  .hours-open { color: var(--btn); font-weight: 500; }
+
+  /* Social */
+  .social-row {
+    display: flex; gap: 10px; margin-top: 4px;
+  }
+  .social-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--sand); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bark); text-decoration: none;
+    transition: background .2s, color .2s, border-color .2s;
+  }
+  .social-btn:hover {
+    background: var(--btn); color: #fff; border-color: var(--btn);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 860px) {
+    .contact-wrap { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .form-card-head, .form-card-body { padding: 20px; }
+  }
+</style>
+
+<!-- Hero -->
+<div class="contact-hero">
+  <div class="hero-label">Veska — Women's Footwear</div>
+  <h1 class="hero-title">Get in <em>Touch</em></h1>
+  <p class="hero-sub">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+</div>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a href="{% url 'home' %}">Home</a>
+  <span>›</span>
+  <span>Contact Us</span>
+</div>
+
+<!-- Main -->
+<div class="contact-wrap">
+
+  <!-- Form -->
+  <div class="form-card">
+    <div class="form-card-head">
+      <div class="form-card-title">Send us a Message</div>
+      <div class="form-card-sub">Fill in the form below and we'll get back to you within 24 hours.</div>
+    </div>
+    <div class="form-card-body">
+
+      {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags }}">
+          {% if 'success' in msg.tags %}
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          {% endif %}
+          {{ msg }}
+        </div>
+      {% endfor %}
+
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="req">*</span></label>
+            <input type="text" name="name" class="form-input {% if errors.name %}is-err{% endif %}"
+              value="{{ form_data.name|default:'' }}"
+              placeholder="Your full name">
+            {% if errors.name %}<span class="field-err">{{ errors.name }}</span>{% endif %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address <span class="req">*</span></label>
+            <input type="email" name="email" class="form-input {% if errors.email %}is-err{% endif %}"
+              value="{{ form_data.email|default:'' }}"
+              placeholder="hello@example.com">
+            {% if errors.email %}<span class="field-err">{{ errors.email }}</span>{% endif %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <input type="text" name="subject" class="form-input"
+            value="{{ form_data.subject|default:'' }}"
+            placeholder="How can we help you?">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message <span class="req">*</span></label>
+          <textarea name="message" class="form-textarea {% if errors.message %}is-err{% endif %}"
+            placeholder="Tell us more about your inquiry…">{{ form_data.message|default:'' }}</textarea>
+          {% if errors.message %}<span class="field-err">{{ errors.message }}</span>{% endif %}
+        </div>
+
+        <button type="submit" class="btn-send">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Send Message
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sidebar Info -->
+  <div class="contact-info">
+
+    <div class="info-card">
+      <div class="info-card-title">Contact Information</div>
+
+      <div class="info-item">
+        <div class="info-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="info-label">Visit Us</div>
+          <div class="info-value">
+            Veska Footwear Store<br>
+            MG Road, Thiruvananthapuram<br>
+            Kerala — 695001, India
+          </div>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.89 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.8 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 5.998 5.999l.98-.98a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="info-label">Call Us</div>
+          <div class="info-value">
+            <a href="tel:+919876543210">+91 98765 43210</a><br>
+            <a href="tel:+914712345678">+91 471 234 5678</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="info-label">Email Us</div>
+          <div class="info-value">
+            <a href="mailto:hello@veska.in">hello@veska.in</a><br>
+            <a href="mailto:support@veska.in">support@veska.in</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Store Hours -->
+    <div class="info-card">
+      <div class="info-card-title">Store Hours</div>
+      <div class="hours-row">
+        <span class="hours-day">Monday – Friday</span>
+        <span class="hours-open">10:00 AM – 8:00 PM</span>
+      </div>
+      <div class="hours-row">
+        <span class="hours-day">Saturday</span>
+        <span class="hours-open">10:00 AM – 9:00 PM</span>
+      </div>
+      <div class="hours-row">
+        <span class="hours-day">Sunday</span>
+        <span class="hours-open">11:00 AM – 7:00 PM</span>
+      </div>
+    </div>
+
+    <!-- Social -->
+    <div class="info-card">
+      <div class="info-card-title">Follow Us</div>
+      <div class="social-row">
+        <a href="#" class="social-btn" title="Instagram">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+          </svg>
+        </a>
+        <a href="#" class="social-btn" title="Facebook">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+          </svg>
+        </a>
+        <a href="#" class="social-btn" title="Twitter / X">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+          </svg>
+        </a>
+        <a href="#" class="social-btn" title="WhatsApp">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

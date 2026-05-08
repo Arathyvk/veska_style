@@ -1,0 +1,281 @@
+{% extends "user_base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+
+/* =========================
+   ROOT & BASE
+========================= */
+:root {
+  --cream: #faf7f2;
+  --sand: #ede8df;
+  --stone: #b8a99a;
+  --bark: #7a5c4a;
+  --espresso: #2e1d13;
+  --ink: #1a1008;
+  --accent: #a0726a;
+  --btn: #8c5c52;
+  --btn-hover: #7a4d44;
+  --border: #d6c9be;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  background: var(--cream);
+  font-family: 'Jost', sans-serif;
+  color: var(--espresso);
+  line-height: 1.6;
+}
+
+/* =========================
+   HERO SECTION (FLUID)
+========================= */
+.about-hero {
+  background: linear-gradient(135deg, #2e1d13 0%, #5a3828 60%, #7a5c4a 100%);
+  padding: clamp(60px, 10vh, 120px) 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 400;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+/* =========================
+   LAYOUT CONTAINERS
+========================= */
+.section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(40px, 8vw, 80px) 24px;
+}
+
+/* STORY GRID: Swaps from 1 to 2 columns seamlessly */
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: clamp(30px, 5vw, 80px);
+  align-items: center;
+}
+
+/* VALUES GRID: Responsive 3-2-1 column layout */
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* STATS STRIP: Horizontal on desktop, 2x2 on mobile */
+.stats-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 30px;
+}
+
+/* =========================
+   COMPONENTS
+========================= */
+.value-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 30px;
+  text-align: center;
+  transition: var(--transition);
+  height: 100%;
+}
+
+.value-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(46,29,19,0.1);
+  border-color: var(--accent);
+}
+
+.cta-btns {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+/* Responsive Buttons */
+.cta-btn-primary, .cta-btn-outline {
+  padding: 16px 36px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+  min-width: 180px;
+  display: inline-block;
+}
+
+.cta-btn-primary { background: #ddb08a; color: var(--espresso); }
+.cta-btn-outline { border: 1px solid rgba(255,255,255,0.3); color: #fff; }
+
+/* =========================
+   MOBILE OVERRIDES (< 600px)
+========================= */
+@media (max-width: 600px) {
+  .cta-btns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .story-img-wrap {
+    aspect-ratio: 1/1; /* Square on mobile to save vertical space */
+  }
+
+  .stat-num {
+    font-size: 2rem;
+  }
+}
+</style>
+
+<div class="about-hero">
+  <div class="hero-label">Est. 2020 — Kerala, India</div>
+  <h1 class="hero-title">Our <em>Story</em></h1>
+  <p class="hero-sub">Crafting luxury women's footwear that blends timeless elegance with everyday comfort.</p>
+  <div class="hero-divider"></div>
+</div>
+
+<div class="breadcrumb">
+  <a href="{% url 'home' %}">Home</a>
+  <span>›</span>
+  <span>About Us</span>
+</div>
+
+<div class="section">
+  <div class="story-grid">
+    <div class="story-img-wrap">
+      <div class="story-img-placeholder">👠</div>
+      <div class="story-img-badge">
+        <strong>5+</strong>
+        Years of Craftsmanship
+      </div>
+    </div>
+    <div class="story-content">
+      <div class="section-tag">Our Story</div>
+      <h2 class="section-title">Born from a <em>Passion</em> for Beautiful Footwear</h2>
+      <p class="section-body">
+        Veska was founded in 2020 in the heart of Kerala with a single mission — to bring luxury women's footwear that feels as beautiful as it looks. We believe every woman deserves shoes that tell her story.
+      </p>
+      <p class="section-body">
+        From elegant heels to comfortable flats, every pair in our collection is thoughtfully designed using premium materials, traditional craftsmanship, and modern sensibilities.
+      </p>
+      <p class="section-body">
+        Today, Veska serves thousands of happy customers across India, with a growing community of women who believe that great shoes are the foundation of every great outfit.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-num">5000+</div>
+      <div class="stat-label">Happy Customers</div>
+    </div>
+    <div>
+      <div class="stat-num">200+</div>
+      <div class="stat-label">Styles Available</div>
+    </div>
+    <div>
+      <div class="stat-num">5+</div>
+      <div class="stat-label">Years of Excellence</div>
+    </div>
+    <div>
+      <div class="stat-num">4.8★</div>
+      <div class="stat-label">Average Rating</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="values-head">
+    <div class="section-tag">Why Choose Veska</div>
+    <h2 class="section-title">What We <em>Stand For</em></h2>
+  </div>
+  <div class="values-grid">
+    <div class="value-card">
+      <div class="value-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <div class="value-title">Made with Love</div>
+      <div class="value-body">Every pair is crafted with care, attention to detail, and a deep passion for beautiful footwear that lasts.</div>
+    </div>
+    <div class="value-card">
+      <div class="value-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+      </div>
+      <div class="value-title">Premium Quality</div>
+      <div class="value-body">We source only the finest materials — genuine leather, soft fabrics, and durable soles built to withstand daily elegance.</div>
+    </div>
+    <div class="value-card">
+      <div class="value-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <rect x="1" y="3" width="15" height="13" rx="1"/>
+          <path d="M16 8h4l3 3v5h-7V8z"/>
+          <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+      </div>
+      <div class="value-title">Fast Delivery</div>
+      <div class="value-body">We ship across India with care and speed. Your perfect pair arrives safely, on time, every time.</div>
+    </div>
+    <div class="value-card">
+      <div class="value-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div class="value-title">Secure Shopping</div>
+      <div class="value-body">Shop with confidence. Your data, payments, and personal information are always protected with us.</div>
+    </div>
+    <div class="value-card">
+      <div class="value-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <div class="value-title">24/7 Support</div>
+      <div class="value-body">Our friendly team is always ready to help — whether it's sizing advice, order tracking, or returns.</div>
+    </div>
+    <div class="value-card">
+      <div class="value-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          <polyline points="17 6 23 6 23 12"/>
+        </svg>
+      </div>
+      <div class="value-title">Easy Returns</div>
+      <div class="value-body">Not happy? Return within 7 days — no questions asked. We make returns simple and hassle-free.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2 class="cta-title">Ready to Find Your <em>Perfect Pair</em>?</h2>
+  <p class="cta-sub">Explore our latest collection of luxury women's footwear — from elegant heels to everyday flats.</p>
+  <div class="cta-btns">
+    <a href="{% url 'product_shop' %}" class="cta-btn-primary">Shop Now</a>
+    <a href="{% url 'contact_us' %}" class="cta-btn-outline">Contact Us</a>
+  </div>
+</div>
+
+{% endblock %}

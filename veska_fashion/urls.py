@@ -19,5 +19,7 @@ urlpatterns = [
     path('order_user/',include('order_user.urls')),
     path('order_admin/',include('order_admin.urls')),
     path('coupon_admin/',include('coupon_admin.urls')),
+    path('returns/',include('return_admin.urls')),
+    path('about/',include('about_us.urls')),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

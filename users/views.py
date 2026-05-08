@@ -11,6 +11,7 @@ from django.views.decorators.cache import never_cache
 from .models import User
 from django.core.exceptions import ValidationError
 from product_admin.models import Product
+from cart_user.models import Cart
  
 from core.otp import gen_otp, send_otp_email, is_otp_expired, save_otp_to_session, get_otp_from_session, clear_otp_from_session
 
@@ -82,6 +83,28 @@ def login_view(request):
         request.session.set_expiry(1209600 if request.POST.get("remember") else 0)
 
         login(request, user)
+
+        session_cart=Cart.objects.filter(
+            session_key = request.session.session_key
+        ).first()
+
+        user_cart,_ = Cart.objects.get_or_create(user=user)
+        
+        if session_cart:
+            for item in session_cart.items.all():
+                user_item, created = user_cart.items.get_or_create(
+                    product=item.product,
+                    variant=item.variant,
+                    default={'quantity':item.quantity}
+                )
+
+                if not created:
+                    user_item.quantity +=item.quantity
+                    user_item.save()
+
+            session_cart.delete()
+
+
         messages.success(request, f"Welcome back, {user.first_name or user.email}!")
         return redirect("home")
 

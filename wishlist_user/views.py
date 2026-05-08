@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
  
-from cart_user.models import Cart, CartItem
+from cart_user.models import Cart,CartItem
 from wishlist_user.models import Wishlist
 from product_admin.models import Product
  
@@ -15,31 +15,28 @@ COUNTRIES = ['India','United States','United Kingdom','UAE','Singapore','Canada'
 
 
 def _get_cart(request):
-    if not request.session.session_key:
-        request.session.create()
     if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(
-            user=request.user,
-            defaults={'session_key': request.session.session_key}
-        )
+        cart,_ = Cart.objects.get_or_create(user=request.user)
         return cart
-    cart, _ = Cart.objects.get_or_create(
-        session_key=request.session.session_key, user=None
-    )
+    
+    request.session.save()
+
+    cart,_ = Cart.objects.get_or_create(user=None)
     return cart
- 
+
 
 
 def _get_wishlist(request):
-    if not request.user.is_authenticated:
-        return None
-    wl, _ = Wishlist.objects.get_or_create(user=request.user)
-    return wl
+    if request.user.is_authenticated:
+        wl, _ = Wishlist.objects.get_or_create(user=request.user)
+        return wl
+    
+    return None
  
  
 def _wishlist_ids(request):
     wl = _get_wishlist(request)
-    if wl is None:
+    if not  wl:
         return set()
     return set(wl.products.values_list('id', flat=True))
  
@@ -61,18 +58,48 @@ def wishlist_toggle(request, slug):
     else:
         wl.products.add(product)
         messages.success(request, f'"{product.name}" saved to wishlist!')
- 
+  
     return redirect(request.POST.get('next', 'product_shop'))
  
 
  
 @login_required(login_url='login')
 def wishlist_detail(request):
-    wl       = _get_wishlist(request)
-    products = wl.products.filter(is_active=True).prefetch_related('images', 'variants')
-    cart     = _get_cart(request)
-    cart_product_ids = set(cart.items.values_list('product_id', flat=True))
+    wl = Wishlist.objects.get_or_create(user=request.user)[0]
+
+    products = wl.products.filter(is_active=True)
+
+    cart = _get_cart(request)
+    cart_product_ids = set()
+
+    if cart:
+        cart_product_ids = set(cart.items.values_list('product_id', flat=True))
+
     return render(request, 'wishlist.html', {
-        'products':         products,
+        'products': products,
         'cart_product_ids': cart_product_ids,
     })
+
+
+@login_required
+def move_to_cart(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    cart = _get_cart(request)
+
+    item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        product=product,
+        defaults={'quantity': 1}
+    )
+
+    if not created:
+        item.quantity += 1
+        item.save()
+
+    wishlist = Wishlist.objects.get(user=request.user)
+    wishlist.products.remove(product)
+
+    messages.success(request, f'{product.name} move to cart')
+
+    return redirect('cart_detail')

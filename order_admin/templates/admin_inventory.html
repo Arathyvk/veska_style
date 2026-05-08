@@ -85,13 +85,133 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
 .btn-det{display:inline-flex;align-items:center;gap:4px;padding:6px 11px;background:var(--card2);border:1px solid var(--border2);color:var(--muted2);border-radius:var(--radius);font-size:14px;font-weight:600;transition:.15s;text-decoration:none}
 .btn-det:hover{border-color:var(--terra);color:var(--terra2)}
 
-.pag{display:flex;align-items:center;justify-content:space-between;padding:12px 17px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px}
-.pag-info{font-size:12px;color:var(--muted)}
-.pag-links{display:flex;align-items:center;gap:4px}
-.pg{display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;border-radius:var(--radius);border:1px solid var(--border2);font-size:12.5px;font-weight:500;color:var(--muted2);background:var(--card2);transition:.15s;text-decoration:none}
-.pg:hover{border-color:var(--terra);color:var(--terra2)}
-.pg.active{background:var(--terra);border-color:var(--terra);color:#1a1714;font-weight:700}
-.pg.off{opacity:.3;pointer-events:none}
+/* PAGINATION */
+
+.table-footer{
+  width:100%;
+  padding:16px 18px;
+  border-top:1px solid var(--border);
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+
+  background:var(--card);
+}
+
+.page-info{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.page-info strong{
+  color:var(--text);
+}
+
+/* RIGHT SIDE */
+
+.pagination{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+/* BUTTONS */
+
+.pg-btn{
+  min-width:70px;
+  height:34px;
+
+  padding:0 14px;
+
+  border-radius:8px;
+  border:1px solid var(--border2);
+
+  background:var(--card2);
+  color:var(--muted2);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:12px;
+  font-weight:600;
+
+  text-decoration:none;
+
+  transition:var(--transition);
+}
+
+.pg-btn:hover{
+  border-color:var(--terra);
+  color:var(--terra2);
+}
+
+.pg-btn.disabled{
+  opacity:.35;
+  pointer-events:none;
+}
+
+/* PAGE NUMBER */
+
+.pg-num{
+  width:34px;
+  height:34px;
+
+  border-radius:8px;
+  border:1px solid var(--border2);
+
+  background:var(--card2);
+  color:var(--muted2);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  text-decoration:none;
+
+  font-size:12px;
+  font-weight:600;
+
+  transition:var(--transition);
+}
+
+.pg-num:hover{
+  border-color:var(--terra);
+  color:var(--terra2);
+}
+
+.pg-num.active{
+  background:var(--terra);
+  border-color:var(--terra);
+  color:#1a1714;
+}
+
+/* DOTS */
+
+.dots{
+  color:var(--muted);
+  padding:0 4px;
+}
+
+/* MOBILE */
+
+@media (max-width:768px){
+
+  .table-footer{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .pagination{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+}
 
 .empty{text-align:center;padding:56px 24px;color:var(--muted)}
 .empty svg{width:44px;height:44px;margin:0 auto 14px;display:block;opacity:.3}
@@ -243,15 +363,18 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
     <div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><h3>No products found</h3><p>{% if has_filters %}Try clearing your filters.{% else %}No products yet.{% endif %}</p></div>
     {% endif %}
   </div>
-  <div class="table-footer">
+<div class="table-footer">
   <div class="page-info">
     Page {{ page_obj.number }} of {{ paginator.num_pages }}
+    · {{ paginator.count }} products
   </div>
 
   <div class="pagination">
 
     {% if page_obj.has_previous %}
-      <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.previous_page_number }}" class="pg-btn">Prev</a>
+      <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.previous_page_number }}" class="pg-btn">
+        Prev
+      </a>
     {% else %}
       <span class="pg-btn disabled">Prev</span>
     {% endif %}
@@ -259,13 +382,18 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
     {% for num in paginator.page_range %}
       {% if num == page_obj.number %}
         <span class="pg-num active">{{ num }}</span>
+
       {% elif num > page_obj.number|add:"-2" and num < page_obj.number|add:"2" %}
-        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ num }}" class="pg-num">{{ num }}</a>
+        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ num }}" class="pg-num">
+          {{ num }}
+        </a>
       {% endif %}
     {% endfor %}
 
     {% if page_obj.has_next %}
-      <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.next_page_number }}" class="pg-btn">Next</a>
+      <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.next_page_number }}" class="pg-btn">
+        Next
+      </a>
     {% else %}
       <span class="pg-btn disabled">Next</span>
     {% endif %}

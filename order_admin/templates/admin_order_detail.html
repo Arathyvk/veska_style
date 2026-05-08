@@ -9,13 +9,13 @@ body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13
 a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:var(--body)}
 
 .wrap{padding:24px 28px 60px;max-width:104pc;margin:0 auto}
-.back-lnk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:18px;transition:color .15s}
+.back-lnk{display:inline-flex;align-items:center;gap:6px;font-size:15px;color:var(--muted);margin-bottom:18px;transition:color .15s}
 .back-lnk:hover{color:var(--terra2)}
 .pg-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:14px}
 .pg-hd h1{font-family:var(--head);font-size:22px;font-weight:700;color:var(--text)}
 .pg-hd p{font-size:14px;color:var(--muted);margin-top:3px}
 
-.sb{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700}
+.sb{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;font-size:15px;font-weight:700}
 .sb .dot{width:5px;height:5px;border-radius:50%}
 .sb-pending{background:var(--orange-pale);color:var(--orange)}.sb-pending .dot{background:var(--orange)}
 .sb-confirmed,.sb-processing{background:var(--blue-pale);color:var(--blue)}.sb-confirmed .dot,.sb-processing .dot{background:var(--blue)}
@@ -35,8 +35,8 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .cb{padding:16px 17px}
 
 .itbl{width:100%;border-collapse:collapse}
-.itbl th{padding:9px 12px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);text-align:left;background:var(--card2)}
-.itbl td{padding:11px 12px;border-bottom:1px solid rgba(58,52,44,.4);vertical-align:middle;font-size:14px}
+.itbl th{padding:9px 12px;font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);text-align:left;background:var(--card2)}
+.itbl td{padding:26px 12px;border-bottom:1px solid rgba(58,52,44,.4);vertical-align:middle;font-size:14px}
 .itbl tr:last-child td{border-bottom:none}
 .item-img{width:44px;height:54px;border-radius:var(--radius);overflow:hidden;background:var(--card2);border:1px solid var(--border);flex-shrink:0}
 .item-img img{width:100%;height:100%;object-fit:cover}
@@ -50,36 +50,105 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .pr.dis{color:var(--green)}.pr.dis .v{color:var(--green)}
 .pr-total{display:flex;justify-content:space-between;font-family:var(--head);font-size:19px;font-weight:700;color:var(--text);padding-top:10px}
 
-.ir{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid rgba(58,52,44,.3)}
+.ir{display:flex;justify-content:space-between;font-size:15px;padding:6px 0;border-bottom:1px solid rgba(58,52,44,.3)}
 .ir:last-child{border-bottom:none}
 .ir-lbl{color:var(--muted)}
 .ir-val{color:var(--text);font-weight:600;text-align:right}
 
 .sc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px}
 .sc-head{padding:12px 17px;background:linear-gradient(135deg,#2e2925,#3a332c);display:flex;align-items:center;gap:8px}
-.sc-head h3{font-size:13.5px;font-weight:700;color:var(--text)}
+.sc-head h3{font-size:15px;font-weight:700;color:var(--text)}
 .sc-body{padding:16px 17px}
-.sc-lbl{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);margin-bottom:7px}
-.sc-sel{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:10px 28px 10px 12px;font-size:13px;outline:none;cursor:pointer;appearance:none;transition:.15s;margin-bottom:10px;
+.sc-lbl{font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);margin-bottom:7px}
+.sc-sel{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:10px 28px 10px 12px;font-size:15px;outline:none;cursor:pointer;appearance:none;transition:.15s;margin-bottom:10px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%238a7d72' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 10px center}
 .sc-sel:focus{border-color:var(--terra)}.sc-sel option{background:var(--card2)}
 .cancel-wrap{display:none;margin-bottom:10px}.cancel-wrap.show{display:block}
-.cancel-ta{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:9px 12px;font-size:13px;resize:vertical;min-height:70px;outline:none;transition:.15s}
+.cancel-ta{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:9px 12px;font-size:15px;resize:vertical;min-height:70px;outline:none;transition:.15s}
 .cancel-ta:focus{border-color:var(--red)}
-.btn-update{width:100%;padding:11px;background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-lg);font-size:13px;font-weight:700;cursor:pointer;transition:.18s}
+.btn-update{width:100%;padding:11px;background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-lg);font-size:15px;font-weight:700;cursor:pointer;transition:.18s}
 .btn-update:hover{background:var(--terra2)}
 
 .u-avatar{width:38px;height:38px;border-radius:50%;background:var(--terra-pale);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--terra);flex-shrink:0}
 .addr-box{background:var(--card2);border-radius:var(--radius-lg);padding:11px 13px;font-size:14px;line-height:1.6;color:var(--muted2)}
 .addr-name{font-weight:700;color:var(--text);margin-bottom:3px}
 .item-pag{display:flex;align-items:center;justify-content:space-between;padding:12px 0 0;border-top:1px solid rgba(58,52,44,.4);gap:12px;flex-wrap:wrap}
-.item-pag-info{font-size:12px;color:var(--muted)}
+.item-pag-info{font-size:15px;color:var(--muted)}
 .item-pag-links{display:flex;align-items:center;gap:4px}
-.ipg{display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;border-radius:var(--radius);border:1px solid var(--border2);font-size:12px;font-weight:500;color:var(--muted2);background:var(--card2);text-decoration:none}
+.ipg{display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;border-radius:var(--radius);border:1px solid var(--border2);font-size:15px;font-weight:500;color:var(--muted2);background:var(--card2);text-decoration:none}
 .ipg:hover{border-color:var(--terra);color:var(--terra2)}
 .ipg.active{background:var(--terra);border-color:var(--terra);color:#1a1714;font-weight:700}
 .ipg.off{opacity:.3;pointer-events:none}
+
+
+.table-footer{width:100%;padding:16px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--card)}
+.page-info{font-size:15px;color:var(--muted)}
+.page-info strong{color:var(--text)}
+.pagination{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pg-btn{min-width:70px;height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--muted2);display:flex;align-items:center;
+  justify-content:center;font-size:15px;font-weight:600;text-decoration:none;transition:var(--transition)}
+
+.pg-btn:hover{border-color:var(--terra);color:var(--terra2)}
+
+.pg-btn.disabled{
+  opacity:.35;
+  pointer-events:none;
+}
+
+
+.pg-num{
+  width:34px;
+  height:34px;
+
+  border-radius:8px;
+  border:1px solid var(--border2);
+
+  background:var(--card2);
+  color:var(--muted2);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  text-decoration:none;
+
+  font-size:15px;
+  font-weight:600;
+
+  transition:var(--transition);
+}
+
+.pg-num:hover{
+  border-color:var(--terra);
+  color:var(--terra2);
+}
+
+.pg-num.active{
+  background:var(--terra);
+  border-color:var(--terra);
+  color:#1a1714;
+}
+
+
+.dots{
+  color:var(--muted);
+  padding:0 4px;
+}
+
+@media (max-width:768px){
+
+  .table-footer{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .pagination{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+}
 </style>
 
 <div class="wrap">
@@ -129,7 +198,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
                 <td style="font-weight:700;color:var(--terra2)">₹{{ item.line_total|floatformat:2 }}</td>
                 <td>
                   {% if item.is_cancelled %}
-                    <span style="background:var(--red-pale);color:var(--red);padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">Cancelled</span>
+                    <span style="background:var(--red-pale);color:var(--red);padding:2px 7px;border-radius:8px;font-size:15px;font-weight:700">Cancelled</span>
                   {% else %}
                     <span style="background:var(--green-pale);color:var(--green);padding:2px 7px;border-radius:8px;font-size:14px;font-weight:700">Active</span>
                   {% endif %}
@@ -199,8 +268,8 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
       <div class="card">
         <div class="ch"><h3>Notes & Reasons</h3></div>
         <div class="cb">
-          {% if order.cancel_reason %}<div style="margin-bottom:12px"><div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--red);margin-bottom:4px">Cancel Reason</div><div style="color:var(--muted2)">{{ order.cancel_reason }}</div></div>{% endif %}
-          {% if order.return_reason %}<div><div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--orange);margin-bottom:4px">Return Reason</div><div style="color:var(--muted2)">{{ order.return_reason }}</div></div>{% endif %}
+          {% if order.cancel_reason %}<div style="margin-bottom:12px"><div style="font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--red);margin-bottom:4px">Cancel Reason</div><div style="color:var(--muted2)">{{ order.cancel_reason }}</div></div>{% endif %}
+          {% if order.return_reason %}<div><div style="font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--orange);margin-bottom:4px">Return Reason</div><div style="color:var(--muted2)">{{ order.return_reason }}</div></div>{% endif %}
         </div>
       </div>
       {% endif %}
@@ -216,8 +285,12 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
             {% csrf_token %}
             <div class="sc-lbl" style="margin-bottom:6px">Change to</div>
             <select name="status" class="sc-sel" id="statusSel" onchange="handleSC(this)">
-              {% for val, label in status_choices %}<option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
-            </select>
+                {% for val, label in status_choices %}
+                  <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>
+                    {{ label }}
+                  </option>
+                {% endfor %}
+              </select>
             <div class="cancel-wrap" id="cancelWrap">
               <div class="sc-lbl" style="margin-bottom:6px">Cancel Reason (optional)</div>
               <textarea name="cancel_reason" class="cancel-ta" placeholder="Reason…">{{ order.cancel_reason }}</textarea>
@@ -240,10 +313,10 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
       </div>
 
       <div>
-        <div style="font-weight:700;font-size:13.5px;color:var(--text)">
+        <div style="font-weight:700;font-size:15px;color:var(--text)">
           {{ name }}
         </div>
-        <div style="font-size:11.5px;color:var(--muted)">
+        <div style="font-size:15px;color:var(--muted)">
           {{ order.user.email|default:"-" }}
         </div>
       </div>
@@ -272,37 +345,48 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
       </div>
     </div>
   </div>
-   <div class="table-footer">
-    <span class="page-info">
-      Page {{ products.number }} of {{ products.paginator.num_pages }}
-      &nbsp;·&nbsp;
-      {{ products.paginator.count }} product{{ products.paginator.count|pluralize }}
-    </span>
-    <div class="pagination">
-      {% if products.has_previous %}
-      <a href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+{% if items_page_obj and items_page_obj.paginator.num_pages > 1 %}
+<div class="table-footer">
+
+  <span class="page-info">
+    Page {{ items_page_obj.number }} of {{ items_page_obj.paginator.num_pages }}
+    &nbsp;·&nbsp;
+    {{ items_page_obj.paginator.count }} item{{ items_page_obj.paginator.count|pluralize }}
+  </span>
+
+  <div class="pagination">
+
+    {% if items_page_obj.has_previous %}
+      <a href="?items_page={{ items_page_obj.previous_page_number }}"
          class="pg-btn">Prev</a>
-      {% else %}
+    {% else %}
       <span class="pg-btn disabled">Prev</span>
+    {% endif %}
+
+    {% for num in items_page_obj.paginator.page_range %}
+
+      {% if num == items_page_obj.number %}
+        <span class="pg-num active">{{ num }}</span>
+
+      {% elif num >= items_page_obj.number|add:"-2" and num <= items_page_obj.number|add:"2" %}
+        <a href="?items_page={{ num }}"
+           class="pg-num">{{ num }}</a>
+
       {% endif %}
 
-      {% for num in products.paginator.page_range %}
-        {% if num == products.number %}
-          <span class="pg-num active">{{ num }}</span>
-        {% elif num >= products.number|add:"-2" and num <= products.number|add:"2" %}
-          <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
-             class="pg-num">{{ num }}</a>
-        {% endif %}
-      {% endfor %}
+    {% endfor %}
 
-      {% if products.has_next %}
-      <a href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+    {% if items_page_obj.has_next %}
+      <a href="?items_page={{ items_page_obj.next_page_number }}"
          class="pg-btn">Next</a>
-      {% else %}
+    {% else %}
       <span class="pg-btn disabled">Next</span>
-      {% endif %}
-    </div>
+    {% endif %}
+
   </div>
+
+</div>
+{% endif %}
 </div>
 <script>
 function handleSC(sel){document.getElementById('cancelWrap').classList.toggle('show',sel.value==='cancelled')}

@@ -211,7 +211,7 @@ button,input,select,textarea{font-family:var(--body)}
 
   <nav class="breadcrumbs">
     <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
-    <a href="{% url 'user_orders' %}">Orders</a><span class="sep">›</span>
+    <a href="{% url 'order_list' %}">Orders</a><span class="sep">›</span>
     <a href="{% url 'order_detail' order.id %}">Order #{{ order.id }}</a><span class="sep">›</span>
     <span class="cur">Return Request</span>
   </nav>
@@ -226,7 +226,7 @@ button,input,select,textarea{font-family:var(--body)}
   </div>
   {% endfor %}
 
-  {# ── CASE 1: return already exists ── #}
+
   {% if existing_return %}
   <div class="return-status-card">
     {% if existing_return.status == 'pending' %}
@@ -297,7 +297,7 @@ button,input,select,textarea{font-family:var(--body)}
     </a>
   </div>
 
-  {# ── CASE 2: non-returnable category ── #}
+
   {% elif not is_returnable_category %}
   <div class="non-returnable">
     <h3>🚫 This item cannot be returned</h3>
@@ -308,63 +308,95 @@ button,input,select,textarea{font-family:var(--body)}
     Back to Order
   </a>
 
-  {# ── CASE 3: deadline expired ── #}
+
   {% elif deadline_expired %}
   <div class="deadline-expired">
     <h3>⏰ Return Window Closed</h3>
     <p>The return window for this order closed on <strong>{{ return_deadline|date:"d M Y" }}</strong>. Returns must be requested within {{ return_days }} days of delivery.</p>
   </div>
-  <a href="{% url 'order_detail' order.id %}" class="btn-back" style="display:flex;margin-top:14px">
+  <a href="{% url 'order_detail' order.order_number %}" class="btn-back" style="display:flex;margin-top:14px">
     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     Back to Order
   </a>
 
-  {# ── CASE 4: return form ── #}
+ 
   {% else %}
   <form method="POST" enctype="multipart/form-data" id="returnForm">
     {% csrf_token %}
 
-    {# STEP 1 — item details #}
+  
     <div class="card">
       <div class="card-head">
         <span class="step-num">1</span>
         <h2>Item to Return</h2>
       </div>
-      <div class="card-body">
-        <div class="order-item">
-          <div class="order-item-img">
-            {% with img=order_item.product.images.first %}
-              {% if img %}<img src="{{ img.image.url }}" alt="{{ order_item.product.name }}">
-              {% else %}
-                <div style="width:100%;height:100%;display:flex;align-items:center;
-                            justify-content:center;color:var(--muted-lt)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="22" height="22">
-                    <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                </div>
-              {% endif %}
-            {% endwith %}
-          </div>
-          <div class="order-item-info">
-            <div class="order-item-name">{{ order_item.product.name }}</div>
-            <div class="order-item-meta">
-              {% if order_item.variant %}Size: {{ order_item.variant.size }} &nbsp;·&nbsp;{% endif %}
-              Qty: {{ order_item.quantity }} &nbsp;·&nbsp;
-              Order #{{ order.id }}
-            </div>
-            <div class="order-item-meta">Delivered: {{ order.delivered_at|date:"d M Y" }}</div>
-            {% if days_left > 2 %}
-              <span class="deadline-badge deadline-ok">✓ {{ days_left }} days left to return</span>
-            {% elif days_left > 0 %}
-              <span class="deadline-badge deadline-warn">⚠ Only {{ days_left }} day{{ days_left|pluralize }} left</span>
+ <div class="card-body">
+
+  {% for item in items %}
+  <label style="display:block;cursor:pointer;margin-bottom:10px">
+
+    <input type="radio" name="item_id" value="{{ item.id }}" required>
+
+    <div class="order-item">
+      <div class="order-item-img">
+        {% with img=item.product.images.first %}
+          {% if img %}
+            <img src="{{ img.image.url }}">
+          {% endif %}
+        {% endwith %}
+      </div>
+
+<form method="POST">
+  {% csrf_token %}
+
+  {% for item in items %}
+    <label style="display:block; cursor:pointer; margin-bottom:12px;">
+
+      <input type="radio"
+             name="item_id"
+             value="{{ item.id }}"
+             required>
+
+      <div class="order-item">
+        
+        <div class="order-item-img">
+          {% with img=item.product.images.first %}
+            {% if img %}
+              <img src="{{ img.image.url }}">
             {% endif %}
-          </div>
-          <div class="order-item-price">₹{{ order_item.line_total|floatformat:2 }}</div>
+          {% endwith %}
         </div>
+
+        <div class="order-item-info">
+          <div class="order-item-name">{{ item.product.name }}</div>
+          <div class="order-item-meta">
+            Size: {{ item.size }} · Qty: {{ item.quantity }}
+          </div>
+        </div>
+
+        <div class="order-item-price">
+          ₹{{ item.line_total }}
+        </div>
+
+      </div>
+
+    </label>
+  {% endfor %}
+
+  <button type="submit">Submit Return</button>
+</form>
+
+      <div class="order-item-price">
+        ₹{{ item.line_total }}
       </div>
     </div>
 
-    {# STEP 2 — conditions #}
+  </label>
+  {% endfor %}
+
+</div>
+    </div>
+
     <div class="card">
       <div class="card-head">
         <span class="step-num">2</span>
@@ -414,7 +446,6 @@ button,input,select,textarea{font-family:var(--body)}
       </div>
     </div>
 
-    {# STEP 3 — return reason #}
     <div class="card">
       <div class="card-head">
         <span class="step-num">3</span>
@@ -446,7 +477,6 @@ button,input,select,textarea{font-family:var(--body)}
           <div class="fhint">Optional — helps us process your return faster</div>
         </div>
 
-        {# proof images — shown for defective/wrong item #}
         <div class="field" id="proofUploadWrap" style="display:none">
           <label class="flabel">
             Proof Images <span class="req">*</span>
@@ -547,7 +577,6 @@ function removePreview(btn, idx) {
   btn.closest('.img-preview').remove();
 }
 
-/* drag-drop on upload zone */
 const zone = document.getElementById('uploadZone');
 if (zone) {
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor='var(--terra)'; });

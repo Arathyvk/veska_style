@@ -21,8 +21,7 @@ class Coupon(models.Model):
 
     discount_type = models.CharField(max_length=10, choices=DISCOUNT_TYPE_CHOICES)
     value         = models.DecimalField(max_digits=10, decimal_places=2)
-    max_discount  = models.DecimalField(max_digits=10, decimal_places=2,
-                                        null=True, blank=True,
+    max_discount  = models.DecimalField(max_digits=10, decimal_places=2,null=True, blank=True,
                                         help_text="Cap for % coupons. Leave blank = no cap.")
 
     min_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)

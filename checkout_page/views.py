@@ -220,16 +220,21 @@ def place_order(request):
     for item in items:
         img = item.product.primary_image
 
+        image_url = ''
+        if img and getattr(img, "image", None):
+            image_url = img.image.url
+
+        line_total = item.unit_price * item.quantity
+
         OrderItem.objects.create(
             order=order,
             product=item.product,
             product_name=item.product.name,
             product_slug=item.product.slug,
             size=item.variant.size if item.variant else '',
-            image_url=img.image.url if img else '',
+            image_url=image_url,
             unit_price=item.unit_price,
             quantity=item.quantity,
-            line_total=item.line_total,
         )
         if item.variant:
             item.variant.stock = max(0, item.variant.stock - item.quantity)
