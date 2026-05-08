@@ -64,6 +64,8 @@ INSTALLED_APPS = [
     'order_user',
     'order_admin',
     'coupon_admin',
+    'return_admin',
+    'about_us',
     
 ]
 

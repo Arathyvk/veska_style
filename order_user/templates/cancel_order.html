@@ -78,11 +78,7 @@ textarea.ftextarea:focus{border-color:var(--danger);background:#fff}
           Reason for cancellation <span class="opt">(optional)</span>
         </label>
 
-        <div class="reason-chips" id="reasonChips">
-          {% for r in "Changed my mind,Found a better price,Ordered by mistake,Delivery too long,Other" %}
-          <span class="reason-chip" onclick="pickReason('{{ r }}', this)">{{ r }}</span>
-          {% endfor %}
-        </div>
+       
 
         <textarea name="cancel_reason" id="cancelReason" class="ftextarea"
                   placeholder="Tell us why (optional)…"></textarea>

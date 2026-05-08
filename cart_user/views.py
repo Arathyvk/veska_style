@@ -12,33 +12,29 @@ MAX_QTY_PER_ITEM = 10
 FREE_SHIPPING    = 999
 SHIPPING_FEE     = 79
 
- 
-def _get_cart(request):
-    if not request.session.session_key:
-        request.session.create()
-    if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(
-            user=request.user,
-            defaults={'session_key': request.session.session_key}
-        )
-        return cart
-    cart, _ = Cart.objects.get_or_create(
-        session_key=request.session.session_key, user=None
-    )
-    return cart
 
+def _get_cart(request):
+    if request.user.is_authenticated:
+        cart,_ = Cart.objects.get_or_create(user=request.user)
+        return cart
+    
+    request.session.save()
+
+    cart,_ = Cart.objects.get_or_create(user=None)
+    return cart
 
  
 def _get_wishlist(request):
-    if not request.user.is_authenticated:
-        return None
-    wl, _ = Wishlist.objects.get_or_create(user=request.user)
-    return wl
+    if request.user.is_authenticated:
+        wl, _ = Wishlist.objects.get_or_create(user=request.user)
+        return wl
+    
+    return None
  
  
 def _wishlist_ids(request):
     wl = _get_wishlist(request)
-    if wl is None:
+    if not  wl:
         return set()
     return set(wl.products.values_list('id', flat=True))
  

@@ -1,121 +1,440 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Order #{{ order.id }} · Veska{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;font-size:11px;color:#1e1a17;background:#fff;padding:32px 40px}
-  .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #1e1a17}
-  .brand{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;letter-spacing:-0.5px;color:#1e1a17}
-  .brand-sub{font-size:10px;color:#7a6f66;margin-top:2px;letter-spacing:1px;text-transform:uppercase}
-  .invoice-label{text-align:right}
-  .invoice-label h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#1e1a17}
-  .invoice-label p{font-size:11px;color:#7a6f66;margin-top:2px}
-  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
-  .meta-box h4{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0a699;margin-bottom:6px}
-  .meta-box p{font-size:11.5px;color:#1e1a17;line-height:1.6}
-  .meta-box .highlight{font-weight:600;font-size:12px}
-  .status-chip{display:inline-block;background:#eaf4ee;color:#3a7d5a;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.5px;text-transform:uppercase}
-  table{width:100%;border-collapse:collapse;margin-bottom:20px}
-  thead tr{background:#1e1a17}
-  th{padding:9px 12px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;text-align:left}
-  th:last-child{text-align:right}
-  td{padding:10px 12px;font-size:11px;border-bottom:1px solid #ece6de;color:#1e1a17;vertical-align:middle}
-  td:last-child{text-align:right;font-weight:600}
-  tr:last-child td{border-bottom:none}
-  tr.cancelled-row td{color:#b0a699;text-decoration:line-through}
-  .totals{margin-left:auto;width:240px}
-  .total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:11px;color:#7a6f66}
-  .total-row .val{color:#1e1a17;font-weight:500}
-  .total-row.grand{border-top:1.5px solid #1e1a17;padding-top:10px;margin-top:6px;font-size:14px;font-weight:700;color:#1e1a17;font-family:'Cormorant Garamond',serif}
-  .total-row.grand .val{font-size:15px}
-  .total-row.free .val{color:#3a7d5a;font-weight:600}
-  .footer{margin-top:32px;padding-top:14px;border-top:1px solid #e0d9d0;display:flex;justify-content:space-between;align-items:center}
-  .footer p{font-size:10px;color:#b0a699}
-  .footer .thank-you{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;color:#b56744}
-  .divider{height:1px;background:#e0d9d0;margin:16px 0}
-  .cancelled-notice{background:#fdf0f0;border:1px solid rgba(181,51,51,.2);border-radius:6px;padding:8px 12px;margin-bottom:16px;font-size:11px;color:#b53333}
+:root{
+  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
+  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
+  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
+  --border:#e0d9d0;--border-lt:#ece6de;
+  --success:#3a7d5a;--success-pale:#eaf4ee;
+  --warning:#c47f17;--warning-pale:#fef8ec;
+  --danger:#b53333;--danger-pale:#fdf0f0;
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+
+.container{max-width:860px;margin:0 auto;padding:0 24px}
+.page-wrap{padding:36px 0 80px}
+
+.breadcrumbs{display:flex;align-items:center;gap:8px;margin-bottom:24px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
+.breadcrumbs .sep{color:var(--muted-lt)}.breadcrumbs .cur{color:var(--ink);font-weight:500}
+
+.page-title{font-family:var(--head);font-size:clamp(24px,4vw,34px);font-weight:600;
+  color:var(--charcoal);margin-bottom:4px}
+.page-title em{font-style:italic;color:var(--terra)}
+
+/* flash */
+.flash{padding:12px 16px;border-radius:var(--radius-md);margin-bottom:18px;
+  font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px}
+.flash.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.2)}
+.flash.error  {background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
+.flash.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.2)}
+
+/* card */
+.card{background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);overflow:hidden;margin-bottom:18px;
+  box-shadow:var(--shadow-sm)}
+.card-head{padding:15px 22px;border-bottom:1px solid var(--border-lt);
+  display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-head h2{font-family:var(--head);font-size:17px;font-weight:600;color:var(--ink);
+  display:flex;align-items:center;gap:8px}
+.card-head h2 svg{width:14px;height:14px;color:var(--terra)}
+.card-body{padding:20px 22px}
+
+/* order status badge */
+.status-badge{display:inline-flex;align-items:center;gap:5px;
+  padding:4px 13px;border-radius:20px;font-size:11px;font-weight:700}
+.s-pending  {background:var(--parchment);color:var(--muted);border:1px solid var(--border)}
+.s-confirmed{background:#e8f4fd;color:#1a6fa8;border:1px solid #b8d8f0}
+.s-processing{background:#e8f4fd;color:#1a6fa8;border:1px solid #b8d8f0}
+.s-shipped  {background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.25)}
+.s-delivered{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.25)}
+.s-cancelled{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
+.s-returned {background:var(--parchment);color:var(--muted);border:1px solid var(--border)}
+
+/* info rows */
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:8px 0;border-bottom:1px solid var(--border-lt);gap:12px;font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-label{color:var(--muted);flex-shrink:0}
+.info-value{color:var(--ink);font-weight:500;text-align:right}
+
+/* order item row */
+.item-row{display:flex;gap:14px;align-items:flex-start;padding:16px 0;
+  border-bottom:1px solid var(--border-lt)}
+.item-row:last-child{border-bottom:none;padding-bottom:0}
+.item-img{width:68px;height:82px;border-radius:var(--radius-md);overflow:hidden;
+  background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
+.item-img img{width:100%;height:100%;object-fit:cover}
+.item-body{flex:1;min-width:0}
+.item-name{font-family:var(--head);font-size:15px;font-weight:600;
+  color:var(--charcoal);margin-bottom:4px;line-height:1.3}
+.item-meta{font-size:12px;color:var(--muted-lt);margin-bottom:10px;line-height:1.6}
+.item-price{font-family:var(--head);font-size:16px;font-weight:700;
+  color:var(--terra-deep);white-space:nowrap}
+
+/* ── RETURN BUTTON STATES ── */
+
+/* 1. Active return button — order delivered, within window, no existing return */
+.btn-return{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 18px;border-radius:var(--radius-md);
+  font-size:12.5px;font-weight:600;cursor:pointer;
+  background:var(--terra-pale);color:var(--terra-deep);
+  border:1.5px solid var(--blush);transition:var(--transition);
+}
+.btn-return:hover{background:var(--terra);color:#fff;border-color:var(--terra)}
+
+/* 2. Return already submitted */
+.btn-return-submitted{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 18px;border-radius:var(--radius-md);
+  font-size:12.5px;font-weight:600;
+  background:var(--warning-pale);color:var(--warning);
+  border:1.5px solid rgba(196,127,23,.3);cursor:default;
+}
+
+/* 3. Return approved/completed */
+.btn-return-done{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 18px;border-radius:var(--radius-md);
+  font-size:12.5px;font-weight:600;
+  background:var(--success-pale);color:var(--success);
+  border:1.5px solid rgba(58,125,90,.25);cursor:default;
+}
+
+/* 4. Deadline expired — button shown but disabled */
+.btn-return-expired{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 18px;border-radius:var(--radius-md);
+  font-size:12.5px;font-weight:500;
+  background:var(--parchment);color:var(--muted-lt);
+  border:1.5px solid var(--border);cursor:not-allowed;
+  text-decoration:line-through;opacity:.65;
+}
+
+/* 5. Not yet delivered — hidden/disabled */
+.btn-return-unavailable{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 18px;border-radius:var(--radius-md);
+  font-size:12.5px;font-weight:500;
+  background:var(--parchment);color:var(--muted-lt);
+  border:1.5px dashed var(--border);cursor:not-allowed;opacity:.45;
+}
+
+/* deadline countdown */
+.deadline-tag{display:inline-flex;align-items:center;gap:4px;
+  font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:10px;margin-left:6px}
+.deadline-ok  {background:var(--success-pale);color:var(--success)}
+.deadline-warn{background:var(--warning-pale);color:var(--warning)}
+.deadline-exp {background:var(--danger-pale);color:var(--danger)}
+
+/* order timeline */
+.order-timeline{display:flex;gap:0;overflow-x:auto;padding:4px 0}
+.tl-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:80px;position:relative}
+.tl-step:not(:last-child)::after{content:'';position:absolute;top:14px;left:50%;
+  width:100%;height:2px;background:var(--border);z-index:0}
+.tl-step.done:not(:last-child)::after{background:var(--success)}
+.tl-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);
+  background:var(--warm-white);display:flex;align-items:center;justify-content:center;
+  font-size:11px;z-index:1;position:relative;transition:var(--transition)}
+.tl-step.done .tl-dot{background:var(--success);border-color:var(--success);color:#fff;font-weight:700}
+.tl-step.active .tl-dot{background:var(--terra);border-color:var(--terra);color:#fff;font-weight:700}
+.tl-step.cancelled .tl-dot{background:var(--danger);border-color:var(--danger);color:#fff}
+.tl-step-label{font-size:10.5px;font-weight:600;color:var(--muted);margin-top:7px;text-align:center}
+.tl-step.done .tl-step-label,.tl-step.active .tl-step-label{color:var(--ink)}
+
+/* summary */
+.sum-row{display:flex;justify-content:space-between;font-size:13px;
+  padding:6px 0;color:var(--muted)}
+.sum-row .val{color:var(--ink);font-weight:500}
+.sum-divider{height:1px;background:var(--border-lt);margin:8px 0}
+.sum-total{display:flex;justify-content:space-between;padding:8px 0 0;
+  font-family:var(--head);font-size:20px;font-weight:700;color:var(--ink)}
+
+.btn-back{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;
+  border:1.5px solid var(--border);border-radius:var(--radius-md);
+  font-size:13px;color:var(--muted);transition:var(--transition)}
+.btn-back:hover{border-color:var(--terra);color:var(--terra)}
 </style>
-</head>
-<body>
 
-<div class="head">
-  <div>
-    <div class="brand">VESKA</div>
-    <div class="brand-sub">Women Footwear</div>
+<div class="page-wrap">
+<div class="container">
+
+  <nav class="breadcrumbs">
+    <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
+    <a href="{% url 'user_orders' %}">Orders</a><span class="sep">›</span>
+    <span class="cur">Order #{{ order.id }}</span>
+  </nav>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;
+              flex-wrap:wrap;gap:12px;margin-bottom:24px">
+    <div>
+      <h1 class="page-title">Order <em>#{{ order.id }}</em></h1>
+      <p style="font-size:13px;color:var(--muted);margin-top:3px">
+        Placed {{ order.created_at|date:"d M Y, h:i A" }}
+      </p>
+    </div>
+    {% if order.status == 'pending' %}
+      <span class="status-badge s-pending">● Pending</span>
+    {% elif order.status == 'confirmed' %}
+      <span class="status-badge s-confirmed">● Confirmed</span>
+    {% elif order.status == 'processing' %}
+      <span class="status-badge s-processing">⚙ Processing</span>
+    {% elif order.status == 'shipped' %}
+      <span class="status-badge s-shipped">🚚 Shipped</span>
+    {% elif order.status == 'delivered' %}
+      <span class="status-badge s-delivered">✓ Delivered</span>
+    {% elif order.status == 'cancelled' %}
+      <span class="status-badge s-cancelled">✕ Cancelled</span>
+    {% elif order.status == 'returned' %}
+      <span class="status-badge s-returned">↩ Returned</span>
+    {% endif %}
   </div>
-  <div class="invoice-label">
-    <h2>INVOICE</h2>
-    <p>#{{ order.order_number }}</p>
-    <p style="margin-top:4px">{{ order.created_at|date:"d M Y" }}</p>
+
+  {% for message in messages %}
+  <div class="flash {{ message.tags }}">
+    {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}🚫{% else %}⚠️{% endif %}
+    {{ message }}
   </div>
-</div>
+  {% endfor %}
 
-<div class="meta-grid">
-  <div class="meta-box">
-    <h4>Bill To</h4>
-    <p class="highlight">{{ order.full_name }}</p>
-    <p>{{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}</p>
-    <p>{{ order.city }}, {{ order.state }} — {{ order.pincode }}</p>
-    <p>{{ order.country }}</p>
-    <p style="margin-top:4px">📞 {{ order.phone }}</p>
+  {# ── ORDER TIMELINE ── #}
+  <div class="card">
+    <div class="card-head">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Order Progress
+      </h2>
+      {% if order.is_delivered %}
+        <span style="font-size:12px;color:var(--success);font-weight:600">
+          Delivered {{ order.delivered_at|date:"d M Y" }}
+        </span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      {% if order.status == 'cancelled' %}
+      <div style="text-align:center;padding:12px 0;color:var(--danger);font-weight:600;font-size:14px">
+        ✕ This order was cancelled
+      </div>
+      {% else %}
+      <div class="order-timeline">
+        {% with steps="pending,confirmed,processing,shipped,delivered" %}
+        {% for step in steps.split %}  {# Django workaround — use forloop below #}
+        {% endfor %}
+        {% endwith %}
+
+        {# Use explicit steps for reliability #}
+        {% for step_name, step_label in timeline_steps %}
+        <div class="tl-step
+          {% if step_name == order.status %}active
+          {% elif step_name in completed_steps %}done{% endif %}">
+          <div class="tl-dot">
+            {% if step_name in completed_steps %}✓
+            {% elif step_name == order.status %}●
+            {% else %}{{ forloop.counter }}{% endif %}
+          </div>
+          <div class="tl-step-label">{{ step_label }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
   </div>
-  <div class="meta-box" style="text-align:right">
-    <h4>Order Info</h4>
-    <p class="highlight">#{{ order.order_number }}</p>
-    <p>Date: {{ order.created_at|date:"d M Y" }}</p>
-    <p>Payment: {{ order.get_payment_method_display }}</p>
-    <p style="margin-top:4px"><span class="status-chip">{{ order.get_status_display }}</span></p>
+
+  {# ── ORDER ITEMS with Return Button ── #}
+  <div class="card">
+    <div class="card-head">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="3" width="15" height="13" rx="1"/>
+          <path d="M16 8h4l3 4v5h-7V8z"/>
+          <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        Items ({{ order.items.count }})
+      </h2>
+    </div>
+    <div class="card-body">
+      {% for item in order.items.all %}
+      <div class="item-row">
+
+        <div class="item-img">
+          {% with img=item.product.images.first %}
+            {% if img %}<img src="{{ img.image.url }}" alt="{{ item.product.name }}">
+            {% else %}
+              <div style="width:100%;height:100%;display:flex;align-items:center;
+                          justify-content:center;color:var(--muted-lt)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="22" height="22">
+                  <rect x="3" y="3" width="18" height="18" rx="3"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        <div class="item-body">
+          <div class="item-name">{{ item.product.name }}</div>
+          <div class="item-meta">
+            {% if item.variant %}Size: {{ item.variant.size }} &nbsp;·&nbsp;{% endif %}
+            Qty: {{ item.quantity }} &nbsp;·&nbsp;
+            ₹{{ item.price|floatformat:2 }} each
+          </div>
+
+          {# ════════════════════════════════════════════════════════
+             SMART RETURN BUTTON — 5 possible states
+             The view passes `item_return_map` dict:
+               key   = item.pk
+               value = {
+                 'can_return':      bool,
+                 'existing_return': ReturnRequest or None,
+                 'deadline_expired': bool,
+                 'days_left':       int,
+                 'is_returnable_category': bool,
+               }
+             ════════════════════════════════════════════════════════ #}
+
+          {% with ri=item_return_map|get_item:item.pk %}
+
+          {% if not order.is_delivered %}
+            {# Order not yet delivered — show placeholder button #}
+            <span class="btn-return-unavailable">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/>
+              </svg>
+              Return (available after delivery)
+            </span>
+
+          {% elif not ri.is_returnable_category %}
+            {# Non-returnable category #}
+            <span class="btn-return-expired">
+              🚫 Non-returnable item
+            </span>
+
+          {% elif ri.existing_return %}
+            {# Return already submitted for this item #}
+            {% if ri.existing_return.status == 'pending' %}
+            <a href="{% url 'return_request' order.id item.id %}" class="btn-return-submitted">
+              ⏳ Return Pending
+            </a>
+            {% elif ri.existing_return.status == 'approved' %}
+            <span class="btn-return-done">✅ Return Approved</span>
+            {% elif ri.existing_return.status == 'completed' %}
+            <span class="btn-return-done">🔄 Return Completed</span>
+            {% elif ri.existing_return.status == 'rejected' %}
+            <span class="btn-return-expired">❌ Return Rejected</span>
+            {% endif %}
+
+          {% elif ri.deadline_expired %}
+            {# Delivered but window closed #}
+            <span class="btn-return-expired">
+              ⏰ Return window closed
+            </span>
+
+          {% else %}
+            {# ✅ ELIGIBLE — show active return button with days countdown #}
+            <a href="{% url 'return_request' order.id item.id %}" class="btn-return">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/>
+              </svg>
+              Return Item
+              {% if ri.days_left <= 2 %}
+                <span class="deadline-tag deadline-warn">{{ ri.days_left }}d left</span>
+              {% elif ri.days_left <= 5 %}
+                <span class="deadline-tag deadline-ok">{{ ri.days_left }}d left</span>
+              {% endif %}
+            </a>
+          {% endif %}
+
+          {% endwith %}
+
+        </div>
+
+        <div class="item-price">₹{{ item.line_total|floatformat:2 }}</div>
+
+      </div>
+      {% endfor %}
+    </div>
   </div>
-</div>
 
-{% if order.status == 'cancelled' %}
-<div class="cancelled-notice">
-  🚫 This order was cancelled on {{ order.cancelled_at|date:"d M Y" }}{% if order.cancel_reason %} — Reason: {{ order.get_cancel_reason_display }}{% endif %}
-</div>
-{% endif %}
-
-<table>
-  <thead>
-    <tr>
-      <th>sl no</th>
-      <th>Product</th>
-      <th>Size</th>
-      <th>Qty</th>
-      <th>Unit Price</th>
-      <th>Total</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in order.items.all %}
-    <tr {% if item.is_cancelled %}class="cancelled-row"{% endif %}>
-      <td>{{ forloop.counter }}</td>
-      <td>{{ item.product_name }}{% if item.is_cancelled %} <span style="font-size:9px;color:#b53333">(Cancelled)</span>{% endif %}</td>
-      <td>{{ item.size|default:"—" }}</td>
-      <td>{{ item.quantity }}</td>
-      <td>₹{{ item.unit_price|floatformat:2 }}</td>
-      <td>₹{{ item.line_total|floatformat:2 }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<div class="totals">
-  <div class="total-row"><span>Subtotal</span><span class="val">₹{{ order.subtotal|floatformat:2 }}</span></div>
-  <div class="total-row {% if order.shipping_charge == 0 %}free{% endif %}">
-    <span>Shipping</span>
-    <span class="val">{% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
+  {# ── DELIVERY INFO ── #}
+  {% if order.is_delivered %}
+  <div class="card" style="border-color:rgba(58,125,90,.25)">
+    <div class="card-body" style="padding:14px 20px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">✅</span>
+        <div>
+          <div style="font-weight:700;color:var(--success);font-size:14px">
+            Delivered on {{ order.delivered_at|date:"d M Y" }}
+          </div>
+          {% if order.can_return %}
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Return window open until <strong>{{ order.return_deadline|date:"d M Y" }}</strong>
+            ({{ order.days_left_to_return }} day{{ order.days_left_to_return|pluralize }} remaining)
+          </div>
+          {% else %}
+          <div style="font-size:12px;color:var(--danger);margin-top:2px">
+            Return window closed on {{ order.return_deadline|date:"d M Y" }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
-  {% if order.discount %}<div class="total-row" style="color:#3a7d5a"><span>Discount</span><span class="val">−₹{{ order.discount|floatformat:2 }}</span></div>{% endif %}
-  {% if order.tax %}<div class="total-row"><span>Tax / GST</span><span class="val">₹{{ order.tax|floatformat:2 }}</span></div>{% endif %}
-  <div class="total-row grand"><span>Grand Total</span><span class="val">₹{{ order.total|floatformat:2 }}</span></div>
-</div>
+  {% endif %}
 
-<div class="footer">
-  <p>Generated on {{ order.created_at|date:"d M Y, h:i A" }} · Veska Style</p>
-  <span class="thank-you">Thank you for shopping with us ♥</span>
-</div>
+  {# ── ORDER SUMMARY ── #}
+  <div class="card">
+    <div class="card-head">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+        Order Summary
+      </h2>
+    </div>
+    <div class="card-body">
+      <div class="sum-row">
+        <span>Subtotal</span>
+        <span class="val">₹{{ order.subtotal|floatformat:2 }}</span>
+      </div>
+      <div class="sum-row">
+        <span>Shipping</span>
+        <span class="val">₹{{ order.shipping_fee|floatformat:2 }}</span>
+      </div>
+      {% if order.discount_amount %}
+      <div class="sum-row">
+        <span>Discount</span>
+        <span class="val" style="color:var(--success)">−₹{{ order.discount_amount|floatformat:2 }}</span>
+      </div>
+      {% endif %}
+      <div class="sum-divider"></div>
+      <div class="sum-total">
+        <span>Total</span>
+        <span>₹{{ order.total|floatformat:2 }}</span>
+      </div>
+    </div>
+  </div>
 
-</body>
-</html>
+  <a href="{% url 'user_orders' %}" class="btn-back">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Back to Orders
+  </a>
+
+</div>
+</div>
+{% endblock %}

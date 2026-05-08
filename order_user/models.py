@@ -3,9 +3,20 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from datetime import timedelta
+
+from return_admin.models import RETURN_DAYS
 
 
-
+RETURN_REASONS = [
+    ('wrong_size',       'Wrong size received'),
+    ('wrong_item',       'Wrong item received'),
+    ('defective',        'Defective / damaged product'),
+    ('not_as_described', 'Not as described'),
+    ('changed_mind',     'Changed my mind'),
+    ('quality_issue',    'Quality not as expected'),
+    ('other',            'Other'),
+]
 
 def _order_number():
     date_part   = timezone.now().strftime('%Y%m%d')
@@ -102,10 +113,11 @@ class Order(models.Model):
     payment_method  = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cod')
     status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     notes           = models.TextField(blank=True)
-
     cancel_reason   = models.TextField(blank=True)
     cancelled_at    = models.DateTimeField(null=True, blank=True)
-    return_reason   = models.TextField(blank=True)
+    return_reason    = models.CharField(max_length=30, choices=RETURN_REASONS, blank=True, null=True)
+    return_notes = models.TextField(blank=True) 
+    delivered_at = models.DateTimeField(null=True, blank=True)
     return_requested_at = models.DateTimeField(null=True, blank=True)
     created_at      = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True)
@@ -130,8 +142,19 @@ class Order(models.Model):
         return self.status in ('pending', 'confirmed', 'processing')
 
     @property
+    def delivered_date(self):
+        if self.delivered_at:
+            return self.delivered_at
+        latest_item_date = self.items.filter(delivered_at__isnull=False).order_by('-delivered_at').values_list('delivered_at', flat=True).first()
+        if latest_item_date:
+            return latest_item_date
+        return self.created_at
+
+    @property
     def can_return(self):
-        return self.status == 'delivered'
+        if self.status != 'delivered':
+            return False
+        return timezone.now() <= self.delivered_date + timedelta(days=RETURN_DAYS)
 
     @property
     def status_color(self):
@@ -152,6 +175,18 @@ class Order(models.Model):
         return base
 
 
+    @property
+    def return_deadline_expired(self):
+        return timezone.now() > self.delivered_date + timedelta(days=RETURN_DAYS)
+ 
+
+
+
+    @property
+    def days_left_to_return(self):
+        deadline = self.delivered_date + timedelta(days=RETURN_DAYS)
+        return max(0, (deadline - timezone.now()).days)
+
 
 class OrderItem(models.Model):
     ITEM_STATUS_CHOICES = [
@@ -167,10 +202,11 @@ class OrderItem(models.Model):
     image_url    = models.CharField(max_length=500, blank=True)
     unit_price   = models.DecimalField(max_digits=10, decimal_places=2)
     quantity     = models.PositiveIntegerField()
-    line_total   = models.DecimalField(max_digits=12, decimal_places=2)
-
+    variant  = models.ForeignKey('product_admin.ProductVariant',
+                                 on_delete=models.SET_NULL, null=True, blank=True)
     status        = models.CharField(max_length=20, choices=ITEM_STATUS_CHOICES, default='active')
     cancel_reason = models.TextField(blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
     cancelled_at  = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -186,59 +222,13 @@ class OrderItem(models.Model):
             self.order.status in ('pending', 'confirmed', 'processing')
         )
     
+    @property
+    def line_total(self):
+        return self.unit_price * self.quantity
 
-RETURN_DAYS = 7         
-LOW_STOCK   = 5
+
+
+  
+
+
  
-NON_RETURNABLE_CATEGORIES = [
-    'hygiene', 'innerwear', 'personalised', 'final_sale',
-]
- 
-RETURN_REASONS = [
-    ('wrong_size',       'Wrong size received'),
-    ('wrong_item',       'Wrong item received'),
-    ('defective',        'Defective / damaged product'),
-    ('not_as_described', 'Not as described'),
-    ('changed_mind',     'Changed my mind'),
-    ('quality_issue',    'Quality not as expected'),
-    ('other',            'Other'),
-]
- 
-RETURN_STATUS = [
-    ('pending',   'Pending'),
-    ('approved',  'Approved'),
-    ('rejected',  'Rejected'),
-    ('completed', 'Completed'),
-]
- 
- 
-class ReturnRequest(models.Model):
-    user             = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                         on_delete=models.CASCADE,
-                                         related_name='return_requests')
-    order            = models.ForeignKey('order_user.Order',
-                                         on_delete=models.CASCADE,
-                                         related_name='return_requests')
-    order_item       = models.ForeignKey('order_user.OrderItem',
-                                         on_delete=models.CASCADE,
-                                         related_name='return_requests')
-    return_reason    = models.CharField(max_length=30, choices=RETURN_REASONS)
-    return_notes     = models.TextField(blank=True)
-    status           = models.CharField(max_length=15, choices=RETURN_STATUS, default='pending')
-    rejection_reason = models.TextField(blank=True)
-    created_at       = models.DateTimeField(auto_now_add=True)
-    updated_at       = models.DateTimeField(auto_now=True)
- 
-    class Meta:
-        ordering = ['-created_at']
- 
-    def __str__(self):
-        return f"Return #{self.pk} — Order #{self.order_id} — {self.status}"
- 
- 
-class ReturnProofImage(models.Model):
-    return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE,
-                                       related_name='proof_images')
-    image          = models.ImageField(upload_to='return_proofs/')
-    uploaded_at    = models.DateTimeField(auto_now_add=True)
-     

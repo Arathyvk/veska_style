@@ -1,0 +1,153 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Select Item to Return · Veska{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
+  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
+  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
+  --border:#e0d9d0;--border-lt:#ece6de;
+  --warning:#c47f17;--warning-pale:#fef8ec;
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+
+.page-wrap{min-height:100vh;padding:36px 0 80px}
+.container{max-width:640px;margin:0 auto;padding:0 24px}
+
+.breadcrumbs{display:flex;align-items:center;gap:8px;margin-bottom:24px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
+.breadcrumbs .sep{color:var(--muted-lt)}
+
+.page-title{font-family:var(--head);font-size:clamp(24px,4vw,34px);font-weight:600;
+  color:var(--charcoal);margin-bottom:4px}
+.page-title em{font-style:italic;color:var(--terra)}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+
+/* deadline banner */
+.deadline-banner{
+  background:var(--warning-pale);border:1px solid rgba(196,127,23,.25);
+  border-radius:var(--radius-md);padding:11px 16px;margin-bottom:20px;
+  display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--warning);font-weight:500;
+}
+
+/* item picker cards */
+.item-pick-list{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.item-pick-card{
+  background:var(--warm-white);border:1.5px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+  transition:border-color .2s,box-shadow .2s;
+}
+.item-pick-card:hover{border-color:var(--terra);box-shadow:var(--shadow-sm)}
+
+.item-pick-inner{display:flex;gap:14px;align-items:center;padding:16px 18px}
+.item-thumb{width:60px;height:72px;border-radius:var(--radius-md);overflow:hidden;
+  background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
+.item-thumb img{width:100%;height:100%;object-fit:cover}
+.item-thumb-empty{width:100%;height:100%;display:flex;align-items:center;
+  justify-content:center;color:var(--muted-lt)}
+.item-pick-info{flex:1;min-width:0}
+.item-pick-name{font-family:var(--head);font-size:15px;font-weight:600;
+  color:var(--charcoal);margin-bottom:4px;line-height:1.3}
+.item-pick-meta{font-size:12px;color:var(--muted-lt);line-height:1.6}
+.item-pick-price{font-family:var(--head);font-size:16px;font-weight:700;
+  color:var(--terra-deep);flex-shrink:0}
+
+/* the actual return button per item */
+.btn-return-item{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  width:100%;padding:12px;border-top:1px solid var(--border-lt);
+  background:var(--terra-pale);color:var(--terra-deep);
+  font-size:13px;font-weight:600;cursor:pointer;
+  border:none;border-top:1.5px solid var(--blush);
+  font-family:var(--body);transition:background .2s,color .2s;text-decoration:none;
+}
+.btn-return-item:hover{background:var(--terra);color:#fff}
+
+.btn-back{
+  display:inline-flex;align-items:center;gap:6px;padding:10px 20px;
+  border:1.5px solid var(--border);border-radius:var(--radius-md);
+  font-size:13px;color:var(--muted);transition:all .2s;
+}
+.btn-back:hover{border-color:var(--terra);color:var(--terra)}
+</style>
+
+<div class="page-wrap">
+<div class="container">
+
+  <nav class="breadcrumbs">
+    <a href="{% url 'home' %}">Home</a>
+    <span class="sep">›</span>
+    <a href="{% url 'order_list' %}">My Orders</a>
+    <span class="sep">›</span>
+    <a href="{% url 'order_detail' order.order_number %}">#{{ order.order_number }}</a>
+    <span class="sep">›</span>
+    <span style="color:var(--ink);font-weight:500">Return</span>
+  </nav>
+
+  <h1 class="page-title">Select <em>Item</em> to Return</h1>
+  <p class="page-sub">Choose which item from order #{{ order.order_number }} you'd like to return.</p>
+
+  {% if days_left <= 2 %}
+  <div class="deadline-banner">
+    ⚠️ Only <strong>{{ days_left }} day{{ days_left|pluralize }}</strong> left to return.
+    Deadline: {{ return_deadline|date:"d M Y" }}.
+  </div>
+  {% endif %}
+
+  <div class="item-pick-list">
+    {% for item in returnable_items %}
+    <div class="item-pick-card">
+      <div class="item-pick-inner">
+        <div class="item-thumb">
+          {% if item.image_url %}
+            <img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
+          {% else %}
+            <div class="item-thumb-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="20" height="20">
+                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+          {% endif %}
+        </div>
+        <div class="item-pick-info">
+          <div class="item-pick-name">{{ item.product_name }}</div>
+          <div class="item-pick-meta">
+            {% if item.size %}Size: {{ item.size }} &nbsp;·&nbsp;{% endif %}
+            Qty: {{ item.quantity }}
+          </div>
+        </div>
+        <div class="item-pick-price">₹{{ item.line_total|floatformat:2 }}</div>
+      </div>
+
+      {# Link directly to the per-item return form #}
+      <a href="{% url 'return_request' order.order_number item.pk %}"
+         class="btn-return-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 .49-4.13"/>
+        </svg>
+        Return This Item
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <a href="{% url 'order_detail' order.order_number %}" class="btn-back">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Back to Order
+  </a>
+
+</div>
+</div>
+{% endblock %}

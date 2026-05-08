@@ -1,0 +1,279 @@
+{% extends "admin_base.html" %}
+{% block page_title %}Return Requests{% endblock %}
+
+{% block content %}
+<style>
+:root{
+  --bg:#1a1410;--card:#231f1a;--card2:#2c2620;
+  --border:#3a342c;--border2:#4a4038;
+  --rose:#c9967a;--rose2:#e8b49a;
+  --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
+  --green:#4caf7d;--red:#e05252;--orange:#e09a52;--blue:#5b9cf6;
+  --radius:6px;
+  --head:'Playfair Display',serif;--body:'Jost',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:14px}
+a{text-decoration:none;color:inherit}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:16px 20px;display:flex;align-items:center;gap:14px}
+.stat-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0}
+.si-pending {background:rgba(224,154,82,.15)}
+.si-approved{background:rgba(76,175,125,.15)}
+.si-rejected{background:rgba(224,82,82,.15)}
+.si-total   {background:rgba(201,150,122,.15)}
+.stat-info .num{font-family:var(--head);font-size:22px;font-weight:700;color:var(--text);line-height:1}
+.stat-info .lbl{font-size:15px;color:var(--muted2);margin-top:3px}
+
+.section-header{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius) var(--radius) 0 0;
+  padding:11px 16px;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.section-header h2{font-family:var(--head);font-size:2pc;font-weight:600}
+
+.filter-bar{
+  background:var(--card);border:1px solid var(--border);border-top:none;
+  padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.filter-btn{
+  padding:5px 14px;border-radius:20px;font-size:15px;font-weight:600;
+  border:1px solid var(--border2);background:var(--card2);color:var(--muted2);
+  cursor:pointer;text-decoration:none;transition:all .15s;
+}
+.filter-btn:hover{border-color:var(--rose);color:var(--rose2)}
+.filter-btn.active{background:var(--rose);border-color:var(--rose);color:#fff}
+.filter-btn.f-pending {border-color:rgba(224,154,82,.4);color:var(--orange)}
+.filter-btn.f-pending.active{background:var(--orange);border-color:var(--orange);color:#fff}
+.filter-btn.f-approved{border-color:rgba(76,175,125,.4);color:var(--green)}
+.filter-btn.f-approved.active{background:var(--green);border-color:var(--green);color:#fff}
+.filter-btn.f-rejected{border-color:rgba(224,82,82,.4);color:var(--red)}
+.filter-btn.f-rejected.active{background:var(--red);border-color:var(--red);color:#fff}
+
+.search-box{
+  display:flex;align-items:center;background:var(--card2);
+  border:1px solid var(--border2);border-radius:20px;padding:5px 12px;gap:6px;margin-left:auto;
+}
+.search-box svg{width:13px;height:13px;color:var(--muted)}
+.search-box input{background:none;border:none;color:var(--text);
+  font-size:13px;padding:0 4px;width:140px;outline:none;font-family:var(--body)}
+.search-box input::placeholder{color:var(--muted)}
+.btn-search{background:var(--rose);color:#fff;font-size:15px;font-weight:600;
+  padding:4px 12px;border-radius:20px;border:none;cursor:pointer}
+
+.table-wrap{background:var(--card);border:1px solid var(--border);
+  border-top:none;border-bottom:none;overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--card2)}
+th{padding:10px 14px;font-size:15px;font-weight:700;color:var(--muted2);
+  text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--border);text-align:left}
+td{padding:14px 14px;border-bottom:1px solid rgba(58,52,44,.5);font-size:15px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(201,150,122,.04)}
+
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+  border-radius:20px;font-size:14px;font-weight:700;letter-spacing:.3px}
+.pill-pending  {background:rgba(224,154,82,.15);color:var(--orange);border:1px solid rgba(224,154,82,.3)}
+.pill-approved {background:rgba(76,175,125,.15);color:var(--green);border:1px solid rgba(76,175,125,.3)}
+.pill-rejected {background:rgba(224,82,82,.12);color:var(--red);border:1px solid rgba(224,82,82,.3)}
+.pill-completed{background:rgba(91,156,246,.12);color:var(--blue);border:1px solid rgba(91,156,246,.3)}
+
+.btn-view{background:rgba(201,150,122,.15);color:var(--rose2);font-size:15px;font-weight:600;
+  padding:5px 13px;border-radius:4px;border:1px solid rgba(201,150,122,.3);
+  cursor:pointer;text-decoration:none;transition:all .15s}
+.btn-view:hover{background:var(--rose);color:#fff;border-color:var(--rose)}
+
+.table-footer{
+  background:var(--card);border:1px solid var(--border);border-top:none;
+  border-radius:0 0 var(--radius) var(--radius);
+  padding:12px 16px;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.pagination{display:flex;align-items:center;gap:5px}
+.pg-btn{background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
+  font-size:15px;font-weight:600;padding:4px 12px;border-radius:4px;
+  cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block}
+.pg-btn:hover{background:var(--rose);border-color:var(--rose);color:#fff}
+.pg-btn.disabled{opacity:.35;pointer-events:none}
+.pg-num{width:28px;height:28px;border-radius:4px;font-size:15px;font-weight:500;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
+  cursor:pointer;transition:all .15s;text-decoration:none}
+.pg-num.active,.pg-num:hover{background:var(--rose);border-color:var(--rose);color:#fff}
+.page-info{font-size:15px;color:var(--muted)}
+.empty-row td{text-align:center;padding:40px;color:var(--muted)}
+
+.messages-wrap{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.msg-toast{background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:11px 15px;font-size:15px;display:flex;align-items:center;gap:9px;
+  min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45)}
+.msg-toast.success{border-left:3px solid var(--green)}
+.msg-toast.error  {border-left:3px solid var(--red)}
+.msg-toast.warning{border-left:3px solid var(--orange)}
+</style>
+
+{% if messages %}
+<div class="messages-wrap" id="msg-wrap">
+  {% for msg in messages %}
+  <div class="msg-toast {{ msg.tags }}">
+    <span style="font-size:15px">{% if msg.tags == 'success' %}✓{% elif msg.tags == 'error' %}✕{% else %}⚠{% endif %}</span>
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+<script>setTimeout(()=>{const w=document.getElementById('msg-wrap');if(w)w.remove();},3500)</script>
+{% endif %}
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-icon si-total">📦</div>
+    <div class="stat-info">
+      <div class="num">{{ stats.total }}</div>
+      <div class="lbl">Total Requests</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-pending">⏳</div>
+    <div class="stat-info">
+      <div class="num" style="color:var(--orange)">{{ stats.pending }}</div>
+      <div class="lbl">Pending Review</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-approved">✅</div>
+    <div class="stat-info">
+      <div class="num" style="color:var(--green)">{{ stats.approved }}</div>
+      <div class="lbl">Approved</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-rejected">❌</div>
+    <div class="stat-info">
+      <div class="num" style="color:var(--red)">{{ stats.rejected }}</div>
+      <div class="lbl">Rejected</div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div class="section-header">
+    <h2>Return Requests</h2>
+  </div>
+
+  <div class="filter-bar">
+    <a href="?{% if query %}q={{ query }}&{% endif %}"
+       class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+    <a href="?status=pending{% if query %}&q={{ query }}{% endif %}"
+       class="filter-btn f-pending {% if status_filter == 'pending' %}active{% endif %}">⏳ Pending</a>
+    <a href="?status=approved{% if query %}&q={{ query }}{% endif %}"
+       class="filter-btn f-approved {% if status_filter == 'approved' %}active{% endif %}">✅ Approved</a>
+    <a href="?status=rejected{% if query %}&q={{ query }}{% endif %}"
+       class="filter-btn f-rejected {% if status_filter == 'rejected' %}active{% endif %}">❌ Rejected</a>
+    <a href="?status=completed{% if query %}&q={{ query }}{% endif %}"
+       class="filter-btn {% if status_filter == 'completed' %}active{% endif %}">🔄 Completed</a>
+
+    <form method="GET" class="search-box" style="margin-left:auto">
+      {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" name="q" placeholder="Search order / user…" value="{{ query|default:'' }}">
+      <button type="submit" class="btn-search">Go</button>
+    </form>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>User</th>
+          <th>Order</th>
+          <th>Product</th>
+          <th>Reason</th>
+          <th>Requested</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ret in returns %}
+        <tr>
+          <td style="color:var(--muted)">{{ ret.pk }}</td>
+          <td>
+            <div style="font-weight:600;color:var(--text)">{{ ret.user.get_full_name|default:ret.user.email }}</div>
+            <div style="font-size:15px;color:var(--muted2)">{{ ret.user.email }}</div>
+          </td>
+          <td style="font-weight:600;color:var(--rose2)">#{{ ret.order.id }}</td>
+                <td style="max-width:160px">
+            {% if ret.order_item and ret.order_item.product %}
+                <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                            max-width:150px;color:var(--text)">
+                {{ ret.order_item.product.name }}
+                </div>
+            {% else %}
+                <div style="color:var(--muted2)">-</div>
+            {% endif %}
+            </td>
+          <td style="color:var(--muted2)">{{ ret.get_return_reason_display }}</td>
+          <td style="color:var(--muted2);white-space:nowrap">{{ ret.created_at|date:"d M Y" }}</td>
+          <td>
+            {% if ret.status == 'pending' %}
+              <span class="pill pill-pending">⏳ Pending</span>
+            {% elif ret.status == 'approved' %}
+              <span class="pill pill-approved">✅ Approved</span>
+            {% elif ret.status == 'rejected' %}
+              <span class="pill pill-rejected">❌ Rejected</span>
+            {% else %}
+              <span class="pill pill-completed">🔄 Completed</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{% url 'admin_return_detail' ret.pk %}" class="btn-view">Review →</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row">
+          <td colspan="8">No return requests found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-footer">
+    <span class="page-info">
+      Page {{ returns.number }} of {{ returns.paginator.num_pages }}
+      &nbsp;·&nbsp; {{ returns.paginator.count }} request{{ returns.paginator.count|pluralize }}
+    </span>
+    <div class="pagination">
+      {% if returns.has_previous %}
+      <a href="?page={{ returns.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="pg-btn">Prev</a>
+      {% else %}<span class="pg-btn disabled">Prev</span>{% endif %}
+
+     {% for p in page_range %}
+    {% if p is None %}
+        <span style="color:var(--muted2);padding:0 4px">…</span>
+
+    {% elif p|stringformat:"i" == returns.number|stringformat:"i" %}
+        <span class="pg-num active">{{ p }}</span>
+
+    {% else %}
+        <a class="pg-num"
+           href="?page={{ p }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if query %}&q={{ query }}{% endif %}">
+            {{ p }}
+        </a>
+    {% endif %}
+{% endfor %}
+
+      {% if returns.has_next %}
+      <a href="?page={{ returns.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="pg-btn">Next</a>
+      {% else %}<span class="pg-btn disabled">Next</span>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
