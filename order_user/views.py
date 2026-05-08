@@ -31,7 +31,7 @@ STATUS_ORDER = [s[0] for s in TIMELINE_STEPS]
 
 @login_required
 def order_list(request):
-    qs = Order.objects.filter(user=request.user).prefetch_related('items')
+    qs = Order.objects.filter(user=request.user).prefetch_related('items','return_requests')
 
     search_query = request.GET.get('q', '').strip()
     if search_query:
@@ -60,21 +60,23 @@ def order_list(request):
 @never_cache
 @login_required(login_url='login')
 def order_detail(request, order_number):
+
     order = get_object_or_404(
         Order.objects.prefetch_related(
             'items__product__images',
             'items__variant',
         ),
         order_number=order_number,
-        user=request.user,
+        user=request.user
     )
 
-    current_idx     = STATUS_ORDER.index(order.status) if order.status in STATUS_ORDER else -1
+    current_idx = STATUS_ORDER.index(order.status) if order.status in STATUS_ORDER else -1
     completed_steps = set(STATUS_ORDER[:current_idx])
 
     item_return_map = {}
 
     for item in order.items.all():
+
         existing_return = ReturnRequest.objects.filter(
             order_item=item,
             user=request.user
@@ -83,13 +85,14 @@ def order_detail(request, order_number):
         category = str(
             item.product.category if item.product and item.product.category else ''
         ).lower()
+
         is_returnable_category = category not in NON_RETURNABLE_CATEGORIES
 
         item_return_map[item.pk] = {
             'is_returnable_category': is_returnable_category,
-            'existing_return':        existing_return,
-            'deadline_expired':       order.return_deadline_expired,
-            'days_left':              order.days_left_to_return,
+            'existing_return': existing_return,
+            'deadline_expired': order.return_deadline_expired,
+            'days_left': order.days_left_to_return,
             'can_return': (
                 order.status == 'delivered'
                 and is_returnable_category
@@ -99,9 +102,9 @@ def order_detail(request, order_number):
         }
 
     return render(request, 'order_detail.html', {
-        'order':           order,
-        'items':           order.items.all(),
-        'timeline_steps':  TIMELINE_STEPS,
+        'order': order,
+        'items': order.items.all(),
+        'timeline_steps': TIMELINE_STEPS,
         'completed_steps': completed_steps,
         'item_return_map': item_return_map,
     })
@@ -185,44 +188,57 @@ def cancel_order_item(request, order_number, item_id):
 
 @login_required
 def return_order(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+    order = get_object_or_404(Order, order_number=order_number)
 
-    if not order.can_return:
-        messages.error(
-            request,
-            f'Return not available (status: {order.get_status_display()}).'
-        )
-        return redirect('order_detail', order_number=order_number)
+    order = get_object_or_404(
+        Order,
+        order_number=order_number
+    )
+
+    if order.user != request.user:
+        messages.error(request, "Unauthorized access.")
+        return redirect('order_list')
 
     returnable_items = []
+
     for item in order.items.filter(status='active'):
         cat = str(
             item.product.category if item.product and item.product.category else ''
         ).lower()
+        
         already_returned = ReturnRequest.objects.filter(
             order_item=item,
             user=request.user
         ).exists()
 
-        if cat not in NON_RETURNABLE_CATEGORIES and not already_returned:
+        item.return_request = ReturnRequest.objects.filter(
+            order_item=item,
+            user=request.user
+        ).first()
+
+        if cat not in NON_RETURNABLE_CATEGORIES:
             returnable_items.append(item)
 
-        if len(returnable_items) == 1:
-            single_item = returnable_items[0]
-            return redirect(
-                'return_request',
-                order_number=order.order_number,
-                item_id=single_item.id
-            )
+    if len(returnable_items) == 1:
+        single_item = returnable_items[0]
+        return redirect(
+            'return_request',
+            order_number=order.order_number,
+            item_id=single_item.id
+        )
 
     if not returnable_items:
         messages.error(request, 'No returnable items found in this order.')
+
+    return_deadline = None
+    if order.delivered_at:
+        return_deadline = order.delivered_at + timedelta(days=RETURN_DAYS)    
 
     return render(request, 'return_order.html', {
         'order':            order,
         'returnable_items': returnable_items,
         'days_left':        order.days_left_to_return,
-        'return_deadline':  order.return_deadline,
+        'return_deadline':  return_deadline,
     })
 
 
@@ -255,11 +271,12 @@ def return_request(request, order_number, item_id):
         user=request.user
     ).first()
 
-    category = str(
-        order_item.product.category if order_item.product and order_item.product.category else ''
-    ).lower()
+    category_slug = ''
 
-    is_returnable_category = category not in NON_RETURNABLE_CATEGORIES
+    if order_item.product and order_item.product.category:
+        category_slug = order_item.product.category.slug.lower()
+
+    is_returnable_category = category_slug not in NON_RETURNABLE_CATEGORIES
 
     return_deadline = order.delivered_at + timedelta(days=RETURN_DAYS)
     deadline_expired = timezone.now() > return_deadline
@@ -269,9 +286,7 @@ def return_request(request, order_number, item_id):
 
         if existing_return:
             messages.error(request, 'Return already exists for this item.')
-            return redirect('return_request',
-                            order_number=order.order_number,
-                            item_id=item_id)
+            return redirect('return_request', order_number=order.order_number, item_id=item_id)
 
         if not is_returnable_category:
             messages.error(request, 'Item not eligible for return.')
@@ -282,16 +297,16 @@ def return_request(request, order_number, item_id):
             return redirect('order_detail', order_number=order.order_number)
 
         return_reason = request.POST.get('return_reason')
-        return_notes = request.POST.get('return_notes', '')
+        return_notes = request.POST.get('return_notes') or ''
         confirmed = request.POST.get('confirm_conditions') == 'on'
 
         if not return_reason:
             messages.error(request, 'Select a return reason.')
-            return redirect(request.path)
+            return render(request, 'return_request.html', locals())
 
         if not confirmed:
             messages.error(request, 'Confirm conditions.')
-            return redirect(request.path)
+            return render(request, 'return_request.html', locals())
 
         ReturnRequest.objects.create(
             user=request.user,
@@ -313,7 +328,6 @@ def return_request(request, order_number, item_id):
         'deadline_expired': deadline_expired,
         'return_deadline': return_deadline,
         'days_left': days_left,
-        'form': request.POST,
     })
 
 

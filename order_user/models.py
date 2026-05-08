@@ -145,16 +145,27 @@ class Order(models.Model):
     def delivered_date(self):
         if self.delivered_at:
             return self.delivered_at
-        latest_item_date = self.items.filter(delivered_at__isnull=False).order_by('-delivered_at').values_list('delivered_at', flat=True).first()
-        if latest_item_date:
-            return latest_item_date
-        return self.created_at
 
+        latest_item_date = (
+            self.items.filter(delivered_at__isnull=False)
+            .order_by('-delivered_at')
+            .values_list('delivered_at', flat=True)
+            .first()
+        )
+
+        return latest_item_date
+    
     @property
     def can_return(self):
         if self.status != 'delivered':
             return False
-        return timezone.now() <= self.delivered_date + timedelta(days=RETURN_DAYS)
+
+        if not self.delivered_date:
+            return False
+
+        deadline = self.delivered_date + timedelta(days=RETURN_DAYS)
+
+        return timezone.now() <= deadline
 
     @property
     def status_color(self):
@@ -177,15 +188,25 @@ class Order(models.Model):
 
     @property
     def return_deadline_expired(self):
-        return timezone.now() > self.delivered_date + timedelta(days=RETURN_DAYS)
+        if not self.delivered_date:
+            return True
+
+        return timezone.now() > (
+            self.delivered_date + timedelta(days=RETURN_DAYS)
+        )
  
 
 
 
     @property
     def days_left_to_return(self):
+        if not self.delivered_date:
+            return 0
+
         deadline = self.delivered_date + timedelta(days=RETURN_DAYS)
+
         return max(0, (deadline - timezone.now()).days)
+    
 
 
 class OrderItem(models.Model):
