@@ -1,0 +1,411 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Payment Failure· Veska{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Razorpay Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<style>
+/* Your existing styles remain the same */
+:root{
+  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--blush:#e9d5c8;
+  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
+  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
+  --border:#e0d9d0;--border-lt:#ece6de;
+  --success:#3a7d5a;--success-pale:#eaf4ee;
+  --shadow-sm:0 2px 12px rgba(30,26,23,.09);
+  --radius-md:10px;--radius-xl:24px;
+  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink);min-height:100vh}
+a{text-decoration:none;color:inherit}
+
+.success-page{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:48px 20px;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(181,103,68,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 10% 90%, rgba(58,125,90,.05) 0%, transparent 60%),
+    var(--cream);
+}
+.wrap{max-width:540px;width:100%;text-align:center;animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+/* ── Animated Illustration ── */
+.illus-wrap{position:relative;width:180px;height:180px;margin:0 auto 36px}
+
+/* outer dashed ring — rotates */
+.ring-outer{
+  position:absolute;inset:0;border-radius:50%;
+  border:1.5px dashed rgba(58,125,90,.25);
+  animation:spin 14s linear infinite;
+}
+/* mid ring — counter-rotates */
+.ring-mid{
+  position:absolute;inset:18px;border-radius:50%;
+  border:1px dashed rgba(181,103,68,.18);
+  animation:spin 9s linear infinite reverse;
+}
+/* main circle */
+.illus-circle{
+  position:absolute;inset:32px;border-radius:50%;
+  background:linear-gradient(145deg,#eaf4ee,#d6eedd);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 40px rgba(58,125,90,.18);
+}
+.check-svg{animation:popIn .5s .25s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes popIn{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* confetti dots */
+.dot{position:absolute;border-radius:50%}
+.d1{width:9px;height:9px;top:14px;left:50%;background:#f5c26b;animation:float 2.4s ease-in-out infinite alternate}
+.d2{width:7px;height:7px;top:44px;right:12px;background:var(--terra);animation:float 2.9s .3s ease-in-out infinite alternate}
+.d3{width:8px;height:8px;bottom:12px;left:24px;background:var(--success);animation:float 2.6s .6s ease-in-out infinite alternate}
+.d4{width:6px;height:6px;bottom:38px;right:28px;background:var(--blush);animation:float 2.1s .9s ease-in-out infinite alternate}
+.d5{width:5px;height:5px;top:30px;left:16px;background:#c47f17;animation:float 3s 1.2s ease-in-out infinite alternate}
+@keyframes float{from{transform:translateY(0) rotate(0deg)}to{transform:translateY(-9px) rotate(20deg)}}
+
+/* ── Text ── */
+h1{font-family:var(--head);font-size:clamp(2rem,5vw,2.8rem);font-weight:600;
+  color:var(--charcoal);margin-bottom:10px;line-height:1.15}
+h1 em{font-style:italic;color:var(--success)}
+.tagline{font-size:.88rem;color:var(--muted);line-height:1.65;margin-bottom:28px;
+  max-width:380px;margin-left:auto;margin-right:auto}
+
+/* ── Order chip ── */
+.order-chip{
+  display:inline-flex;align-items:center;gap:12px;
+  background:var(--warm-white);border:1px solid var(--border);
+  border-radius:40px;padding:10px 22px;margin-bottom:28px;
+  box-shadow:var(--shadow-sm);
+}
+.chip-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted-lt);margin-bottom:1px}
+.chip-num{font-family:monospace;font-size:.95rem;font-weight:700;color:var(--terra)}
+
+/* ── Summary card ── */
+.summary{
+  background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);padding:22px 26px;
+  margin-bottom:28px;text-align:left;box-shadow:var(--shadow-sm);
+}
+.s-row{display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--border-lt);font-size:.82rem}
+.s-row:last-child{border:none;padding-top:13px;margin-top:4px}
+.s-label{color:var(--muted)}
+.s-val{font-weight:600;color:var(--ink)}
+.s-row.total .s-label{font-family:var(--head);font-size:1rem;color:var(--charcoal);font-weight:600}
+.s-row.total .s-val{font-family:var(--head);font-size:1.35rem;font-weight:700;color:var(--charcoal)}
+.discount-val{color:var(--success)}
+
+/* ── Buttons ── */
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:12px 24px;
+  border-radius:var(--radius-md);font-size:.85rem;font-weight:600;
+  cursor:pointer;border:none;transition:all .2s;white-space:nowrap;
+}
+.btn-primary{background:var(--charcoal);color:#fff}
+.btn-primary:hover{background:var(--terra);transform:translateY(-1px)}
+.btn-outline{background:none;border:1.5px solid var(--border);color:var(--muted)}
+.btn-outline:hover{border-color:var(--terra);color:var(--terra);transform:translateY(-1px)}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  display: none;
+}
+.loading-content {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+}
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--terra);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+</style>
+
+<div class="success-page">
+  <div class="wrap" id="successContent" style="display: none;">
+    <!-- Your existing success content -->
+    <div class="illus-wrap">
+      <div class="ring-outer"></div>
+      <div class="ring-mid"></div>
+      <div class="illus-circle">
+        <svg class="check-svg" width="52" height="52" fill="none"
+             stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="dot d1"></div>
+      <div class="dot d2"></div>
+      <div class="dot d3"></div>
+      <div class="dot d4"></div>
+      <div class="dot d5"></div>
+    </div>
+
+    <h1>Thank <em>You!</em></h1>
+    <p class="tagline">
+      Your order has been placed successfully.<br>
+      We'll keep you updated every step of the way.
+    </p>
+
+    <div class="order-chip">
+      <div>
+        <div class="chip-label">Order Number</div>
+        <div class="chip-num" id="orderNumber"></div>
+      </div>
+    </div>
+
+    <div class="summary" id="orderSummary">
+      <!-- Summary will be populated by JavaScript -->
+    </div>
+
+    <div class="btn-row">
+      <a href="#" id="viewOrderBtn" class="btn btn-primary">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        View Order Details
+      </a>
+      <a href="{% url 'product_shop' %}" class="btn btn-outline">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Continue Shopping
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p>Processing your payment...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Get order data from session storage or URL parameters
+let currentOrderData = null;
+
+// Function to initialize Razorpay payment
+function initializeRazorpayPayment(orderData) {
+    const options = {
+        key: orderData.razorpay_key_id,
+        amount: orderData.razorpay_amount,
+        currency: orderData.razorpay_currency,
+        name: 'Veska',
+        description: `Order ${orderData.order_number}`,
+        order_id: orderData.razorpay_order_id,
+        handler: function(response) {
+            // Payment successful - verify with backend
+            verifyPayment(response, orderData.order_number);
+        },
+        prefill: {
+            name: orderData.customer_name,
+            email: orderData.customer_email,
+            contact: orderData.customer_phone
+        },
+        theme: {
+            color: '#b56744'
+        },
+        modal: {
+            ondismiss: function() {
+                // Payment cancelled
+                handlePaymentCancellation(orderData.order_number);
+            }
+        }
+    };
+    
+    const razorpay = new Razorpay(options);
+    razorpay.open();
+}
+
+// Function to verify payment with backend
+function verifyPayment(paymentResponse, orderNumber) {
+    fetch('/verify-payment/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            razorpay_order_id: paymentResponse.razorpay_order_id,
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_signature: paymentResponse.razorpay_signature,
+            order_number: orderNumber
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success page with order details
+            showSuccessPage(data.order);
+        } else {
+            // Payment verification failed
+            showErrorPage('Payment verification failed. Please contact support.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorPage('An error occurred. Please contact support.');
+    });
+}
+
+// Function to handle payment cancellation
+function handlePaymentCancellation(orderNumber) {
+    // Redirect to cart or payment page with cancellation message
+    window.location.href = `/cart/?payment_cancelled=true&order=${orderNumber}`;
+}
+
+// Function to show success page with order details
+function showSuccessPage(order) {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    
+    // Update order number
+    document.getElementById('orderNumber').innerText = `#${order.order_number}`;
+    
+    // Build summary HTML
+    const summaryHtml = `
+        <div class="s-row">
+            <span class="s-label">Items ordered</span>
+            <span class="s-val">${order.items_count} item${order.items_count !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="s-row">
+            <span class="s-label">Payment method</span>
+            <span class="s-val">${order.payment_method}</span>
+        </div>
+        <div class="s-row">
+            <span class="s-label">Subtotal</span>
+            <span class="s-val">₹${order.subtotal}</span>
+        </div>
+        ${order.discount_amount > 0 ? `
+        <div class="s-row">
+            <span class="s-label">Coupon discount${order.coupon_code ? ` (${order.coupon_code})` : ''}</span>
+            <span class="s-val discount-val">−₹${order.discount_amount}</span>
+        </div>
+        ` : ''}
+        ${order.wallet_amount_used > 0 ? `
+        <div class="s-row">
+            <span class="s-label">Wallet credit used</span>
+            <span class="s-val discount-val">−₹${order.wallet_amount_used}</span>
+        </div>
+        ` : ''}
+        <div class="s-row">
+            <span class="s-label">Shipping</span>
+            <span class="s-val">${order.shipping_charge === 0 ? 'Free' : `₹${order.shipping_charge}`}</span>
+        </div>
+        <div class="s-row">
+            <span class="s-label">Tax (GST 5%)</span>
+            <span class="s-val">₹${order.tax}</span>
+        </div>
+        <div class="s-row total">
+            <span class="s-label">Total Paid</span>
+            <span class="s-val">₹${order.total}</span>
+        </div>
+    `;
+    
+    document.getElementById('orderSummary').innerHTML = summaryHtml;
+    document.getElementById('viewOrderBtn').href = `/order/${order.order_number}/`;
+    document.getElementById('successContent').style.display = 'block';
+}
+
+// Function to show error page
+function showErrorPage(message) {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('successContent').innerHTML = `
+        <div class="illus-wrap">
+            <div class="ring-outer"></div>
+            <div class="ring-mid"></div>
+            <div class="illus-circle" style="background: linear-gradient(145deg,#fee, #fdd);">
+                <svg width="52" height="52" fill="none" stroke="var(--terra)" stroke-width="2.5" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+        </div>
+        <h1>Payment <em>Failed</em></h1>
+        <p class="tagline">${message}</p>
+        <div class="btn-row">
+            <a href="/cart/" class="btn btn-primary">Back to Cart</a>
+            <a href="{% url 'product_shop' %}" class="btn btn-outline">Continue Shopping</a>
+        </div>
+    `;
+    document.getElementById('successContent').style.display = 'block';
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Get order data from session storage (set when user selects payment method)
+    const orderData = sessionStorage.getItem('pendingOrder');
+    if (orderData) {
+        currentOrderData = JSON.parse(orderData);
+        sessionStorage.removeItem('pendingOrder');
+        
+        // Show loading overlay
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        // Initialize Razorpay payment
+        initializeRazorpayPayment(currentOrderData);
+    } else {
+        // If no pending order, check if we're coming from successful payment
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderNumber = urlParams.get('order');
+        const paymentStatus = urlParams.get('payment_status');
+        
+        if (paymentStatus === 'success' && orderNumber) {
+            // Fetch order details from backend
+            fetch(`/get-order-details/${orderNumber}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessPage(data.order);
+                    }
+                });
+        }
+    }
+});
+</script>
+{% endblock %}

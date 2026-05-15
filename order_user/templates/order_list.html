@@ -259,7 +259,7 @@ button,input,select{font-family:var(--body)}
               Cancel
             </a>
             {% endif %}
-            {% if order.can_return %}
+            {% if not order.can_return.exits %}
             <a href="{% url 'return_order' order.order_number %}" class="btn-action btn-return-sm">
               Return
             </a>

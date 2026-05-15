@@ -81,7 +81,7 @@ def save_new_variants(product, json_str):
         return
     if not isinstance(rows, list):
         return
-    VALID_SIZES = {'US 6', 'US 7', 'US 8', 'US 9', 'US 10', 'US 11', ''}
+    VALID_SIZES = {'US 6', 'US 7', 'US 8', 'US 9', 'US 10', 'US 11'}
     for row in rows:
         if not isinstance(row, dict):
             continue
@@ -167,7 +167,6 @@ def product_add(request):
 
             product = form.save(commit=False)
 
-            # ── three visibility flags from the three toggles ──
             product.is_active      = 'is_active'      in request.POST
             product.is_featured    = 'is_featured'    in request.POST
             product.is_shop_active = 'is_shop_active' in request.POST
@@ -215,7 +214,6 @@ def product_edit(request, uuid):
 
             product = form.save(commit=False)
 
-            # ── three visibility flags from the three toggles ──
             product.is_active      = 'is_active'      in request.POST
             product.is_featured    = 'is_featured'    in request.POST
             product.is_shop_active = 'is_shop_active' in request.POST

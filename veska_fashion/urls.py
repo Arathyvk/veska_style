@@ -21,5 +21,6 @@ urlpatterns = [
     path('coupon_admin/',include('coupon_admin.urls')),
     path('returns/',include('return_admin.urls')),
     path('about/',include('about_us.urls')),
+    path('payment_user/',include('payment_user.urls')),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
