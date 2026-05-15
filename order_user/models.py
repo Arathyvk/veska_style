@@ -87,6 +87,8 @@ class Order(models.Model):
     ]
     PAYMENT_METHOD_CHOICES = [
         ('cod', 'Cash on Delivery'),
+        ('razorpay',  'Razorpay'),
+        ('wallet',  'wallet'),
     ]
 
     order_number    = models.CharField(max_length=30, unique=True,default=_order_number, editable=False, db_index=True)
@@ -111,6 +113,16 @@ class Order(models.Model):
     total           = models.DecimalField(max_digits=12, decimal_places=2)
 
     payment_method  = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cod')
+    payment_status  = models.CharField(max_length=20, choices=[('pending','pending'),('paid','paid'),('failed','failed'),('refunded','refunded')])
+ 
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
+
+    wallet_amount_used = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    refund_to_wallet   = models.BooleanField(default=False)
+    refund_approved    = models.BooleanField(default=False)
+
     status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     notes           = models.TextField(blank=True)
     cancel_reason   = models.TextField(blank=True)

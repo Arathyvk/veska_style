@@ -6,10 +6,14 @@ from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponse
 from datetime import timedelta
+from decimal import Decimal
+from django.db import transaction as db_tx
 
 from order_user.models import Order, OrderItem
 from return_admin.models import ReturnRequest, RETURN_DAYS, NON_RETURNABLE_CATEGORIES
 from product_admin.models import ProductVariant
+# from wallet.models import Wallet
+
 
 
 NON_RETURNABLE_CATEGORIES = [
@@ -26,6 +30,25 @@ TIMELINE_STEPS = [
 
 STATUS_ORDER = [s[0] for s in TIMELINE_STEPS]
 
+CANCEL_REASONS =[
+    ('changed_mind',   'Changed my mind'),
+    ('wrong_item',     'Orderes wrong item/size'),
+    ('found_cheaper',  'Found better price elsewhere'),
+    ('delivery_delay', 'Delivery is taking too long'),
+    ('payment_issue',  'Payment issue'),
+    ('other',          'other'),
+
+]
+
+RETURN_REASONS = [
+    ('wrong_size',        'Wrong size received'),
+    ('wrong_item',        'Wrong item received'),
+    ('defective',         'Defective / damaged product'),
+    ('not_as_described',  'Not as described'),
+    ('changed_mind',      'Changed my mind'),
+    ('quality_issue',     'Quality not as expected'),
+    ('other',             'Other'),
+]
 
 
 
@@ -121,35 +144,52 @@ def order_success(request, order_number):
 @login_required
 def cancel_order(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
-
+ 
     if not order.can_cancel:
-        messages.error(
-            request,
-            f'Order #{order.order_number} cannot be cancelled '
-            f'(current status: {order.get_status_display()}).'
-        )
-        return redirect('order_detail', order_number=order.order_number)
-
+        messages.error(request, "This order can no longer be cancelled.")
+        return redirect('order_detail', order_number=order_number)
+ 
     if request.method == 'POST':
         reason = request.POST.get('cancel_reason', '').strip()
-
-        for item in order.items.filter(status='active'):
-            _restore_stock(item)
-            item.status        = 'cancelled'
-            item.cancel_reason = reason
-            item.cancelled_at  = timezone.now()
-            item.save(update_fields=['status', 'cancel_reason', 'cancelled_at'])
-
-        order.status        = 'cancelled'
-        order.cancel_reason = reason
-        order.cancelled_at  = timezone.now()
-        order.save(update_fields=['status', 'cancel_reason', 'cancelled_at', 'updated_at'])
-
-        messages.success(request, f'Order #{order.order_number} has been cancelled.')
-        return redirect('order_detail', order_number=order.order_number)
-
-    return render(request, 'cancel_order.html', {'order': order})
-
+ 
+        with db_tx.atomic():
+            for item in order.items.filter(status='active'):
+                if item.variant:
+                    item.variant.stock += item.quantity
+                    item.variant.save(update_fields=['stock'])
+                item.status       = 'cancelled'
+                item.cancel_reason = reason
+                item.cancelled_at  = timezone.now()
+                item.save()
+ 
+            order.status        = 'cancelled'
+            order.cancel_reason = reason
+            order.cancelled_at  = timezone.now()
+ 
+            refund_amount = Decimal('0.00')
+            if order.payment_method in ('razorpay', 'wallet') and order.payment_status == 'paid':
+                refund_amount = order.total
+                try:
+                    w = Wallet.get_or_create_for_user(request.user)
+                    w.credit(refund_amount,
+                             description=f"Refund – cancelled order #{order_number}",
+                             reason='ORDER_CANCEL', order=order)
+                    order.refund_to_wallet = True
+                except Exception:
+                    pass
+ 
+            order.save()
+ 
+        msg = f"Order #{order_number} cancelled."
+        if refund_amount > 0:
+            msg += f" ₹{refund_amount} refunded to your wallet."
+        messages.success(request, msg)
+        return redirect('order_list')
+ 
+    return render(request, 'checkout/cancel_order.html', {
+        'order':   order,
+        'reasons': CANCEL_REASONS,
+    })
 
 
 
@@ -157,88 +197,83 @@ def cancel_order(request, order_number):
 def cancel_order_item(request, order_number, item_id):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
     item  = get_object_or_404(OrderItem, id=item_id, order=order)
-
+ 
     if not item.can_cancel:
-        messages.error(request, f'"{item.product_name}" cannot be cancelled at this stage.')
-        return redirect('order_detail', order_number=order.order_number)
-
+        messages.error(request, "This item cannot be cancelled.")
+        return redirect('order_detail', order_number=order_number)
+ 
     if request.method == 'POST':
         reason = request.POST.get('cancel_reason', '').strip()
-
-        _restore_stock(item)
-        item.status        = 'cancelled'
-        item.cancel_reason = reason
-        item.cancelled_at  = timezone.now()
-        item.save(update_fields=['status', 'cancel_reason', 'cancelled_at'])
-
-        if not order.items.filter(status='active').exists():
-            order.status        = 'cancelled'
-            order.cancel_reason = 'All items cancelled by user'
-            order.cancelled_at  = timezone.now()
-            order.save(update_fields=['status', 'cancel_reason', 'cancelled_at', 'updated_at'])
-            messages.success(request, f'"{item.product_name}" was the last item — order fully cancelled.')
-        else:
-            messages.success(request, f'"{item.product_name}" has been cancelled.')
-
-        return redirect('order_detail', order_number=order.order_number)
-
-    return render(request, 'cancel_item.html', {'order': order, 'item': item})
+ 
+        with db_tx.atomic():
+            if item.variant:
+                item.variant.stock += item.quantity
+                item.variant.save(update_fields=['stock'])
+ 
+            item.status       = 'cancelled'
+            item.cancel_reason = reason
+            item.cancelled_at  = timezone.now()
+            item.save()
+ 
+            if order.payment_method in ('razorpay', 'wallet') and order.payment_status == 'paid':
+                try:
+                    w = Wallet.get_or_create_for_user(request.user)
+                    w.credit(item.line_total,
+                             description=f"Refund – '{item.product_name}' in #{order_number}",
+                             reason='ORDER_CANCEL', order=order)
+                    messages.success(request,
+                        f"Item cancelled. ₹{item.line_total} refunded to your wallet.")
+                except Exception:
+                    messages.success(request, "Item cancelled successfully.")
+            else:
+                messages.success(request, "Item cancelled successfully.")
+ 
+        return redirect('order_detail', order_number=order_number)
+ 
+    return render(request, 'cancel_item.html', {
+        'order':   order,
+        'item':    item,
+        'reasons': CANCEL_REASONS,
+    })
 
 
 
 @login_required
 def return_order(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number)
-
-    order = get_object_or_404(
-        Order,
-        order_number=order_number
-    )
-
-    if order.user != request.user:
-        messages.error(request, "Unauthorized access.")
-        return redirect('order_list')
-
-    returnable_items = []
-
-    for item in order.items.filter(status='active'):
-        cat = str(
-            item.product.category if item.product and item.product.category else ''
-        ).lower()
-        
-        already_returned = ReturnRequest.objects.filter(
-            order_item=item,
-            user=request.user
-        ).exists()
-
-        item.return_request = ReturnRequest.objects.filter(
-            order_item=item,
-            user=request.user
-        ).first()
-
-        if cat not in NON_RETURNABLE_CATEGORIES:
-            returnable_items.append(item)
-
-    if len(returnable_items) == 1:
-        single_item = returnable_items[0]
-        return redirect(
-            'return_request',
-            order_number=order.order_number,
-            item_id=single_item.id
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+ 
+    if not order.can_return:
+        messages.error(request, "This order is not eligible for return.")
+        return redirect('order_detail', order_number=order_number)
+ 
+    if order.status == 'return_requested':
+        messages.info(request, "Return already submitted. Awaiting admin review.")
+        return redirect('order_detail', order_number=order_number)
+ 
+    if request.method == 'POST':
+        return_reason = request.POST.get('return_reason', '').strip()
+        return_notes  = request.POST.get('return_notes', '').strip()
+ 
+        if not return_reason:
+            messages.error(request, "Please select a reason for the return.")
+            return render(request, 'return_order.html', {
+                'order': order, 'reasons': RETURN_REASONS,
+            })
+ 
+        order.status              = 'return_requested'
+        order.return_reason       = return_reason
+        order.return_notes        = return_notes
+        order.return_requested_at = timezone.now()
+        order.save()
+ 
+        messages.success(
+            request,
+            "Return request submitted. Your refund will be credited after admin review."
         )
-
-    if not returnable_items:
-        messages.error(request, 'No returnable items found in this order.')
-
-    return_deadline = None
-    if order.delivered_at:
-        return_deadline = order.delivered_at + timedelta(days=RETURN_DAYS)    
-
-    return render(request, 'return_order.html', {
-        'order':            order,
-        'returnable_items': returnable_items,
-        'days_left':        order.days_left_to_return,
-        'return_deadline':  return_deadline,
+        return redirect('order_detail', order_number=order_number)
+ 
+    return render(request, 'checkout/return_order.html', {
+        'order': order, 'reasons': RETURN_REASONS,
     })
 
 

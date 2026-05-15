@@ -103,3 +103,6 @@ def move_to_cart(request, product_id):
     messages.success(request, f'{product.name} move to cart')
 
     return redirect('cart_detail')
+
+
+

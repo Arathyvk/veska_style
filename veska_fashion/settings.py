@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'coupon_admin',
     'return_admin',
     'about_us',
+    'payment_user',
     
 ]
 
@@ -249,3 +250,6 @@ ACCOUNT_INACTIVE_URL = '/accounts/inactive/'
 
 GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')
+
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET")

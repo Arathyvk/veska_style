@@ -125,25 +125,19 @@ a{text-decoration:none;color:inherit}
         <div class="item-pick-price">₹{{ item.line_total|floatformat:2 }}</div>
       </div>
 
-      {% if item.return_request %}
+{% if not item.return_request %}
 
-      <div class="btn-return-item" style="cursor:default;background:#f3f3f3;color:#666;">
-          Return {{ item.return_request.status|title }}
-      </div>
+<a href="{% url 'return_request' order.order_number item.id %}"
+  class="btn-return-item">
+    <svg width="13" height="13" fill="none" stroke="currentColor"
+         stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="1 4 1 10 7 10"/>
+      <path d="M3.51 15a9 9 0 1 0 .49-4.13"/>
+    </svg>
+    Return This Item
+</a>
 
-      {% else %}
-
-      <a href="{% url 'return_request' order.order_number item.pk %}"
-        class="btn-return-item">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <polyline points="1 4 1 10 7 10"/>
-            <path d="M3.51 15a9 9 0 1 0 .49-4.13"/>
-          </svg>
-          Return This Item
-      </a>
-
-      {% endif %}
-      
+{% endif %}
     </div>
     {% endfor %}
   </div>
