@@ -7,14 +7,15 @@ from category_admin.models import Category
 
 
 CATEGORY_CHOICES = [
-    ('Formal', 'Formal'),
+    ('Sneakers', 'Sneakers'),
+    ('Heels', 'Heels'),
+    ('Flats', 'Flats'),
+    ('Boots', 'Boots'),
+    ('Sandals', 'Sandals'),
+    ('Loafers', 'Loafers'),
+    ('Sports Shoes', 'Sports Shoes'),
     ('Casual', 'Casual'),
-    ('Party',  'Party'),
-    ('Sports', 'Sports'),
-    ('Ethnic', 'Ethnic'),
-    ('Sandal', 'Sandal'),
 ]
-
 
 class Product(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

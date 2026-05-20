@@ -22,5 +22,7 @@ urlpatterns = [
     path('returns/',include('return_admin.urls')),
     path('about/',include('about_us.urls')),
     path('payment_user/',include('payment_user.urls')),
+    path('wallet_user/',include('wallet_user.urls')),
+    path('wallet_admin/',include('wallet_admin.urls')),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

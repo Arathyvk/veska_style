@@ -6,7 +6,7 @@
 <style>
 :root{--cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--terra:#b56744;--terra-pale:#f7ede5;
   --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;--border:#e0d9d0;--border-lt:#ece6de;
-  --danger:#b53333;--danger-pale:#fdf0f0;--head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+  --danger:#b53333;--danger-pale:#fdf0f0;--body:'DM Sans',sans-serif;
   --radius-md:10px;--radius-lg:16px;--radius-xl:24px;--transition:all .2s cubic-bezier(.4,0,.2,1)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
@@ -50,7 +50,7 @@ textarea.ftextarea:focus{border-color:var(--danger);background:#fff}
   <div class="container">
     <div class="breadcrumbs">
       <a href="{% url 'order_list' %}">My Orders</a><span class="sep">›</span>
-      <a href="{% url 'order_detail' order.order_number %}">#{{ order.order_number }}</a><span class="sep">›</span>
+      <a href="{% url 'order_detail' order.uuid %}">#{{ order.uuid }}</a><span class="sep">›</span>
       <span>Cancel</span>
     </div>
     <div class="page-title"><em>Cancel</em> Order</div>
@@ -63,7 +63,7 @@ textarea.ftextarea:focus{border-color:var(--danger);background:#fff}
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         <div>
-          <div class="order-ref-num">#{{ order.order_number }}</div>
+          <div class="order-ref-num">#{{ order.uuid }}</div>
           <div class="order-ref-info">
             {{ order.items.count }} item{{ order.items.count|pluralize }} ·
             ₹{{ order.total|floatformat:2 }} ·
@@ -85,10 +85,10 @@ textarea.ftextarea:focus{border-color:var(--danger);background:#fff}
 
         <div class="btn-row">
           <button type="submit" class="btn-danger"
-                  onclick="return confirm('Confirm cancellation of order #{{ order.order_number }}?')">
+                  onclick="return confirm('Confirm cancellation of order #{{ order.uuid }}?')">
             Confirm Cancellation
           </button>
-          <a href="{% url 'order_detail' order.order_number %}" class="btn-back">Keep Order</a>
+          <a href="{% url 'order_detail' order.uuid %}" class="btn-back">Keep Order</a>
         </div>
       </form>
     </div>

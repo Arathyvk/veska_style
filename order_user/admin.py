@@ -3,9 +3,6 @@ from django.utils.html import format_html
 from order_user.models import Order, OrderItem, Coupon
 
 
-# =========================
-# COUPON ADMIN
-# =========================
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
 
@@ -63,9 +60,7 @@ class CouponAdmin(admin.ModelAdmin):
     status_badge.short_description = 'Status'
 
 
-# =========================
-# ORDER ITEM INLINE
-# =========================
+
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
@@ -76,7 +71,7 @@ class OrderItemInline(admin.TabularInline):
         'unit_price', 'quantity',
         'line_total_display',
         'item_status_badge',
-        'cancel_reason', 'cancelled_at',
+        'cancel_reason',
     )
 
     fields = (
@@ -101,9 +96,7 @@ class OrderItemInline(admin.TabularInline):
     item_status_badge.short_description = 'Item Status'
 
 
-# =========================
-# ORDER ADMIN
-# =========================
+
 STATUS_COLORS = {
     'pending':          ('#fef8ec', '#c47f17'),
     'confirmed':        ('#e6f1fb', '#185fa5'),
@@ -119,11 +112,9 @@ STATUS_COLORS = {
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
 
-    # =========================
-    # LIST VIEW
-    # =========================
+
     list_display = (
-        'order_number_link', 'user_display', 'full_name',
+        'uuid', 'user_display', 'full_name',
         'phone', 'city', 'total_display',
         'discount_display', 'status_badge',
         'payment_method', 'created_at',
@@ -131,7 +122,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     list_filter = ('status', 'payment_method', 'created_at', 'country')
     search_fields = (
-        'order_number', 'full_name', 'phone',
+        'uuid', 'full_name', 'phone',
         'user__email', 'user__username',
         'city', 'coupon_code',
         'items__product_name',
@@ -147,25 +138,17 @@ class OrderAdmin(admin.ModelAdmin):
         'mark_confirmed', 'mark_processing',
         'mark_shipped', 'mark_delivered',
     ]
-
-    # =========================
-    # READONLY FIELDS
-    # =========================
     readonly_fields = (
-        'order_number', 'user', 'created_at', 'updated_at',
+        'uuid', 'user', 'created_at', 'updated_at',
         'subtotal', 'discount_amount', 'shipping_charge',
-        'tax', 'total', 'coupon_code',
-        'discount_type', 'discount_value',
-        'cancelled_at', 'return_requested_at',
+        'wallet_amount_used', 'total', 'coupon_code',
     )
 
-    # =========================
-    # FIELDSETS
-    # =========================
+   
     fieldsets = (
         ('Order Info', {
             'fields': (
-                'order_number', 'user', 'status',
+                'uuid', 'user', 'status',
                 'payment_method', 'notes',
                 'created_at', 'updated_at',
             ),
@@ -180,29 +163,19 @@ class OrderAdmin(admin.ModelAdmin):
         ('Pricing', {
             'fields': (
                 'subtotal', 'coupon_code',
-                'discount_type', 'discount_value',
                 'discount_amount',
-                'shipping_charge', 'tax', 'total',
+                'shipping_charge', 'total',
             ),
         }),
-        ('Cancellation', {
-            'fields': ('cancel_reason', 'cancelled_at'),
-            'classes': ('collapse',),
-        }),
-        ('Return', {
-            'fields': ('return_reason', 'return_requested_at'),
-            'classes': ('collapse',),
-        }),
+    
     )
 
-    # =========================
-    # CUSTOM DISPLAY METHODS
-    # =========================
+  
     def order_number_link(self, obj):
         return format_html(
             '<a href="/admin/checkout_page/order/{}/change/" '
             'style="font-family:monospace;font-weight:600;color:#b56744">{}</a>',
-            obj.pk, obj.order_number
+            obj.pk, obj.uuid
         )
     order_number_link.short_description = 'Order #'
 

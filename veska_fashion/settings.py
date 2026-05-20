@@ -15,7 +15,10 @@ from pathlib import Path
 import cloudinary
 from decouple import config
 from django.contrib.messages import constants as messages
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -67,10 +70,12 @@ INSTALLED_APPS = [
     'return_admin',
     'about_us',
     'payment_user',
+    'wallet_user',
+    'wallet_admin',
     
 ]
 
-SITE_ID = 2
+SITE_ID = 1
 
 
 cloudinary.config(
@@ -251,5 +256,6 @@ ACCOUNT_INACTIVE_URL = '/accounts/inactive/'
 GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')
 
-RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID')
-RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET")
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
+PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET")
+PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox")

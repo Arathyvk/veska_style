@@ -13,7 +13,7 @@
   --warning:#c47f17;--warning-pale:#fef8ec;
   --shadow-sm:0 2px 8px rgba(30,26,23,.08);
   --radius-md:10px;--radius-lg:16px;--radius-xl:24px;
-  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+  --body:'DM Sans',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
@@ -84,13 +84,13 @@ a{text-decoration:none;color:inherit}
     <span class="sep">›</span>
     <a href="{% url 'order_list' %}">My Orders</a>
     <span class="sep">›</span>
-    <a href="{% url 'order_detail' order.order_number %}">#{{ order.order_number }}</a>
+    <a href="{% url 'order_detail' order.uuid %}">#{{ order.uuid }}</a>
     <span class="sep">›</span>
     <span style="color:var(--ink);font-weight:500">Return</span>
   </nav>
 
   <h1 class="page-title">Select <em>Item</em> to Return</h1>
-  <p class="page-sub">Choose which item from order #{{ order.order_number }} you'd like to return.</p>
+  <p class="page-sub">Choose which item from order #{{ order.uuid }} you'd like to return.</p>
 
   {% if days_left <= 2 %}
   <div class="deadline-banner">
@@ -127,7 +127,7 @@ a{text-decoration:none;color:inherit}
 
 {% if not item.return_request %}
 
-<a href="{% url 'return_request' order.order_number item.id %}"
+<a href="{% url 'return_request' order.uuid item.id %}"
   class="btn-return-item">
     <svg width="13" height="13" fill="none" stroke="currentColor"
          stroke-width="2.5" viewBox="0 0 24 24">
@@ -142,7 +142,7 @@ a{text-decoration:none;color:inherit}
     {% endfor %}
   </div>
 
-  <a href="{% url 'order_detail' order.order_number %}" class="btn-back">
+  <a href="{% url 'order_detail' order.uuid %}" class="btn-back">
     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
       <polyline points="15 18 9 12 15 6"/>
     </svg>

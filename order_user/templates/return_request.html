@@ -17,7 +17,6 @@
   --shadow-md:0 6px 24px rgba(30,26,23,.1);
   --radius-sm:6px; --radius-md:10px; --radius-lg:16px; --radius-xl:24px;
   --transition:all .2s cubic-bezier(.4,0,.2,1);
-  --head:'Cormorant Garamond',Georgia,serif;
   --body:'DM Sans',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -197,7 +196,7 @@ button,input,select,textarea{font-family:var(--body)}
   <nav class="breadcrumbs">
     <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
     <a href="{% url 'order_list' %}">Orders</a><span class="sep">›</span>
-    <a href="{% url 'order_detail' order.id %}">Order #{{ order.id }}</a><span class="sep">›</span>
+    <a href="{% url 'order_detail' order.uuid %}">Order #{{ order.id }}</a><span class="sep">›</span>
     <span class="cur">Return Request</span>
   </nav>
 
@@ -276,7 +275,7 @@ button,input,select,textarea{font-family:var(--body)}
       </div>
     </div>
 
-    <a href="{% url 'order_detail' order.order_number %}" class="btn-back" style="margin-top:20px">
+    <a href="{% url 'order_detail' order.uuid %}" class="btn-back" style="margin-top:20px">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       Back to Order
     </a>
@@ -288,7 +287,7 @@ button,input,select,textarea{font-family:var(--body)}
     <h3>🚫 This item cannot be returned</h3>
     <p>This product belongs to a category that is not eligible for returns (e.g., hygiene-sensitive items, final sale, or personalised products).</p>
   </div>
-  <a href="{% url 'order_detail' order.order_number %}" class="btn-back" style="display:flex;margin-top:14px">
+  <a href="{% url 'order_detail' order.uuid %}" class="btn-back" style="display:flex;margin-top:14px">
     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     Back to Order
   </a>
@@ -299,7 +298,7 @@ button,input,select,textarea{font-family:var(--body)}
     <h3>⏰ Return Window Closed</h3>
     <p>The return window for this order closed on <strong>{{ return_deadline|date:"d M Y" }}</strong>. Returns must be requested within {{ return_days }} days of delivery.</p>
   </div>
-  <a href="{% url 'order_detail' order.order_number %}" class="btn-back" style="display:flex;margin-top:14px">
+  <a href="{% url 'order_detail' order.uuid %}" class="btn-back" style="display:flex;margin-top:14px">
     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     Back to Order
   </a>
@@ -511,7 +510,7 @@ button,input,select,textarea{font-family:var(--body)}
           Submit Return Request
         </button>
 
-        <a href="{% url 'cancel_order' order.order_number %}" class="btn-back">
+        <a href="{% url 'cancel_order' order.uuid %}" class="btn-back">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <polyline points="15 18 9 12 15 6"/>
           </svg>

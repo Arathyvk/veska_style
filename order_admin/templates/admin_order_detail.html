@@ -281,7 +281,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
         <div class="sc-body">
           <div class="sc-lbl">Current</div>
           <div style="margin-bottom:14px"><span class="sb sb-{{ order.status }}"><span class="dot"></span>{{ order.get_status_display }}</span></div>
-          <form method="POST" action="{% url 'admin_order_update_status' order.order_number %}">
+          <form method="POST" action="{% url 'admin_order_update_status' order.uuid %}">
             {% csrf_token %}
             <div class="sc-lbl" style="margin-bottom:6px">Change to</div>
             <select name="status" class="sc-sel" id="statusSel" onchange="handleSC(this)">

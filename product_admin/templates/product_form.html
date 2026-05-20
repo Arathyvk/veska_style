@@ -235,11 +235,11 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 
 <form method="POST" id="product-form" enctype="multipart/form-data" novalidate>
   {% csrf_token %}
-  <input type="hidden" name="cropped_images_json"  id="cropped_images_json"  value="[]">
   <input type="hidden" name="removed_image_ids"    id="removed_image_ids"    value="[]">
   <input type="hidden" name="save_as_draft"        id="save_as_draft"        value="0">
   <input type="hidden" name="new_variants_json"    id="new_variants_json"    value="[]">
   <input type="hidden" name="deleted_variant_ids"  id="deleted_variant_ids"  value="[]">
+  <input type="hidden" name="cropped_images_json"  id="cropped_images_json"  value="[]">
 
   <div class="form-shell">
 
@@ -271,26 +271,35 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
             </div>
           </div>
 
-          <div class="fgrid2">
-            <div class="frow">
-              <label class="flabel">Category <span class="req">*</span></label>
-              <select class="fselect" name="category" required>
-                <option value="">— Select —</option>
-                {% for val, label in form.fields.category.choices %}
-                  {% if val %}
-                  <option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ label }}</option>
-                  {% endif %}
-                {% endfor %}
-              </select>
-              {% if form.category.errors %}<div class="ferror">{{ form.category.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="frow">
-              <label class="flabel">Stock <span class="req">*</span></label>
-              <input class="finput" name="stock" type="number" min="0"
-                     placeholder="0" value="{{ form.stock.value|default:'' }}" required>
-              {% if form.stock.errors %}<div class="ferror">{{ form.stock.errors.0 }}</div>{% endif %}
-            </div>
-          </div>
+<div class="fgrid2">
+  <div class="frow">
+    <label class="flabel">Category <span class="req">*</span></label>
+
+    <select name="category" class="fselect" required>
+      <option value="">— Select —</option>
+
+      {% for value, label in form.fields.category.choices %}
+        <option value="{{ value }}"
+          {% if form.category.value == value %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+
+    {% if form.category.errors %}
+      <div class="ferror">{{ form.category.errors.0 }}</div>
+    {% endif %}
+  </div>
+
+  <div class="frow">
+    <label class="flabel">Stock <span class="req">*</span></label>
+    {{ form.stock }}
+
+    {% if form.stock.errors %}
+      <div class="ferror">{{ form.stock.errors.0 }}</div>
+    {% endif %}
+  </div>
+</div>
 
           <div class="frow">
             <label class="flabel">Description</label>

@@ -14,6 +14,7 @@ from django.http                    import JsonResponse
 
 from product_admin.models import Product, ProductImage, ProductVariant
 from .forms import ProductForm, ProductVariantForm
+from category_admin.models import Category  
 
 
 def is_admin(user):
@@ -158,6 +159,7 @@ def product_add(request):
         return redirect('admin_login')
 
     form = ProductForm()
+    categories = Category.objects.all() 
 
     if request.method == 'POST':
         form = ProductForm(request.POST)
@@ -194,6 +196,7 @@ def product_add(request):
         'variant_form': ProductVariantForm(),
         'action':       'add',
         'product':      None,
+        'categories':   categories,  
     })
 
 
@@ -205,6 +208,7 @@ def product_edit(request, uuid):
 
     product = get_object_or_404(Product, uuid=uuid)
     form    = ProductForm(instance=product)
+    categories = Category.objects.all()  
 
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
@@ -243,8 +247,8 @@ def product_edit(request, uuid):
         'variant_form': ProductVariantForm(),
         'product':      product,
         'action':       'edit',
+        'categories':   categories, \
     })
-
 
 @never_cache
 @login_required(login_url='admin_login')
