@@ -1,0 +1,301 @@
+{% extends "admin_base.html" %}
+{% load static %}
+{% block title %}Wallet · {{ wallet.user.email }} · Admin{% endblock %}
+{% block content %}
+<style>
+/* ========== DARK THEME (matching order detail page) ========== */
+:root{
+  --bg:#1a1714;
+  --card:#252118;
+  --card2:#2e2925;
+  --card3:#342e28;
+  --border:#3a342c;
+  --border2:#4a4038;
+  --text:#f0ebe4;
+  --muted:#8a7d72;
+  --muted2:#b0a090;
+  --terra:#c9967a;
+  --terra2:#e8b49a;
+  --terra-pale:rgba(201,150,122,.12);
+  --green:#4caf7d;
+  --green-pale:rgba(76,175,125,.14);
+  --red:#e05252;
+  --red-pale:rgba(224,82,82,.14);
+  --orange:#e09a52;
+  --orange-pale:rgba(224,154,82,.14);
+  --blue:#5b8dee;
+  --blue-pale:rgba(91,141,238,.14);
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:14px;
+  --radius-xl:18px;
+  --head:'Georgia',serif;
+  --body:system-ui,-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
+a{text-decoration:none;color:inherit}
+
+.container{max-width:1000px;margin:0 auto;padding:24px}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:20px;transition:.15s}
+.back-link:hover{color:var(--terra2)}
+
+.page-title{font-family:var(--head);font-size:28px;font-weight:600;color:var(--text);margin-bottom:20px}
+.page-title span{font-style:italic;color:var(--terra2)}
+
+.detail-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+@media(max-width:760px){.detail-grid{grid-template-columns:1fr}}
+
+/* Left: transactions */
+.txn-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.txn-card-head{padding:12px 18px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.txn-card-head h3{font-family:var(--head);font-size:17px;font-weight:600;color:var(--text)}
+.txn-card-head span{font-size:11px;color:var(--muted)}
+
+.txn-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);transition:background .12s}
+.txn-row:last-child{border-bottom:none}
+.txn-row:hover{background:rgba(46,41,37,.6)}
+.txn-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.txn-icon.credit{background:var(--green-pale)}
+.txn-icon.credit svg{color:var(--green)}
+.txn-icon.debit{background:var(--red-pale)}
+.txn-icon.debit svg{color:var(--red)}
+.txn-body{flex:1;min-width:0}
+.txn-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.txn-sub{font-size:11px;color:var(--muted)}
+.txn-ref{font-size:10px;color:var(--muted);font-family:monospace;margin-top:2px}
+.txn-right{text-align:right;flex-shrink:0}
+.txn-amount{font-family:var(--head);font-size:17px;font-weight:700}
+.txn-amount.credit{color:var(--green)}
+.txn-amount.debit{color:var(--red)}
+.txn-date{font-size:10.5px;color:var(--muted);margin-top:3px}
+.empty-state{text-align:center;padding:36px;color:var(--muted);font-size:13px}
+
+/* Right: info + adjust */
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.info-head{padding:12px 18px;background:linear-gradient(135deg, var(--card2) 0%, #3d3630 100%);border-bottom:1px solid var(--border)}
+.info-head h3{font-family:var(--head);font-size:17px;font-weight:600;color:var(--text)}
+.info-body{padding:16px 18px}
+
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-row .lbl{color:var(--muted)}
+.info-row .val{font-weight:600;color:var(--text)}
+.bal-big{font-family:var(--head);font-size:32px;font-weight:700;color:var(--terra2);text-align:center;padding:16px 0 8px}
+
+/* Adjust form */
+.adj-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.adj-head{padding:12px 18px;background:var(--card2);border-bottom:1px solid var(--border)}
+.adj-head h3{font-family:var(--head);font-size:17px;font-weight:600;color:var(--text)}
+.adj-body{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+
+.adj-toggle{display:flex;gap:0;border:1.5px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:4px}
+.adj-toggle-btn{flex:1;padding:9px;background:var(--card2);border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--body);color:var(--muted2);transition:.15s;letter-spacing:.3px}
+.adj-toggle-btn.credit.active{background:var(--green-pale);color:var(--green)}
+.adj-toggle-btn.debit.active{background:var(--red-pale);color:var(--red)}
+
+.adj-label{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted2);margin-bottom:5px}
+.adj-input{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:9px 12px;font-family:var(--body);font-size:14px;color:var(--text);background:var(--card2);outline:none;transition:.18s}
+.adj-input:focus{border-color:var(--terra);background:var(--card3)}
+.adj-textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:9px 12px;font-family:var(--body);font-size:13px;color:var(--text);background:var(--card2);outline:none;resize:vertical;min-height:64px;transition:.18s}
+.adj-textarea:focus{border-color:var(--terra);background:var(--card3)}
+
+.btn-adj{width:100%;padding:12px;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;letter-spacing:.3px}
+.btn-adj.credit{background:var(--green);color:#1a1714}
+.btn-adj.credit:hover{background:#3a7d5a}
+.btn-adj.debit{background:var(--red);color:#fff}
+.btn-adj.debit:hover{background:#8f2828}
+
+.adj-result{padding:10px 12px;border-radius:var(--radius-md);font-size:12px;font-weight:500;display:none;margin-top:4px}
+.adj-result.success{background:var(--green-pale);color:var(--green);border:1px solid rgba(76,175,125,.3)}
+.adj-result.error{background:var(--red-pale);color:var(--red);border:1px solid rgba(224,82,82,.3)}
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:16px}
+.page-btn{min-width:32px;height:32px;padding:0 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--card2);font-size:12px;font-weight:600;color:var(--muted2);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all .2s}
+.page-btn:hover,.page-btn.current{border-color:var(--terra);color:var(--terra2);background:var(--terra-pale)}
+</style>
+
+<div class="container">
+  <a href="{% url 'admin_wallet_list' %}" class="back-link">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to All Wallets
+  </a>
+
+  <div class="page-title">Wallet — <span>{{ wallet.user.email }}</span></div>
+
+  <div class="detail-grid">
+
+    <!-- Left: transaction history -->
+    <div class="txn-card">
+      <div class="txn-card-head">
+        <h3>Transaction History</h3>
+        <span>{{ transactions.paginator.count }} record{{ transactions.paginator.count|pluralize }}</span>
+      </div>
+
+      {% if transactions %}
+        {% for txn in transactions %}
+        <div class="txn-row">
+          <div class="txn-icon {{ txn.transaction_type }}">
+            {% if txn.is_credit %}
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+            </svg>
+            {% else %}
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+            </svg>
+            {% endif %}
+          </div>
+          <div class="txn-body">
+            <div class="txn-title">
+              {% if txn.reason == 'order_cancellation' %}Order Cancellation Refund
+              {% elif txn.reason == 'order_return' %}Return Refund
+              {% elif txn.reason == 'order_payment' %}Order Payment
+              {% elif txn.reason == 'manual_adjustment' %}Manual Adjustment
+              {% else %}{{ txn.reason|title }}{% endif %}
+            </div>
+            {% if txn.order %}<div class="txn-sub">Order #{{ txn.order.order_number }}</div>{% endif %}
+            {% if txn.description %}<div class="txn-sub">{{ txn.description }}</div>{% endif %}
+            {% if txn.reference %}<div class="txn-ref">Ref: {{ txn.reference }}</div>{% endif %}
+          </div>
+          <div class="txn-right">
+            <div class="txn-amount {{ txn.transaction_type }}">
+              {% if txn.is_credit %}+{% else %}−{% endif %}₹{{ txn.amount|floatformat:2 }}
+            </div>
+            <div class="txn-date">{{ txn.created_at|date:"d M Y, h:i A" }}</div>
+          </div>
+        </div>
+        {% endfor %}
+
+        {% if transactions.has_other_pages %}
+        <div class="pagination">
+          {% if transactions.has_previous %}<a href="?page={{ transactions.previous_page_number }}" class="page-btn">‹</a>{% endif %}
+          {% for num in transactions.paginator.page_range %}
+            {% if transactions.number == num %}<span class="page-btn current">{{ num }}</span>
+            {% else %}<a href="?page={{ num }}" class="page-btn">{{ num }}</a>{% endif %}
+          {% endfor %}
+          {% if transactions.has_next %}<a href="?page={{ transactions.next_page_number }}" class="page-btn">›</a>{% endif %}
+        </div>
+        {% endif %}
+
+      {% else %}
+        <div class="empty-state">No transactions for this wallet yet.</div>
+      {% endif %}
+    </div>
+
+    <!-- Right: balance info + manual adjust -->
+    <div>
+      <div class="info-card">
+        <div class="info-head"><h3>Wallet Info</h3></div>
+        <div class="info-body">
+          <div class="bal-big">₹{{ wallet.balance|floatformat:2 }}</div>
+          <div class="info-row"><span class="lbl">User</span><span class="val">{{ wallet.user.email }}</span></div>
+          <div class="info-row"><span class="lbl">Name</span><span class="val">{{ wallet.user.get_full_name|default:"—" }}</span></div>
+          <div class="info-row"><span class="lbl">Created</span><span class="val">{{ wallet.created_at|date:"d M Y" }}</span></div>
+          <div class="info-row"><span class="lbl">Last Updated</span><span class="val">{{ wallet.updated_at|date:"d M Y" }}</span></div>
+        </div>
+      </div>
+
+      <!-- Manual Adjust -->
+      <div class="adj-card">
+        <div class="adj-head"><h3>Manual Adjustment</h3></div>
+        <div class="adj-body">
+
+          <div class="adj-toggle">
+            <button type="button" class="adj-toggle-btn credit active" id="btnCredit" onclick="setAction('credit')">
+              ▲ Credit
+            </button>
+            <button type="button" class="adj-toggle-btn debit" id="btnDebit" onclick="setAction('debit')">
+              ▼ Debit
+            </button>
+          </div>
+
+          <div>
+            <div class="adj-label">Amount (₹)</div>
+            <input class="adj-input" type="number" id="adjAmount" placeholder="0.00" min="0.01" step="0.01">
+          </div>
+
+          <div>
+            <div class="adj-label">Note (optional)</div>
+            <textarea class="adj-textarea" id="adjNote" placeholder="Reason for adjustment…"></textarea>
+          </div>
+
+          <button class="btn-adj credit" id="adjSubmitBtn" onclick="submitAdjust()">
+            Credit Wallet
+          </button>
+
+          <div class="adj-result" id="adjResult"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const WALLET_ID  = {{ wallet.pk }};
+const CSRF_TOKEN = '{{ csrf_token }}';
+let currentAction = 'credit';
+
+function setAction(action) {
+  currentAction = action;
+  document.getElementById('btnCredit').classList.toggle('active', action === 'credit');
+  document.getElementById('btnDebit').classList.toggle('active',  action === 'debit');
+  const btn = document.getElementById('adjSubmitBtn');
+  btn.className = `btn-adj ${action}`;
+  btn.textContent = action === 'credit' ? '▲ Credit Wallet' : '▼ Debit Wallet';
+}
+
+async function submitAdjust() {
+  const amount = parseFloat(document.getElementById('adjAmount').value);
+  const note   = document.getElementById('adjNote').value.trim();
+  const result = document.getElementById('adjResult');
+
+  if (!amount || amount <= 0) {
+    showResult('error', 'Please enter a valid amount.');
+    return;
+  }
+
+  const btn = document.getElementById('adjSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+
+  try {
+    const res  = await fetch("{% url 'admin_wallet_adjust' wallet.pk %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': CSRF_TOKEN
+      },
+      body: JSON.stringify({ action: currentAction, amount, note })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showResult('success',
+        `₹${amount.toFixed(2)} ${data.action === 'credit' ? 'credited to' : 'debited from'} wallet. New balance: ₹${parseFloat(data.balance).toFixed(2)}`
+      );
+      document.getElementById('adjAmount').value = '';
+      document.getElementById('adjNote').value   = '';
+      setTimeout(() => location.reload(), 1800);
+    } else {
+      showResult('error', data.error || 'Something went wrong.');
+    }
+  } catch (e) {
+    showResult('error', 'Network error. Please try again.');
+  } finally {
+    btn.disabled = false;
+    setAction(currentAction);
+  }
+}
+
+function showResult(type, msg) {
+  const el = document.getElementById('adjResult');
+  el.className = `adj-result ${type}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+</script>
+{% endblock %}

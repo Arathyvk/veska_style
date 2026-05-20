@@ -1,0 +1,174 @@
+{% extends "admin_base.html" %}
+{% load static %}
+{% block title %}Wallet Management · Admin{% endblock %}
+{% block content %}
+<style>
+/* ========== DARK THEME (matching order detail page) ========== */
+:root{
+  --bg:#1a1714;
+  --card:#252118;
+  --card2:#2e2925;
+  --card3:#342e28;
+  --border:#3a342c;
+  --border2:#4a4038;
+  --text:#f0ebe4;
+  --muted:#8a7d72;
+  --muted2:#b0a090;
+  --terra:#c9967a;
+  --terra2:#e8b49a;
+  --terra-pale:rgba(201,150,122,.12);
+  --green:#4caf7d;
+  --green-pale:rgba(76,175,125,.14);
+  --red:#e05252;
+  --red-pale:rgba(224,82,82,.14);
+  --orange:#e09a52;
+  --orange-pale:rgba(224,154,82,.14);
+  --blue:#5b8dee;
+  --blue-pale:rgba(91,141,238,.14);
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:14px;
+  --radius-xl:18px;
+  --head:'Georgia',serif;
+  --body:system-ui,-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
+a{text-decoration:none;color:inherit}
+
+.container{max-width:1080px;margin:0 auto;padding:24px}
+
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-title{font-family:var(--head);font-size:22px;font-weight:700;color:var(--text)}
+.page-title span{font-style:italic;color:var(--terra2)}
+
+.search-form{display:flex;gap:8px}
+.search-input{border:1.5px solid var(--border);border-radius:var(--radius-md);padding:9px 14px;font-family:var(--body);font-size:13px;background:var(--card2);color:var(--text);outline:none;width:240px;transition:.18s}
+.search-input:focus{border-color:var(--terra)}
+.btn-search{background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-md);padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--body);transition:.2s}
+.btn-search:hover{background:var(--terra2)}
+
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.table-head{padding:12px 20px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.table-head h3{font-family:var(--head);font-size:16px;font-weight:700;color:var(--text)}
+.table-head span{font-size:12px;color:var(--muted)}
+
+table{width:100%;border-collapse:collapse}
+thead th{padding:12px 16px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);background:var(--card2);border-bottom:1px solid var(--border);text-align:left}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(46,41,37,.6)}
+tbody td{padding:14px 16px;font-size:13px;color:var(--text);vertical-align:middle}
+
+.user-cell{display:flex;flex-direction:column}
+.user-email{font-weight:600;color:var(--text)}
+.user-name{font-size:12px;color:var(--muted);margin-top:1px}
+
+.balance-cell{font-family:var(--head);font-size:18px;font-weight:700;color:var(--terra2)}
+.balance-zero{color:var(--muted2)}
+
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.badge.high{background:var(--green-pale);color:var(--green)}
+.badge.mid{background:var(--orange-pale);color:var(--orange)}
+.badge.low{background:rgba(138,125,114,.2);color:var(--muted2)}
+
+.btn-view{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--card2);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;font-weight:600;transition:.2s}
+.btn-view:hover{background:var(--terra);border-color:var(--terra);color:#1a1714}
+
+.empty-state{text-align:center;padding:48px;color:var(--muted);font-size:14px}
+
+/* pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:16px}
+.page-btn{min-width:34px;height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--muted2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s}
+.page-btn:hover{border-color:var(--terra);color:var(--terra2)}
+.page-btn.current{background:var(--terra);border-color:var(--terra);color:#1a1714}
+</style>
+
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">Wallet <span>Management</span></div>
+    <form class="search-form" method="GET">
+      <input class="search-input" type="text" name="q" placeholder="Search by email…" value="{{ search }}">
+      <button class="btn-search" type="submit">Search</button>
+    </form>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <h3>All User Wallets</h3>
+      <span>{{ wallets.paginator.count }} wallet{{ wallets.paginator.count|pluralize }}</span>
+    </div>
+
+    {% if wallets %}
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Balance</th>
+          <th>Status</th>
+          <th>Last Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for wallet in wallets %}
+        <tr>
+          <td>
+            <div class="user-cell">
+              <span class="user-email">{{ wallet.user.email }}</span>
+              <span class="user-name">{{ wallet.user.get_full_name|default:"—" }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="balance-cell {% if wallet.balance == 0 %}balance-zero{% endif %}">
+              ₹{{ wallet.balance|floatformat:2 }}
+            </span>
+          </td>
+          <td>
+            {% if wallet.balance >= 500 %}
+              <span class="badge high">High</span>
+            {% elif wallet.balance >= 100 %}
+              <span class="badge mid">Medium</span>
+            {% else %}
+              <span class="badge low">Low</span>
+            {% endif %}
+          </td>
+          <td style="color:var(--muted);font-size:12px">{{ wallet.updated_at|date:"d M Y, h:i A" }}</td>
+          <td>
+            <a href="{% url 'admin_wallet_detail' wallet.pk %}" class="btn-view">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              View
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if wallets.has_other_pages %}
+    <div class="pagination">
+      {% if wallets.has_previous %}
+      <a href="?q={{ search }}&page={{ wallets.previous_page_number }}" class="page-btn">‹</a>
+      {% endif %}
+      {% for num in wallets.paginator.page_range %}
+        {% if wallets.number == num %}
+        <span class="page-btn current">{{ num }}</span>
+        {% else %}
+        <a href="?q={{ search }}&page={{ num }}" class="page-btn">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if wallets.has_next %}
+      <a href="?q={{ search }}&page={{ wallets.next_page_number }}" class="page-btn">›</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">No wallets found{% if search %} for "{{ search }}"{% endif %}.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
