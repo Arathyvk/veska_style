@@ -1,0 +1,445 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}My Wallet · Veska{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ══════════════════════════════════════════════
+   VESKA DESIGN TOKENS
+══════════════════════════════════════════════ */
+:root{
+  --cream:#faf8f5; --warm-white:#fff; --parchment:#f2ede6; --blush:#e9d5c8;
+  --terra:#b56744; --terra-deep:#8f4f31; --terra-pale:#f7ede5; --terra-mid:#c8895e;
+  --ink:#1e1a17; --charcoal:#2e2925; --muted:#7a6f66; --muted-lt:#b0a699;
+  --border:#e0d9d0; --border-lt:#ece6de;
+  --success:#3a7d5a; --success-pale:#eaf4ee;
+  --warning:#c47f17; --warning-pale:#fef8ec;
+  --danger:#b53333;  --danger-pale:#fdf0f0;
+  --shadow-sm:0 2px 10px rgba(30,26,23,.08);
+  --shadow-md:0 6px 28px rgba(30,26,23,.12);
+  --radius-md:10px; --radius-lg:16px; --radius-xl:24px;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+  --head:'Cormorant Garamond',Georgia,serif;
+  --body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+
+/* ── Page shell ── */
+.wallet-page{min-height:100vh;padding-bottom:80px}
+.container{max-width:920px;margin:0 auto;padding:0 24px}
+
+/* ── Hero ── */
+.page-hero{
+  background:var(--charcoal);padding:34px 0 28px;
+  position:relative;overflow:hidden;
+}
+.page-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 80% at 90% 50%,rgba(181,103,68,.12),transparent);
+}
+.page-hero::after{
+  content:'WALLET';position:absolute;right:40px;top:50%;
+  transform:translateY(-50%);font-family:var(--head);font-size:110px;
+  font-weight:700;color:rgba(255,255,255,.03);pointer-events:none;
+  letter-spacing:-.02em;
+}
+.page-hero h1{font-family:var(--head);font-size:clamp(24px,4vw,40px);
+  font-weight:600;color:#fff;margin-bottom:4px;position:relative}
+.page-hero h1 em{font-style:italic;color:var(--blush)}
+.page-hero p{font-size:12px;color:rgba(255,255,255,.4);position:relative}
+
+/* ── Breadcrumbs ── */
+.breadcrumbs{display:flex;align-items:center;gap:8px;
+  padding:16px 0 24px;font-size:12px;color:var(--muted)}
+.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
+.breadcrumbs .sep{color:var(--muted-lt)}
+.breadcrumbs .current{color:var(--ink);font-weight:500}
+
+/* ── Django messages ── */
+.msg{padding:11px 16px;border-radius:var(--radius-md);margin-bottom:14px;
+  font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+.msg.success{background:var(--success-pale);color:var(--success);
+  border:1px solid rgba(58,125,90,.18)}
+.msg.error{background:var(--danger-pale);color:var(--danger);
+  border:1px solid rgba(181,51,51,.18)}
+.msg.warning{background:var(--warning-pale);color:var(--warning);
+  border:1px solid rgba(196,127,23,.18)}
+
+/* ══════════════════════════════════════════════
+   BALANCE CARD
+══════════════════════════════════════════════ */
+.balance-card{
+  background:linear-gradient(135deg,var(--charcoal) 0%,#3c3028 50%,#2a2018 100%);
+  border-radius:var(--radius-xl);padding:36px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:var(--shadow-md);position:relative;overflow:hidden;
+  margin-bottom:24px;animation:fadeUp .4s ease both;
+}
+/* decorative circles */
+.balance-card::before{content:'';position:absolute;right:-50px;top:-50px;
+  width:220px;height:220px;border-radius:50%;
+  background:rgba(255,255,255,.03);pointer-events:none}
+.balance-card::after{content:'';position:absolute;right:80px;bottom:-70px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(181,103,68,.06);pointer-events:none}
+
+.bc-left{position:relative;z-index:1}
+.bc-label{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);margin-bottom:8px}
+.bc-amount{
+  font-family:var(--head);font-size:clamp(2.4rem,5vw,3.4rem);
+  font-weight:700;color:#fff;line-height:1;letter-spacing:-.02em;
+}
+.bc-amount sup{font-size:50%;opacity:.6;vertical-align:top;padding-top:.5rem}
+.bc-sub{font-size:.74rem;color:rgba(255,255,255,.4);margin-top:10px;line-height:1.6}
+.bc-updated{font-size:.68rem;color:rgba(255,255,255,.25);margin-top:4px}
+
+.bc-right{position:relative;z-index:1}
+.wallet-badge{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:40px;padding:12px 20px;
+  display:flex;align-items:center;gap:10px;
+  font-size:.78rem;color:rgba(255,255,255,.65);
+}
+.wallet-badge svg{opacity:.5}
+.wallet-badge-label{display:block;font-size:.6rem;opacity:.45;
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+
+/* ══════════════════════════════════════════════
+   INFO STRIP
+══════════════════════════════════════════════ */
+.info-strip{
+  background:var(--terra-pale);
+  border:1px solid rgba(181,103,68,.15);
+  border-left:3.5px solid var(--terra);
+  border-radius:var(--radius-md);
+  padding:14px 18px;margin-bottom:24px;
+  display:flex;align-items:flex-start;gap:12px;
+  font-size:.82rem;color:var(--terra-deep);line-height:1.6;
+  animation:fadeUp .5s .05s ease both;
+}
+.info-strip svg{flex-shrink:0;margin-top:2px;opacity:.7}
+.info-strip strong{font-weight:600}
+
+/* ══════════════════════════════════════════════
+   STATS ROW
+══════════════════════════════════════════════ */
+.stats-row{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:14px;margin-bottom:24px;
+  animation:fadeUp .5s .1s ease both;
+}
+.stat-card{
+  background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:18px 20px;
+  display:flex;align-items:center;gap:14px;
+}
+.stat-icon{width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon.green{background:var(--success-pale)}
+.stat-icon.red{background:var(--danger-pale)}
+.stat-icon.amber{background:var(--warning-pale)}
+.stat-val{font-family:var(--head);font-size:1.4rem;font-weight:700;color:var(--charcoal);
+  line-height:1}
+.stat-lbl{font-size:.72rem;color:var(--muted-lt);margin-top:3px;text-transform:uppercase;
+  letter-spacing:.05em}
+
+/* ══════════════════════════════════════════════
+   TRANSACTION CARD
+══════════════════════════════════════════════ */
+.txn-card{
+  background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);overflow:hidden;
+  animation:fadeUp .5s .15s ease both;
+}
+.txn-card-head{
+  padding:16px 24px;border-bottom:1px solid var(--border-lt);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.txn-card-title{
+  font-family:var(--head);font-size:1.15rem;font-weight:600;color:var(--charcoal)
+}
+.txn-count{font-size:.75rem;color:var(--muted-lt)}
+
+/* table */
+.txn-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.txn-table th{
+  text-align:left;padding:11px 20px;
+  background:var(--parchment);
+  color:var(--muted);font-size:.68rem;
+  letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+}
+.txn-table td{
+  padding:14px 20px;border-bottom:1px solid var(--border-lt);
+  vertical-align:middle;
+}
+.txn-table tr:last-child td{border:none}
+.txn-table tr:hover td{background:#fdf9f7;transition:background .15s}
+
+/* type badge */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 11px;border-radius:20px;
+  font-size:.7rem;font-weight:700;white-space:nowrap;
+}
+.badge-credit{background:var(--success-pale);color:var(--success)}
+.badge-debit {background:var(--danger-pale); color:var(--danger)}
+
+/* amount */
+.amt-credit{color:var(--success);font-weight:700;font-size:.88rem}
+.amt-debit {color:var(--danger); font-weight:700;font-size:.88rem}
+
+/* reason pill */
+.reason-pill{
+  font-size:.68rem;color:var(--muted);background:var(--parchment);
+  padding:3px 9px;border-radius:4px;white-space:nowrap;
+}
+
+/* order link */
+.order-link{font-size:.75rem;color:var(--terra);font-family:monospace}
+.order-link:hover{text-decoration:underline}
+
+/* date cell */
+.date-main{font-size:.8rem;color:var(--ink)}
+.date-time{font-size:.7rem;color:var(--muted-lt)}
+
+/* empty */
+.txn-empty{text-align:center;padding:60px 20px}
+.txn-empty-icon{
+  width:70px;height:70px;border-radius:50%;
+  background:var(--parchment);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+}
+.txn-empty p{font-size:.85rem;color:var(--muted);line-height:1.6}
+
+/* ── animations ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(14px)}
+  to  {opacity:1;transform:none}
+}
+
+/* ── responsive ── */
+@media(max-width:680px){
+  .balance-card{flex-direction:column;gap:22px;padding:28px 24px}
+  .stats-row{grid-template-columns:1fr}
+  .txn-table thead{display:none}
+  .txn-table td{display:block;padding:6px 16px;border:none}
+  .txn-table tr{display:block;padding:12px 0;border-bottom:1px solid var(--border-lt)}
+  .txn-table tr:last-child{border:none}
+}
+</style>
+
+<div class="wallet-page">
+
+  <!-- Hero -->
+  <div class="page-hero">
+    <div class="container">
+      <h1>My <em>Wallet</em></h1>
+      <p>Credits · Refunds · Payments</p>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs">
+      <a href="{% url 'home' %}">Home</a>
+      <span class="sep">›</span>
+      <a href="{% url 'order_list' %}">My Account</a>
+      <span class="sep">›</span>
+      <span class="current">Wallet</span>
+    </nav>
+
+    <!-- Django messages -->
+    {% for message in messages %}
+    <div class="msg {{ message.tags }}">
+      {% if message.tags == 'success' %}✅
+      {% elif message.tags == 'error' %}🚫
+      {% else %}⚠️{% endif %}
+      {{ message }}
+    </div>
+    {% endfor %}
+
+    <!-- ══ BALANCE CARD ══ -->
+    <div class="balance-card">
+      <div class="bc-left">
+        <div class="bc-label">Available Balance</div>
+        <div class="bc-amount">
+          <sup>₹</sup>{{ wallet.balance|floatformat:2 }}
+        </div>
+        <div class="bc-sub">
+          Usable at checkout &nbsp;·&nbsp; Instant on cancellation
+          &nbsp;·&nbsp; After admin approval on returns
+        </div>
+        <div class="bc-updated">
+          Last updated {{ wallet.updated_at|date:"d M Y, g:i A" }}
+        </div>
+      </div>
+      <div class="bc-right">
+        <div class="wallet-badge">
+          <svg width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="1.8" viewBox="0 0 24 24">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <path d="M16 12h.01"/>
+          </svg>
+          <div>
+            <span class="wallet-badge-label">Veska Wallet</span>
+            {{ request.user.username }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ INFO STRIP ══ -->
+    <div class="info-strip">
+      <svg width="16" height="16" fill="none" stroke="currentColor"
+           stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div>
+        <strong>How your wallet works:</strong>
+        Cancellation refunds are credited <strong>instantly</strong>.
+        Return refunds are credited <strong>after admin review</strong>.
+        Use your balance at checkout by selecting the Wallet payment option.
+      </div>
+    </div>
+
+    <!-- ══ STATS ══ -->
+    {% with txns=transactions %}
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <svg width="18" height="18" fill="none" stroke="var(--success)"
+               stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-val">
+            ₹{% with total=0 %}
+              {% for t in txns %}{% if t.is_credit %}{% with total=total|add:t.amount %}{% endwith %}{% endif %}{% endfor %}
+              {{ wallet.transactions.filter.count }}
+            {% endwith %}
+          </div>
+          <div class="stat-lbl">Total Credits</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red">
+          <svg width="18" height="18" fill="none" stroke="var(--danger)"
+               stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+            <polyline points="17 18 23 18 23 12"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-val">{{ txns|length }}</div>
+          <div class="stat-lbl">Transactions</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber">
+          <svg width="18" height="18" fill="none" stroke="var(--warning)"
+               stroke-width="2" viewBox="0 0 24 24">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-val">₹{{ wallet.balance|floatformat:0 }}</div>
+          <div class="stat-lbl">Spendable Now</div>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+
+    <!-- ══ TRANSACTION TABLE ══ -->
+    <div class="txn-card">
+      <div class="txn-card-head">
+        <span class="txn-card-title">Transaction History</span>
+        <span class="txn-count">{{ transactions|length }} entr{{ transactions|length|pluralize:"y,ies" }}</span>
+      </div>
+
+      {% if transactions %}
+      <table class="txn-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date & Time</th>
+            <th>Description</th>
+            <th>Reason</th>
+            <th>Order</th>
+            <th>Type</th>
+            <th style="text-align:right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for txn in transactions %}
+          <tr>
+            <td style="color:var(--muted-lt);font-size:.75rem">{{ forloop.counter }}</td>
+            <td>
+              <div class="date-main">{{ txn.created_at|date:"d M Y" }}</div>
+              <div class="date-time">{{ txn.created_at|time:"H:i" }}</div>
+            </td>
+            <td style="max-width:200px;color:var(--muted)">
+              {{ txn.description|default:"—" }}
+            </td>
+            <td>
+              <span class="reason-pill">{{ txn.get_reason_display }}</span>
+            </td>
+            <td>
+              {% if txn.order %}
+                <a class="order-link"
+                   href="{% url 'order_detail' txn.order.order_number %}">
+                  #{{ txn.order.order_number }}
+                </a>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if txn.is_credit %}
+                <span class="badge badge-credit">↑ Credit</span>
+              {% else %}
+                <span class="badge badge-debit">↓ Debit</span>
+              {% endif %}
+            </td>
+            <td style="text-align:right">
+              {% if txn.is_credit %}
+                <span class="amt-credit">+₹{{ txn.amount|floatformat:2 }}</span>
+              {% else %}
+                <span class="amt-debit">−₹{{ txn.amount|floatformat:2 }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% else %}
+      <div class="txn-empty">
+        <div class="txn-empty-icon">
+          <svg width="28" height="28" fill="none" stroke="var(--muted-lt)"
+               stroke-width="1.4" viewBox="0 0 24 24">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <path d="M16 12h.01"/>
+          </svg>
+        </div>
+        <p>
+          No transactions yet.<br>
+          Refunds from cancellations or approved returns will appear here.
+        </p>
+      </div>
+      {% endif %}
+
+    </div><!-- /txn-card -->
+
+  </div><!-- /container -->
+</div><!-- /wallet-page -->
+{% endblock %}

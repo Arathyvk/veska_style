@@ -4,7 +4,7 @@
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;--terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;--ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;--border:#e0d9d0;--border-lt:#ece6de;--success:#3a7d5a;--success-pale:#eaf4ee;--shadow-xs:0 1px 3px rgba(30,26,23,.06);--shadow-sm:0 2px 8px rgba(30,26,23,.08);--shadow-lg:0 16px 48px rgba(30,26,23,.14);--radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;--head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;}
+:root{--cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;--terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;--ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;--border:#e0d9d0;--border-lt:#ece6de;--success:#3a7d5a;--success-pale:#eaf4ee;--shadow-xs:0 1px 3px rgba(30,26,23,.06);--shadow-sm:0 2px 8px rgba(30,26,23,.08);--shadow-lg:0 16px 48px rgba(30,26,23,.14);--radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;--body:'DM Sans',sans-serif;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--body);background:var(--cream);color:var(--ink)}a{text-decoration:none;color:inherit}
 .page{min-height:100vh;padding-bottom:80px;background:var(--cream)}
 .container{max-width:600px;margin:0 auto;padding:0 24px}
@@ -130,7 +130,7 @@
       </div>
 
       <div class="cta-group">
-        <a href="{% url 'order_detail' order.order_number %}" class="btn-primary">
+        <a href="{% url 'order_detail' order.uuid %}" class="btn-primary">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
@@ -230,7 +230,7 @@
         </div>
 
         <div class="bottom-ctas">
-          <a href="{% url 'order_detail' order.order_number %}" class="btn-detail">
+          <a href="{% url 'order_detail' order.uuid %}" class="btn-detail">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             View Order Details
           </a>

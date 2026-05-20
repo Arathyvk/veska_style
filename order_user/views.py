@@ -1,18 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponse
 from datetime import timedelta
 from decimal import Decimal
+from uuid import UUID
 from django.db import transaction as db_tx
 
-from order_user.models import Order, OrderItem
+from order_user.models import Order, OrderItem, Coupon
 from return_admin.models import ReturnRequest, RETURN_DAYS, NON_RETURNABLE_CATEGORIES
 from product_admin.models import ProductVariant
-# from wallet.models import Wallet
+from wallet_user.models import Wallet
 
 
 
@@ -80,74 +81,32 @@ def order_list(request):
     })
 
 
-@never_cache
 @login_required(login_url='login')
-def order_detail(request, order_number):
-
-    order = get_object_or_404(
-        Order.objects.prefetch_related(
-            'items__product__images',
-            'items__variant',
-        ),
-        order_number=order_number,
-        user=request.user
-    )
-
-    current_idx = STATUS_ORDER.index(order.status) if order.status in STATUS_ORDER else -1
-    completed_steps = set(STATUS_ORDER[:current_idx])
-
-    item_return_map = {}
-
-    for item in order.items.all():
-
-        existing_return = ReturnRequest.objects.filter(
-            order_item=item,
-            user=request.user
-        ).first()
-
-        category = str(
-            item.product.category if item.product and item.product.category else ''
-        ).lower()
-
-        is_returnable_category = category not in NON_RETURNABLE_CATEGORIES
-
-        item_return_map[item.pk] = {
-            'is_returnable_category': is_returnable_category,
-            'existing_return': existing_return,
-            'deadline_expired': order.return_deadline_expired,
-            'days_left': order.days_left_to_return,
-            'can_return': (
-                order.status == 'delivered'
-                and is_returnable_category
-                and not order.return_deadline_expired
-                and existing_return is None
-            ),
-        }
+def order_detail(request, uuid):
+    order = get_object_or_404(Order, uuid=uuid, user=request.user)
+    items = order.items.all()
 
     return render(request, 'order_detail.html', {
         'order': order,
-        'items': order.items.all(),
-        'timeline_steps': TIMELINE_STEPS,
-        'completed_steps': completed_steps,
-        'item_return_map': item_return_map,
-    })
-
+        'items': items,
+        'steps': TIMELINE_STEPS
+        })
 
 
 
 @login_required
-def order_success(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+def order_success(request, uuid):
+    order = get_object_or_404(Order, uuid=uuid, user=request.user)
     return render(request, 'order_success.html', {'order': order})
 
 
 @login_required
-def cancel_order(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+def cancel_order(request, uuid):
+    order = get_object_or_404(Order, uuid=uuid, user=request.user)
  
     if not order.can_cancel:
         messages.error(request, "This order can no longer be cancelled.")
-        return redirect('order_detail', order_number=order_number)
+        return redirect('order_detail', uuid=order.uuid)
  
     if request.method == 'POST':
         reason = request.POST.get('cancel_reason', '').strip()
@@ -167,12 +126,12 @@ def cancel_order(request, order_number):
             order.cancelled_at  = timezone.now()
  
             refund_amount = Decimal('0.00')
-            if order.payment_method in ('razorpay', 'wallet') and order.payment_status == 'paid':
+            if order.payment_method in ('paypal', 'wallet') and order.payment_status == 'paid':
                 refund_amount = order.total
                 try:
                     w = Wallet.get_or_create_for_user(request.user)
                     w.credit(refund_amount,
-                             description=f"Refund – cancelled order #{order_number}",
+                             description=f"Refund – cancelled order #{uuid}",
                              reason='ORDER_CANCEL', order=order)
                     order.refund_to_wallet = True
                 except Exception:
@@ -180,110 +139,101 @@ def cancel_order(request, order_number):
  
             order.save()
  
-        msg = f"Order #{order_number} cancelled."
+        msg = f"Order #{uuid} cancelled."
         if refund_amount > 0:
             msg += f" ₹{refund_amount} refunded to your wallet."
         messages.success(request, msg)
         return redirect('order_list')
  
-    return render(request, 'checkout/cancel_order.html', {
+    return render(request, 'cancel_order.html', {
         'order':   order,
         'reasons': CANCEL_REASONS,
     })
 
 
 
-@login_required
-def cancel_order_item(request, order_number, item_id):
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
-    item  = get_object_or_404(OrderItem, id=item_id, order=order)
+@require_POST
+@login_required(login_url='login')
+def cancel_order_item(request, item_id):
+    item = get_object_or_404(OrderItem, pk=item_id, order__user=request.user)
  
-    if not item.can_cancel:
-        messages.error(request, "This item cannot be cancelled.")
-        return redirect('order_detail', order_number=order_number)
+    if item.cancel_status != 'none':
+        messages.error(request, 'This item has already been cancelled or a request is pending.')
+        return redirect('order_detail', uuid=item.order.uuid)
  
-    if request.method == 'POST':
-        reason = request.POST.get('cancel_reason', '').strip()
+    reason = request.POST.get('reason', '').strip()
+    if not reason:
+        messages.error(request, 'Please provide a cancellation reason.')
+        return redirect('order_detail', uuid=item.order.uuid)
  
-        with db_tx.atomic():
-            if item.variant:
-                item.variant.stock += item.quantity
-                item.variant.save(update_fields=['stock'])
+    with db_tx.atomic():
+        item.cancel_status = 'cancelled'
+        item.cancel_reason = reason
+        item.save(update_fields=['cancel_status', 'cancel_reason'])
  
-            item.status       = 'cancelled'
-            item.cancel_reason = reason
-            item.cancelled_at  = timezone.now()
-            item.save()
+        if item.variant:
+            item.variant.stock += item.quantity
+            item.variant.save(update_fields=['stock'])
+        elif item.product:
+            item.product.stock += item.quantity
+            item.product.save(update_fields=['stock'])
  
-            if order.payment_method in ('razorpay', 'wallet') and order.payment_status == 'paid':
-                try:
-                    w = Wallet.get_or_create_for_user(request.user)
-                    w.credit(item.line_total,
-                             description=f"Refund – '{item.product_name}' in #{order_number}",
-                             reason='ORDER_CANCEL', order=order)
-                    messages.success(request,
-                        f"Item cancelled. ₹{item.line_total} refunded to your wallet.")
-                except Exception:
-                    messages.success(request, "Item cancelled successfully.")
-            else:
-                messages.success(request, "Item cancelled successfully.")
+        order = item.order
+        if not order.items.filter(cancel_status='none').exists():
+            order.status = 'cancelled'
+            order.save(update_fields=['status'])
  
-        return redirect('order_detail', order_number=order_number)
- 
-    return render(request, 'cancel_item.html', {
-        'order':   order,
-        'item':    item,
-        'reasons': CANCEL_REASONS,
-    })
-
+    messages.success(request, 'Item cancelled successfully.')
+    return redirect('order_detail', uuid=item.order.uuid)
 
 
 @login_required
-def return_order(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
- 
+def return_order(request, uuid):
+    order = get_object_or_404(
+        Order,
+        uuid = uuid,
+        user =request.user
+    )
+
     if not order.can_return:
-        messages.error(request, "This order is not eligible for return.")
-        return redirect('order_detail', order_number=order_number)
- 
-    if order.status == 'return_requested':
-        messages.info(request, "Return already submitted. Awaiting admin review.")
-        return redirect('order_detail', order_number=order_number)
- 
-    if request.method == 'POST':
-        return_reason = request.POST.get('return_reason', '').strip()
-        return_notes  = request.POST.get('return_notes', '').strip()
- 
-        if not return_reason:
-            messages.error(request, "Please select a reason for the return.")
-            return render(request, 'return_order.html', {
-                'order': order, 'reasons': RETURN_REASONS,
-            })
- 
-        order.status              = 'return_requested'
-        order.return_reason       = return_reason
-        order.return_notes        = return_notes
-        order.return_requested_at = timezone.now()
-        order.save()
- 
-        messages.success(
-            request,
-            "Return request submitted. Your refund will be credited after admin review."
-        )
-        return redirect('order_detail', order_number=order_number)
- 
-    return render(request, 'checkout/return_order.html', {
-        'order': order, 'reasons': RETURN_REASONS,
+        messages.error(request,"This order is not eligible for return. ")
+        return redirect('order_detail', uuid = order.uuid)
+    
+    returnable_items = []
+
+    for item in order.items.all():
+
+        existing_return = ReturnRequest.objects.filter(
+            order_item=item,
+            user=request.user
+
+        ).first()
+        
+        item.return_request = existing_return
+
+        returnable_items.append(item)
+
+    return_deadline = order.delivered_at + timedelta(days=RETURN_DAYS)    
+
+    days_left = max(
+        0,
+        (return_deadline  - timezone.now()).days
+
+    )
+
+    return render(request, 'return_order.html',{
+        'order' : order,
+        'returnable_items' : returnable_items,
+        'return_deadline ' : return_deadline.astimezone,
+        'days_left' : days_left,
     })
 
-
-
 @login_required
-def return_request(request, order_number, item_id):
+def return_request(request, uuid, item_id):
 
     order = get_object_or_404(
         Order,
-        order_number=order_number,
+        uuid=uuid,
         user=request.user
     )
 
@@ -295,11 +245,11 @@ def return_request(request, order_number, item_id):
 
     if order.status != 'delivered':
         messages.error(request, 'Returns can only be requested for delivered orders.')
-        return redirect('order_detail', order_number=order.order_number)
+        return redirect('order_detail', uuid=order.uuid)
 
     if not order.delivered_at:
         messages.error(request, 'Delivery date not recorded.')
-        return redirect('order_detail', order_number=order.order_number)
+        return redirect('order_detail', uuid=order.uuid)
 
     existing_return = ReturnRequest.objects.filter(
         order_item=order_item,
@@ -321,15 +271,15 @@ def return_request(request, order_number, item_id):
 
         if existing_return:
             messages.error(request, 'Return already exists for this item.')
-            return redirect('return_request', order_number=order.order_number, item_id=item_id)
+            return redirect('return_request', uuid=order.uuid, item_id=item_id)
 
         if not is_returnable_category:
             messages.error(request, 'Item not eligible for return.')
-            return redirect('order_detail', order_number=order.order_number)
+            return redirect('order_detail', uuid=order.uuid)
 
         if deadline_expired:
             messages.error(request, 'Return window closed.')
-            return redirect('order_detail', order_number=order.order_number)
+            return redirect('order_detail', uuid=order.uuid)
 
         return_reason = request.POST.get('return_reason')
         return_notes = request.POST.get('return_notes') or ''
@@ -353,7 +303,7 @@ def return_request(request, order_number, item_id):
         )
 
         messages.success(request, "Return request submitted.")
-        return redirect("order_detail", order_number=order.order_number)
+        return redirect("order_detail", uuid=order.uuid)
 
     return render(request, 'return_request.html', {
         'order': order,
@@ -363,12 +313,26 @@ def return_request(request, order_number, item_id):
         'deadline_expired': deadline_expired,
         'return_deadline': return_deadline,
         'days_left': days_left,
+        'reasons': RETURN_REASONS,
     })
 
 
 @login_required
-def download_invoice(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+def return_order_redirect(request, short_id):
+    orders = Order.objects.filter(
+        uuid__startswith=short_id.upper(),
+        user=request.user
+    )
+    if orders.exists():
+        return redirect('return_order', uuid=orders.first().uuid)
+    else:
+        messages.error(request, "Order not found")
+        return redirect('order_list')
+    
+
+@login_required
+def download_invoice(request, uuid):
+    order = get_object_or_404(Order, uuid=uuid, user=request.user)
     items = order.items.all()
 
     try:
@@ -416,7 +380,7 @@ def download_invoice(request, order_number):
                       styles['Normal']),
             Paragraph(
                 f'<font name="Helvetica-Bold" size="14" color="#2e2925">INVOICE</font><br/>'
-                f'<font name="Helvetica" size="8" color="#7a6f66">#{order.order_number}</font><br/>'
+                f'<font name="Helvetica" size="8" color="#7a6f66">#{order.uuid}</font><br/>'
                 f'<font name="Helvetica" size="8" color="#7a6f66">'
                 f'{order.created_at.strftime("%d %B %Y")}</font>',
                 ps('hr', alignment=TA_RIGHT)
@@ -429,7 +393,7 @@ def download_invoice(request, order_number):
         bt = Table([
             [Paragraph('<b>Bill To</b>', s_head), Paragraph('<b>Order Info</b>', s_head)],
             [Paragraph(f'{order.full_name}<br/>{order.phone}', s_body),
-             Paragraph(f'Order: <b>#{order.order_number}</b>', s_body)],
+             Paragraph(f'Order: <b>#{order.uuid}</b>', s_body)],
             [Paragraph(order.address_one_line, s_body),
              Paragraph(f'Date: {order.created_at.strftime("%d %b %Y, %I:%M %p")}', s_body)],
             [Paragraph('', s_body), Paragraph(f'Status: <b>{order.get_status_display()}</b>', s_body)],
@@ -502,7 +466,7 @@ def download_invoice(request, order_number):
         buf.seek(0)
         response = HttpResponse(buf, content_type='application/pdf')
         response['Content-Disposition'] = (
-            f'attachment; filename="Veska_Invoice_{order.order_number}.pdf"')
+            f'attachment; filename="Veska_Invoice_{order.uuid}.pdf"')
         return response
 
     except ImportError:

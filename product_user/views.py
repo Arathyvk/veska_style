@@ -31,14 +31,15 @@ SORT_MAP = {
 }
 
 CATEGORY_CHOICES = [
-    ('Formal', 'Formal'),
+    ('Sneakers', 'Sneakers'),
+    ('Heels', 'Heels'),
+    ('Flats', 'Flats'),
+    ('Boots', 'Boots'),
+    ('Sandals', 'Sandals'),
+    ('Loafers', 'Loafers'),
+    ('Sports Shoes', 'Sports Shoes'),
     ('Casual', 'Casual'),
-    ('Party',  'Party'),
-    ('Sports', 'Sports'),
-    ('Ethnic', 'Ethnic'),
-    ('Sandal', 'Sandal'),
 ]
-
 SIZE_CHOICES = ['US 6', 'US 7', 'US 8', 'US 9', 'US 10', 'US 11']
 
 STOCK_CHOICES = [
@@ -84,33 +85,40 @@ def _wishlist_ids(request):
 
 
 def product_shop(request):
+
     qs = (
         Product.objects
         .filter(is_active=True, is_shop_active=True)
         .prefetch_related('images', 'variants')
     )
 
-    raw_query           = request.GET.get('q', '').strip()
-    search_query        = _sanitize_search(raw_query)
+    raw_query = request.GET.get('q', '').strip()
+    search_query = _sanitize_search(raw_query)
+
     selected_categories = request.GET.getlist('category')
-    selected_sizes      = request.GET.getlist('size')
-    price_min_raw       = request.GET.get('price_min', '').strip()
-    price_max_raw       = request.GET.get('price_max', '').strip()
-    stock_filter        = request.GET.get('stock', '')
-    sort_key            = request.GET.get('sort', 'newest')
+    selected_sizes = request.GET.getlist('size')
+
+    price_min_raw = request.GET.get('price_min', '').strip()
+    price_max_raw = request.GET.get('price_max', '').strip()
+
+    stock_filter = request.GET.get('stock', '').strip()
+
+    sort_key = request.GET.get('sort', 'newest')
     if sort_key not in SORT_MAP:
         sort_key = 'newest'
 
     if search_query:
         qs = qs.filter(
-            Q(name__icontains=search_query)        |
+            Q(name__icontains=search_query) |
             Q(description__icontains=search_query) |
-            Q(category__name__icontains=search_query)    |
+            Q(category__name__icontains=search_query) |
             Q(color__icontains=search_query)
         )
 
     if selected_categories:
-        qs = qs.filter(category__name__in=selected_categories)
+        qs = qs.filter(
+            category__name__in=selected_categories
+        )
 
     if selected_sizes:
         qs = qs.filter(
@@ -133,13 +141,18 @@ def product_shop(request):
         price_max_raw = ''
 
     if stock_filter == 'in_stock':
-        qs = qs.filter(stock__gt=5)
-    elif stock_filter == 'low_stock':
-        qs = qs.filter(stock__gt=0, stock__lte=5)
-    elif stock_filter == 'out_stock':
-        qs = qs.filter(stock=0)
+        qs = qs.filter(variants__stock__gt=5)
 
-    qs = qs.order_by(SORT_MAP[sort_key])
+    elif stock_filter == 'low_stock':
+        qs = qs.filter(variants__stock__gt=0, variants__stock__lte=5)
+
+    elif stock_filter == 'out_stock':
+        qs = qs.filter(variants__stock=0)
+
+    qs = qs.distinct()
+
+    sort_field = SORT_MAP.get(sort_key, '-created_at')         
+    qs = qs.order_by(sort_field)
 
     paginator = Paginator(qs, ITEMS_PER_PAGE)
     page_obj  = paginator.get_page(request.GET.get('page', 1))
@@ -262,7 +275,7 @@ def product_detail(request, slug):
     )
     wl          = _get_wishlist(request)
     in_wishlist = wl.products.filter(pk=product.pk).exists() if wl else False
-    category_display = dict(CATEGORY_CHOICES).get(product.category, product.category)
+    category_display = product.category.name
 
     return render(request, 'product_detail.html', {
         'product':          product,

@@ -1,5 +1,6 @@
 from django import forms
 from product_admin.models import Product, ProductVariant
+from category_admin.models import Category  
 
 
 class ProductForm(forms.ModelForm):
@@ -37,6 +38,15 @@ class ProductForm(forms.ModelForm):
             }),
             'is_active': forms.CheckboxInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set the queryset for category field
+        self.fields['category'].queryset = Category.objects.all()
+        # Add empty label if you want
+        self.fields['category'].empty_label = "— Select —"
+        # Override label_from_instance to show category name
+        self.fields['category'].label_from_instance = lambda obj: obj.name
 
     def clean_price(self):
         price = self.cleaned_data.get('price')

@@ -17,7 +17,7 @@
   --shadow-sm:0 2px 8px rgba(30,26,23,.08);
   --radius-md:10px;--radius-lg:16px;--radius-xl:24px;
   --transition:all .2s cubic-bezier(.4,0,.2,1);
-  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+  --body:'DM Sans',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
@@ -181,121 +181,144 @@ button,input,select{font-family:var(--body)}
       </select>
     </form>
 
-    {% if orders %}
-      {% for order in orders %}
-      <div class="order-card">
+{% if orders %}
 
-      <div class="order-card-head">
-          <div>
-            <div class="order-num">#{{ order.order_number }}</div>
-            <div class="order-date">Placed on {{ order.created_at|date:"d M Y, g:i A" }}</div>
-          </div>
-          <div class="order-head-right">
-            <span class="status-badge st-{{ order.status }}">
-              <span class="dot"></span>
-              {{ order.get_status_display }}
-            </span>
-          </div>
+  {% for order in orders %}
+  <div class="order-card">
+
+    <div class="order-card-head">
+
+      <div>
+        <div class="order-num">
+          #{{ order.uuid }}
         </div>
 
-        <div class="order-card-body">
-          <div class="order-items-preview">
-            {% for item in order.items.all|slice:":3" %}
-            <div class="item-thumb">
-              {% if item.image_url %}
-                <img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
-              {% else %}
-                <div class="item-thumb-empty">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="20" height="20">
-                    <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                </div>
-              {% endif %}
-            </div>
-            {% endfor %}
-            {% if order.items.count > 3 %}
-            <div class="item-thumb-more">+{{ order.items.count|add:"-3" }}</div>
-            {% endif %}
-          </div>
-
-          <div class="order-meta">
-            <span>
-              {{ order.items.count }} item{{ order.items.count|pluralize }}
-            </span>
-            <span>
-              📍 {{ order.city }}, {{ order.state }}
-            </span>
-            <span>
-              💳 {{ order.get_payment_method_display }}
-            </span>
-            {% if order.coupon_code %}
-            <span>🏷️ {{ order.coupon_code }}</span>
-            {% endif %}
-          </div>
+        <div class="order-date">
+          Placed on {{ order.created_at|date:"d M Y, g:i A" }}
         </div>
-
-        <div class="order-card-foot">
-          <div>
-            <div style="font-size:11px;color:var(--muted-lt);margin-bottom:2px">Order Total</div>
-            <div class="order-total">₹{{ order.total|floatformat:2 }}</div>
-          </div>
-          <div class="order-actions">
-            <a href="{% url 'order_detail' order.order_number %}" class="btn-action btn-view">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-              View Details
-            </a>
-            <a href="{% url 'download_invoice' order.order_number %}" class="btn-action btn-invoice">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Invoice
-            </a>
-            {% if order.can_cancel %}
-            <a href="{% url 'cancel_order' order.order_number %}" class="btn-action btn-cancel-sm">
-              Cancel
-            </a>
-            {% endif %}
-            {% if not order.can_return.exits %}
-            <a href="{% url 'return_order' order.order_number %}" class="btn-action btn-return-sm">
-              Return
-            </a>
-            {% endif %}
-          </div>
-        </div>
-
       </div>
-      {% endfor %}
 
-    {% else %}
-    <div class="empty-state">
-      <div class="empty-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-          <polyline points="10 9 9 9 8 9"/>
-        </svg>
+      <div class="order-head-right">
+        <span class="status-badge st-{{ order.status }}">
+          <span class="dot"></span>
+          {{ order.get_status_display }}
+        </span>
       </div>
-      <h2>No orders <em>found</em></h2>
-      <p>
-        {% if search_query or status_filter %}
-          No orders match your search. Try different keywords.
-        {% else %}
-          You haven't placed any orders yet. Start shopping!
-        {% endif %}
-      </p>
-      <a href="{% url 'product_shop' %}" class="btn-shop">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <polyline points="15 18 9 12 15 6"/>
-        </svg>
-        Browse Shop
-      </a>
+
     </div>
+
+    <div class="order-card-body">
+
+      <div class="order-items-preview">
+
+        {% for item in order.items.all|slice:":3" %}
+        <div class="item-thumb">
+
+          {% if item.image_url %}
+            <img src="{{ item.image_url }}" alt="{{ item.product_name }}">
+          {% else %}
+            <div class="item-thumb-empty">
+              No Image
+            </div>
+          {% endif %}
+
+        </div>
+        {% endfor %}
+
+        {% if order.items.count > 3 %}
+        <div class="item-thumb-more">
+          +{{ order.items.count|add:"-3" }}
+        </div>
+        {% endif %}
+
+      </div>
+
+      <div class="order-meta">
+
+        <span>
+          {{ order.items.count }} item{{ order.items.count|pluralize }}
+        </span>
+
+        <span>
+          📍 {{ order.city }}, {{ order.state }}
+        </span>
+
+        <span>
+          💳 {{ order.get_payment_method_display }}
+        </span>
+
+        {% if order.coupon_code %}
+        <span>
+          🏷️ {{ order.coupon_code }}
+        </span>
+        {% endif %}
+
+      </div>
+
+    </div>
+
+    <div class="order-card-foot">
+
+      <div class="order-total">
+        ₹{{ order.total|floatformat:2 }}
+      </div>
+
+      <div class="order-actions">
+
+        <a href="{% url 'order_detail' order.uuid %}" class="btn-action btn-view">
+          View Details
+        </a>
+
+        <a href="{% url 'download_invoice' order.uuid %}" class="btn-action btn-invoice">
+          Invoice
+        </a>
+
+        {% if order.can_cancel %}
+        <a href="{% url 'cancel_order' order.uuid %}" class="btn-action btn-cancel-sm">
+          Cancel
+        </a>
+        {% endif %}
+
+        {% if order.can_return %}
+        <a href="{% url 'return_order' order.uuid %}" class="btn-action btn-return-sm">
+          Return
+        </a>
+        {% endif %}
+
+      </div>
+
+    </div>
+
+  </div>
+  {% endfor %}
+
+{% else %}
+
+<div class="empty-state">
+
+  <div class="empty-icon">
+    No Orders
+  </div>
+
+  <h2>
+    No orders <em>found</em>
+  </h2>
+
+  <p>
+    {% if search_query or status_filter %}
+      No orders match your search.
+    {% else %}
+      You haven't placed any orders yet.
     {% endif %}
+  </p>
+
+  <a href="{% url 'product_shop' %}" class="btn-shop">
+    Browse Shop
+  </a>
+
+</div>
+
+{% endif %}
 
   </div>
 </div>

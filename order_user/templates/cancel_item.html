@@ -6,7 +6,7 @@
 <style>
 :root{--cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--terra:#b56744;--terra-pale:#f7ede5;
   --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;--border:#e0d9d0;
-  --danger:#b53333;--danger-pale:#fdf0f0;--head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
+  --danger:#b53333;--danger-pale:#fdf0f0;--body:'DM Sans',sans-serif;
   --radius-md:10px;--radius-xl:24px;--transition:all .2s cubic-bezier(.4,0,.2,1)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
@@ -52,7 +52,7 @@ textarea.ftextarea:focus{border-color:var(--danger);background:#fff}
   <div class="container">
     <div class="breadcrumbs">
       <a href="{% url 'order_list' %}">My Orders</a><span class="sep">›</span>
-      <a href="{% url 'order_detail' order.order_number %}">#{{ order.order_number }}</a><span class="sep">›</span>
+      <a href="{% url 'order_detail' order.uuid %}">#{{ order.uuid }}</a><span class="sep">›</span>
       <span>Cancel Item</span>
     </div>
     <div class="page-title"><em>Cancel</em> Item</div>
@@ -97,7 +97,7 @@ textarea.ftextarea:focus{border-color:var(--danger);background:#fff}
                   onclick="return confirm('Cancel {{ item.product_name }}?')">
             Cancel This Item
           </button>
-          <a href="{% url 'order_detail' order.order_number %}" class="btn-back">Keep It</a>
+          <a href="{% url 'order_detail' order.uuid %}" class="btn-back">Keep It</a>
         </div>
       </form>
     </div>

@@ -1,3 +1,4 @@
+import uuid
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
@@ -138,7 +139,7 @@ def admin_order_list(request):
  
 @never_cache
 @login_required(login_url='admin_login')
-def order_detail(request, order_number):
+def order_detail(request, uuid):
 
     if not is_admin(request.user):
         return redirect('admin_login')
@@ -148,7 +149,7 @@ def order_detail(request, order_number):
             'items__product',
             'items__variant'
         ),
-        order_number=order_number
+        uuid=uuid
     )
 
     items_qs = order.items.all()
@@ -172,25 +173,25 @@ def order_detail(request, order_number):
 @never_cache
 @login_required(login_url='admin_login')
 @require_POST
-def order_update_status(request, order_number):
+def order_update_status(request, uuid):
     if not is_admin(request.user):
         return redirect('admin_login')
  
-    order      = get_object_or_404(Order, order_number=order_number)
+    order      = get_object_or_404(Order, uuid=uuid)
     new_status = request.POST.get('status', '').strip()
  
     valid = dict(ORDER_STATUS_CHOICES).keys()
 
     if new_status not in valid:
         messages.error(request, 'Invalid status.')
-        return redirect('admin_order_detail', order_number=order_number)
+        return redirect('admin_order_detail', uuid=uuid)
 
     order.status = new_status
     if new_status == 'delivered' and not order.delivered_at:
         order.delivered_at = timezone.now()
     order.save()
     messages.success(request, f'Order status updated to {new_status}.')
-    return redirect('admin_order_detail', order_number=order_number)
+    return redirect('admin_order_detail', uuid=uuid)
 
 
 @staff_member_required(login_url='admin:login')
