@@ -4,7 +4,7 @@ from django.conf import settings
 
 class RazorpayTransaction(models.Model):
     STATUS_CHOICES = [
-        ('creates', 'created'),
+        ('created', 'created'),
         ('paid',    'paid'),
         ('failed',  'failed'),
         ('refunded','refunded'),

@@ -128,9 +128,10 @@ class Order(models.Model):
     payment_status    = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
     status            = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
-    paypal_order_id   = models.CharField(max_length=100, blank=True)   # PayPal order ID
-    paypal_capture_id = models.CharField(max_length=100, blank=True)   # PayPal capture ID after payment
-    paypal_payer_id   = models.CharField(max_length=100, blank=True)
+    razorpay_order_id   = models.CharField(max_length=100, blank=True)   
+    razorpay_payment_id = models.CharField(max_length=100, blank=True)   
+    razorpay_signature  = models.CharField(max_length=255, blank=True)   
+
 
     notes             = models.TextField(blank=True)
     created_at        = models.DateTimeField(auto_now_add=True)

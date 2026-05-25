@@ -20,39 +20,47 @@ class Wallet(models.Model):
         return f"{self.user.username}'s Wallet ₹{self.balance}"    
     
     
-    def credit(self,amount, reason = '',order=None, reference=''):
+    def credit(self, amount, reason='', order=None, reference='', description=''):
+
         amount = Decimal(str(amount))
+
         self.balance += amount
         self.save(update_fields=['balance', 'updated_at'])
+
         WalletTransaction.objects.create(
-            wallet           = self,
-            transaction_type = WalletTransaction.CREDIT,
-            amount           = amount,
-            reason           = reason,
-            order            = order,
-            reference        = reference or str(uuid.uuid4())[:12].upper(),
-        ) 
+            wallet=self,
+            transaction_type=WalletTransaction.CREDIT,
+            amount=amount,
+            reason=reason,
+            order=order,
+            reference=reference or str(uuid.uuid4())[:12].upper(),
+            description=description,
+        )
  
 
-    def debit(self, amount, reason='', order=None , reference='' ):
-        amount     =  Decimal(str(amount))
+    def debit(self, amount, reason='', order=None, reference='', description=''):
+
+        amount = Decimal(str(amount))
+
         if amount > self.balance:
             raise ValueError("Insufficient wallet balance.")
+
         self.balance -= amount
         self.save(update_fields=['balance', 'updated_at'])
+
         WalletTransaction.objects.create(
-            wallet          = self,
-            transaction_type= WalletTransaction.DEBIT,
-            amount          = amount,
-            reason          = reason,
-            order           = order,
-            reference       = reference or str(uuid.uuid4())[:12].upper(),
+            wallet=self,
+            transaction_type=WalletTransaction.DEBIT,
+            amount=amount,
+            reason=reason,
+            order=order,
+            reference=reference or str(uuid.uuid4())[:12].upper(),
+            description=description,
         )
 
 
 
     def can_pay(self, amount):
-        from decimal import Decimal
         return self.balance >= Decimal(str(amount))
 
 
@@ -62,8 +70,8 @@ class WalletTransaction(models.Model):
     DEBIT  = 'debit'        
  
     TRANSACTION_TYPES = [
-        ('CREDIT', 'Credit'),
-        ('DEBIT',  'Debit'),
+        (CREDIT, 'Credit'),
+        (DEBIT,  'Debit'),
     ]
  
     REASON_CANCELLATION = 'order_cancellation'
@@ -84,7 +92,7 @@ class WalletTransaction(models.Model):
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
     amount           = models.DecimalField(max_digits=12, decimal_places=2)
     description      = models.CharField(max_length=300, blank=True)
-    reason           = models.CharField(max_length=20, choices=REASON_CHOICES, default='MANUAL')
+    reason           = models.CharField(max_length=20, choices=REASON_CHOICES, default=REASON_MANUAL)
     order            = models.ForeignKey('order_user.Order', on_delete=models.SET_NULL,null=True, blank=True, related_name='wallet_transactions')
     reference        = models.CharField(max_length=50, blank=True)
     created_at       = models.DateTimeField(auto_now_add=True)
