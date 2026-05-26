@@ -7,10 +7,9 @@ from django.db.models import Q
 from django.http import HttpResponse
 from datetime import timedelta
 from decimal import Decimal
-from uuid import UUID
 from django.db import transaction as db_tx
 
-from order_user.models import Order, OrderItem, Coupon
+from order_user.models import Order, OrderItem
 from return_admin.models import ReturnRequest, RETURN_DAYS, NON_RETURNABLE_CATEGORIES
 from product_admin.models import ProductVariant
 from wallet_user.models import Wallet
@@ -31,7 +30,7 @@ TIMELINE_STEPS = [
 
 STATUS_ORDER = [s[0] for s in TIMELINE_STEPS]
 
-CANCEL_REASONS =[
+CANCEL_REASONS = [
     ('changed_mind',   'Changed my mind'),
     ('wrong_item',     'Orderes wrong item/size'),
     ('found_cheaper',  'Found better price elsewhere'),
@@ -389,12 +388,26 @@ def download_invoice(request, uuid):
         ht.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'MIDDLE'),('BOTTOMPADDING',(0,0),(-1,-1),8)]))
         story.append(ht)
         story.append(HRFlowable(width=usable_w, thickness=1.5, color=TERRA, spaceAfter=10))
+        
+        address_parts = []
+        if hasattr(order, 'address_line1') and order.address_line1:
+            address_parts.append(order.address_line1)
+        if hasattr(order, 'address_line2') and order.address_line2:
+            address_parts.append(order.address_line2)
+        if hasattr(order, 'city') and order.city:
+            address_parts.append(order.city)
+        if hasattr(order, 'state') and order.state:
+            address_parts.append(order.state)
+        if hasattr(order, 'pincode') and order.pincode:
+            address_parts.append(order.pincode)
+        
+        address_one_line = ', '.join(address_parts)
 
         bt = Table([
             [Paragraph('<b>Bill To</b>', s_head), Paragraph('<b>Order Info</b>', s_head)],
             [Paragraph(f'{order.full_name}<br/>{order.phone}', s_body),
              Paragraph(f'Order: <b>#{order.uuid}</b>', s_body)],
-            [Paragraph(order.address_one_line, s_body),
+            [Paragraph(address_one_line, s_body),
              Paragraph(f'Date: {order.created_at.strftime("%d %b %Y, %I:%M %p")}', s_body)],
             [Paragraph('', s_body), Paragraph(f'Status: <b>{order.get_status_display()}</b>', s_body)],
             [Paragraph('', s_body), Paragraph(f'Payment: {order.get_payment_method_display()}', s_body)],
@@ -414,14 +427,23 @@ def download_invoice(request, uuid):
             Paragraph('<b>Unit Price</b>', ps('rh', alignment=TA_RIGHT, fontSize=9, fontName='Helvetica-Bold')),
             Paragraph('<b>Total</b>',  ps('rh2', alignment=TA_RIGHT, fontSize=9, fontName='Helvetica-Bold')),
         ]]
+
         for it in items:
-            note = ' <font color="#b53333">(cancelled)</font>' if it.status == 'cancelled' else ''
+            note = ' <font color="#b53333">(cancelled)</font>' if it.cancel_status == 'cancelled' else ''
+            
+            size_value = getattr(it, 'size', None) or getattr(it, 'size_name', None) or '—'
+            
+            if hasattr(it, 'line_total') and it.line_total:
+                line_total = it.line_total
+            else:
+                line_total = it.quantity * it.unit_price
+            
             rows.append([
                 Paragraph(f'{it.product_name}{note}', s_body),
-                Paragraph(it.size or '—', ps('cc',  alignment=TA_CENTER, fontSize=8.5, fontName='Helvetica')),
+                Paragraph(str(size_value), ps('cc',  alignment=TA_CENTER, fontSize=8.5, fontName='Helvetica')),
                 Paragraph(str(it.quantity), ps('ccc', alignment=TA_CENTER, fontSize=8.5, fontName='Helvetica')),
                 Paragraph(f'₹{it.unit_price:.2f}', s_right),
-                Paragraph(f'₹{it.line_total:.2f}', s_right),
+                Paragraph(f'₹{line_total:.2f}', s_right),
             ])
 
         item_table = Table(rows, colWidths=col_w, repeatRows=1)
