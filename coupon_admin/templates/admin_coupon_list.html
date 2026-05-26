@@ -98,7 +98,18 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
   <div class="tbl-wrap">
     {% if page_obj %}
     <table class="dtbl">
-      <thead><tr><th>Code</th><th>Type</th><th>Discount</th><th>Min Order</th><th>Usage</th><th>Validity</th><th>Active</th><th>Actions</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Type</th>
+          <th>Discount</th>
+          <th>Min Order</th>
+          <th>Usage</th>
+          <th>Validity</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
       <tbody>
         {% for c in page_obj %}
         <tr id="crow-{{ c.pk }}">
@@ -114,7 +125,6 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
           <td>{% if c.min_order_value %}₹{{ c.min_order_value|floatformat:0 }}{% else %}<span style="color:var(--muted)">None</span>{% endif %}</td>
           <td>
             <div class="usage-bar-wrap">
-              <div class="usage-nums">{{ c.times_used }}{% if c.usage_limit %} / {{ c.usage_limit }}{% else %} / ∞{% endif %}</div>
               {% if c.usage_limit %}<div class="usage-bar"><div class="usage-fill" style="width:{% widthratio c.times_used c.usage_limit 100 %}%"></div></div>{% endif %}
               <div style="font-size:15px;color:var(--muted);margin-top:3px">{{ c.per_user_limit }}× per user</div>
             </div>
@@ -126,7 +136,7 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
               {% if c.valid_until < now %}<span class="expired-tag">Expired</span>
               {% elif c.valid_from > now %}<span class="coming-tag">Soon</span>
               {% else %}<span class="valid-tag">Active</span>{% endif %}
-            {% else %}<div style="font-size:11px;color:var(--muted)">No expiry</div>{% endif %}
+            {% else %}<div style="font-size:15px;color:var(--muted)">No expiry</div>{% endif %}
           </td>
           <td>
             <label class="tgl" title="Toggle active" onclick="toggleCoupon('{{ c.pk }}', this)">
@@ -140,7 +150,7 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
                 <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 Edit
               </a>
-              <form method="POST" action="{% url 'admin_coupon_delete' c.pk %}" onsubmit="return confirm('Delete {{ c.code }}?')">
+              <form method="POST" action="{% url 'admin_coupon_delete' c.pk %}" onsubmit="return confirm('Delete {{ c.code }}?')" style="display:inline">
                 {% csrf_token %}
                 <button type="submit" class="btn-del">
                   <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
@@ -152,59 +162,58 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
         {% endfor %}
       </tbody>
     </table>
-    {% if page_obj.has_other_pages %}
+    
+    <!-- FIXED PAGINATION - Using page_obj instead of products -->
     <div class="pag">
-      <div class="pag-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</div>
+      <div class="pag-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} &nbsp;·&nbsp; {{ page_obj.paginator.count }} coupon{{ page_obj.paginator.count|pluralize }}</div>
       <div class="pag-links">
-        {% if page_obj.has_previous %}<a href="?{{ params_str }}&page={{ page_obj.previous_page_number }}" class="pg">‹</a>{% else %}<span class="pg off">‹</span>{% endif %}
-        {% for num in page_obj.paginator.page_range %}{% if page_obj.number == num %}<span class="pg active">{{ num }}</span>{% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}<a href="?{{ params_str }}&page={{ num }}" class="pg">{{ num }}</a>{% endif %}{% endfor %}
-        {% if page_obj.has_next %}<a href="?{{ params_str }}&page={{ page_obj.next_page_number }}" class="pg">›</a>{% else %}<span class="pg off">›</span>{% endif %}
+        {% if page_obj.has_previous %}
+          <a href="?{{ params_str }}&page={{ page_obj.previous_page_number }}" class="pg">‹</a>
+        {% else %}
+          <span class="pg off">‹</span>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <span class="pg active">{{ num }}</span>
+          {% elif num >= page_obj.number|add:"-3" and num <= page_obj.number|add:"3" %}
+            <a href="?{{ params_str }}&page={{ num }}" class="pg">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+          <a href="?{{ params_str }}&page={{ page_obj.next_page_number }}" class="pg">›</a>
+        {% else %}
+          <span class="pg off">›</span>
+        {% endif %}
       </div>
     </div>
-    {% endif %}
+    
     {% else %}
-    <div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg><h3>No coupons yet</h3><p>Create your first discount coupon.</p></div>
+    <div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      <h3>No coupons yet</h3>
+      <p>Create your first discount coupon.</p>
+    </div>
     {% endif %}
-  </div>
-<div class="table-footer">
-  <div class="page-info">
-    Page {{ page_obj.number }} of {{ paginator.num_pages }}
-  </div>
-
-  <div class="pagination">
-
-    {% if page_obj.has_previous %}
-      <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.previous_page_number }}" class="pg-btn">Prev</a>
-    {% else %}
-      <span class="pg-btn disabled">Prev</span>
-    {% endif %}
-
-    {% for num in paginator.page_range %}
-      {% if num == page_obj.number %}
-        <span class="pg-num active">{{ num }}</span>
-      {% elif num > page_obj.number|add:"-2" and num < page_obj.number|add:"2" %}
-        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ num }}" class="pg-num">{{ num }}</a>
-      {% endif %}
-    {% endfor %}
-
-    {% if page_obj.has_next %}
-      <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.next_page_number }}" class="pg-btn">Next</a>
-    {% else %}
-      <span class="pg-btn disabled">Next</span>
-    {% endif %}
-
   </div>
 </div>
 
-</div>
 <script>
 async function toggleCoupon(pk, lbl) {
   const cb = lbl.querySelector('input');
   const res = await fetch(`/admin-panel/coupons/${pk}/toggle/`, {
-    method:'POST', headers:{'X-CSRFToken':'{{ csrf_token }}','X-Requested-With':'XMLHttpRequest'}
+    method:'POST', 
+    headers:{
+      'X-CSRFToken':'{{ csrf_token }}',
+      'X-Requested-With':'XMLHttpRequest',
+      'Content-Type':'application/json'
+    }
   });
   const d = await res.json();
-  if (!d.ok) { cb.checked = !cb.checked; }
+  if (!d.ok) { 
+    cb.checked = !cb.checked; 
+  }
 }
 </script>
 {% endblock %}

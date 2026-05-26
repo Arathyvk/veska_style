@@ -1,6 +1,7 @@
 import hmac
 import hashlib
 import razorpay
+import json
 from datetime import timedelta
 
 from django.conf import settings
@@ -8,8 +9,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from django.contrib import messages
 
 from order_user.models import Order
 from cart_user.models import Cart
@@ -51,8 +53,40 @@ def create_razorpay_order(request, uuid):
 
 
 @login_required
-@require_POST
 def razorpay_payment_success(request):
+    # Handle GET requests (failures/cancellations)
+    if request.method == 'GET':
+        error_reason = request.GET.get('reason', '')
+        error_desc = request.GET.get('error_description', 'Payment was cancelled')
+        
+        # Try to find order from session or GET parameters
+        razorpay_order_id = request.GET.get('razorpay_order_id', '')
+        order = None
+        
+        if razorpay_order_id:
+            order = Order.objects.filter(
+                razorpay_order_id=razorpay_order_id,
+                user=request.user
+            ).first()
+        
+        if not order:
+            # Try to get from session
+            razorpay_order_id = request.session.get('razorpay_order_id', '')
+            if razorpay_order_id:
+                order = Order.objects.filter(
+                    razorpay_order_id=razorpay_order_id,
+                    user=request.user
+                ).first()
+        
+        if order:
+            # Redirect to failure page with order context
+            failure_url = reverse('payment_failure_with_order', kwargs={'uuid': order.uuid})
+            return redirect(f"{failure_url}?error_description={error_desc}&reason={error_reason}")
+        else:
+            # Redirect to generic failure page
+            return redirect(f"{reverse('payment_failure')}?reason={error_reason}")
+    
+    # Handle POST requests (successful payments)
     razorpay_order_id   = request.POST.get('razorpay_order_id', '')
     razorpay_payment_id = request.POST.get('razorpay_payment_id', '')
     razorpay_signature  = request.POST.get('razorpay_signature', '')
@@ -103,19 +137,34 @@ def razorpay_payment_success(request):
         )
 
 
+
 @login_required
 def payment_success(request, uuid):
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
 
-    if order.payment_status not in ('paid', 'pending') and order.payment_method != 'cod':
+    # For COD orders
+    if order.payment_method == 'cod' and order.payment_status == 'pending':
+        estimated = order.created_at + timedelta(days=5)
+        return render(request, 'payment_success.html', {
+            'order': order,
+            'estimated_delivery': estimated.strftime('%d %b %Y'),
+        })
+    
+    # For paid orders
+    if order.payment_status == 'paid':
+        estimated = order.created_at + timedelta(days=5)
+        return render(request, 'payment_success.html', {
+            'order': order,
+            'estimated_delivery': estimated.strftime('%d %b %Y'),
+        })
+    
+    # If order is not paid and not COD, redirect to appropriate failure page
+    if order.payment_status == 'failed':
         return redirect('payment_failure_with_order', uuid=uuid)
-
-    estimated = order.created_at + timedelta(days=5)
-
-    return render(request, 'payment_success.html', {
-        'order':              order,
-        'estimated_delivery': estimated.strftime('%d %b %Y'),
-    })
+    
+    # For any other invalid state
+    messages.error(request, 'Payment not completed. Please try again.')
+    return redirect('cart_detail')
 
 
 
@@ -203,55 +252,60 @@ def payment_failure(request):
             'failed_at':         timezone.now().strftime('%d %b %Y, %I:%M %p'),
         })
 
-import json
-from django.http import JsonResponse
+
+
+
 
 @login_required
+@require_http_methods(["POST"])
 def razorpay_verify_payment(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+        
+        razorpay_order_id = data.get('razorpay_order_id')
+        razorpay_payment_id = data.get('razorpay_payment_id')
+        razorpay_signature = data.get('razorpay_signature')
+        
+        order = Order.objects.filter(
+            razorpay_order_id=razorpay_order_id,
+            user=request.user
+        ).first()
+        
+        if not order:
+            return JsonResponse({'success': False, 'error': 'Order not found'})
+        
+        body = f"{razorpay_order_id}|{razorpay_payment_id}"
+        expected = hmac.new(
+            settings.RAZORPAY_KEY_SECRET.encode(),
+            body.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        if hmac.compare_digest(expected, razorpay_signature):
+            order.payment_status = 'paid'
+            order.razorpay_payment_id = razorpay_payment_id
+            order.razorpay_signature = razorpay_signature
+            order.status = 'confirmed'
+            order.save()
             
-            razorpay_order_id = data.get('razorpay_order_id')
-            razorpay_payment_id = data.get('razorpay_payment_id')
-            razorpay_signature = data.get('razorpay_signature')
+            try:
+                cart = Cart.objects.get(user=request.user)
+                cart.items.all().delete()
+            except:
+                pass
             
-            order = Order.objects.filter(
-                razorpay_order_id=razorpay_order_id,
-                user=request.user
-            ).first()
+            return JsonResponse({
+                'success': True,
+                'redirect_url': reverse('payment_success', kwargs={'uuid': order.uuid})
+            })
+        else:
+            order.payment_status = 'failed'
+            order.save(update_fields=['payment_status'])
+            return JsonResponse({
+                'success': False, 
+                'error': 'Invalid signature',
+                'redirect_url': reverse('payment_failure_with_order', kwargs={'uuid': order.uuid})
+            })
             
-            if not order:
-                return JsonResponse({'success': False, 'error': 'Order not found'})
-            
-            body = f"{razorpay_order_id}|{razorpay_payment_id}"
-            expected = hmac.new(
-                settings.RAZORPAY_KEY_SECRET.encode(),
-                body.encode(),
-                hashlib.sha256
-            ).hexdigest()
-            
-            if hmac.compare_digest(expected, razorpay_signature):
-                order.payment_status = 'paid'
-                order.razorpay_payment_id = razorpay_payment_id
-                order.razorpay_signature = razorpay_signature
-                order.status = 'confirmed'
-                order.save()
-                
-                try:
-                    cart = Cart.objects.get(user=request.user)
-                    cart.items.all().delete()
-                except:
-                    pass
-                
-                return JsonResponse({
-                    'success': True,
-                    'redirect_url': reverse('payment_success', kwargs={'uuid': order.uuid})
-                })
-            else:
-                return JsonResponse({'success': False, 'error': 'Invalid signature'})
-                
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

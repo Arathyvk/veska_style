@@ -1,0 +1,665 @@
+{% extends "admin_base.html" %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+:root {
+  --bg:       #1a1410;
+  --card:     #231f1a;
+  --card2:    #2c2620;
+  --card3:    #332e28;
+  --border:   #3a342c;
+  --border2:  #4a4038;
+  --rose:     #c9967a;
+  --rose2:    #e8b49a;
+  --rose-dim: rgba(201,150,122,.15);
+  --text:     #f0ebe4;
+  --muted:    #8a7d72;
+  --muted2:   #b0a090;
+  --green:    #4caf7d;
+  --red:      #e05252;
+  --amber:    #e09a3c;
+  --blue:     #5b9bd5;
+  --radius:   10px;
+  --head:     'Playfair Display', serif;
+  --body:     'DM Sans', sans-serif;
+  --shadow:   0 4px 24px rgba(0,0,0,.35);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--body); background: var(--bg); color: var(--text); }
+
+/* ── page wrapper ── */
+.dash-page { padding: 28px 32px 60px; }
+
+/* ── page heading ── */
+.dash-heading {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+}
+.dash-heading h1 {
+  font-family: var(--head); font-size: 28px; font-weight: 500;
+  color: var(--text); letter-spacing: -.3px;
+}
+.dash-heading h1 em { font-style: italic; color: var(--rose2); }
+
+.dash-actions { display: flex; align-items: center; gap: 10px; }
+.year-select {
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 20px; color: var(--muted2); font-size: 12px; font-weight: 500;
+  padding: 6px 14px; cursor: pointer; font-family: var(--body); outline: none;
+  transition: border-color .15s;
+}
+.year-select:hover { border-color: var(--rose); }
+.btn-download {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, var(--rose), #a06848);
+  color: #fff; font-size: 12px; font-weight: 600;
+  padding: 8px 18px; border-radius: 20px; border: none; cursor: pointer;
+  font-family: var(--body); box-shadow: 0 3px 12px rgba(201,150,122,.3);
+  transition: opacity .2s;
+}
+.btn-download:hover { opacity: .88; }
+
+/* ── section label ── */
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+}
+
+/* ── KPI cards ── */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 14px;
+  margin-bottom: 28px;
+}
+@media(max-width:960px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:520px)  { .kpi-grid { grid-template-columns: 1fr; } }
+
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative; overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.kpi-card::before {
+  content: ''; position: absolute; right: -18px; top: -18px;
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--rose-dim); pointer-events: none;
+}
+
+.kpi-top { display: flex; align-items: center; justify-content: space-between; }
+.kpi-label { font-size: 11px; font-weight: 600; color: var(--muted2);
+             text-transform: uppercase; letter-spacing: .7px; }
+.kpi-badge {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+}
+.kpi-badge.up   { background: rgba(76,175,125,.15); color: var(--green); }
+.kpi-badge.down { background: rgba(224,82,82,.15);  color: var(--red); }
+.kpi-badge.flat { background: rgba(176,160,144,.15); color: var(--muted2); }
+
+.kpi-bottom { display: flex; align-items: flex-end; justify-content: space-between; }
+.kpi-value {
+  font-family: var(--head); font-size: 26px; font-weight: 600;
+  color: var(--text); line-height: 1;
+}
+.kpi-spark { width: 64px; height: 36px; }
+
+/* ── main grid ── */
+.dash-grid {
+  display: grid; grid-template-columns: 1fr 320px; gap: 18px;
+  margin-bottom: 18px;
+}
+@media(max-width:1100px) { .dash-grid { grid-template-columns: 1fr; } }
+
+/* ── chart card ── */
+.chart-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px;
+}
+.chart-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.chart-card-head h3 {
+  font-family: var(--head); font-size: 16px; font-weight: 500; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.chart-live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--rose);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(201,150,122,.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(201,150,122,0); }
+}
+.chart-wrap { position: relative; height: 220px; }
+
+.view-details-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 20px; font-size: 11.5px; font-weight: 600;
+  color: var(--muted2); padding: 5px 14px; text-decoration: none;
+  transition: all .15s;
+}
+.view-details-btn:hover { border-color: var(--rose); color: var(--rose2); }
+.view-details-btn svg { width: 11px; height: 11px; }
+
+/* ── status breakdown card ── */
+.status-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px;
+}
+.status-card h3 {
+  font-family: var(--head); font-size: 16px; font-weight: 500;
+  color: var(--text); margin-bottom: 16px;
+}
+.status-rows { display: flex; flex-direction: column; gap: 10px; }
+.status-row { display: flex; flex-direction: column; gap: 5px; }
+.status-row-top {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px;
+}
+.status-row-label { color: var(--muted2); font-weight: 500; }
+.status-row-count { color: var(--text); font-weight: 600; }
+.status-bar-bg {
+  height: 5px; background: var(--border); border-radius: 3px; overflow: hidden;
+}
+.status-bar-fill {
+  height: 100%; border-radius: 3px; transition: width .6s ease;
+}
+
+/* ── bottom row ── */
+.bottom-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+@media(max-width:900px) { .bottom-grid { grid-template-columns: 1fr; } }
+
+/* ── table card ── */
+.tbl-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.tbl-card-head {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tbl-card-head h3 {
+  font-family: var(--head); font-size: 15px; font-weight: 500; color: var(--text);
+}
+.tbl-card-head a {
+  font-size: 11px; color: var(--rose); text-decoration: none; font-weight: 600;
+}
+.tbl-card-head a:hover { color: var(--rose2); }
+.tbl-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--card2); }
+th {
+  padding: 9px 14px; text-align: left; font-size: 10px; font-weight: 700;
+  letter-spacing: .8px; text-transform: uppercase; color: var(--muted);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+td {
+  padding: 10px 14px; border-bottom: 1px solid rgba(58,52,44,.45);
+  color: var(--muted2); vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(201,150,122,.03); }
+td strong { color: var(--text); font-weight: 500; }
+td a { color: var(--rose); text-decoration: none; }
+td a:hover { color: var(--rose2); }
+
+/* ── status pills ── */
+.pill {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 9px; border-radius: 20px; letter-spacing: .3px;
+}
+.pill-pending    { background: rgba(224,154,60,.15);  color: var(--amber); }
+.pill-confirmed  { background: rgba(91,155,213,.15);  color: var(--blue); }
+.pill-processing { background: rgba(91,155,213,.12);  color: #7bb8e8; }
+.pill-shipped    { background: rgba(201,150,122,.15); color: var(--rose2); }
+.pill-delivered  { background: rgba(76,175,125,.15);  color: var(--green); }
+.pill-cancelled  { background: rgba(224,82,82,.15);   color: var(--red); }
+.pill-paid       { background: rgba(76,175,125,.15);  color: var(--green); }
+.pill-unpaid     { background: rgba(224,154,60,.12);  color: var(--amber); }
+.pill-wallet     { background: rgba(201,150,122,.12); color: var(--rose2); }
+.pill-razorpay   { background: rgba(91,155,213,.12);  color: #7bb8e8; }
+.pill-cod        { background: rgba(176,160,144,.12); color: var(--muted2); }
+
+/* ── low-stock card ── */
+.stock-list { padding: 6px 0; }
+.stock-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 18px; border-bottom: 1px solid rgba(58,52,44,.4);
+}
+.stock-item:last-child { border-bottom: none; }
+.stock-name { font-size: 13px; color: var(--text); font-weight: 500;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              max-width: 180px; }
+.stock-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.stock-qty { font-size: 12px; font-weight: 700; }
+.stock-qty.critical { color: var(--red); }
+.stock-qty.low      { color: var(--amber); }
+.stock-edit {
+  font-size: 10px; background: var(--card3); border: 1px solid var(--border2);
+  color: var(--muted2); padding: 2px 8px; border-radius: 4px;
+  text-decoration: none; transition: all .15s;
+}
+.stock-edit:hover { border-color: var(--rose); color: var(--rose2); }
+.out-badge {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 18px; background: rgba(224,82,82,.07);
+  border-top: 1px solid rgba(224,82,82,.15);
+  font-size: 12px; color: var(--red); font-weight: 600;
+}
+
+/* ── footer ── */
+.dash-footer {
+  text-align: center; padding: 24px 0 0;
+  font-size: 12px; color: var(--muted); border-top: 1px solid var(--border);
+  margin-top: 36px;
+}
+</style>
+
+<div class="dash-page">
+
+  <!-- heading -->
+  <div class="dash-heading">
+    <h1>Admin <em>Panel</em></h1>
+    <div class="dash-actions">
+      <select class="year-select" id="yearSelect" onchange="switchYear(this.value)">
+        <option value="{{ current_year }}" selected>{{ current_year }}</option>
+        <option value="{{ current_year|add:'-1' }}">{{ current_year|add:'-1' }}</option>
+        <option value="{{ current_year|add:'-2' }}">{{ current_year|add:'-2' }}</option>
+      </select>
+      <a href="{% url 'admin_order_list' %}" class="btn-download" download>
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        View Orders
+      </a>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="section-label">Sales Summary</div>
+  <div class="kpi-grid">
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Revenue</span>
+        <span class="kpi-badge {% if '-' in revenue_pct %}down{% else %}up{% endif %}">
+          {{ revenue_pct }}
+        </span>
+      </div>
+      <div class="kpi-bottom">
+        <span class="kpi-value">₹{{ revenue|floatformat:0 }}</span>
+        <svg class="kpi-spark" viewBox="0 0 64 36" fill="none">
+          <polyline points="0,28 12,20 24,24 36,12 48,16 64,6"
+                    stroke="#c9967a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Orders</span>
+        <span class="kpi-badge {% if '-' in orders_pct %}down{% else %}up{% endif %}">
+          {{ orders_pct }}
+        </span>
+      </div>
+      <div class="kpi-bottom">
+        <span class="kpi-value">{{ orders_count }}</span>
+        <svg class="kpi-spark" viewBox="0 0 64 36" fill="none">
+          <polyline points="0,30 10,26 20,20 32,28 42,16 54,22 64,10"
+                    stroke="#e05252" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Products Sold</span>
+        <span class="kpi-badge {% if '-' in items_pct %}down{% else %}up{% endif %}">
+          {{ items_pct }}
+        </span>
+      </div>
+      <div class="kpi-bottom">
+        <span class="kpi-value">{{ items_sold }}</span>
+        <svg class="kpi-spark" viewBox="0 0 64 36" fill="none">
+          <polyline points="0,32 12,22 22,26 34,14 46,18 56,10 64,14"
+                    stroke="#4caf7d" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Customers</span>
+        <span class="kpi-badge {% if '-' in customers_pct %}down{% else %}up{% endif %}">
+          {{ customers_pct }}
+        </span>
+      </div>
+      <div class="kpi-bottom">
+        <span class="kpi-value">{{ customers }}</span>
+        <svg class="kpi-spark" viewBox="0 0 64 36" fill="none">
+          <polyline points="0,28 14,24 26,18 36,22 48,12 60,16 64,10"
+                    stroke="#4caf7d" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+  </div><!-- /kpi-grid -->
+
+  <!-- chart + status -->
+  <div class="dash-grid">
+
+    <!-- Revenue line chart -->
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <h3>
+          <span class="chart-live-dot"></span>
+          Orders Update
+        </h3>
+        <a href="{% url 'admin_order_list' %}" class="view-details-btn">
+          View Details
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Order status breakdown -->
+    <div class="status-card">
+      <h3>Order Status</h3>
+      <div class="status-rows">
+        {% with total_s=status_counts.pending|add:status_counts.confirmed|add:status_counts.processing|add:status_counts.shipped|add:status_counts.delivered|add:status_counts.cancelled %}
+
+        {% if status_counts.pending %}
+        <div class="status-row">
+          <div class="status-row-top">
+            <span class="status-row-label">Pending</span>
+            <span class="status-row-count">{{ status_counts.pending }}</span>
+          </div>
+          <div class="status-bar-bg">
+            <div class="status-bar-fill" style="width:{% widthratio status_counts.pending total_s 100 %}%;background:var(--amber)"></div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if status_counts.confirmed %}
+        <div class="status-row">
+          <div class="status-row-top">
+            <span class="status-row-label">Confirmed</span>
+            <span class="status-row-count">{{ status_counts.confirmed }}</span>
+          </div>
+          <div class="status-bar-bg">
+            <div class="status-bar-fill" style="width:{% widthratio status_counts.confirmed total_s 100 %}%;background:var(--blue)"></div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if status_counts.processing %}
+        <div class="status-row">
+          <div class="status-row-top">
+            <span class="status-row-label">Processing</span>
+            <span class="status-row-count">{{ status_counts.processing }}</span>
+          </div>
+          <div class="status-bar-bg">
+            <div class="status-bar-fill" style="width:{% widthratio status_counts.processing total_s 100 %}%;background:#7bb8e8"></div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if status_counts.shipped %}
+        <div class="status-row">
+          <div class="status-row-top">
+            <span class="status-row-label">Shipped</span>
+            <span class="status-row-count">{{ status_counts.shipped }}</span>
+          </div>
+          <div class="status-bar-bg">
+            <div class="status-bar-fill" style="width:{% widthratio status_counts.shipped total_s 100 %}%;background:var(--rose)"></div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="status-row">
+          <div class="status-row-top">
+            <span class="status-row-label">Delivered</span>
+            <span class="status-row-count">{{ status_counts.delivered }}</span>
+          </div>
+          <div class="status-bar-bg">
+            <div class="status-bar-fill" style="width:{% widthratio status_counts.delivered total_s 100 %}%;background:var(--green)"></div>
+          </div>
+        </div>
+
+        {% if status_counts.cancelled %}
+        <div class="status-row">
+          <div class="status-row-top">
+            <span class="status-row-label">Cancelled</span>
+            <span class="status-row-count">{{ status_counts.cancelled }}</span>
+          </div>
+          <div class="status-bar-bg">
+            <div class="status-bar-fill" style="width:{% widthratio status_counts.cancelled total_s 100 %}%;background:var(--red)"></div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% endwith %}
+      </div>
+    </div>
+
+  </div><!-- /dash-grid -->
+
+  <!-- recent orders + low stock -->
+  <div class="bottom-grid">
+
+    <!-- Recent Orders table -->
+    <div class="tbl-card">
+      <div class="tbl-card-head">
+        <h3>Recent Orders</h3>
+        <a href="{% url 'admin_order_list' %}">View all →</a>
+      </div>
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in recent_orders %}
+            <tr>
+              <td>
+                <a href="{% url 'order_detail' order.uuid %}">#{{ order.order_number }}</a>
+              </td>
+              <td>
+                <strong>{{ order.full_name }}</strong><br>
+                <span style="font-size:11px;color:var(--muted)">{{ order.user.email }}</span>
+              </td>
+              <td><strong>₹{{ order.total|floatformat:0 }}</strong></td>
+              <td><span class="pill pill-{{ order.status }}">{{ order.status|title }}</span></td>
+              <td>
+                <span class="pill pill-{{ order.payment_method }}">{{ order.get_payment_method_display }}</span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">
+                No orders yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Low Stock + Top Products -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+      <!-- Low stock -->
+      <div class="tbl-card">
+        <div class="tbl-card-head">
+          <h3>⚠ Low Stock</h3>
+          <a href="{% url 'admin_inventory_list' %}">Manage →</a>
+        </div>
+        <div class="stock-list">
+          {% for product in low_stock %}
+          <div class="stock-item">
+            <span class="stock-name">{{ product.name }}</span>
+            <div class="stock-right">
+              <span class="stock-qty {% if product.stock <= 2 %}critical{% else %}low{% endif %}">
+                {{ product.stock }} left
+              </span>
+              <a href="{% url 'admin_inventory_detail' product.pk %}" class="stock-edit">Edit</a>
+            </div>
+          </div>
+          {% empty %}
+          <div style="padding:20px 18px;color:var(--muted);font-size:13px">
+            All products sufficiently stocked ✓
+          </div>
+          {% endfor %}
+        </div>
+        {% if out_of_stock %}
+        <div class="out-badge">
+          <span>Out of stock</span>
+          <span>{{ out_of_stock }} product{{ out_of_stock|pluralize }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Top Products -->
+      <div class="tbl-card">
+        <div class="tbl-card-head">
+          <h3>Top Products</h3>
+          <a href="{% url 'product_list' %}">View all →</a>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Product</th><th>Sold</th></tr>
+            </thead>
+            <tbody>
+              {% for item in top_products %}
+              <tr>
+                <td style="color:var(--muted);font-size:11px">{{ forloop.counter }}</td>
+                <td><strong>{{ item.product__name }}</strong></td>
+                <td><strong>{{ item.sold }}</strong></td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">
+                  No sales data yet.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /right col -->
+
+  </div><!-- /bottom-grid -->
+
+  <div class="dash-footer">© {{ current_year }} Veska. All Rights Reserved.</div>
+
+</div><!-- /dash-page -->
+
+<script>
+// ── Revenue chart (spline) ────────────────────────────────────────────────────
+const LABELS  = {{ chart_labels|safe }};
+const REVENUE = {{ chart_revenue|safe }};
+
+const ctx = document.getElementById('revenueChart').getContext('2d');
+
+// gradient fill
+const grad = ctx.createLinearGradient(0, 0, 0, 220);
+grad.addColorStop(0,   'rgba(201,150,122,.35)');
+grad.addColorStop(0.6, 'rgba(201,150,122,.06)');
+grad.addColorStop(1,   'rgba(201,150,122,0)');
+
+const revenueChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: LABELS,
+    datasets: [{
+      label: 'Revenue (₹)',
+      data: REVENUE,
+      borderColor: '#c9967a',
+      borderWidth: 2.5,
+      pointBackgroundColor: '#c9967a',
+      pointBorderColor: '#1a1410',
+      pointBorderWidth: 2,
+      pointRadius: 4,
+      pointHoverRadius: 7,
+      tension: 0.45,           // spline curve — matches design
+      fill: true,
+      backgroundColor: grad,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#2c2620',
+        borderColor: '#4a4038',
+        borderWidth: 1,
+        titleColor: '#b0a090',
+        bodyColor: '#f0ebe4',
+        titleFont: { size: 11 },
+        bodyFont: { size: 13, weight: '600', family: "'DM Sans', sans-serif" },
+        padding: 10,
+        callbacks: {
+          label: ctx => ` ₹${ctx.parsed.y.toLocaleString('en-IN')}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid:  { color: 'rgba(58,52,44,.5)', drawBorder: false },
+        ticks: { color: '#8a7d72', font: { size: 11 } },
+        border: { display: false },
+      },
+      y: {
+        grid:  { color: 'rgba(58,52,44,.5)', drawBorder: false },
+        ticks: {
+          color: '#8a7d72', font: { size: 11 },
+          callback: v => v >= 1000 ? `₹${(v/1000).toFixed(0)}K` : `₹${v}`
+        },
+        border: { display: false },
+      }
+    }
+  }
+});
+
+// ── Year switcher ─────────────────────────────────────────────────────────────
+async function switchYear(year) {
+  try {
+    const res  = await fetch(`{% url 'dashboard_chart_data' %}?year=${year}`);
+    const data = await res.json();
+    revenueChart.data.datasets[0].data = data.revenue;
+    revenueChart.update('active');
+  } catch (e) {
+    console.error('Chart update failed', e);
+  }
+}
+</script>
+{% endblock %}

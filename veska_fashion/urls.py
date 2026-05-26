@@ -24,5 +24,6 @@ urlpatterns = [
     path('payment_user/',include('payment_user.urls')),
     path('wallet_user/',include('wallet_user.urls')),
     path('wallet_admin/',include('wallet_admin.urls')),
+    path('dashboard/',include('dashboard.urls')),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
