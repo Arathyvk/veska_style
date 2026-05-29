@@ -40,6 +40,7 @@ class Coupon(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
 
     class Meta:
         ordering = ['-created_at']
@@ -120,6 +121,7 @@ class Coupon(models.Model):
             if not ok:
                 return False, Decimal('0'), reason
         return True, self.calculate_discount(subtotal, cart_items), ''
+
 
 
 class CouponUsage(models.Model):

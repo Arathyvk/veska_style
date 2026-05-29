@@ -166,6 +166,7 @@ class Order(models.Model):
         return None
         
 class OrderItem(models.Model):
+    
     order         = models.ForeignKey('order_user.Order', on_delete=models.CASCADE, related_name='items')
     product       = models.ForeignKey('product_admin.Product', on_delete=models.SET_NULL, null=True)
     variant       = models.ForeignKey('product_admin.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)

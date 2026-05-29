@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'wallet_user',
     'wallet_admin',
     'dashboard',
+    'offer_admin',
     
 ]
 

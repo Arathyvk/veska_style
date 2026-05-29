@@ -178,6 +178,15 @@ a{text-decoration:none;color:inherit}
 .size-badge{
   font-size:10px;padding:3px 7px;border-radius:4px;
   background:var(--parchment);border:1px solid var(--border);color:var(--muted);
+  cursor:pointer;transition:var(--transition);
+}
+.size-badge:hover{
+  background:var(--terra);color:#fff;border-color:var(--terra);
+}
+.size-badge.out-of-stock{
+  opacity:0.4;
+  cursor:not-allowed;
+  text-decoration:line-through;
 }
 
 .stock-label{
@@ -215,6 +224,141 @@ a{text-decoration:none;color:inherit}
 .btn-terra{display:inline-flex;align-items:center;gap:8px;background:var(--terra);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:13px;font-weight:600;padding:12px 24px;text-decoration:none;cursor:pointer;transition:var(--transition)}
 .btn-terra:hover{background:var(--terra-deep)}
 
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  backdrop-filter: blur(5px);
+}
+.modal-content {
+  background: var(--warm-white);
+  margin: 10% auto;
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 450px;
+  position: relative;
+  animation: slideDown 0.3s ease;
+  box-shadow: var(--shadow-lg);
+}
+@keyframes slideDown {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-close {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.modal-close:hover { color: var(--terra); }
+.modal h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: var(--charcoal);
+}
+.modal-product-name {
+  color: var(--terra);
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-lt);
+}
+.modal-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.size-option {
+  flex: 1;
+  min-width: 70px;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--warm-white);
+  text-align: center;
+}
+.size-option:hover:not(.disabled) { 
+  border-color: var(--terra); 
+  background: var(--terra-pale);
+  transform: translateY(-2px);
+}
+.size-option.selected {
+  background: var(--terra);
+  border-color: var(--terra);
+  color: white;
+}
+.size-option.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.stock-info {
+  font-size: 11px;
+  display: block;
+  margin-top: 4px;
+  font-weight: normal;
+}
+.modal-quantity {
+  margin: 20px 0;
+}
+.modal-quantity label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+.modal-quantity input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-family: var(--body);
+  transition: var(--transition);
+}
+.modal-quantity input:focus {
+  outline: none;
+  border-color: var(--terra);
+}
+.modal-add-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--charcoal);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 10px;
+}
+.modal-add-btn:hover {
+  background: var(--terra);
+}
+.modal-error {
+  color: #b53333;
+  font-size: 12px;
+  margin-top: 10px;
+  text-align: center;
+  display: none;
+}
+
 @keyframes cardReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .product-card{animation:cardReveal .35s ease both}
 {% for i in "12345678" %}.product-card:nth-child({{ forloop.counter }}){animation-delay:{{ forloop.counter0|add:0 }}0ms}{% endfor %}
@@ -224,16 +368,15 @@ a{text-decoration:none;color:inherit}
   <div class="container">
     <div class="shop-shell">
 
+      <!-- Sidebar Filters -->
       <aside>
         <form method="GET" action="{% url 'product_shop' %}" id="filterForm">
-
           {% if sort_by  %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
           {% if query    %}<input type="hidden" name="q"    value="{{ query }}">{% endif %}
           {% if price_min%}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
           {% if price_max%}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
 
           <div class="filter-sidebar">
-
             <div class="fs-header">
               <h3>
                 <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -246,6 +389,7 @@ a{text-decoration:none;color:inherit}
               {% endif %}
             </div>
 
+            <!-- Category Filter -->
             <div class="filter-block">
               <div class="filter-block-head open" onclick="toggleBlock(this)">
                 <h4>Category</h4>
@@ -258,14 +402,12 @@ a{text-decoration:none;color:inherit}
                          {% if val in cat_slug_list %}checked{% endif %}
                          onchange="document.getElementById('filterForm').submit()">
                   {{ label }}
-                  {% if val in cat_slug_list %}
-                    <span style="margin-left:auto;font-size:11px;color:var(--terra)">✓</span>
-                  {% endif %}
                 </label>
                 {% endfor %}
               </div>
             </div>
 
+            <!-- Size Filter -->
             <div class="filter-block">
               <div class="filter-block-head open" onclick="toggleBlock(this)">
                 <h4>Size</h4>
@@ -278,14 +420,12 @@ a{text-decoration:none;color:inherit}
                          {% if size in size_list %}checked{% endif %}
                          onchange="document.getElementById('filterForm').submit()">
                   {{ size }}
-                  {% if size in size_list %}
-                    <span style="margin-left:auto;font-size:15px;color:var(--terra)">✓</span>
-                  {% endif %}
                 </label>
                 {% endfor %}
               </div>
             </div>
 
+            <!-- Availability Filter -->
             <div class="filter-block">
               <div class="filter-block-head open" onclick="toggleBlock(this)">
                 <h4>Availability</h4>
@@ -313,6 +453,7 @@ a{text-decoration:none;color:inherit}
               </div>
             </div>
 
+            <!-- Price Filter -->
             <div class="filter-block">
               <div class="filter-block-head open" onclick="toggleBlock(this)">
                 <h4>Price Range</h4>
@@ -333,13 +474,13 @@ a{text-decoration:none;color:inherit}
                 <button type="submit" class="btn-apply">Apply</button>
               </div>
             </div>
-
           </div>
         </form>
       </aside>
 
+      <!-- Main Content -->
       <div class="shop-main">
-
+        <!-- Top Bar -->
         <div class="shop-topbar">
           <form method="GET" action="{% url 'product_shop' %}" style="display:contents" id="searchForm">
             {% for cat in cat_slug_list %}<input type="hidden" name="category" value="{{ cat }}">{% endfor %}
@@ -375,6 +516,7 @@ a{text-decoration:none;color:inherit}
           </span>
         </div>
 
+        <!-- Active Filters -->
         {% if query or cat_slug_list or size_list or price_min or price_max or stock_filter %}
         <div class="active-filters">
           {% if query %}
@@ -388,41 +530,38 @@ a{text-decoration:none;color:inherit}
           {% for selected_cat in cat_slug_list %}
           <span class="filter-pill">
             {{ selected_cat }}
-            <a class="filter-pill-x"
-               href="?{% for other in cat_slug_list %}{% if other != selected_cat %}category={{ other }}&{% endif %}{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+            <a class="filter-pill-x" href="?{% for other in cat_slug_list %}{% if other != selected_cat %}category={{ other }}&{% endif %}{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
           </span>
           {% endfor %}
 
           {% for selected_size in size_list %}
           <span class="filter-pill">
             {{ selected_size }}
-            <a class="filter-pill-x"
-               href="?{% for other in size_list %}{% if other != selected_size %}size={{ other }}&{% endif %}{% endfor %}{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+            <a class="filter-pill-x" href="?{% for other in size_list %}{% if other != selected_size %}size={{ other }}&{% endif %}{% endfor %}{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
           </span>
           {% endfor %}
 
           {% if price_min or price_max %}
           <span class="filter-pill">
             ₹ {{ price_min|default:"0" }} – {{ price_max|default:"∞" }}
-            <a class="filter-pill-x"
-               href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+            <a class="filter-pill-x" href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
           </span>
           {% endif %}
 
           {% if stock_filter %}
           <span class="filter-pill">
              {% for val, label in stock_choices %}{% if val == stock_filter %}{{ label }}{% endif %}{% endfor %}
-            <a class="filter-pill-x"
-               href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
+            <a class="filter-pill-x" href="?{% for cat in cat_slug_list %}category={{ cat }}&{% endfor %}{% for sz in size_list %}size={{ sz }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if price_min %}price_min={{ price_min }}&{% endif %}{% if price_max %}price_max={{ price_max }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}">✕</a>
           </span>
           {% endif %}
         </div>
         {% endif %}
 
+        <!-- Product Grid -->
         {% if page_obj %}
         <div class="product-grid">
           {% for product in page_obj %}
-          <article class="product-card {% if product.total_stock == 0 %}oos{% endif %}">
+          <article class="product-card {% if product.total_stock == 0 %}oos{% endif %}" data-product-id="{{ product.id }}" data-product-name="{{ product.name|escapejs }}">
 
             <a href="{% url 'product_detail' product.slug %}">
               <div class="card-img">
@@ -448,6 +587,7 @@ a{text-decoration:none;color:inherit}
               </div>
             </a>
 
+            <!-- Wishlist Button -->
             <form method="POST" action="{% url 'wishlist_toggle' product.slug %}"
                   style="position:absolute;top:12px;right:12px;z-index:10;">
               {% csrf_token %}
@@ -466,16 +606,21 @@ a{text-decoration:none;color:inherit}
                 <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
               </div>
 
+              <!-- Size Badges (Clickable) -->
               {% if product.variants.all %}
               <div class="card-sizes">
                 {% for variant in product.variants.all %}
-                  {% if variant.stock > 0 %}
-                    <span class="size-badge">{{ variant.size }}</span>
-                  {% endif %}
+                  <span class="size-badge {% if variant.stock == 0 %}out-of-stock{% endif %}"
+                        data-size="{{ variant.size }}"
+                        data-stock="{{ variant.stock }}"
+                        onclick="openSizeModal('{{ product.id }}', '{{ product.name|escapejs }}', {{ product.variants.all|safe }}, event)">
+                    {{ variant.size }}
+                  </span>
                 {% endfor %}
               </div>
               {% endif %}
 
+              <!-- Stock Label -->
               {% if product.total_stock > 5 %}
                 <div class="stock-label in">
                   <span class="stock-dot dot-in"></span> In Stock
@@ -490,34 +635,34 @@ a{text-decoration:none;color:inherit}
                 </div>
               {% endif %}
 
+              <!-- Add to Cart Button -->
               <div class="card-footer">
                 <div class="card-price">
                   <span class="now">₹{{ product.price|floatformat:2 }}</span>
                 </div>
                 {% if product.total_stock == 0 %}
-
                   <button class="card-add" disabled>Sold Out</button>
                 {% else %}
-
-                  <form method="POST" action="{% url 'cart_add' product.slug %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button type="submit" class="card-add">Add to Cart</button>
-                  </form>
+                  <button type="button" class="card-add" 
+                          onclick="openSizeModal('{{ product.id }}', '{{ product.name|escapejs }}', {
+                            {% for variant in product.variants.all %}
+                              '{{ variant.size }}': {{ variant.stock }}{% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                          }, event)">
+                    Add to Cart
+                  </button>
                 {% endif %}
               </div>
             </div>
-
           </article>
           {% endfor %}
         </div>
 
+        <!-- Pagination -->
         {% if page_obj.has_other_pages %}
         <div class="pagination">
-
           {% if page_obj.has_previous %}
-          <a class="pg-btn"
-            href="?{% if params_str %}{{ params_str }}&{% endif %}page={{ page_obj.previous_page_number }}">
+          <a class="pg-btn" href="?{% if params_str %}{{ params_str }}&{% endif %}page={{ page_obj.previous_page_number }}">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           </a>
           {% else %}
@@ -537,8 +682,7 @@ a{text-decoration:none;color:inherit}
           {% endfor %}
 
           {% if page_obj.has_next %}
-          <a class="pg-btn"
-              href="?{% if params_str %}{{ params_str }}&{% endif %}page={{ page_obj.next_page_number }}">
+          <a class="pg-btn" href="?{% if params_str %}{{ params_str }}&{% endif %}page={{ page_obj.next_page_number }}">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
           </a>
           {% else %}
@@ -546,9 +690,7 @@ a{text-decoration:none;color:inherit}
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
           </span>
           {% endif %}
-
         </div>
-
         <p class="pg-info-line">
           Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
           &nbsp;·&nbsp;
@@ -557,6 +699,7 @@ a{text-decoration:none;color:inherit}
         {% endif %}
 
         {% else %}
+        <!-- Empty State -->
         <div class="empty-state">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
@@ -585,27 +728,198 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
         {% endif %}
-
       </div>
     </div>
   </div>
 </div>
 
+<!-- Size Selection Modal -->
+<div id="sizeModal" class="modal">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h3>Select Size</h3>
+    <div class="modal-product-name" id="modalProductName"></div>
+    <div class="modal-sizes" id="modalSizes"></div>
+    <div class="modal-quantity">
+      <label>Quantity:</label>
+      <input type="number" id="modalQuantity" value="1" min="1" max="10">
+    </div>
+    <div class="modal-error" id="modalError"></div>
+    <form id="modalAddToCartForm" method="POST" action="{% url 'cart_add_with_size' %}">
+      {% csrf_token %}
+      <input type="hidden" name="product_id" id="modalProductId">
+      <input type="hidden" name="size" id="modalSelectedSize">
+      <input type="hidden" name="quantity" id="modalSelectedQuantity">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button type="submit" class="modal-add-btn">Add to Cart</button>
+    </form>
+  </div>
+</div>
+
 <script>
-function sanitizeAndToggleClear(inp) {
-  inp.value = inp.value.replace(/[^a-zA-Z\u0900-\u097F\s']/g, '');
-  document.getElementById('clearBtn').style.display = inp.value.trim() ? 'flex' : 'none';
+// Modal functionality
+const modal = document.getElementById('sizeModal');
+const modalProductName = document.getElementById('modalProductName');
+const modalSizesContainer = document.getElementById('modalSizes');
+const modalQuantityInput = document.getElementById('modalQuantity');
+const modalSelectedSizeInput = document.getElementById('modalSelectedSize');
+const modalProductIdInput = document.getElementById('modalProductId');
+const modalQuantityHidden = document.getElementById('modalSelectedQuantity');
+const modalForm = document.getElementById('modalAddToCartForm');
+const modalError = document.getElementById('modalError');
+
+let currentSelectedSize = null;
+let currentMaxStock = 0;
+
+function openSizeModal(productId, productName, sizesData, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  modalProductName.textContent = productName;
+  modalProductIdInput.value = productId;
+  
+  // Clear previous sizes and error
+  modalSizesContainer.innerHTML = '';
+  modalError.style.display = 'none';
+  currentSelectedSize = null;
+  modalSelectedSizeInput.value = '';
+  
+  // Parse sizes data if it's a string
+  let sizes = sizesData;
+  if (typeof sizesData === 'string') {
+    try {
+      sizes = JSON.parse(sizesData.replace(/'/g, '"'));
+    } catch(e) {
+      console.error('Error parsing sizes:', e);
+      sizes = {};
+    }
+  }
+  
+  // Create size buttons
+  for (const [size, stock] of Object.entries(sizes)) {
+    const sizeBtn = document.createElement('div');
+    sizeBtn.className = 'size-option';
+    if (stock === 0) {
+      sizeBtn.classList.add('disabled');
+    }
+    sizeBtn.innerHTML = `
+      ${size}
+      ${stock > 0 && stock <= 5 ? `<span class="stock-info">Only ${stock} left</span>` : ''}
+      ${stock === 0 ? '<span class="stock-info">Out of stock</span>' : ''}
+    `;
+    sizeBtn.dataset.size = size;
+    sizeBtn.dataset.stock = stock;
+    
+    if (stock > 0) {
+      sizeBtn.onclick = (e) => {
+        e.stopPropagation();
+        selectSize(size, stock);
+      };
+    }
+    
+    modalSizesContainer.appendChild(sizeBtn);
+  }
+  
+  // Reset quantity
+  modalQuantityInput.value = 1;
+  modalQuantityInput.max = 10;
+  
+  // Show modal
+  modal.style.display = 'block';
 }
-function clearSearch() {
-  const inp = document.getElementById('searchInput');
-  inp.value = '';
-  document.getElementById('clearBtn').style.display = 'none';
-  inp.closest('form').submit();
+
+function selectSize(size, stock) {
+  // Remove selected class from all
+  document.querySelectorAll('.size-option').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+  
+  // Add selected class to clicked button
+  event.target.closest('.size-option').classList.add('selected');
+  
+  // Set selected size and max quantity
+  currentSelectedSize = size;
+  currentMaxStock = stock;
+  modalSelectedSizeInput.value = size;
+  modalQuantityInput.max = Math.min(stock, 10);
+  
+  if (modalQuantityInput.value > modalQuantityInput.max) {
+    modalQuantityInput.value = modalQuantityInput.max;
+  }
+  
+  // Clear any previous error
+  modalError.style.display = 'none';
 }
+
+// Update hidden quantity before submit
+modalForm.onsubmit = function(e) {
+  modalQuantityHidden.value = modalQuantityInput.value;
+  
+  if (!currentSelectedSize) {
+    modalError.textContent = 'Please select a size';
+    modalError.style.display = 'block';
+    e.preventDefault();
+    return false;
+  }
+  
+  if (parseInt(modalQuantityInput.value) > currentMaxStock) {
+    modalError.textContent = `Only ${currentMaxStock} units available in this size`;
+    modalError.style.display = 'block';
+    e.preventDefault();
+    return false;
+  }
+  
+  return true;
+}
+
+// Close modal
+document.querySelector('.modal-close').onclick = function() {
+  modal.style.display = 'none';
+}
+
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Filter toggle function
 function toggleBlock(head) {
   head.classList.toggle('open');
   const body = head.nextElementSibling;
-  body.style.display = body.style.display === 'none' ? '' : 'none';
+  if (body.style.display === 'none') {
+    body.style.display = '';
+  } else {
+    body.style.display = 'none';
+  }
 }
+
+// Search functions
+function sanitizeAndToggleClear(inp) {
+  inp.value = inp.value.replace(/[^a-zA-Z\u0900-\u097F\s']/g, '');
+  const clearBtn = document.getElementById('clearBtn');
+  if (clearBtn) {
+    clearBtn.style.display = inp.value.trim() ? 'flex' : 'none';
+  }
+}
+
+function clearSearch() {
+  const inp = document.getElementById('searchInput');
+  if (inp) {
+    inp.value = '';
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    inp.closest('form').submit();
+  }
+}
+
+// Initialize any open filter blocks
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.filter-block-head.open').forEach(head => {
+    const body = head.nextElementSibling;
+    if (body) body.style.display = '';
+  });
+});
 </script>
 {% endblock %}

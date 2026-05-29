@@ -1,9 +1,9 @@
-import hmac, hashlib
 import json
 import razorpay
 import datetime
 from decimal import Decimal
- 
+from uuid import uuid4
+from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -13,7 +13,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
 
  
 from cart_user.models import Cart
@@ -203,57 +202,57 @@ def remove_coupon(request):
  
 @login_required(login_url='login')
 def checkout(request):
-    cart       = _get_cart(request)
+    cart = _get_cart(request)
     cart_items = cart.items.select_related('variant', 'variant__product', 'product').all()
- 
+
     if not cart_items.exists():
         messages.warning(request, 'Your cart is empty.')
         return redirect('cart_detail')
- 
-    subtotal        = sum(_item_price(i) * i.quantity for i in cart_items)
-    coupon_code     = request.session.get('coupon_code', '')
+
+    subtotal = sum(_item_price(i) * i.quantity for i in cart_items)
+    coupon_code = request.session.get('coupon_code', '')
     coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
- 
+
     if coupon_code:
         try:
             Coupon.objects.get(code=coupon_code, is_active=True)
         except Coupon.DoesNotExist:
-            coupon_code     = ''
+            coupon_code = ''
             coupon_discount = Decimal('0')
-            request.session.pop('coupon_code',     None)
+            request.session.pop('coupon_code', None)
             request.session.pop('coupon_discount', None)
- 
-    totals    = _calc_totals(subtotal, coupon_discount)
+
+    totals = _calc_totals(subtotal, coupon_discount)
     addresses = request.user.addresses.all()
-    selected  = addresses.filter(is_default=True).first()
- 
+    selected = addresses.filter(is_default=True).first()
+
     try:
         wallet_balance = Wallet.objects.get(user=request.user).balance
     except Wallet.DoesNotExist:
         wallet_balance = Decimal('0')
- 
+
     enriched = []
     for item in cart_items:
         enriched.append({
-            'product':    item.product,
-            'variant':    item.variant,
-            'quantity':   item.quantity,
+            'product': item.product,
+            'variant': item.variant,
+            'quantity': item.quantity,
             'unit_price': _item_price(item),
             'line_total': _item_price(item) * item.quantity,
         })
- 
+
     return render(request, 'checkout.html', {
-        'cart_items':      enriched,
-        'subtotal':        totals['subtotal'],
-        'coupon_code':     coupon_code,
+        'cart_items': enriched,
+        'subtotal': totals['subtotal'],
+        'coupon_code': coupon_code,
         'coupon_discount': totals['coupon_discount'],
-        'shipping':        totals['shipping'],
-        'grand_total':     totals['grand_total'],
-        'addresses':       addresses,
-        'selected_id':     str(selected.id) if selected else '',
-        'free_threshold':  FREE_SHIPPING_THRESHOLD,
-        'wallet_balance':  wallet_balance,
-        'cod_fee':         COD_FEE,
+        'shipping': totals['shipping'],
+        'grand_total': totals['grand_total'],
+        'addresses': addresses,
+        'selected_id': str(selected.id) if selected else '',
+        'free_threshold': FREE_SHIPPING_THRESHOLD,
+        'wallet_balance': wallet_balance,
+        'cod_fee': COD_FEE,
         'razorpay_key_id': settings.RAZORPAY_KEY_ID,
     })
  
@@ -263,30 +262,31 @@ def checkout(request):
 @login_required(login_url='login')
 def razorpay_create_order(request):
     try:
-        data          = json.loads(request.body)
-        address_id    = data.get('address_id')
+        data = json.loads(request.body)
+        address_id = data.get('address_id')
         wallet_amount = Decimal(str(data.get('wallet_amount', '0')))
-        notes         = data.get('notes', '')
+        notes = data.get('notes', '')
 
         if not address_id:
             return JsonResponse({'error': 'Please select a delivery address.'}, status=400)
 
         address = get_object_or_404(Address, pk=address_id, user=request.user)
-        cart    = _get_cart(request)
-        items   = cart.items.select_related('variant', 'product').all()
+        cart = _get_cart(request)
+        items = cart.items.select_related('variant', 'product').all()
 
         if not items.exists():
             return JsonResponse({'error': 'Cart is empty.'}, status=400)
 
-        subtotal        = sum(_item_price(i) * i.quantity for i in items)
-        coupon_code     = request.session.get('coupon_code', '')
+        subtotal = sum(_item_price(i) * i.quantity for i in items)
+        coupon_code = request.session.get('coupon_code', '')
         coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
-        coupon_obj      = None
+        coupon_obj = None
+        
         if coupon_code:
             try:
                 coupon_obj = Coupon.objects.get(code=coupon_code, is_active=True)
             except Coupon.DoesNotExist:
-                coupon_code     = ''
+                coupon_code = ''
                 coupon_discount = Decimal('0')
 
         try:
@@ -295,15 +295,23 @@ def razorpay_create_order(request):
             wb = Decimal('0')
 
         wallet_used = min(wallet_amount, wb, subtotal + (SHIPPING_CHARGE if subtotal < FREE_SHIPPING_THRESHOLD else Decimal('0')))
-        totals      = _calc_totals(subtotal, coupon_discount, wallet_used)
+        totals = _calc_totals(subtotal, coupon_discount, wallet_used)
         grand_total = totals['grand_total']
+
+        if grand_total <= 0:
+            # Handle zero amount payment
+            return JsonResponse({
+                'success': True,
+                'zero_amount': True,
+                'redirect_url': reverse('order_success_zero_amount')
+            })
 
         amount_paise = int(grand_total * 100)
 
-        client   = _razorpay_client()
+        client = _razorpay_client()
         rz_order = client.order.create({
-            'amount':          amount_paise,
-            'currency':        'INR',
+            'amount': amount_paise,
+            'currency': 'INR',
             'payment_capture': 1,
             'notes': {
                 'user_email': request.user.email,
@@ -311,7 +319,6 @@ def razorpay_create_order(request):
             },
         })
 
-        # ── Create the Django Order NOW so verify can find it ──
         with db_tx.atomic():
             order = Order.objects.create(
                 user=request.user,
@@ -333,12 +340,12 @@ def razorpay_create_order(request):
                 payment_status='pending',
                 status='pending',
                 notes=notes,
-                razorpay_order_id=rz_order['id'],  # save it immediately
+                razorpay_order_id=rz_order['id'],  # ← CRITICAL: Save this!
             )
 
             for item in items:
                 price = _item_price(item)
-                img   = item.product.images.first()
+                img = item.product.images.first()
                 OrderItem.objects.create(
                     order=order,
                     product=item.product,
@@ -359,9 +366,8 @@ def razorpay_create_order(request):
                     defaults={'order': order}
                 )
 
-            # Deduct wallet immediately if used
             if wallet_used > 0:
-                wallet          = Wallet.objects.get(user=request.user)
+                wallet = Wallet.objects.get(user=request.user)
                 wallet.balance -= wallet_used
                 wallet.save(update_fields=['balance'])
                 WalletTransaction.objects.create(
@@ -372,12 +378,16 @@ def razorpay_create_order(request):
                     description=f'Wallet payment for order {order.uuid}',
                 )
 
+            # Store order UUID in session for later reference
+            request.session['current_order_uuid'] = str(order.uuid)
+
         return JsonResponse({
-            'success':           True,
+            'success': True,
             'razorpay_order_id': rz_order['id'],
-            'amount':            amount_paise,
-            'currency':          'INR',
-            'key_id':            settings.RAZORPAY_KEY_ID,
+            'amount': amount_paise,
+            'currency': 'INR',
+            'key_id': settings.RAZORPAY_KEY_ID,
+            'order_uuid': str(order.uuid),  # ← Send this to frontend
             'prefill': {
                 'name': (
                     f"{getattr(request.user, 'first_name', '')} "
@@ -388,7 +398,8 @@ def razorpay_create_order(request):
         })
 
     except Exception as exc:
-        import traceback; traceback.print_exc()
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': str(exc)}, status=500)
  
 
@@ -398,63 +409,106 @@ def razorpay_verify_payment(request):
     try:
         data = json.loads(request.body)
 
-        razorpay_order_id   = data.get('razorpay_order_id')
+        razorpay_order_id = data.get('razorpay_order_id')
         razorpay_payment_id = data.get('razorpay_payment_id')
-        razorpay_signature  = data.get('razorpay_signature')
+        razorpay_signature = data.get('razorpay_signature')
+        order_uuid = data.get('order_uuid')
 
         if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
-            return JsonResponse({'success': False, 'error': 'Missing payment details.'}, status=400)
+            return JsonResponse({
+                'success': False, 
+                'error': 'Missing payment details.',
+                'redirect_url': reverse('order_failure')
+            }, status=400)
 
+        # Find order by razorpay_order_id
         order = Order.objects.filter(
             razorpay_order_id=razorpay_order_id,
             user=request.user
         ).first()
 
-        if not order:
-            return JsonResponse({'success': False, 'error': 'Order not found.'}, status=404)
+        if not order and order_uuid:
+            order = Order.objects.filter(
+                uuid=order_uuid,
+                user=request.user
+            ).first()
 
-        # Use the Razorpay SDK to verify — avoids hmac.new confusion entirely
+        if not order:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Order not found.',
+                'redirect_url': reverse('order_failure')
+            }, status=404)
+
         client = _razorpay_client()
-        params = {
-            'razorpay_order_id':   razorpay_order_id,
+        params_dict = {
+            'razorpay_order_id': razorpay_order_id,
             'razorpay_payment_id': razorpay_payment_id,
-            'razorpay_signature':  razorpay_signature,
+            'razorpay_signature': razorpay_signature,
         }
 
         try:
-            client.utility.verify_payment_signature(params)
+            client.utility.verify_payment_signature(params_dict)
             signature_valid = True
-        except razorpay.errors.SignatureVerificationError:
+        except razorpay.errors.SignatureVerificationError as e:
             signature_valid = False
+            print(f"Signature verification failed: {str(e)}")
 
         if not signature_valid:
             order.payment_status = 'failed'
-            order.save(update_fields=['payment_status'])
-            return JsonResponse({'success': False, 'error': 'Payment verification failed.'}, status=400)
+            order.status = 'cancelled'
+            order.save(update_fields=['payment_status', 'status'])
+            
+            # Restore wallet amount if used
+            if order.wallet_amount_used > 0:
+                try:
+                    wallet = Wallet.objects.get(user=request.user)
+                    wallet.balance += order.wallet_amount_used
+                    wallet.save(update_fields=['balance'])
+                except Wallet.DoesNotExist:
+                    pass
+            
+            return JsonResponse({
+                'success': False, 
+                'error': 'Payment verification failed.',
+                'redirect_url': reverse('order_failure') + f'?uuid={order.uuid}'
+            }, status=400)
 
-        order.payment_status      = 'paid'
+        # Update order as paid
+        order.payment_status = 'paid'
         order.razorpay_payment_id = razorpay_payment_id
-        order.razorpay_signature  = razorpay_signature
-        order.status              = 'confirmed'
-        order.save(update_fields=['payment_status', 'razorpay_payment_id', 'razorpay_signature', 'status'])
+        order.razorpay_signature = razorpay_signature
+        order.status = 'confirmed'
+        order.paid_at = timezone.now()
+        order.save(update_fields=['payment_status', 'razorpay_payment_id', 
+                                  'razorpay_signature', 'status', 'paid_at'])
 
+        # Clear the cart
         try:
-            Cart.objects.get(user=request.user).items.all().delete()
+            cart = Cart.objects.get(user=request.user)
+            cart.items.all().delete()
         except Cart.DoesNotExist:
             pass
 
-        for key in ['coupon_code', 'coupon_discount', 'pending_checkout', 'razorpay_order_id']:
+        # Clear session data
+        for key in ['coupon_code', 'coupon_discount', 'pending_checkout', 
+                   'razorpay_order_id', 'current_order_uuid']:
             request.session.pop(key, None)
 
         return JsonResponse({
-            'success':      True,
+            'success': True,
             'redirect_url': reverse('order_success', kwargs={'uuid': order.uuid})
         })
 
     except Exception as exc:
-        import traceback; traceback.print_exc()
-        return JsonResponse({'success': False, 'error': str(exc)}, status=500)
- 
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False, 
+            'error': str(exc),
+            'redirect_url': reverse('order_failure')
+        }, status=500)
+    
 
 @require_POST
 @login_required(login_url='login')
@@ -655,3 +709,33 @@ def payment_failure(request):
         'error_code':        request.GET.get('error_code', 'PAYMENT_FAILED'),
         'failed_at':         timezone.now().strftime('%d %b %Y, %I:%M %p'),
     })
+
+
+
+@csrf_exempt
+def razorpay_webhook(request):
+    if request.method == "POST":
+        try:
+            payload = json.loads(request.body)
+            event = payload.get('event')
+            
+            if event == 'payment.captured':
+                payment_id = payload['payload']['payment']['entity']['id']
+                order_id = payload['payload']['payment']['entity']['order_id']
+                
+                # Update order status
+                order = Order.objects.filter(razorpay_order_id=order_id).first()
+                if order and order.payment_status != 'paid':
+                    order.payment_status = 'paid'
+                    order.status = 'confirmed'
+                    order.paid_at = timezone.now()
+                    order.save()
+                    
+                    # Clear cart
+                    Cart.objects.filter(user=order.user).delete()
+            
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'invalid method'}, status=405)

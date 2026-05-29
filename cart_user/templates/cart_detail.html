@@ -280,8 +280,8 @@ button,input{font-family:var(--body)}
                   <form method="POST" action="{% url 'cart_update' item.id %}" class="qty-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="decrease">
-                    <button type="submit" class="qty-btn">
-                      {% if item.quantity == 1 %}0{% else %}-{% endif %}
+                       <button type="submit" class="qty-btn" {% if item.quantity <= 1 %}disabled{% endif %}>
+                        −
                     </button>
                   </form>
 
@@ -337,19 +337,32 @@ button,input{font-family:var(--body)}
           <div class="summary-head"><h3>Order Summary</h3></div>
           <div class="summary-body">
 
-            <div class="sum-row">
-              <span>Subtotal ({{ available_items|length }} item{{ available_items|length|pluralize }})</span>
-              <span class="val">₹{{ subtotal|floatformat:2 }}</span>
-            </div>
-            <div class="sum-row">
-              <span>Shipping</span>
-              <span class="val" style="color:var(--muted-lt);font-size:11px">At checkout</span>
-            </div>
-            <div class="sum-divider"></div>
-            <div class="sum-total">
-              <span>Subtotal</span>
-              <span>₹{{ subtotal|floatformat:2 }}</span>
-            </div>
+          <div class="sum-row">
+            <span>Subtotal ({{ available_items|length }} item{{ available_items|length|pluralize }})</span>
+            <span class="val">₹{{ subtotal|floatformat:2 }}</span>
+          </div>
+
+          <div class="sum-row">
+            <span>Shipping</span>
+            <span class="val">
+              {% if subtotal >= 999 %}
+                FREE
+              {% else %}
+                ₹79.00
+              {% endif %}
+            </span>
+          </div>
+
+          <div class="sum-row total-row">
+            <span>Total</span>
+            <span class="val">
+              {% if subtotal >= 999 %}
+                ₹{{ subtotal|floatformat:2 }}
+              {% else %}
+                ₹{{ subtotal|add:79|floatformat:2 }}
+              {% endif %}
+            </span>
+          </div>
 
             {% if unavailable_items %}
               <a class="btn-checkout disabled" aria-disabled="true">
