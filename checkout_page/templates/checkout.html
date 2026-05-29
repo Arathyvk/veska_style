@@ -3,11 +3,11 @@
 {% block title %}Checkout · Veska{% endblock %}
 
 {% block content %}
+<meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <style>
-/* ... (keep all your existing CSS styles exactly as they are) ... */
 :root{
   --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
   --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
@@ -30,7 +30,7 @@ a{text-decoration:none;color:inherit}
 .co-hero{background:var(--charcoal);padding:38px 0 30px;position:relative;overflow:hidden}
 .co-hero::before{content:'';position:absolute;right:-80px;top:-80px;width:380px;height:380px;border-radius:50%;border:70px solid rgba(181,103,68,.08);pointer-events:none}
 .co-hero .inner{position:relative;z-index:1}
-.co-hero h1{font-family:var(--head);font-size:clamp(24px,4vw,40px);font-weight:500;color:#fff;letter-spacing:-.3px;margin-bottom:4px}
+.co-hero h1{font-size:clamp(24px,4vw,40px);font-weight:500;color:#fff;letter-spacing:-.3px;margin-bottom:4px}
 .co-hero h1 em{font-style:italic;color:var(--blush)}
 .co-hero p{font-size:12px;color:rgba(255,255,255,.38);font-weight:300}
 
@@ -73,7 +73,7 @@ a{text-decoration:none;color:inherit}
 
 .co-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-xs)}
 .co-card-head{padding:14px 20px;background:var(--parchment);border-bottom:1px solid var(--border-lt);display:flex;align-items:center;justify-content:space-between}
-.co-card-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:9px}
+.co-card-head h3{font-size:18px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:9px}
 .co-card-head h3 svg{width:15px;height:15px;color:var(--terra);flex-shrink:0}
 .co-card-head .hd-link{font-size:12px;color:var(--terra);font-weight:600;display:flex;align-items:center;gap:5px}
 .co-card-head .hd-link:hover{color:var(--terra-deep)}
@@ -106,11 +106,11 @@ a{text-decoration:none;color:inherit}
 .oi-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
 .oi-body{flex:1;min-width:0}
 .oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted-lt);margin-bottom:3px}
-.oi-name{font-family:var(--head);font-size:15px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
+.oi-name{font-size:15px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
 .oi-meta{font-size:11.5px;color:var(--muted-lt)}
 .oi-price-col{text-align:right;flex-shrink:0;min-width:72px}
 .oi-unit-price{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
-.oi-line-total{font-family:var(--head);font-size:16px;font-weight:600;color:var(--charcoal)}
+.oi-line-total{font-size:16px;font-weight:600;color:var(--charcoal)}
 
 .notes-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:10px 14px;font-family:var(--body);font-size:13px;background:var(--parchment);color:var(--ink);outline:none;resize:vertical;min-height:68px;transition:var(--transition)}
 .notes-field:focus{border-color:var(--terra);background:#fff}
@@ -152,15 +152,15 @@ a{text-decoration:none;color:inherit}
 
 .summary-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px;box-shadow:var(--shadow-sm)}
 .sum-head{padding:18px 20px;background:var(--charcoal)}
-.sum-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:#fff}
+.sum-head h3{font-size:18px;font-weight:500;color:#fff}
 .sum-body{padding:18px 20px}
 .sum-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;color:var(--muted)}
 .sum-row .val{color:var(--ink);font-weight:500}
 .sum-row.free .val,.sum-row.saving .val,.sum-row.wallet-row .val{color:var(--success);font-weight:600}
 .sum-divider{height:1px;background:var(--border);margin:8px 0}
 .sum-total{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0 0}
-.sum-total .lbl{font-family:var(--head);font-size:17px;color:var(--muted)}
-.sum-total .val{font-family:var(--head);font-size:24px;font-weight:600;color:var(--charcoal)}
+.sum-total .lbl{font-size:17px;color:var(--muted)}
+.sum-total .val{font-size:24px;font-weight:600;color:var(--charcoal)}
 .free-ship-hint{margin-top:12px;padding:9px 12px;background:var(--success-pale);border-radius:var(--radius-sm);font-size:11.5px;color:var(--success);font-weight:500;display:flex;align-items:center;gap:6px}
 .free-ship-track{margin-top:6px;height:4px;background:var(--sand);border-radius:3px;overflow:hidden}
 .free-ship-fill{height:100%;background:var(--success);border-radius:3px;transition:width .5s ease}
@@ -217,7 +217,7 @@ a{text-decoration:none;color:inherit}
     </div>
     {% endfor %}
 
-    {# ── coupon strip ── #}
+    <!-- Coupon strip -->
     <div class="coupon-strip">
       <div class="coupon-label">Promo / Coupon Code</div>
       {% if coupon_code %}
@@ -226,7 +226,7 @@ a{text-decoration:none;color:inherit}
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             <div>
               <div class="coupon-applied-code">{{ coupon_code }}</div>
-              <div class="coupon-applied-save">Saving ₹{{ coupon_discount|floatformat:2 }}</div>
+              <div class="coupon-applied-save">Saving Rs. {{ coupon_discount|floatformat:2 }}</div>
             </div>
           </div>
           <form method="POST" action="{% url 'remove_coupon' %}">{% csrf_token %}
@@ -245,7 +245,7 @@ a{text-decoration:none;color:inherit}
 
     <div class="co-grid">
       <div>
-        {# ── delivery address ── #}
+        <!-- Delivery Address -->
         <div class="co-card">
           <div class="co-card-head">
             <h3>
@@ -301,6 +301,7 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
 
+        <!-- Order Items -->
         <div class="co-card">
           <div class="co-card-head">
             <h3>
@@ -336,14 +337,15 @@ a{text-decoration:none;color:inherit}
                 </div>
               </div>
               <div class="oi-price-col">
-                <div class="oi-unit-price">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
-                <div class="oi-line-total">₹{{ item.line_total|floatformat:2 }}</div>
+                <div class="oi-unit-price">Rs. {{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
+                <div class="oi-line-total">Rs. {{ item.line_total|floatformat:2 }}</div>
               </div>
             </div>
             {% endfor %}
           </div>
         </div>
 
+        <!-- Payment Method -->
         <div class="co-card">
           <div class="co-card-head">
             <h3>
@@ -354,7 +356,7 @@ a{text-decoration:none;color:inherit}
             </h3>
           </div>
           <div class="co-card-body">
-            {# Razorpay #}
+            <!-- Razorpay -->
             <div class="pay-option selected" data-pay-method="razorpay" onclick="selectPayment('razorpay')">
               <label>
                 <input type="radio" name="_pay_radio" value="razorpay" checked>
@@ -370,7 +372,7 @@ a{text-decoration:none;color:inherit}
               </label>
             </div>
 
-            {# COD #}
+            <!-- COD -->
             <div class="pay-option" data-pay-method="cod" onclick="selectPayment('cod')">
               <label>
                 <input type="radio" name="_pay_radio" value="cod">
@@ -379,7 +381,7 @@ a{text-decoration:none;color:inherit}
                 <div class="pay-info">
                   <div class="pay-name">
                     Cash on Delivery
-                    {% if cod_fee > 0 %}<span class="pay-tag amber">+₹{{ cod_fee }} fee</span>{% endif %}
+                    {% if cod_fee > 0 %}<span class="pay-tag amber">+Rs. {{ cod_fee }} fee</span>{% endif %}
                   </div>
                   <div class="pay-sub">Pay when your order arrives at your door</div>
                 </div>
@@ -395,7 +397,7 @@ a{text-decoration:none;color:inherit}
                 <div class="pay-info">
                   <div class="pay-name">
                     Veska Wallet
-                    <span class="wallet-bal-chip">₹{{ wallet_balance|floatformat:2 }} available</span>
+                    <span class="wallet-bal-chip">Rs. {{ wallet_balance|floatformat:2 }} available</span>
                   </div>
                   <div class="pay-sub">
                     Pay instantly using your wallet balance
@@ -414,8 +416,8 @@ a{text-decoration:none;color:inherit}
                   <button type="button" class="btn-wdr-apply" id="applyWalletBtn" onclick="applyWalletPayment()">Apply</button>
                 </div>
                 <div class="wdr-hint" id="walletInfo">
-                  Available: ₹{{ wallet_balance|floatformat:2 }} &nbsp;|&nbsp;
-                  Order total: ₹{{ grand_total|floatformat:2 }}
+                  Available: Rs. {{ wallet_balance|floatformat:2 }} &nbsp;|&nbsp;
+                  Order total: Rs. {{ grand_total|floatformat:2 }}
                 </div>
                 <div id="walletAppliedBadge" style="display:none" class="wdr-applied">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -428,7 +430,7 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
 
-        {# ── order notes ── #}
+        <!-- Order Notes -->
         <div class="co-card">
           <div class="co-card-head">
             <h3>
@@ -446,38 +448,39 @@ a{text-decoration:none;color:inherit}
         </div>
       </div>
 
+      <!-- Order Summary Sidebar -->
       <div>
         <div class="summary-card">
           <div class="sum-head"><h3>Order Summary</h3></div>
           <div class="sum-body">
             <div class="sum-row">
               <span>Subtotal ({{ cart_items|length }} item{{ cart_items|length|pluralize }})</span>
-              <span class="val">₹{{ subtotal|floatformat:2 }}</span>
+              <span class="val">Rs. {{ subtotal|floatformat:2 }}</span>
             </div>
 
             {% if coupon_code %}
             <div class="sum-row saving">
               <span>Coupon ({{ coupon_code }})</span>
-              <span class="val">−₹{{ coupon_discount|floatformat:2 }}</span>
+              <span class="val">−Rs. {{ coupon_discount|floatformat:2 }}</span>
             </div>
             {% endif %}
 
             {% if shipping == 0 %}
             <div class="sum-row free"><span>Shipping</span><span class="val">FREE</span></div>
             {% else %}
-            <div class="sum-row"><span>Shipping</span><span class="val">₹{{ shipping|floatformat:2 }}</span></div>
+            <div class="sum-row"><span>Shipping</span><span class="val">Rs. {{ shipping|floatformat:2 }}</span></div>
             {% endif %}
 
             <div class="sum-row wallet-row" id="walletDiscountRow" style="display:none">
               <span>Wallet deduction</span>
-              <span class="val" id="walletDiscountVal">−₹0</span>
+              <span class="val" id="walletDiscountVal">−Rs. 0</span>
             </div>
 
             <div class="sum-divider"></div>
 
             <div class="sum-total">
               <span class="lbl">Total to Pay</span>
-              <span class="val" id="grandTotalVal">₹{{ grand_total|floatformat:2 }}</span>
+              <span class="val" id="grandTotalVal">Rs. {{ grand_total|floatformat:2 }}</span>
             </div>
 
             <div id="remainingAmountInfo" style="display:none;margin-top:10px;padding:8px;background:var(--warning-pale);border-radius:var(--radius-sm);font-size:12px;">
@@ -487,7 +490,7 @@ a{text-decoration:none;color:inherit}
             {% if shipping > 0 %}
             <div style="margin-top:14px">
               <div class="free-ship-hint">
-                🚚 Add ₹{{ free_threshold|add:"-"|add:subtotal|floatformat:0 }} more for free shipping
+                🚚 Add Rs. {{ free_threshold|add:"-"|add:subtotal|floatformat:0 }} more for free shipping
               </div>
               <div class="free-ship-track">
                 <div class="free-ship-fill" style="width:{% widthratio subtotal free_threshold 100 %}%"></div>
@@ -501,7 +504,7 @@ a{text-decoration:none;color:inherit}
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
-              <span id="btnLabel">Pay with Razorpay · ₹{{ grand_total|floatformat:2 }}</span>
+              <span id="btnLabel">Place Order</span>
             </button>
 
             <div class="rzp-secure-note" id="rzpSecureNote">
@@ -522,7 +525,7 @@ a{text-decoration:none;color:inherit}
 
             <div class="trust-strip">
               <div class="trust-item">🔒 Your payment is secure &amp; encrypted</div>
-              <div class="trust-item">🚚 Free shipping above ₹999</div>
+              <div class="trust-item">🚚 Free shipping above Rs. 999</div>
               <div class="trust-item">↩️ Easy 30-day returns</div>
               <div class="trust-item">📞 24/7 customer support</div>
             </div>
@@ -541,21 +544,21 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
-// ── Django → JS context ─────────────────────────────────────────────────────
+// Django context variables
 const ORIGINAL_TOTAL = parseFloat('{{ grand_total|floatformat:2 }}');
 const WALLET_BALANCE = parseFloat('{{ wallet_balance|default:"0" }}');
 const CSRF_TOKEN = '{{ csrf_token }}';
 const HAS_ADDRESS = '{{ addresses|yesno:"true,false" }}';
 const RZP_KEY_ID = '{{ razorpay_key_id }}';
 
-// ── state ───────────────────────────────────────────────────────────────────
+// State variables
 let selectedPaymentMethod = 'razorpay';
 let selectedAddressId = '{{ selected_id }}';
 let walletPaymentAmount = 0;
 let walletApplied = false;
 let currentTotal = ORIGINAL_TOTAL;
 
-// ── Helper Functions ─────────────────────────────────────────────────────────
+// Helper Functions
 function showSpinner(msg) {
   document.getElementById('spinnerMsg').textContent = msg || 'Processing…';
   document.getElementById('spinnerOverlay').style.display = 'flex';
@@ -582,23 +585,23 @@ function updateBtn() {
   if (method === 'razorpay') {
     const payAmt = walletApplied ? currentTotal : ORIGINAL_TOTAL;
     if (walletApplied && currentTotal === 0) {
-      label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
+      label.textContent = `Pay with Wallet · Rs. ${walletPaymentAmount.toFixed(2)}`;
       noteEl.style.display = 'none';
     } else {
-      label.textContent = payAmt > 0 ? `Pay via Razorpay · ₹${payAmt.toFixed(2)}` : `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
+      label.textContent = payAmt > 0 ? `Pay via Razorpay · Rs. ${payAmt.toFixed(2)}` : `Pay with Wallet · Rs. ${walletPaymentAmount.toFixed(2)}`;
       noteEl.style.display = payAmt > 0 ? 'flex' : 'none';
     }
   } else if (method === 'cod') {
-    label.textContent = `Place Order (COD) · ₹${ORIGINAL_TOTAL.toFixed(2)}`;
+    label.textContent = `Place Order (COD) · Rs. ${ORIGINAL_TOTAL.toFixed(2)}`;
     noteEl.style.display = 'none';
   } else if (method === 'wallet') {
     if (!walletApplied) {
       label.textContent = 'Apply wallet amount first ↑';
     } else if (currentTotal > 0) {
-      label.textContent = `Insufficient wallet balance (₹${currentTotal.toFixed(2)} remaining)`;
+      label.textContent = `Insufficient wallet balance (Rs. ${currentTotal.toFixed(2)} remaining)`;
       btn.disabled = true;
     } else {
-      label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
+      label.textContent = `Pay with Wallet · Rs. ${walletPaymentAmount.toFixed(2)}`;
     }
     noteEl.style.display = 'none';
   }
@@ -630,11 +633,11 @@ function applyWalletPayment() {
     return;
   }
   if (amount > WALLET_BALANCE) {
-    alert(`Insufficient wallet balance. Available: ₹${WALLET_BALANCE.toFixed(2)}`);
+    alert(`Insufficient wallet balance. Available: Rs. ${WALLET_BALANCE.toFixed(2)}`);
     return;
   }
   if (amount > ORIGINAL_TOTAL) {
-    alert(`Amount cannot exceed the order total of ₹${ORIGINAL_TOTAL.toFixed(2)}`);
+    alert(`Amount cannot exceed the order total of Rs. ${ORIGINAL_TOTAL.toFixed(2)}`);
     return;
   }
 
@@ -643,12 +646,12 @@ function applyWalletPayment() {
   currentTotal = Math.max(ORIGINAL_TOTAL - walletPaymentAmount, 0);
 
   document.getElementById('walletDiscountRow').style.display = 'flex';
-  document.getElementById('walletDiscountVal').textContent = `−₹${walletPaymentAmount.toFixed(2)}`;
-  document.getElementById('grandTotalVal').textContent = `₹${currentTotal.toFixed(2)}`;
+  document.getElementById('walletDiscountVal').textContent = `−Rs. ${walletPaymentAmount.toFixed(2)}`;
+  document.getElementById('grandTotalVal').textContent = `Rs. ${currentTotal.toFixed(2)}`;
 
   if (currentTotal > 0) {
     document.getElementById('remainingAmountInfo').style.display = 'block';
-    document.getElementById('remainingAmount').textContent = `₹${currentTotal.toFixed(2)}`;
+    document.getElementById('remainingAmount').textContent = `Rs. ${currentTotal.toFixed(2)}`;
   } else {
     document.getElementById('remainingAmountInfo').style.display = 'none';
   }
@@ -657,7 +660,7 @@ function applyWalletPayment() {
   const applyBtn = document.getElementById('applyWalletBtn');
   applyBtn.disabled = true;
   applyBtn.textContent = 'Applied ✓';
-  document.getElementById('walletAppliedText').textContent = `₹${walletPaymentAmount.toFixed(2)} will be deducted from your wallet`;
+  document.getElementById('walletAppliedText').textContent = `Rs. ${walletPaymentAmount.toFixed(2)} will be deducted from your wallet`;
   document.getElementById('walletAppliedBadge').style.display = 'flex';
   updateBtn();
 }
@@ -668,7 +671,7 @@ function resetWalletState() {
   currentTotal = ORIGINAL_TOTAL;
 
   document.getElementById('walletDiscountRow').style.display = 'none';
-  document.getElementById('grandTotalVal').textContent = `₹${ORIGINAL_TOTAL.toFixed(2)}`;
+  document.getElementById('grandTotalVal').textContent = `Rs. ${ORIGINAL_TOTAL.toFixed(2)}`;
   document.getElementById('remainingAmountInfo').style.display = 'none';
 
   const input = document.getElementById('walletAmount');
@@ -690,7 +693,7 @@ function resetWalletPayment() {
   updateBtn();
 }
 
-// ── COD / Wallet order ────────────────────────────────────────────────────────
+// COD / Wallet order
 async function placeNonRazorpayOrder(method) {
   const btn = document.getElementById('placeOrderBtn');
   btn.disabled = true;
@@ -726,145 +729,96 @@ async function placeNonRazorpayOrder(method) {
   }
 }
 
-// ── Razorpay flow ─────────────────────────────────────────────────────────────
+// Razorpay flow
 async function openRazorpay() {
-  // Validation
   if (!selectedAddressId) {
-    alert('Please select a delivery address first.');
+    alert('Please select a delivery address.');
     return;
   }
 
-  // Show loading spinner
-  showSpinner('Creating order...');
+  if (currentTotal <= 0) {
+    placeNonRazorpayOrder('wallet');
+    return;
+  }
+
+  showSpinner('Creating your order...');
 
   try {
-    // Create order on server
     const response = await fetch("{% url 'razorpay_create_order' %}", {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': CSRF_TOKEN
+        "Content-Type": "application/json",
+        "X-CSRFToken": CSRF_TOKEN
       },
       body: JSON.stringify({
         address_id: selectedAddressId,
-        wallet_amount: walletPaymentAmount || 0,
-        notes: document.getElementById('orderNotes')?.value || ''
+        wallet_amount: walletPaymentAmount,
+        notes: document.getElementById('orderNotes').value,
       })
     });
 
-    // Parse response
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const orderData = await response.json();
-    
-    if (!orderData.success) {
-      throw new Error(orderData.error || 'Failed to create order');
-    }
-
-    // Hide spinner before opening Razorpay
+    const data = await response.json();
     hideSpinner();
 
-    // Initialize Razorpay options
-    const options = {
-      key: orderData.key_id,
-      amount: orderData.amount,
-      currency: orderData.currency || 'INR',
-      name: 'Veska',
-      description: `Order Payment - ${orderData.order_id}`,
-      order_id: orderData.razorpay_order_id,
-      prefill: {
-        name: orderData.prefill?.name || '',
-        email: orderData.prefill?.email || '',
-        contact: orderData.prefill?.phone || ''
-      },
-      notes: {
-        address_id: selectedAddressId,
-        order_uuid: orderData.order_uuid
-      },
-      theme: {
-        color: '#b56744'
-      },
-      modal: {
-        ondismiss: function() {
-          console.log('Payment modal closed by user');
-          window.location.href = "{% url 'razorpay_payment_success' %}?reason=Payment+cancelled";
-        }
-      },
-      handler: async function(paymentResponse) {
-        console.log('Payment successful, verifying...', paymentResponse);
-        showSpinner('Verifying payment...');
-        
-        try {
-          const verifyResponse = await fetch("{% url 'razorpay_verify_payment' %}", {
-            method: 'POST',
+    if (data.success) {
+      var options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        order_id: data.razorpay_order_id,
+        name: "Veska",
+        description: "Order Payment",
+        prefill: data.prefill,
+        theme: {
+          color: "#b56744"
+        },
+        modal: {
+          ondismiss: function() {
+            window.location.href = `/payment/failure/?razorpay_order_id=${data.razorpay_order_id}`;
+          }
+        },
+        handler: function (response) {
+          fetch("{% url 'razorpay_verify_payment' %}", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': CSRF_TOKEN
+              "Content-Type": "application/json",
+              "X-CSRFToken": CSRF_TOKEN
             },
             body: JSON.stringify({
-              razorpay_order_id: paymentResponse.razorpay_order_id,
-              razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_signature: paymentResponse.razorpay_signature,
-              order_uuid: orderData.order_uuid
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              order_uuid: data.order_uuid
             })
+          })
+          .then(res => res.json())
+          .then(verifyData => {
+            if (verifyData.success) {
+              window.location.href = verifyData.redirect_url;
+            } else {
+              window.location.href = verifyData.redirect_url || `/payment/failure/?uuid=${data.order_uuid}`;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            window.location.href = `/payment/failure/?uuid=${data.order_uuid}`;
           });
-          
-          const verifyData = await verifyResponse.json();
-          hideSpinner();
-          
-          if (verifyData.success && verifyData.redirect_url) {
-            window.location.href = verifyData.redirect_url;
-          } else if (verifyData.success && verifyData.order_uuid) {
-            // Fallback redirect using order UUID
-            window.location.href = "#".replace('UUID_PLACEHOLDER', verifyData.order_uuid);
-          } else {
-            throw new Error(verifyData.error || 'Payment verification failed');
-          }
-        } catch (error) {
-          hideSpinner();
-          console.error('Verification error:', error);
-          alert('Payment verification failed. Please contact support or check your orders.');
-          window.location.href = "{% url 'razorpay_payment_success' %}?reason=Verification+failed";
         }
-      }
-    };
-
-    // Initialize and open Razorpay
-    const razorpayInstance = new Razorpay(options);
-    
-    // Handle payment failure event
-    razorpayInstance.on('payment.failed', function(failureResponse) {
-      console.error('Payment failed:', failureResponse);
-      const error = failureResponse.error;
-      const errorMessage = error?.description || error?.reason || 'Payment processing failed';
-      window.location.href = "{% url 'razorpay_payment_success' %}?reason=" + encodeURIComponent(errorMessage);
-    });
-    
-    // Open Razorpay checkout
-    razorpayInstance.open();
-    
-  } catch (error) {
-    // Hide spinner and show error
-    hideSpinner();
-    console.error('Order creation error:', error);
-    
-    // User-friendly error message
-    let errorMessage = 'Unable to process payment. ';
-    if (error.message.includes('network') || error.message.includes('fetch')) {
-      errorMessage += 'Please check your internet connection and try again.';
-    } else if (error.message.includes('HTTP')) {
-      errorMessage += 'Server error occurred. Please try again later.';
+      };
+      
+      var rzp = new Razorpay(options);
+      rzp.open();
     } else {
-      errorMessage += error.message;
+      alert(data.error || 'Failed to create order. Please try again.');
     }
-    
-    alert(errorMessage);
+  } catch (error) {
+    hideSpinner();
+    console.error('Error:', error);
+    alert('Network error. Please try again.');
   }
 }
 
-// ── main action dispatcher ───────────────────────────────────────────────────
+// Main action dispatcher
 function handlePlaceOrder() {
   if (!selectedAddressId) {
     alert('Please select a delivery address.');
@@ -873,13 +827,12 @@ function handlePlaceOrder() {
 
   const method = selectedPaymentMethod;
 
-  if (method === 'razorpay' && walletApplied && currentTotal === 0) {
-    placeNonRazorpayOrder('wallet');
-    return;
-  }
-
   if (method === 'razorpay') {
-    openRazorpay();
+    if (walletApplied && currentTotal === 0) {
+      placeNonRazorpayOrder('wallet');
+    } else {
+      openRazorpay();
+    }
   } else if (method === 'cod') {
     placeNonRazorpayOrder('cod');
   } else if (method === 'wallet') {
@@ -888,17 +841,18 @@ function handlePlaceOrder() {
       return;
     }
     if (currentTotal > 0) {
-      alert(`Wallet balance is insufficient. Remaining: ₹${currentTotal.toFixed(2)}`);
+      alert(`Wallet balance is insufficient. Remaining: Rs. ${currentTotal.toFixed(2)}`);
       return;
     }
     placeNonRazorpayOrder('wallet');
   }
 }
 
-// ── Initialize ────────────────────────────────────────────────────────────────
+// 
 document.addEventListener('DOMContentLoaded', function() {
   selectPayment('razorpay');
-  console.log('Checkout page loaded. Razorpay Key:', RZP_KEY_ID);
+  updateBtn();
+  console.log('Razorpay Key ID:', RZP_KEY_ID);
 });
 </script>
 {% endblock %}

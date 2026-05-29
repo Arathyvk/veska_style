@@ -6,8 +6,8 @@ from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q, Min, Max, Avg
 
-from product_admin.models import Product, ProductReview
-from cart_user.models     import Cart
+from product_admin.models import Product, ProductReview, ProductVariant
+from cart_user.models     import Cart,CartItem
 from wishlist_user.models import Wishlist
 
 ITEMS_PER_PAGE   = 12
@@ -298,6 +298,52 @@ def product_detail(request, slug):
         'in_wishlist':      in_wishlist,
         'category_display': category_display,
     })
+
+
+@require_POST
+def cart_add_with_size(request):
+    product_id = request.POST.get('product_id')
+    size = request.POST.get('size')
+    quantity = int(request.POST.get('quantity', 1))
+    next_url = request.POST.get('next', '/shop/')
+    
+    if not product_id or not size:
+        messages.error(request, 'Please select a size')
+        return redirect(next_url)
+    
+    try:
+        product = Product.objects.get(id=product_id, is_active=True)
+    except Product.DoesNotExist:
+        messages.error(request, 'Product not found')
+        return redirect(next_url)
+    
+    try:
+        variant = ProductVariant.objects.get(product=product, size=size)
+    except ProductVariant.DoesNotExist:
+        messages.error(request, f'Size {size} is not available for this product')
+        return redirect(next_url)
+    
+    if variant.stock < quantity:
+        messages.error(request, f'Only {variant.stock} units available in size {size}')
+        return redirect(next_url)
+    
+    cart = _get_cart(request)
+    
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        product=product,
+        variant=variant,
+        defaults={'quantity': quantity}
+    )
+    
+    if not created:
+        cart_item.quantity += quantity
+        if cart_item.quantity > variant.stock:
+            cart_item.quantity = variant.stock
+        cart_item.save()
+    
+    messages.success(request, f'{product.name} (Size: {size}) added to cart')
+    return redirect(next_url)
 
 
 @require_POST

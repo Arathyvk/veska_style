@@ -1,0 +1,412 @@
+{% extends "admin_base.html" %}
+{% block page_title %}Offers Management{% endblock %}
+
+{% block topbar_actions %}
+<div style="display: flex; gap: 10px;">
+  <a href="{% url 'offer_admin:offer_add' %}" class="btn-primary">+ Product/Category Offer</a>
+  <a href="{% url 'offer_admin:referral_offer_add' %}" class="btn-secondary">+ Referral Offer</a>
+  <a href="{% url 'offer_admin:referral_stats' %}" class="btn-outline">View Referral Stats</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+:root {
+  --bg: #1a1410; --card: #231f1a; --card2: #2c2620;
+  --border: #3a342c; --border2: #4a4038;
+  --rose: #c9967a; --rose2: #e8b49a;
+  --text: #f0ebe4; --muted: #8a7d72; --muted2: #b0a090;
+  --green: #4caf7d; --red: #e05252; --orange: #e09a52;
+  --radius: 6px;
+  --head: 'Playfair Display', serif;
+}
+
+.section-header {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-header h2 {
+  font-family: var(--head);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.table-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: none;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr {
+  background: var(--card2);
+}
+
+th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted2);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(58, 52, 44, 0.5);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+tr:hover td {
+  background: rgba(201, 150, 122, 0.04);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-active {
+  background: rgba(76, 175, 125, 0.15);
+  border: 1px solid rgba(76, 175, 125, 0.3);
+  color: var(--green);
+}
+
+.badge-inactive {
+  background: rgba(224, 82, 82, 0.15);
+  border: 1px solid rgba(224, 82, 82, 0.3);
+  color: var(--red);
+}
+
+.badge-expired {
+  background: rgba(138, 125, 114, 0.15);
+  border: 1px solid rgba(138, 125, 114, 0.3);
+  color: var(--muted2);
+}
+
+.offer-type {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.type-product { background: rgba(201, 150, 122, 0.2); color: var(--rose2); }
+.type-category { background: rgba(76, 175, 125, 0.15); color: var(--green); }
+.type-referral { background: rgba(224, 82, 82, 0.15); color: var(--red); }
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.btn-edit {
+  background: #2a6e45;
+  color: #5df0a0;
+}
+
+.btn-toggle {
+  background: #4a4038;
+  color: var(--muted2);
+}
+
+.btn-delete {
+  background: #6e2a2a;
+  color: #f07070;
+}
+
+.btn-icon:hover {
+  opacity: 0.8;
+}
+
+.table-footer {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pagination {
+  display: flex;
+  gap: 5px;
+}
+
+.pg-btn, .pg-num {
+  padding: 6px 12px;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  color: var(--muted2);
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.pg-btn:hover, .pg-num:hover, .pg-num.active {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: #fff;
+}
+
+.empty-row td {
+  text-align: center;
+  padding: 48px;
+  color: var(--muted);
+}
+
+.empty-row a {
+  color: var(--rose2);
+  text-decoration: none;
+}
+
+.messages-wrap {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msg-toast {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 15px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 220px;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.45);
+}
+
+.create-offer-btn{
+  background: linear-gradient(135deg, var(--rose), var(--rose2));
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.create-offer-btn:hover{
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.msg-toast.success { border-left: 3px solid var(--green); }
+.msg-toast.error { border-left: 3px solid var(--red); }
+</style>
+
+{% if messages %}
+<div class="messages-wrap" id="msg-wrap">
+  {% for msg in messages %}
+  <div class="msg-toast {{ msg.tags }}">
+    <span>{% if msg.tags == 'success' %}✓{% else %}✕{% endif %}</span>
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+<script>
+  setTimeout(() => {
+    const w = document.getElementById('msg-wrap');
+    if (w) w.remove();
+  }, 3500);
+</script>
+{% endif %}
+
+<div>
+        <div class="section-header">
+
+        <div style="display:flex; align-items:center; gap:12px;">
+            <h2 style="margin:0;">All Offers</h2>
+
+            <a href="{% url 'offer_add' %}" class="create-offer-btn">
+            + Create Offer
+            </a>
+        </div>
+
+        <div class="filter-bar">
+      <form method="GET" style="display: flex; gap: 8px;">
+        <input type="text" name="q" placeholder="Search offers..." 
+               value="{{ query }}" class="filter-select" style="width: 200px;">
+        <select name="type" class="filter-select">
+          <option value="">All Types</option>
+          <option value="PRODUCT" {% if offer_type == 'PRODUCT' %}selected{% endif %}>Product Offers</option>
+          <option value="CATEGORY" {% if offer_type == 'CATEGORY' %}selected{% endif %}>Category Offers</option>
+          <option value="REFERRAL" {% if offer_type == 'REFERRAL' %}selected{% endif %}>Referral Offers</option>
+        </select>
+        <select name="status" class="filter-select">
+          <option value="">All Status</option>
+          <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+          <option value="expired" {% if status == 'expired' %}selected{% endif %}>Expired</option>
+          <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+        <button type="submit" class="btn-primary" style="padding: 8px 16px;">Filter</button>
+        {% if query or offer_type or status %}
+          <a href="{% url 'offer_list' %}" class="btn-outline" style="padding: 8px 16px;">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>sl no</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Discount</th>
+          <th>Valid Period</th>
+          <th>Usage</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td style="color: var(--muted)">{{ forloop.counter }}</td>
+          <td style="font-weight: 500;">{{ offer.name }}</td>
+          <td>
+            <span class="offer-type type-{% if offer.offer_type == 'PRODUCT' %}product{% elif offer.offer_type == 'CATEGORY' %}category{% else %}referral{% endif %}">
+              {{ offer.get_offer_type_display }}
+            </span>
+          </td>
+          <td style="font-weight: 600; color: var(--rose2);">
+            {{ offer.discount_display }}
+            {% if offer.min_purchase_amount > 0 %}
+              <small style="display: block; font-size: 10px; color: var(--muted);">
+                min ₹{{ offer.min_purchase_amount }}
+              </small>
+            {% endif %}
+          </td>
+          <td style="font-size: 12px;">
+            {{ offer.start_date|date:"d M Y" }}<br>
+            <span style="color: var(--muted);">to</span><br>
+            {{ offer.end_date|date:"d M Y" }}
+          </td>
+          <td style="font-size: 12px;">
+            {% if offer.usage_limit > 0 %}
+              {{ offer.used_count }}/{{ offer.usage_limit }}
+            {% else %}
+              Unlimited
+            {% endif %}
+          </td>
+          <td>
+            {% if offer.is_valid %}
+              <span class="badge badge-active">Active</span>
+            {% elif not offer.is_active %}
+              <span class="badge badge-inactive">Inactive</span>
+            {% else %}
+              <span class="badge badge-expired">Expired</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="actions">
+              <a href="{% url 'offer_edit' offer.uuid %}" class="btn-icon btn-edit">Edit</a>
+              <form method="POST" action="{% url 'offer_toggle' offer.uuid %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon btn-toggle">
+                  {% if offer.is_active %}Deactivate{% else %}Activate{% endif %}
+                </button>
+              </form>
+              <form method="POST" action="{% url 'offer_delete' offer.uuid %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon btn-delete" onclick="return confirm('Delete this offer?')">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row">
+          <td colspan="8">
+            No offers found. 
+            <a href="{% url 'offer_add' %}">Create your first offer →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if offers.has_other_pages %}
+  <div class="table-footer">
+    <span class="page-info">
+      Page {{ offers.number }} of {{ offers.paginator.num_pages }}
+    </span>
+    <div class="pagination">
+      {% if offers.has_previous %}
+        <a href="?page={{ offers.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if offer_type %}&type={{ offer_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="pg-btn">Prev</a>
+      {% endif %}
+      
+      {% for num in offers.paginator.page_range %}
+        {% if num == offers.number %}
+          <span class="pg-num active">{{ num }}</span>
+        {% elif num >= offers.number|add:'-2' and num <= offers.number|add:'2' %}
+          <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if offer_type %}&type={{ offer_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="pg-num">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+      
+      {% if offers.has_next %}
+        <a href="?page={{ offers.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if offer_type %}&type={{ offer_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="pg-btn">Next</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

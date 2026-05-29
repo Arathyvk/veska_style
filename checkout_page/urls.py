@@ -6,7 +6,8 @@ urlpatterns = [
  
     path('razorpay/create-order/',  views.razorpay_create_order,  name='razorpay_create_order'),
     path('razorpay/verify/', views.razorpay_verify_payment, name='razorpay_verify_payment'),
- 
+    path('razorpay/webhook/', views.razorpay_webhook, name='razorpay_webhook'),
+
     path('place-order/', views.place_order, name='place_order'),
  
     path('order/success/<uuid:uuid>/', views.order_success, name='order_success'),
