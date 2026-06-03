@@ -375,10 +375,10 @@ def payment_success(request):
 
     try:
         session = stripe.checkout.Session.retrieve(session_id)
-        print(f"[DEBUG] payment_success - session_id={session_id}, payment_status={session.payment_status}")
+        print(f"[DEBUG] payment_success - session_id={session_id}, status={session.status}, payment_status={session.payment_status}")
 
-        if session.payment_status not in ('paid', 'unpaid'):
-            messages.error(request, 'Payment session invalid.')
+        if session.status != 'complete':
+            messages.error(request, 'Payment was not successful.')
             return redirect('payment_cancel')
         
         payment = get_object_or_404(StripePayment, session_id=session_id, user=request.user)
@@ -386,22 +386,28 @@ def payment_success(request):
         if payment.order:
             return redirect('order_success', uuid=payment.order.uuid)
 
-        metadata = dict(session.metadata)
+        metadata = {}
+        if session.metadata:
+            try:
+                metadata = session.metadata.to_dict()
+            except Exception:
+                metadata = {}
 
-        address_id      = int(metadata.get('address_id', 0))
-        wallet_amount   = Decimal(str(metadata.get('wallet_amount', '0')))
-        notes           = metadata.get('notes', '')
-        coupon_code     = metadata.get('coupon_code', '')
-        coupon_discount = Decimal(str(metadata.get('coupon_discount', '0')))
-        shipping_amount = Decimal(str(metadata.get('shipping_amount', '0')))
-        subtotal        = Decimal(str(metadata.get('subtotal', '0')))
+        address_id = int(metadata.get('address_id', 0))
+        wallet_amount = Decimal(str(metadata.get('wallet_amount', '0')))
+        notes = metadata.get('notes', '')
+        coupon_code = metadata.get('coupon_code', '')
+        coupon_discount = Decimal(metadata.get('coupon_discount', '0'))
+        shipping_amount = Decimal(metadata.get('shipping_amount', '0'))
+        subtotal = Decimal(metadata.get('subtotal', '0'))
+        cart_id = int(metadata.get('cart_id', 0))
 
         address = get_object_or_404(Address, id=address_id, user=request.user)
 
-        cart_id = int(metadata.get('cart_id', 0))
         try:
             cart = Cart.objects.get(id=cart_id, user=request.user)
             cart_items = cart.items.select_related('variant', 'product').all()
+
         except Cart.DoesNotExist:
             cart = None
             cart_items = []
@@ -487,7 +493,7 @@ def payment_success(request):
                 )
 
             cart.items.all().delete()
-
+            
             for key in ['coupon_code', 'coupon_discount']:
                 request.session.pop(key, None)
 
@@ -496,12 +502,16 @@ def payment_success(request):
             payment.payment_intent_id = session.payment_intent
             payment.save()
 
+        print(f"[DEBUG] Order created successfully with uuid: {order.uuid}")
+        messages.success(request, 'Payment successful! Your order has been confirmed.')
         return redirect('order_success', uuid=order.uuid)
 
     except StripePayment.DoesNotExist:
+        print("[DEBUG] StripePayment.DoesNotExist error")
         messages.error(request, 'Payment record not found. Please contact support.')
         return redirect('payment_cancel')
     except Exception as e:
+        print(f"[DEBUG] Exception in payment_success: {str(e)}")
         import traceback
         traceback.print_exc()
         messages.error(request, f'Unable to verify payment: {str(e)}')
