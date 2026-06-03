@@ -26,7 +26,9 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
+
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(unique=True)

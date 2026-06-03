@@ -50,7 +50,6 @@ STATUS_FLOW = {
 def is_admin(user):
     return user.is_authenticated and user.is_staff
  
-
  
 @never_cache
 @login_required(login_url='admin_login')
@@ -70,8 +69,10 @@ def admin_order_list(request):
         qs = qs.filter(
             Q(order_number__icontains=query) |
             Q(user__email__icontains=query) |
-            Q(user__first_name__icontains=query)
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query)
         )
+        
     if status_filter:
         qs = qs.filter(status=status_filter)
     if date_from:

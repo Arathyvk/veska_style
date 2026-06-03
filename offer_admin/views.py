@@ -31,18 +31,15 @@ def offer_list(request):
     
     offers = BaseOffer.objects.all()
     
-    # Apply search filter
     if query:
         offers = offers.filter(
             Q(name__icontains=query) |
             Q(referral_code__icontains=query)
         )
     
-    # Apply type filter
     if offer_type:
         offers = offers.filter(offer_type=offer_type)
     
-    # Apply status filter
     now = timezone.now()
     if status == 'active':
         offers = offers.filter(
@@ -55,11 +52,8 @@ def offer_list(request):
     elif status == 'inactive':
         offers = offers.filter(is_active=False)
     
-    # Order by creation date (newest first)
-# Order by creation date (newest first)
     offers = offers.order_by('-created_at')
 
-    # Pagination
     paginator = Paginator(offers, 10)
     page = request.GET.get('page')
 
@@ -211,15 +205,13 @@ def referral_stats(request):
     if not is_admin(request.user):
         return redirect('admin_login')
     
-    # Statistics
+    
     total_referrals = ReferralTransaction.objects.count()
     total_earnings = ReferralTransaction.objects.filter(is_credited=True).aggregate(Sum('amount_earned'))['amount_earned__sum'] or 0
     active_codes = ReferralCode.objects.filter(is_active=True).count()
     
-    # Recent transactions
     recent_transactions = ReferralTransaction.objects.select_related('referrer', 'referred_user').order_by('-created_at')[:20]
     
-    # Top referrers
     top_referrers = ReferralCode.objects.filter(is_active=True).order_by('-total_referrals')[:10]
     
     context = {
@@ -232,12 +224,10 @@ def referral_stats(request):
     return render(request, 'referral_stats.html', context)
 
 
-# Helper function to get applicable offers for a product
 def get_applicable_offers(product, user=None):
     now = timezone.now()
     offers = []
     
-    # Product-specific offers
     product_offers = BaseOffer.objects.filter(
         offer_type='PRODUCT',
         products=product,
@@ -247,7 +237,6 @@ def get_applicable_offers(product, user=None):
     )
     offers.extend(product_offers)
     
-    # Category offers
     category_offers = BaseOffer.objects.filter(
         offer_type='CATEGORY',
         categories=product.category,
@@ -257,7 +246,6 @@ def get_applicable_offers(product, user=None):
     )
     offers.extend(category_offers)
     
-    # Filter by user usage limits if user is provided
     if user and user.is_authenticated:
         valid_offers = []
         for offer in offers:

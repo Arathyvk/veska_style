@@ -84,7 +84,9 @@ def refund_on_return_approval(order):
 
 @transaction.atomic
 def debit_wallet_for_order(order, amount):
-  
+    if amount <= 0:
+        return
+ 
     wallet = get_or_create_wallet(order.user)
     wallet.debit(
         amount      = amount,

@@ -18,11 +18,11 @@ RETURN_REASONS = [
     ('other',            'Other'),
 ]
 
+
 def _order_number():
     date_part   = timezone.now().strftime('%Y%m%d')
     unique_part = uuid.uuid4().hex[:4].upper()
     return f'VES-{date_part}-{unique_part}'
-
 
 
 
@@ -75,67 +75,73 @@ class Coupon(models.Model):
 
 
 class Order(models.Model):
-    STATUS_CHOICES = [
-        ('pending',    'Pending'),
-        ('confirmed',  'Confirmed'),
-        ('processing', 'Processing'),
-        ('shipped',    'Shipped'),
-        ('delivered',  'Delivered'),
-        ('cancelled',  'Cancelled'),
-        ('refunded',   'Refunded'),
-        ('return_requested', 'Return Requested'),
-        ('returned', 'Returned'),
 
-]
-    
+    STATUS_CHOICES = [
+        ('pending',          'Pending'),
+        ('confirmed',        'Confirmed'),
+        ('processing',       'Processing'),
+        ('shipped',          'Shipped'),
+        ('delivered',        'Delivered'),
+        ('cancelled',        'Cancelled'),
+        ('refunded',         'Refunded'),
+        ('return_requested', 'Return Requested'),
+        ('returned',         'Returned'),
+    ]
 
     PAYMENT_STATUS = [
-        ('pending',   'Pending'),
-        ('paid',      'Paid'),
-        ('failed',    'Failed'),
-        ('refunded',  'Refunded'),
+        ('pending',  'Pending'),
+        ('paid',     'Paid'),
+        ('failed',   'Failed'),
+        ('refunded', 'Refunded'),
     ]
+
     PAYMENT_METHOD = [
-        ('paypal', 'PayPal'),
-        ('cod',    'Cash on Delivery'),
-        ('wallet', 'Wallet'),
+        ('phonepe', 'PhonePe'),         
+        ('cod',     'Cash on Delivery'),
+        ('wallet',  'Wallet'),
     ]
 
-    uuid           = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    user           = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='orders')
 
-    full_name      = models.CharField(max_length=120)
-    phone          = models.CharField(max_length=20)
-    address_line1  = models.CharField(max_length=255)
-    address_line2  = models.CharField(max_length=255, blank=True)
-    city           = models.CharField(max_length=80)
-    state          = models.CharField(max_length=80)
-    pincode        = models.CharField(max_length=20)
-    country        = models.CharField(max_length=60)
-    
-    delivered_at = models.DateTimeField(null=True, blank=True)
-    subtotal          = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    coupon_code       = models.CharField(max_length=50, blank=True)
-    discount_amount   = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    shipping_charge   = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    full_name     = models.CharField(max_length=120)
+    phone         = models.CharField(max_length=20)
+    address_line1 = models.CharField(max_length=255)
+    address_line2 = models.CharField(max_length=255, blank=True)
+    city          = models.CharField(max_length=80)
+    state         = models.CharField(max_length=80)
+    pincode       = models.CharField(max_length=20)
+    country       = models.CharField(max_length=60)
+
+    subtotal           = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    coupon_code        = models.CharField(max_length=50, blank=True)
+    discount_amount    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_charge    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     wallet_amount_used = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total             = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    return_reason = models.TextField(blank=True, null=True)
-    return_notes = models.TextField(blank=True, null=True)
-    return_requested_at = models.DateTimeField(blank=True, null=True)
-    
-    payment_method    = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='paypal')
-    payment_status    = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
-    status            = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    total              = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
-    razorpay_order_id   = models.CharField(max_length=100, blank=True)   
-    razorpay_payment_id = models.CharField(max_length=100, blank=True)   
-    razorpay_signature  = models.CharField(max_length=255, blank=True)   
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='phonepe')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
+    status         = models.CharField(max_length=20, choices=STATUS_CHOICES,  default='pending')
 
+    phonepe_payment_id = models.CharField(
+        max_length=100, blank=True, default='',
+        help_text='PhonePe transactionId returned after successful payment',
+    )
+    phonepe_response   = models.JSONField(
+        null=True, blank=True,
+        help_text='Raw PhonePe status-check response payload (for audit)',
+    )
 
-    notes             = models.TextField(blank=True)
-    created_at        = models.DateTimeField(auto_now_add=True)
-    updated_at        = models.DateTimeField(auto_now=True)
+    delivered_at          = models.DateTimeField(null=True, blank=True)
+    return_reason         = models.TextField(blank=True, null=True)
+    return_notes          = models.TextField(blank=True, null=True)
+    return_requested_at   = models.DateTimeField(blank=True, null=True)
+
+    notes      = models.TextField(blank=True)
+    paid_at    = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -149,37 +155,43 @@ class Order(models.Model):
 
     @property
     def can_return(self):
-            
         if self.status != 'delivered':
             return False
-        
         if not self.delivered_at:
             return False
-        
         return_deadline = self.delivered_at + timedelta(days=RETURN_DAYS)
         return timezone.now() <= return_deadline
-    
+
     @property
     def return_deadline(self):
         if self.delivered_at:
             return self.delivered_at + timedelta(days=RETURN_DAYS)
         return None
-        
+
+
+
+
 class OrderItem(models.Model):
-    
-    order         = models.ForeignKey('order_user.Order', on_delete=models.CASCADE, related_name='items')
-    product       = models.ForeignKey('product_admin.Product', on_delete=models.SET_NULL, null=True)
-    variant       = models.ForeignKey('product_admin.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
-    product_name  = models.CharField(max_length=255)
-    product_slug  = models.SlugField(max_length=255)
-    size          = models.CharField(max_length=20, blank=True)
-    image_url     = models.URLField(blank=True)
-    unit_price    = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity      = models.PositiveIntegerField()
+
+    order        = models.ForeignKey(
+        'order_user.Order', on_delete=models.CASCADE, related_name='items'
+    )
+    product      = models.ForeignKey(
+        'product_admin.Product', on_delete=models.SET_NULL, null=True
+    )
+    variant      = models.ForeignKey(
+        'product_admin.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True
+    )
+    product_name = models.CharField(max_length=255)
+    product_slug = models.SlugField(max_length=255)
+    size         = models.CharField(max_length=20, blank=True)
+    image_url    = models.URLField(blank=True)
+    unit_price   = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity     = models.PositiveIntegerField()
     cancel_status = models.CharField(
         max_length=20,
-        choices=[('none','None'),('requested','Requested'),('cancelled','Cancelled')],
-        default='none'
+        choices=[('none', 'None'), ('requested', 'Requested'), ('cancelled', 'Cancelled')],
+        default='none',
     )
     cancel_reason = models.TextField(blank=True)
 
@@ -189,8 +201,3 @@ class OrderItem(models.Model):
     @property
     def line_total(self):
         return self.unit_price * self.quantity
-
-  
-
-
- 
