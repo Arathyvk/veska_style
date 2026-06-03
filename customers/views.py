@@ -19,7 +19,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.http import JsonResponse
 
 from django.core.mail import send_mail
-from .models import Address
+from customers.models import Address
 
 User = get_user_model()
 

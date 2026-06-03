@@ -1,0 +1,432 @@
+{% extends "user_base.html" %}
+{% load static %}
+{% block title %}Order Confirmed · Veska{% endblock %}
+
+{% block content %}
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
+  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
+  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
+  --border:#e0d9d0;--border-lt:#ece6de;
+  --success:#3a7d5a;--success-pale:#eaf4ee;
+  --stripe:#635bff;
+  --shadow-xs:0 1px 3px rgba(30,26,23,.06);
+  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
+  --shadow-lg:0 24px 64px rgba(30,26,23,.16);
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --head:'Cormorant Garamond',Georgia,serif;
+  --body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink);min-height:100vh}
+
+/* ── Confetti canvas ── */
+#confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999}
+
+/* ── Page ── */
+.ps-page{padding:48px 0 80px;min-height:100vh}
+.container{max-width:760px;margin:0 auto;padding:0 24px}
+
+/* ── Hero check ── */
+.ps-hero{text-align:center;padding:40px 0 32px;animation:fadeUp .6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.check-ring{width:88px;height:88px;border-radius:50%;background:var(--success);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 20px;
+  box-shadow:0 0 0 12px rgba(58,125,90,.12),0 0 0 24px rgba(58,125,90,.06);
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1) .1s both}
+@keyframes popIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+.check-ring svg{color:#fff}
+.ps-hero h1{font-family:var(--head);font-size:clamp(28px,5vw,44px);font-weight:500;
+  color:var(--charcoal);margin-bottom:8px;letter-spacing:-.3px}
+.ps-hero h1 em{font-style:italic;color:var(--terra)}
+.ps-hero p{font-size:14px;color:var(--muted);max-width:420px;margin:0 auto;line-height:1.7}
+
+/* ── Statement card ── */
+.stmt-card{background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);overflow:hidden;margin-bottom:20px;
+  box-shadow:var(--shadow-sm);animation:fadeUp .6s ease .15s both}
+.stmt-head{background:var(--charcoal);padding:18px 24px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.stmt-head-left h3{font-family:var(--head);font-size:20px;font-weight:500;color:#fff;margin-bottom:2px}
+.stmt-head-left p{font-size:11px;color:rgba(255,255,255,.45);font-weight:300}
+.stmt-head-right{text-align:right}
+.stmt-status{display:inline-flex;align-items:center;gap:6px;background:var(--success);
+  color:#fff;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:5px 12px;border-radius:20px}
+.stmt-status-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.stmt-body{padding:20px 24px}
+.stmt-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:500px){.stmt-grid{grid-template-columns:1fr}}
+.stmt-field{background:var(--parchment);border-radius:var(--radius-md);padding:12px 14px}
+.stmt-field .lbl{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--muted-lt);margin-bottom:4px}
+.stmt-field .val{font-size:13.5px;font-weight:600;color:var(--ink)}
+.stmt-field .val.mono{font-family:monospace;font-size:12px;letter-spacing:.3px}
+.stmt-field .val.green{color:var(--success)}
+
+/* ── Items list ── */
+.items-title{font-family:var(--head);font-size:17px;font-weight:500;color:var(--ink);
+  margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border-lt)}
+.item-row{display:flex;gap:12px;align-items:center;padding:11px 0;
+  border-bottom:1px solid var(--border-lt)}
+.item-row:last-child{border-bottom:none;padding-bottom:0}
+.item-img{width:50px;height:62px;border-radius:var(--radius-sm);background:var(--parchment);
+  flex-shrink:0;overflow:hidden;border:1px solid var(--border-lt)}
+.item-img img{width:100%;height:100%;object-fit:cover}
+.item-img-empty{width:100%;height:100%;display:flex;align-items:center;
+  justify-content:center;color:var(--muted-lt)}
+.item-body{flex:1;min-width:0}
+.item-cat{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--muted-lt);margin-bottom:2px}
+.item-name{font-family:var(--head);font-size:14px;font-weight:500;color:var(--ink);
+  margin-bottom:3px;line-height:1.25}
+.item-meta{font-size:11px;color:var(--muted-lt)}
+.item-price{text-align:right;flex-shrink:0}
+.item-price .unit{font-size:10.5px;color:var(--muted-lt);margin-bottom:1px}
+.item-price .total{font-family:var(--head);font-size:15px;font-weight:600;color:var(--charcoal)}
+
+/* ── Totals ── */
+.totals-box{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.totals-row{display:flex;justify-content:space-between;font-size:13px;
+  color:var(--muted);padding:5px 0}
+.totals-row .v{color:var(--ink);font-weight:500}
+.totals-row.saving .v,.totals-row.free .v,.totals-row.wallet .v{color:var(--success);font-weight:600}
+.totals-divider{height:1px;background:var(--border);margin:8px 0}
+.totals-final{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0 0}
+.totals-final .lbl{font-size:16px;color:var(--muted)}
+.totals-final .val{font-family:var(--head);font-size:28px;font-weight:600;color:var(--charcoal)}
+
+/* ── Payment badge ── */
+.pay-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(99,91,255,.08);
+  border:1px solid rgba(99,91,255,.2);color:var(--stripe);font-size:11.5px;font-weight:600;
+  padding:6px 14px;border-radius:20px;margin-top:14px}
+
+/* ── Delivery card ── */
+.delivery-card{background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);padding:20px 24px;margin-bottom:20px;
+  box-shadow:var(--shadow-xs);animation:fadeUp .6s ease .25s both}
+.delivery-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.delivery-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:var(--ink)}
+.delivery-head svg{color:var(--terra)}
+.delivery-track{display:flex;align-items:center;gap:0;margin-bottom:18px;overflow-x:auto;padding-bottom:4px}
+.dt-step{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:80px}
+.dt-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;background:var(--warm-white);
+  font-size:12px;transition:all .3s;flex-shrink:0}
+.dt-step.done .dt-dot{border-color:var(--success);background:var(--success);color:#fff}
+.dt-step.active .dt-dot{border-color:var(--terra);background:var(--terra);color:#fff;
+  box-shadow:0 0 0 4px rgba(181,103,68,.15)}
+.dt-label{font-size:10px;font-weight:600;color:var(--muted-lt);text-align:center;
+  letter-spacing:.2px;line-height:1.3;max-width:72px}
+.dt-step.done .dt-label,.dt-step.active .dt-label{color:var(--ink)}
+.dt-line{flex:1;height:2px;background:var(--border);min-width:20px}
+.dt-step.done+.dt-line{background:var(--success)}
+.eta-box{background:var(--success-pale);border:1px solid rgba(58,125,90,.18);
+  border-radius:var(--radius-md);padding:11px 14px;display:flex;align-items:center;gap:10px}
+.eta-box svg{color:var(--success);flex-shrink:0}
+.eta-box .eta-text{font-size:13px;font-weight:600;color:var(--success)}
+.eta-box .eta-sub{font-size:11px;color:var(--success);opacity:.7;margin-top:1px}
+.addr-mini{margin-top:12px;padding:12px 14px;background:var(--parchment);
+  border-radius:var(--radius-md);font-size:12.5px;color:var(--muted);line-height:1.7}
+.addr-mini strong{color:var(--ink);font-size:13.5px;display:block;margin-bottom:2px}
+
+/* ── Actions ── */
+.actions-card{animation:fadeUp .6s ease .35s both}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  padding:14px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);
+  font-family:var(--body);font-size:14px;font-weight:600;cursor:pointer;
+  text-decoration:none;transition:background .2s;margin-bottom:10px}
+.btn-primary:hover{background:var(--terra)}
+.btn-secondary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:12px;background:none;color:var(--muted);border:1.5px solid var(--border);
+  border-radius:var(--radius-md);font-family:var(--body);font-size:13px;
+  text-decoration:none;transition:all .2s;margin-bottom:10px}
+.btn-secondary:hover{border-color:var(--terra);color:var(--terra)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+@media(max-width:480px){.btn-row{grid-template-columns:1fr}}
+
+/* ── Trust ── */
+.trust-mini{margin-top:20px;display:flex;flex-wrap:wrap;justify-content:center;gap:18px;
+  font-size:11.5px;color:var(--muted-lt)}
+.trust-mini span{display:flex;align-items:center;gap:5px}
+</style>
+
+<!-- Confetti -->
+<canvas id="confetti-canvas"></canvas>
+
+<div class="ps-page">
+  <div class="container">
+
+    <!-- Hero -->
+    <div class="ps-hero">
+      <div class="check-ring">
+        <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h1>Order <em>Confirmed!</em></h1>
+      <p>Thank you, {{ order.full_name|default:request.user.get_full_name }}! Your order has been placed successfully. You'll receive a confirmation email shortly.</p>
+    </div>
+
+    <!-- Order Statement -->
+    <div class="stmt-card">
+      <div class="stmt-head">
+        <div class="stmt-head-left">
+          <h3>Order Receipt</h3>
+          <p>Keep this for your records</p>
+        </div>
+        <div class="stmt-head-right">
+          <div class="stmt-status">
+            <span class="stmt-status-dot"></span>
+            {{ order.get_status_display|default:"Confirmed" }}
+          </div>
+        </div>
+      </div>
+      <div class="stmt-body">
+        <div class="stmt-grid">
+          <div class="stmt-field">
+            <div class="lbl">Order Number</div>
+            <div class="val mono">#{{ order.uuid|truncatechars:13 }}</div>
+          </div>
+          <div class="stmt-field">
+            <div class="lbl">Order Date</div>
+            <div class="val">{{ order.created_at|date:"d M Y, g:i A" }}</div>
+          </div>
+          <div class="stmt-field">
+            <div class="lbl">Payment Method</div>
+            <div class="val">
+              {% if order.payment_method == 'stripe' %}💳 Stripe
+              {% elif order.payment_method == 'cod' %}💵 Cash on Delivery
+              {% elif order.payment_method == 'wallet' %}👛 Veska Wallet
+              {% else %}{{ order.payment_method|upper }}{% endif %}
+            </div>
+          </div>
+          <div class="stmt-field">
+            <div class="lbl">Payment Status</div>
+            <div class="val green">
+              {% if order.payment_status == 'paid' %}✓ Paid
+              {% elif order.payment_status == 'pending' %}⏳ Pending (COD)
+              {% else %}{{ order.payment_status|capfirst }}{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Items -->
+        <div class="items-title">{{ order_items|length }} Item{{ order_items|length|pluralize }}</div>
+        {% for item in order_items %}
+        <div class="item-row">
+          <div class="item-img">
+            {% if item.image_url %}
+            <img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
+            {% else %}
+            <div class="item-img-empty">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.3" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            {% endif %}
+          </div>
+          <div class="item-body">
+            <div class="item-cat">{{ item.product.category|default:"Product" }}</div>
+            <div class="item-name">{{ item.product_name }}</div>
+            <div class="item-meta">
+              {% if item.size %}Size: {{ item.size }} · {% endif %}
+              Qty: {{ item.quantity }}
+            </div>
+          </div>
+          <div class="item-price">
+            <div class="unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
+            <div class="total">₹{{ item.line_total|floatformat:2 }}</div>
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Totals -->
+        <div class="totals-box">
+          <div class="totals-row">
+            <span>Subtotal</span>
+            <span class="v">₹{{ order.subtotal|floatformat:2 }}</span>
+          </div>
+          {% if order.discount_amount and order.discount_amount > 0 %}
+          <div class="totals-row saving">
+            <span>Coupon {% if order.coupon_code %}({{ order.coupon_code }}){% endif %}</span>
+            <span class="v">−₹{{ order.discount_amount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+          {% if order.shipping_charge == 0 %}
+          <div class="totals-row free"><span>Shipping</span><span class="v">FREE</span></div>
+          {% else %}
+          <div class="totals-row"><span>Shipping</span><span class="v">₹{{ order.shipping_charge|floatformat:2 }}</span></div>
+          {% endif %}
+          {% if order.wallet_amount_used and order.wallet_amount_used > 0 %}
+          <div class="totals-row wallet">
+            <span>Wallet Used</span>
+            <span class="v">−₹{{ order.wallet_amount_used|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+          <div class="totals-divider"></div>
+          <div class="totals-final">
+            <span class="lbl">Total Paid</span>
+            <span class="val">₹{{ order.total|floatformat:2 }}</span>
+          </div>
+        </div>
+
+        {% if order.payment_method == 'stripe' and order.stripe_payment_intent_id %}
+        <div>
+          <span class="pay-badge">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Secured by Stripe · {{ order.stripe_payment_intent_id|truncatechars:22 }}
+          </span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Delivery Info -->
+    <div class="delivery-card">
+      <div class="delivery-head">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+          <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        <h3>Delivery Information</h3>
+      </div>
+      <div class="delivery-track">
+        <div class="dt-step done">
+          <div class="dt-dot">✓</div>
+          <div class="dt-label">Order Confirmed</div>
+        </div>
+        <div class="dt-line"></div>
+        <div class="dt-step active">
+          <div class="dt-dot">📦</div>
+          <div class="dt-label">Processing</div>
+        </div>
+        <div class="dt-line"></div>
+        <div class="dt-step">
+          <div class="dt-dot">🚚</div>
+          <div class="dt-label">Shipped</div>
+        </div>
+        <div class="dt-line"></div>
+        <div class="dt-step">
+          <div class="dt-dot">🏠</div>
+          <div class="dt-label">Delivered</div>
+        </div>
+      </div>
+      <div class="eta-box">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <div>
+          <div class="eta-text">Estimated Delivery: {{ estimated_delivery }}</div>
+          <div class="eta-sub">3–7 business days via standard shipping</div>
+        </div>
+      </div>
+      <div class="addr-mini">
+        <strong>{{ order.full_name }}</strong>
+        {{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %},
+        {{ order.city }}, {{ order.state }} — {{ order.pincode }}<br>
+        📞 {{ order.phone }}
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-card">
+      <a href="{% url 'order_detail' order.uuid %}" class="btn-primary">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        View Order Details
+      </a>
+      <div class="btn-row">
+        <a href="{% url 'product_list' %}" class="btn-secondary">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+          Continue Shopping
+        </a>
+        <a href="{% url 'order_list' %}" class="btn-secondary">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          All Orders
+        </a>
+      </div>
+      <div class="trust-mini">
+        <span>🔒 Secure Payment</span>
+        <span>↩️ 30-day Returns</span>
+        <span>📞 24/7 Support</span>
+        <span>🚚 Free Shipping on ₹999+</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── Confetti ── */
+(function(){
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#b56744','#3a7d5a','#635bff','#e9d5c8','#f2ede6','#2e2925'];
+  const pieces = Array.from({length:130}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height - canvas.height,
+    r: Math.random() * 6 + 3,
+    d: Math.random() * 80 + 20,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    tilt: Math.random() * 10 - 10,
+    tiltAngleInc: Math.random() * .07 + .05,
+    tiltAngle: 0,
+    shape: Math.random() > .5 ? 'rect' : 'circle',
+  }));
+
+  let angle = 0, frame = 0, running = true;
+  function draw(){
+    if(!running) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    angle += .01;
+    pieces.forEach(p => {
+      p.tiltAngle += p.tiltAngleInc;
+      p.y += (Math.cos(angle + p.d) + 2 + p.r/4) * .8;
+      p.x += Math.sin(angle) * 1.2;
+      p.tilt = Math.sin(p.tiltAngle) * 12;
+      ctx.beginPath();
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = .85;
+      if(p.shape === 'rect'){
+        ctx.save();
+        ctx.translate(p.x + p.r, p.y + p.r);
+        ctx.rotate(p.tilt * Math.PI / 180);
+        ctx.fillRect(-p.r, -p.r/2, p.r*2, p.r);
+        ctx.restore();
+      } else {
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fill();
+      }
+      if(p.y > canvas.height + 20){
+        p.y = -20; p.x = Math.random() * canvas.width;
+      }
+    });
+    frame++;
+    if(frame < 240) requestAnimationFrame(draw);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); running = false; }
+  }
+  setTimeout(draw, 200);
+  window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+})();
+</script>
+{% endblock %}

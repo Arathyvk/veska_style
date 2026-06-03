@@ -67,9 +67,9 @@ INSTALLED_APPS = [
     'order_user',
     'order_admin',
     'coupon_admin',
+    'coupon_user',
     'return_admin',
     'about_us',
-    'payment_user',
     'wallet_user',
     'wallet_admin',
     'dashboard',
@@ -225,7 +225,7 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 AUTH_USER_MODEL = 'users.User'
 
 
-ACCOUNT_ADAPTER         = 'core.adapters.AccountAdapter'
+ACCOUNT_ADAPTER = 'core.adapters.AccountAdapter'
 
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -258,5 +258,5 @@ ACCOUNT_INACTIVE_URL = '/accounts/inactive/'
 GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')
 
-RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')

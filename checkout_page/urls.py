@@ -3,11 +3,6 @@ from . import views
  
 urlpatterns = [
     path('', views.checkout, name='checkout'),
- 
-    path('razorpay/create-order/',  views.razorpay_create_order,  name='razorpay_create_order'),
-    path('razorpay/verify/', views.razorpay_verify_payment, name='razorpay_verify_payment'),
-    path('razorpay/webhook/', views.razorpay_webhook, name='razorpay_webhook'),
-
     path('place-order/', views.place_order, name='place_order'),
  
     path('order/success/<uuid:uuid>/', views.order_success, name='order_success'),
@@ -18,4 +13,10 @@ urlpatterns = [
     path('address/add/',                  views.address_add,         name='address_add'),
     path('address/<int:pk>/edit/',        views.address_edit,        name='address_edit'),
     path('address/<int:pk>/set-default/', views.address_set_default, name='address_set_default'),
+
+    path('stripe/create-checkout/', views.stripe_create_checkout_session, name='stripe_create_checkout'),
+    path('payment/success/', views.payment_success, name='payment_success'),
+    path('payment/cancel/', views.payment_cancel, name='payment_cancel'),
+    path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
+    
 ]

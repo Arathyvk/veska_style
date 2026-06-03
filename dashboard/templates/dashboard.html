@@ -45,6 +45,7 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
   color: var(--text); letter-spacing: -.3px;
 }
 .dash-heading h1 em { font-style: italic; color: var(--rose2); }
+.dash-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
 .dash-actions { display: flex; align-items: center; gap: 10px; }
 .year-select {
@@ -54,15 +55,28 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
   transition: border-color .15s;
 }
 .year-select:hover { border-color: var(--rose); }
-.btn-download {
+.btn-orders {
   display: inline-flex; align-items: center; gap: 7px;
   background: linear-gradient(135deg, var(--rose), #a06848);
   color: #fff; font-size: 12px; font-weight: 600;
   padding: 8px 18px; border-radius: 20px; border: none; cursor: pointer;
   font-family: var(--body); box-shadow: 0 3px 12px rgba(201,150,122,.3);
-  transition: opacity .2s;
+  transition: opacity .2s; text-decoration: none;
 }
-.btn-download:hover { opacity: .88; }
+.btn-orders:hover { opacity: .88; }
+
+/* ── today strip ── */
+.today-strip {
+  display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap;
+}
+.today-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 7px 16px; font-size: 12px;
+}
+.today-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rose); animation: pulse 2s infinite; }
+.today-chip strong { color: var(--text); font-weight: 600; }
+.today-chip span   { color: var(--muted2); }
 
 /* ── section label ── */
 .section-label {
@@ -80,8 +94,8 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 
 .kpi-card {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px 18px;
-  display: flex; flex-direction: column; gap: 10px;
+  border-radius: var(--radius); padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 12px;
   position: relative; overflow: hidden;
   transition: transform .2s, box-shadow .2s;
 }
@@ -93,8 +107,15 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 }
 
 .kpi-top { display: flex; align-items: center; justify-content: space-between; }
-.kpi-label { font-size: 11px; font-weight: 600; color: var(--muted2);
-             text-transform: uppercase; letter-spacing: .7px; }
+.kpi-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--rose-dim); display: flex; align-items: center;
+  justify-content: center; font-size: 15px; flex-shrink: 0;
+}
+.kpi-label {
+  font-size: 11px; font-weight: 600; color: var(--muted2);
+  text-transform: uppercase; letter-spacing: .7px;
+}
 .kpi-badge {
   font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
 }
@@ -102,16 +123,15 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 .kpi-badge.down { background: rgba(224,82,82,.15);  color: var(--red); }
 .kpi-badge.flat { background: rgba(176,160,144,.15); color: var(--muted2); }
 
-.kpi-bottom { display: flex; align-items: flex-end; justify-content: space-between; }
 .kpi-value {
-  font-family: var(--head); font-size: 26px; font-weight: 600;
+  font-family: var(--head); font-size: 28px; font-weight: 600;
   color: var(--text); line-height: 1;
 }
-.kpi-spark { width: 64px; height: 36px; }
+.kpi-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
 
 /* ── main grid ── */
 .dash-grid {
-  display: grid; grid-template-columns: 1fr 320px; gap: 18px;
+  display: grid; grid-template-columns: 1fr 300px; gap: 18px;
   margin-bottom: 18px;
 }
 @media(max-width:1100px) { .dash-grid { grid-template-columns: 1fr; } }
@@ -138,7 +158,6 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
   50%      { box-shadow: 0 0 0 6px rgba(201,150,122,0); }
 }
 .chart-wrap { position: relative; height: 220px; }
-
 .view-details-btn {
   display: inline-flex; align-items: center; gap: 5px;
   background: var(--card2); border: 1px solid var(--border2);
@@ -159,19 +178,20 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
   color: var(--text); margin-bottom: 16px;
 }
 .status-rows { display: flex; flex-direction: column; gap: 10px; }
-.status-row { display: flex; flex-direction: column; gap: 5px; }
+.status-row  { display: flex; flex-direction: column; gap: 5px; }
 .status-row-top {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 12px;
+  display: flex; align-items: center; justify-content: space-between; font-size: 12px;
 }
 .status-row-label { color: var(--muted2); font-weight: 500; }
-.status-row-count { color: var(--text); font-weight: 600; }
-.status-bar-bg {
-  height: 5px; background: var(--border); border-radius: 3px; overflow: hidden;
+.status-row-count { color: var(--text); font-weight: 700; }
+.status-bar-bg   { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.status-bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+.status-total-chip {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--muted2);
 }
-.status-bar-fill {
-  height: 100%; border-radius: 3px; transition: width .6s ease;
-}
+.status-total-chip strong { color: var(--text); font-weight: 700; }
 
 /* ── bottom row ── */
 .bottom-grid {
@@ -211,7 +231,7 @@ tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(201,150,122,.03); }
 td strong { color: var(--text); font-weight: 500; }
 td a { color: var(--rose); text-decoration: none; }
-td a:hover { color: var(--rose2); }
+td a:hover { color: var(--rose2); text-decoration: underline; }
 
 /* ── status pills ── */
 .pill {
@@ -225,21 +245,24 @@ td a:hover { color: var(--rose2); }
 .pill-delivered  { background: rgba(76,175,125,.15);  color: var(--green); }
 .pill-cancelled  { background: rgba(224,82,82,.15);   color: var(--red); }
 .pill-paid       { background: rgba(76,175,125,.15);  color: var(--green); }
-.pill-unpaid     { background: rgba(224,154,60,.12);  color: var(--amber); }
+.pill-pending-pay { background: rgba(224,154,60,.12); color: var(--amber); }
 .pill-wallet     { background: rgba(201,150,122,.12); color: var(--rose2); }
-.pill-razorpay   { background: rgba(91,155,213,.12);  color: #7bb8e8; }
+.pill-stripe     { background: rgba(99,91,255,.12);   color: #9b94ff; }
 .pill-cod        { background: rgba(176,160,144,.12); color: var(--muted2); }
 
 /* ── low-stock card ── */
-.stock-list { padding: 6px 0; }
+.stock-list { padding: 4px 0; }
 .stock-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 18px; border-bottom: 1px solid rgba(58,52,44,.4);
+  padding: 10px 18px; border-bottom: 1px solid rgba(58,52,44,.4);
+  transition: background .12s;
 }
 .stock-item:last-child { border-bottom: none; }
-.stock-name { font-size: 13px; color: var(--text); font-weight: 500;
-              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-              max-width: 180px; }
+.stock-item:hover { background: rgba(201,150,122,.04); }
+.stock-name {
+  font-size: 13px; color: var(--text); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+}
 .stock-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .stock-qty { font-size: 12px; font-weight: 700; }
 .stock-qty.critical { color: var(--red); }
@@ -257,117 +280,182 @@ td a:hover { color: var(--rose2); }
   font-size: 12px; color: var(--red); font-weight: 600;
 }
 
+/* ── right col extras ── */
+.right-col { display: flex; flex-direction: column; gap: 18px; }
+
+/* ── top products mini table ── */
+.top-prod-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px; border-bottom: 1px solid rgba(58,52,44,.4);
+  transition: background .12s;
+}
+.top-prod-row:last-child { border-bottom: none; }
+.top-prod-row:hover { background: rgba(201,150,122,.04); }
+.top-rank {
+  width: 22px; height: 22px; border-radius: 50%; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: var(--card3); color: var(--muted2);
+}
+.top-rank.gold   { background: rgba(224,154,60,.2); color: var(--amber); }
+.top-rank.silver { background: rgba(176,160,144,.2); color: #b0a090; }
+.top-rank.bronze { background: rgba(201,150,122,.15); color: var(--rose); }
+.top-prod-name { flex: 1; font-size: 12.5px; color: var(--text); font-weight: 500;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-prod-sold { font-size: 12px; font-weight: 700; color: var(--rose2); flex-shrink: 0; }
+
+/* ── quick actions ── */
+.quick-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  padding: 14px 18px;
+}
+.qa-btn {
+  display: flex; align-items: center; gap: 7px; padding: 10px 12px;
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--muted2);
+  text-decoration: none; transition: all .15s;
+}
+.qa-btn:hover { border-color: var(--rose); color: var(--rose2); background: var(--card3); }
+.qa-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
 /* ── footer ── */
 .dash-footer {
   text-align: center; padding: 24px 0 0;
   font-size: 12px; color: var(--muted); border-top: 1px solid var(--border);
   margin-top: 36px;
 }
+
+/* ── animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.kpi-card    { animation: fadeUp .4s ease both; }
+.kpi-card:nth-child(1) { animation-delay: .05s; }
+.kpi-card:nth-child(2) { animation-delay: .10s; }
+.kpi-card:nth-child(3) { animation-delay: .15s; }
+.kpi-card:nth-child(4) { animation-delay: .20s; }
+.chart-card, .status-card { animation: fadeUp .5s ease .2s both; }
+.tbl-card, .right-col     { animation: fadeUp .5s ease .3s both; }
 </style>
 
 <div class="dash-page">
 
-  <!-- heading -->
+  <!-- ── Heading ── -->
   <div class="dash-heading">
-    <h1>Admin <em>Panel</em></h1>
+    <div>
+      <h1>Admin <em>Dashboard</em></h1>
+      <div class="dash-meta">{{ current_year }} · Last updated just now</div>
+    </div>
     <div class="dash-actions">
       <select class="year-select" id="yearSelect" onchange="switchYear(this.value)">
         <option value="{{ current_year }}" selected>{{ current_year }}</option>
         <option value="{{ current_year|add:'-1' }}">{{ current_year|add:'-1' }}</option>
         <option value="{{ current_year|add:'-2' }}">{{ current_year|add:'-2' }}</option>
       </select>
-      <a href="{% url 'admin_order_list' %}" class="btn-download" download>
+      <a href="{% url 'admin_order_list' %}" class="btn-orders">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
         </svg>
         View Orders
       </a>
     </div>
   </div>
 
-  <!-- KPIs -->
-  <div class="section-label">Sales Summary</div>
+  <!-- ── Today strip ── -->
+  <div class="today-strip">
+    <div class="today-chip">
+      <span class="dot"></span>
+      <span>Today's orders</span>
+      <strong>{{ today_orders }}</strong>
+    </div>
+    <div class="today-chip">
+      <span class="dot"></span>
+      <span>Today's revenue</span>
+      <strong>₹{{ today_revenue|floatformat:0 }}</strong>
+    </div>
+    <div class="today-chip">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
+      <span>Total customers</span>
+      <strong>{{ customers }}</strong>
+    </div>
+  </div>
+
+  <!-- ── KPIs ── -->
+  <div class="section-label">Sales Summary · This Month vs Last Month</div>
   <div class="kpi-grid">
 
     <div class="kpi-card">
       <div class="kpi-top">
-        <span class="kpi-label">Revenue</span>
+        <div>
+          <div class="kpi-icon">💰</div>
+        </div>
         <span class="kpi-badge {% if '-' in revenue_pct %}down{% else %}up{% endif %}">
           {{ revenue_pct }}
         </span>
       </div>
-      <div class="kpi-bottom">
-        <span class="kpi-value">₹{{ revenue|floatformat:0 }}</span>
-        <svg class="kpi-spark" viewBox="0 0 64 36" fill="none">
-          <polyline points="0,28 12,20 24,24 36,12 48,16 64,6"
-                    stroke="#c9967a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <div>
+        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-value">₹{{ revenue|floatformat:0 }}</div>
+        <div class="kpi-sub">₹{{ revenue_this|floatformat:0 }} this month</div>
       </div>
     </div>
 
     <div class="kpi-card">
       <div class="kpi-top">
-        <span class="kpi-label">Orders</span>
+        <div class="kpi-icon">📦</div>
         <span class="kpi-badge {% if '-' in orders_pct %}down{% else %}up{% endif %}">
           {{ orders_pct }}
         </span>
       </div>
-      <div class="kpi-bottom">
-        <span class="kpi-value">{{ orders_count }}</span>
-        <svg class="kpi-spark" viewBox="0 0 64 36" fill="none">
-          <polyline points="0,30 10,26 20,20 32,28 42,16 54,22 64,10"
-                    stroke="#e05252" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <div>
+        <div class="kpi-label">Total Orders</div>
+        <div class="kpi-value">{{ orders_count }}</div>
+        <div class="kpi-sub">{{ orders_this }} this month</div>
       </div>
     </div>
 
     <div class="kpi-card">
       <div class="kpi-top">
-        <span class="kpi-label">Products Sold</span>
+        <div class="kpi-icon">👟</div>
         <span class="kpi-badge {% if '-' in items_pct %}down{% else %}up{% endif %}">
           {{ items_pct }}
         </span>
       </div>
-      <div class="kpi-bottom">
-        <span class="kpi-value">{{ items_sold }}</span>
-        <svg class="kpi-spark" viewBox="0 0 64 36" fill="none">
-          <polyline points="0,32 12,22 22,26 34,14 46,18 56,10 64,14"
-                    stroke="#4caf7d" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <div>
+        <div class="kpi-label">Items Sold</div>
+        <div class="kpi-value">{{ items_sold }}</div>
+        <div class="kpi-sub">units this month</div>
       </div>
     </div>
 
     <div class="kpi-card">
       <div class="kpi-top">
-        <span class="kpi-label">Total Customers</span>
+        <div class="kpi-icon">👤</div>
         <span class="kpi-badge {% if '-' in customers_pct %}down{% else %}up{% endif %}">
           {{ customers_pct }}
         </span>
       </div>
-      <div class="kpi-bottom">
-        <span class="kpi-value">{{ customers }}</span>
-        <svg class="kpi-spark" viewBox="0 0 64 36" fill="none">
-          <polyline points="0,28 14,24 26,18 36,22 48,12 60,16 64,10"
-                    stroke="#4caf7d" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <div>
+        <div class="kpi-label">Customers</div>
+        <div class="kpi-value">{{ customers }}</div>
+        <div class="kpi-sub">{{ customers_this }} joined this month</div>
       </div>
     </div>
 
   </div><!-- /kpi-grid -->
 
-  <!-- chart + status -->
+  <!-- ── Chart + Status ── -->
   <div class="dash-grid">
 
-    <!-- Revenue line chart -->
     <div class="chart-card">
       <div class="chart-card-head">
         <h3>
           <span class="chart-live-dot"></span>
-          Orders Update
+          Monthly Revenue — {{ current_year }}
         </h3>
         <a href="{% url 'admin_order_list' %}" class="view-details-btn">
-          View Details
+          All orders
           <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
@@ -378,11 +466,10 @@ td a:hover { color: var(--rose2); }
       </div>
     </div>
 
-    <!-- Order status breakdown -->
     <div class="status-card">
       <h3>Order Status</h3>
+      {% with total_s=status_counts.pending|add:status_counts.confirmed|add:status_counts.processing|add:status_counts.shipped|add:status_counts.delivered|add:status_counts.cancelled %}
       <div class="status-rows">
-        {% with total_s=status_counts.pending|add:status_counts.confirmed|add:status_counts.processing|add:status_counts.shipped|add:status_counts.delivered|add:status_counts.cancelled %}
 
         {% if status_counts.pending %}
         <div class="status-row">
@@ -391,7 +478,7 @@ td a:hover { color: var(--rose2); }
             <span class="status-row-count">{{ status_counts.pending }}</span>
           </div>
           <div class="status-bar-bg">
-            <div class="status-bar-fill" style="width:{% widthratio status_counts.pending total_s 100 %}%;background:var(--amber)"></div>
+            <div class="status-bar-fill" style="width:{% if total_s %}{% widthratio status_counts.pending total_s 100 %}{% else %}0{% endif %}%;background:var(--amber)"></div>
           </div>
         </div>
         {% endif %}
@@ -403,7 +490,7 @@ td a:hover { color: var(--rose2); }
             <span class="status-row-count">{{ status_counts.confirmed }}</span>
           </div>
           <div class="status-bar-bg">
-            <div class="status-bar-fill" style="width:{% widthratio status_counts.confirmed total_s 100 %}%;background:var(--blue)"></div>
+            <div class="status-bar-fill" style="width:{% if total_s %}{% widthratio status_counts.confirmed total_s 100 %}{% else %}0{% endif %}%;background:var(--blue)"></div>
           </div>
         </div>
         {% endif %}
@@ -415,7 +502,7 @@ td a:hover { color: var(--rose2); }
             <span class="status-row-count">{{ status_counts.processing }}</span>
           </div>
           <div class="status-bar-bg">
-            <div class="status-bar-fill" style="width:{% widthratio status_counts.processing total_s 100 %}%;background:#7bb8e8"></div>
+            <div class="status-bar-fill" style="width:{% if total_s %}{% widthratio status_counts.processing total_s 100 %}{% else %}0{% endif %}%;background:#7bb8e8"></div>
           </div>
         </div>
         {% endif %}
@@ -427,7 +514,7 @@ td a:hover { color: var(--rose2); }
             <span class="status-row-count">{{ status_counts.shipped }}</span>
           </div>
           <div class="status-bar-bg">
-            <div class="status-bar-fill" style="width:{% widthratio status_counts.shipped total_s 100 %}%;background:var(--rose)"></div>
+            <div class="status-bar-fill" style="width:{% if total_s %}{% widthratio status_counts.shipped total_s 100 %}{% else %}0{% endif %}%;background:var(--rose)"></div>
           </div>
         </div>
         {% endif %}
@@ -438,7 +525,7 @@ td a:hover { color: var(--rose2); }
             <span class="status-row-count">{{ status_counts.delivered }}</span>
           </div>
           <div class="status-bar-bg">
-            <div class="status-bar-fill" style="width:{% widthratio status_counts.delivered total_s 100 %}%;background:var(--green)"></div>
+            <div class="status-bar-fill" style="width:{% if total_s %}{% widthratio status_counts.delivered total_s 100 %}{% else %}0{% endif %}%;background:var(--green)"></div>
           </div>
         </div>
 
@@ -449,21 +536,37 @@ td a:hover { color: var(--rose2); }
             <span class="status-row-count">{{ status_counts.cancelled }}</span>
           </div>
           <div class="status-bar-bg">
-            <div class="status-bar-fill" style="width:{% widthratio status_counts.cancelled total_s 100 %}%;background:var(--red)"></div>
+            <div class="status-bar-fill" style="width:{% if total_s %}{% widthratio status_counts.cancelled total_s 100 %}{% else %}0{% endif %}%;background:var(--red)"></div>
           </div>
         </div>
         {% endif %}
 
-        {% endwith %}
+        {% if status_counts.return_requested %}
+        <div class="status-row">
+          <div class="status-row-top">
+            <span class="status-row-label">Returns</span>
+            <span class="status-row-count">{{ status_counts.return_requested }}</span>
+          </div>
+          <div class="status-bar-bg">
+            <div class="status-bar-fill" style="width:{% if total_s %}{% widthratio status_counts.return_requested total_s 100 %}{% else %}0{% endif %}%;background:#a06848"></div>
+          </div>
+        </div>
+        {% endif %}
+
       </div>
+      <div class="status-total-chip">
+        <span>Total Orders</span>
+        <strong>{{ total_s }}</strong>
+      </div>
+      {% endwith %}
     </div>
 
   </div><!-- /dash-grid -->
 
-  <!-- recent orders + low stock -->
+  <!-- ── Bottom row ── -->
   <div class="bottom-grid">
 
-    <!-- Recent Orders table -->
+    <!-- Recent Orders -->
     <div class="tbl-card">
       <div class="tbl-card-head">
         <h3>Recent Orders</h3>
@@ -484,7 +587,7 @@ td a:hover { color: var(--rose2); }
             {% for order in recent_orders %}
             <tr>
               <td>
-                <a href="{% url 'order_detail' order.uuid %}">#{{ order.order_number }}</a>
+                <a href="{% url 'admin_order_detail' order.uuid %}">#{{ order.uuid|truncatechars:8 }}</a>
               </td>
               <td>
                 <strong>{{ order.full_name }}</strong><br>
@@ -493,7 +596,7 @@ td a:hover { color: var(--rose2); }
               <td><strong>₹{{ order.total|floatformat:0 }}</strong></td>
               <td><span class="pill pill-{{ order.status }}">{{ order.status|title }}</span></td>
               <td>
-                <span class="pill pill-{{ order.payment_method }}">{{ order.get_payment_method_display }}</span>
+                <span class="pill pill-{{ order.payment_method }}">{{ order.payment_method|upper }}</span>
               </td>
             </tr>
             {% empty %}
@@ -508,10 +611,50 @@ td a:hover { color: var(--rose2); }
       </div>
     </div>
 
-    <!-- Low Stock + Top Products -->
-    <div style="display:flex;flex-direction:column;gap:18px;">
+    <!-- Right column -->
+    <div class="right-col">
 
-      <!-- Low stock -->
+      <!-- Quick Actions -->
+      <div class="tbl-card">
+        <div class="tbl-card-head"><h3>Quick Actions</h3></div>
+        <div class="quick-actions">
+          <a href="{% url 'product_add' %}" class="qa-btn">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>Add Product
+          </a>
+          <a href="{% url 'admin_coupon_add' %}" class="qa-btn">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/>
+            </svg>New Coupon
+          </a>
+          <a href="{% url 'admin_order_list' %}" class="qa-btn">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>Orders
+          </a>
+          <a href="{% url 'admin_inventory_list' %}" class="qa-btn">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>Inventory
+          </a>
+          <a href="{% url 'category_add' %}" class="qa-btn">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>Category
+          </a>
+          <a href="{% url 'offer_add' %}" class="qa-btn">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>New Offer
+          </a>
+        </div>
+      </div>
+
+      <!-- Low Stock -->
       <div class="tbl-card">
         <div class="tbl-card-head">
           <h3>⚠ Low Stock</h3>
@@ -530,7 +673,7 @@ td a:hover { color: var(--rose2); }
           </div>
           {% empty %}
           <div style="padding:20px 18px;color:var(--muted);font-size:13px">
-            All products sufficiently stocked ✓
+            ✓ All products sufficiently stocked
           </div>
           {% endfor %}
         </div>
@@ -548,46 +691,35 @@ td a:hover { color: var(--rose2); }
           <h3>Top Products</h3>
           <a href="{% url 'product_list' %}">View all →</a>
         </div>
-        <div class="tbl-scroll">
-          <table>
-            <thead>
-              <tr><th>sl no</th><th>Product</th><th>Sold</th></tr>
-            </thead>
-            <tbody>
-              {% for item in top_products %}
-              <tr>
-                <td style="color:var(--muted);font-size:11px">{{ forloop.counter }}</td>
-                <td><strong>{{ item.product__name }}</strong></td>
-                <td><strong>{{ item.sold }}</strong></td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">
-                  No sales data yet.
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div>
+          {% for item in top_products %}
+          <div class="top-prod-row">
+            <span class="top-rank {% if forloop.counter == 1 %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% endif %}">
+              {{ forloop.counter }}
+            </span>
+            <span class="top-prod-name">{{ item.product__name }}</span>
+            <span class="top-prod-sold">{{ item.sold }} sold</span>
+          </div>
+          {% empty %}
+          <div style="padding:20px 18px;color:var(--muted);font-size:13px">No sales data yet.</div>
+          {% endfor %}
         </div>
       </div>
 
-    </div><!-- /right col -->
+    </div><!-- /right-col -->
 
   </div><!-- /bottom-grid -->
 
-  <div class="dash-footer">© {{ current_year }} Veska. All Rights Reserved.</div>
+  <div class="dash-footer">© {{ current_year }} Veska Admin Panel</div>
 
 </div><!-- /dash-page -->
 
 <script>
-// ── Revenue chart (spline) ────────────────────────────────────────────────────
-const LABELS  = '{{ chart_labels|safe }}';
-const REVENUE = '{{ chart_revenue|safe }}';
+const LABELS  = {{ chart_labels|safe }};
+const REVENUE = {{ chart_revenue|safe }};
 
 const ctx = document.getElementById('revenueChart').getContext('2d');
 
-// gradient fill
 const grad = ctx.createLinearGradient(0, 0, 0, 220);
 grad.addColorStop(0,   'rgba(201,150,122,.35)');
 grad.addColorStop(0.6, 'rgba(201,150,122,.06)');
@@ -607,7 +739,7 @@ const revenueChart = new Chart(ctx, {
       pointBorderWidth: 2,
       pointRadius: 4,
       pointHoverRadius: 7,
-      tension: 0.45,           // spline curve — matches design
+      tension: 0.45,
       fill: true,
       backgroundColor: grad,
     }]
@@ -634,12 +766,12 @@ const revenueChart = new Chart(ctx, {
     },
     scales: {
       x: {
-        grid:  { color: 'rgba(58,52,44,.5)', drawBorder: false },
-        ticks: { color: '#8a7d72', font: { size: 11 } },
+        grid:   { color: 'rgba(58,52,44,.5)', drawBorder: false },
+        ticks:  { color: '#8a7d72', font: { size: 11 } },
         border: { display: false },
       },
       y: {
-        grid:  { color: 'rgba(58,52,44,.5)', drawBorder: false },
+        grid:   { color: 'rgba(58,52,44,.5)', drawBorder: false },
         ticks: {
           color: '#8a7d72', font: { size: 11 },
           callback: v => v >= 1000 ? `₹${(v/1000).toFixed(0)}K` : `₹${v}`
@@ -650,7 +782,6 @@ const revenueChart = new Chart(ctx, {
   }
 });
 
-// ── Year switcher ─────────────────────────────────────────────────────────────
 async function switchYear(year) {
   try {
     const res  = await fetch(`{% url 'dashboard_chart_data' %}?year=${year}`);

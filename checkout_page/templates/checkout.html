@@ -5,7 +5,6 @@
 {% block content %}
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <style>
 :root{
@@ -16,6 +15,7 @@
   --success:#3a7d5a;--success-pale:#eaf4ee;
   --warning:#c47f17;--warning-pale:#fef8ec;
   --danger:#b53333;--danger-pale:#fdf0f0;
+  --stripe:#635bff;--stripe-pale:rgba(99,91,255,.08);
   --shadow-xs:0 1px 3px rgba(30,26,23,.06);
   --shadow-sm:0 2px 8px rgba(30,26,23,.08);
   --shadow-lg:0 16px 48px rgba(30,26,23,.14);
@@ -27,10 +27,26 @@
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
 a{text-decoration:none;color:inherit}
 
+/* Toast Notifications */
+.toast-notification{position:fixed;top:20px;right:20px;z-index:10000;min-width:280px;max-width:400px;background:var(--warm-white);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:slideIn 0.3s ease;border-left:4px solid;}
+.toast-notification.success{border-left-color:var(--success);background:var(--success-pale)}
+.toast-notification.error{border-left-color:var(--danger);background:var(--danger-pale)}
+.toast-notification.warning{border-left-color:var(--warning);background:var(--warning-pale)}
+.toast-notification.info{border-left-color:var(--terra);background:var(--terra-pale)}
+.toast-icon{font-size:20px}
+.toast-content{flex:1;font-size:13px;font-weight:500;color:var(--ink)}
+.toast-close{cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:0 4px}
+.toast-close:hover{color:var(--ink)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+/* ── Hero ── */
 .co-hero{background:var(--charcoal);padding:38px 0 30px;position:relative;overflow:hidden}
-.co-hero::before{content:'';position:absolute;right:-80px;top:-80px;width:380px;height:380px;border-radius:50%;border:70px solid rgba(181,103,68,.08);pointer-events:none}
+.co-hero::before{content:'';position:absolute;right:-80px;top:-80px;width:380px;height:380px;
+  border-radius:50%;border:70px solid rgba(181,103,68,.08);pointer-events:none}
 .co-hero .inner{position:relative;z-index:1}
-.co-hero h1{font-size:clamp(24px,4vw,40px);font-weight:500;color:#fff;letter-spacing:-.3px;margin-bottom:4px}
+.co-hero h1{font-family:var(--head);font-size:clamp(24px,4vw,40px);font-weight:500;
+  color:#fff;letter-spacing:-.3px;margin-bottom:4px}
 .co-hero h1 em{font-style:italic;color:var(--blush)}
 .co-hero p{font-size:12px;color:rgba(255,255,255,.38);font-weight:300}
 
@@ -41,29 +57,41 @@ a{text-decoration:none;color:inherit}
 .steps{display:flex;align-items:center;margin-bottom:24px}
 .step{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--muted-lt)}
 .step.done{color:var(--success)}.step.active{color:var(--terra)}
-.step-num{width:26px;height:26px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.step-num{width:26px;height:26px;border-radius:50%;border:2px solid currentColor;
+  display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 .step.done .step-num{background:var(--success);border-color:var(--success);color:#fff}
 .step.active .step-num{background:var(--terra);border-color:var(--terra);color:#fff}
 .step-line{flex:1;height:1px;background:var(--border);margin:0 12px;max-width:64px}
 
-.msg-bar{padding:11px 16px;border-radius:var(--radius-md);margin-bottom:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px}
+.msg-bar{padding:11px 16px;border-radius:var(--radius-md);margin-bottom:10px;
+  font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px}
 .msg-bar.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.2)}
 .msg-bar.error{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
 .msg-bar.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.2)}
 
-.coupon-strip{margin:4px 0 16px;padding:14px 18px;background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-lg)}
-.coupon-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+/* ── Coupon ── */
+.coupon-strip{margin:4px 0 16px;padding:14px 18px;background:var(--warm-white);
+  border:1px solid var(--border);border-radius:var(--radius-lg)}
+.coupon-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px}
 .coupon-row{display:flex;gap:8px}
-.coupon-input{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;font-weight:600;letter-spacing:.5px;font-family:monospace;background:var(--parchment);color:var(--ink);outline:none;transition:border .18s}
+.coupon-input{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 13px;font-size:13px;font-weight:600;letter-spacing:.5px;
+  font-family:monospace;background:var(--parchment);color:var(--ink);outline:none;transition:border .18s}
 .coupon-input:focus{border-color:var(--terra);background:#fff}
-.btn-coupon{background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 16px;font-family:var(--body);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .2s}
+.btn-coupon{background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);
+  padding:10px 16px;font-family:var(--body);font-size:12.5px;font-weight:600;
+  cursor:pointer;white-space:nowrap;transition:background .2s}
 .btn-coupon:hover{background:var(--terra)}
-.coupon-applied{display:flex;align-items:center;justify-content:space-between;background:var(--success-pale);border:1px solid rgba(58,125,90,.2);border-radius:var(--radius-md);padding:10px 14px}
+.coupon-applied{display:flex;align-items:center;justify-content:space-between;
+  background:var(--success-pale);border:1px solid rgba(58,125,90,.2);
+  border-radius:var(--radius-md);padding:10px 14px}
 .coupon-applied-left{display:flex;align-items:center;gap:9px}
 .coupon-applied-left svg{color:var(--success)}
 .coupon-applied-code{font-size:13px;font-weight:700;color:var(--success)}
 .coupon-applied-save{font-size:11px;color:var(--success);margin-top:2px}
-.btn-remove-coupon{background:none;border:none;font-family:var(--body);font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline}
+.btn-remove-coupon{background:none;border:none;font-family:var(--body);
+  font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline}
 .btn-remove-coupon:hover{color:var(--danger)}
 
 .co-page{padding-bottom:80px;min-height:100vh;background:var(--cream)}
@@ -71,125 +99,193 @@ a{text-decoration:none;color:inherit}
 .co-grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
 @media(max-width:860px){.co-grid{grid-template-columns:1fr}}
 
-.co-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-xs)}
-.co-card-head{padding:14px 20px;background:var(--parchment);border-bottom:1px solid var(--border-lt);display:flex;align-items:center;justify-content:space-between}
-.co-card-head h3{font-size:18px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:9px}
+/* ── Cards ── */
+.co-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);
+  overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-xs)}
+.co-card-head{padding:14px 20px;background:var(--parchment);border-bottom:1px solid var(--border-lt);
+  display:flex;align-items:center;justify-content:space-between}
+.co-card-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:var(--ink);
+  display:flex;align-items:center;gap:9px}
 .co-card-head h3 svg{width:15px;height:15px;color:var(--terra);flex-shrink:0}
-.co-card-head .hd-link{font-size:12px;color:var(--terra);font-weight:600;display:flex;align-items:center;gap:5px}
+.co-card-head .hd-link{font-size:12px;color:var(--terra);font-weight:600;
+  display:flex;align-items:center;gap:5px}
 .co-card-head .hd-link:hover{color:var(--terra-deep)}
 .co-card-body{padding:16px 20px}
 
+/* ── Address ── */
 .addr-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.addr-option{border:2px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:var(--transition)}
+.addr-option{border:2px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;cursor:pointer;transition:var(--transition)}
 .addr-option.selected{border-color:var(--terra);background:var(--terra-pale)}
 .addr-option label{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer;width:100%}
 .addr-option input[type=radio]{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
-.addr-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:var(--transition);background:var(--warm-white);position:relative}
+.addr-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);
+  flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
+  transition:var(--transition);background:var(--warm-white);position:relative}
 .addr-option.selected .addr-radio{border-color:var(--terra);background:var(--terra)}
-.addr-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;opacity:0;transition:opacity .15s;position:absolute}
+.addr-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;
+  opacity:0;transition:opacity .15s;position:absolute}
 .addr-option.selected .addr-radio::after{opacity:1}
 .addr-info{flex:1;min-width:0}
-.addr-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.default-tag{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--terra);color:#fff;padding:2px 8px;border-radius:10px}
+.addr-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px;
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.default-tag{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  background:var(--terra);color:#fff;padding:2px 8px;border-radius:10px}
 .addr-text{font-size:12.5px;color:var(--muted);line-height:1.65}
 .addr-phone{font-size:11.5px;color:var(--muted-lt);margin-top:3px}
 .addr-actions{display:flex;gap:12px;margin-top:8px}
-.addr-act-btn{font-size:11.5px;color:var(--terra);font-weight:600;background:none;border:none;cursor:pointer;padding:0;font-family:var(--body);text-decoration:underline;text-underline-offset:2px}
+.addr-act-btn{font-size:11.5px;color:var(--terra);font-weight:600;background:none;border:none;
+  cursor:pointer;padding:0;font-family:var(--body);text-decoration:underline;text-underline-offset:2px}
 .addr-act-btn:hover{color:var(--terra-deep)}
-.btn-add-addr{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:11px;background:none;color:var(--muted);border:1.5px dashed var(--border);border-radius:var(--radius-lg);font-family:var(--body);font-size:13px;cursor:pointer;transition:var(--transition);text-decoration:none}
+.btn-add-addr{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+  padding:11px;background:none;color:var(--muted);border:1.5px dashed var(--border);
+  border-radius:var(--radius-lg);font-family:var(--body);font-size:13px;cursor:pointer;
+  transition:var(--transition);text-decoration:none}
 .btn-add-addr:hover{border-color:var(--terra);color:var(--terra);background:var(--terra-pale)}
 
+/* ── Order items ── */
 .oi-row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-lt)}
 .oi-row:last-child{border-bottom:none;padding-bottom:0}
-.oi-img{width:54px;height:68px;border-radius:var(--radius-sm);overflow:hidden;background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
+.oi-img{width:54px;height:68px;border-radius:var(--radius-sm);overflow:hidden;
+  background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
 .oi-img img{width:100%;height:100%;object-fit:cover}
 .oi-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
 .oi-body{flex:1;min-width:0}
-.oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted-lt);margin-bottom:3px}
-.oi-name{font-size:15px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
+.oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--muted-lt);margin-bottom:3px}
+.oi-name{font-family:var(--head);font-size:15px;font-weight:500;color:var(--ink);
+  line-height:1.25;margin-bottom:4px}
 .oi-meta{font-size:11.5px;color:var(--muted-lt)}
 .oi-price-col{text-align:right;flex-shrink:0;min-width:72px}
 .oi-unit-price{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
-.oi-line-total{font-size:16px;font-weight:600;color:var(--charcoal)}
+.oi-line-total{font-family:var(--head);font-size:16px;font-weight:600;color:var(--charcoal)}
 
-.notes-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:10px 14px;font-family:var(--body);font-size:13px;background:var(--parchment);color:var(--ink);outline:none;resize:vertical;min-height:68px;transition:var(--transition)}
+/* ── Notes ── */
+.notes-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
+  padding:10px 14px;font-family:var(--body);font-size:13px;background:var(--parchment);
+  color:var(--ink);outline:none;resize:vertical;min-height:68px;transition:var(--transition)}
 .notes-field:focus{border-color:var(--terra);background:#fff}
 .notes-field::placeholder{color:var(--muted-lt)}
 
-.pay-option{border:2px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:var(--transition);margin-bottom:10px}
+/* ── Payment methods ── */
+.pay-option{border:2px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;
+  cursor:pointer;transition:var(--transition);margin-bottom:10px}
 .pay-option:last-child{margin-bottom:0}
 .pay-option.selected{border-color:var(--terra);background:var(--terra-pale)}
 .pay-option label{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;width:100%}
 .pay-option input[type=radio]{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
-.pay-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:var(--transition);background:var(--warm-white);position:relative}
+.pay-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:var(--transition);
+  background:var(--warm-white);position:relative}
 .pay-option.selected .pay-radio{border-color:var(--terra);background:var(--terra)}
-.pay-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;opacity:0;transition:opacity .15s;position:absolute}
+.pay-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;
+  opacity:0;transition:opacity .15s;position:absolute}
 .pay-option.selected .pay-radio::after{opacity:1}
-.pay-logo{width:44px;height:28px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
-.pay-logo.rzp{background:#3395FF;color:#fff;font-size:9px}
+.pay-logo{width:52px;height:30px;border-radius:6px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:9px;font-weight:800;letter-spacing:.4px}
+.pay-logo.stripe{background:var(--stripe);color:#fff;font-size:10px;font-weight:700;
+  letter-spacing:.2px;font-family:var(--body)}
 .pay-logo.cod{background:var(--sand);color:var(--charcoal);font-size:20px}
-.pay-logo.wlt{background:var(--terra-pale);border:1px solid rgba(181,103,68,.2);color:var(--terra);font-size:20px}
+.pay-logo.wlt{background:var(--terra-pale);border:1px solid rgba(181,103,68,.2);
+  color:var(--terra);font-size:20px}
 .pay-info{flex:1;min-width:0}
-.pay-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pay-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .pay-sub{font-size:11.5px;color:var(--muted-lt);line-height:1.5}
-.pay-tag{font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:10px}
+.pay-tag{font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:2px 8px;border-radius:10px}
 .pay-tag.green{background:var(--success-pale);color:var(--success)}
 .pay-tag.amber{background:var(--warning-pale);color:var(--warning)}
-.wallet-bal-chip{display:inline-flex;align-items:center;gap:5px;background:var(--success-pale);color:var(--success);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.wallet-bal-chip{display:inline-flex;align-items:center;gap:5px;background:var(--success-pale);
+  color:var(--success);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
 
-.wallet-deduct-row{padding:10px 16px 14px 50px;border-top:1px solid rgba(181,103,68,.12);background:rgba(247,237,229,.6)}
-.wdr-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+/* ── Wallet deduct ── */
+.wallet-deduct-row{padding:10px 16px 14px 50px;border-top:1px solid rgba(181,103,68,.12);
+  background:rgba(247,237,229,.6)}
+.wdr-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:7px}
 .wdr-row{display:flex;gap:8px;align-items:center}
-.wdr-input{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;font-family:var(--body);color:var(--ink);background:var(--warm-white);outline:none;transition:border .2s}
+.wdr-input{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:8px 12px;font-size:13px;font-family:var(--body);color:var(--ink);
+  background:var(--warm-white);outline:none;transition:border .2s}
 .wdr-input:focus{border-color:var(--terra)}
-.btn-wdr-apply{padding:8px 14px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--body);transition:background .2s}
+.btn-wdr-apply{padding:8px 14px;background:var(--charcoal);color:#fff;border:none;
+  border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;
+  white-space:nowrap;font-family:var(--body);transition:background .2s}
 .btn-wdr-apply:hover:not(:disabled){background:var(--terra)}
 .btn-wdr-apply:disabled{opacity:.5;cursor:not-allowed}
 .wdr-hint{font-size:11px;color:var(--muted-lt);margin-top:6px}
-.wdr-applied{display:flex;align-items:center;gap:8px;margin-top:8px;background:var(--success-pale);border:1px solid rgba(58,125,90,.18);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--success);font-weight:500}
-.btn-wdr-remove{margin-left:auto;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted-lt);font-family:var(--body)}
+.wdr-applied{display:flex;align-items:center;gap:8px;margin-top:8px;
+  background:var(--success-pale);border:1px solid rgba(58,125,90,.18);
+  border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--success);font-weight:500}
+.btn-wdr-remove{margin-left:auto;background:none;border:none;cursor:pointer;
+  font-size:11px;color:var(--muted-lt);font-family:var(--body)}
 .btn-wdr-remove:hover{color:var(--danger)}
 
-.summary-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px;box-shadow:var(--shadow-sm)}
+/* ── Summary card ── */
+.summary-card{background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px;box-shadow:var(--shadow-sm)}
 .sum-head{padding:18px 20px;background:var(--charcoal)}
-.sum-head h3{font-size:18px;font-weight:500;color:#fff}
+.sum-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:#fff}
 .sum-body{padding:18px 20px}
-.sum-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;color:var(--muted)}
+.sum-row{display:flex;justify-content:space-between;align-items:center;
+  font-size:13px;padding:7px 0;color:var(--muted)}
 .sum-row .val{color:var(--ink);font-weight:500}
 .sum-row.free .val,.sum-row.saving .val,.sum-row.wallet-row .val{color:var(--success);font-weight:600}
 .sum-divider{height:1px;background:var(--border);margin:8px 0}
 .sum-total{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0 0}
 .sum-total .lbl{font-size:17px;color:var(--muted)}
-.sum-total .val{font-size:24px;font-weight:600;color:var(--charcoal)}
-.free-ship-hint{margin-top:12px;padding:9px 12px;background:var(--success-pale);border-radius:var(--radius-sm);font-size:11.5px;color:var(--success);font-weight:500;display:flex;align-items:center;gap:6px}
+.sum-total .val{font-family:var(--head);font-size:26px;font-weight:600;color:var(--charcoal)}
+.free-ship-hint{margin-top:12px;padding:9px 12px;background:var(--success-pale);
+  border-radius:var(--radius-sm);font-size:11.5px;color:var(--success);font-weight:500;
+  display:flex;align-items:center;gap:6px}
 .free-ship-track{margin-top:6px;height:4px;background:var(--sand);border-radius:3px;overflow:hidden}
 .free-ship-fill{height:100%;background:var(--success);border-radius:3px;transition:width .5s ease}
 
-.btn-place-order{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:15px;margin-top:16px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:14px;font-weight:600;letter-spacing:.3px;cursor:pointer;transition:var(--transition)}
+/* ── Stripe note ── */
+.stripe-secure-note{display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:11px;color:var(--muted-lt);margin-top:10px}
+.stripe-secure-note svg{color:var(--stripe);flex-shrink:0}
+.stripe-badge{display:inline-flex;align-items:center;gap:4px;background:var(--stripe-pale);
+  color:var(--stripe);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
+
+/* ── CTA ── */
+.btn-place-order{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  padding:15px;margin-top:16px;background:var(--charcoal);color:#fff;border:none;
+  border-radius:var(--radius-md);font-family:var(--body);font-size:14px;font-weight:600;
+  letter-spacing:.3px;cursor:pointer;transition:var(--transition)}
 .btn-place-order:hover:not(:disabled){background:var(--terra)}
 .btn-place-order:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed}
-
-.btn-back-cart{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;margin-top:10px;background:none;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:var(--body);font-size:13px;cursor:pointer;transition:var(--transition);text-decoration:none}
+.btn-back-cart{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+  padding:10px;margin-top:10px;background:none;color:var(--muted);border:1.5px solid var(--border);
+  border-radius:var(--radius-md);font-family:var(--body);font-size:13px;cursor:pointer;
+  transition:var(--transition);text-decoration:none}
 .btn-back-cart:hover{border-color:var(--terra);color:var(--terra)}
-
-.trust-strip{margin-top:18px;padding-top:14px;border-top:1px solid var(--border-lt);display:flex;flex-direction:column;gap:7px}
+.trust-strip{margin-top:18px;padding-top:14px;border-top:1px solid var(--border-lt);
+  display:flex;flex-direction:column;gap:7px}
 .trust-item{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
-.no-addr-note{background:var(--danger-pale);border:1px solid rgba(181,51,51,.2);border-radius:var(--radius-md);padding:10px 14px;margin-top:12px;font-size:12px;color:var(--danger);line-height:1.6}
-.rzp-secure-note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted-lt);margin-top:10px}
+.no-addr-note{background:var(--danger-pale);border:1px solid rgba(181,51,51,.2);
+  border-radius:var(--radius-md);padding:10px 14px;margin-top:12px;font-size:12px;
+  color:var(--danger);line-height:1.6}
 
-.spinner-overlay{position:fixed;inset:0;background:rgba(30,26,23,.45);display:none;align-items:center;justify-content:center;z-index:9999}
-.spinner-box{background:var(--warm-white);border-radius:var(--radius-lg);padding:32px 40px;text-align:center;box-shadow:var(--shadow-lg)}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--terra);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+/* ── Spinner ── */
+.spinner-overlay{position:fixed;inset:0;background:rgba(30,26,23,.45);display:none;
+  align-items:center;justify-content:center;z-index:9999}
+.spinner-box{background:var(--warm-white);border-radius:var(--radius-lg);
+  padding:32px 40px;text-align:center;box-shadow:var(--shadow-lg)}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--terra);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner-box p{font-size:13px;color:var(--muted);font-weight:500}
 </style>
 
 <div class="co-page">
+  <!-- Hero -->
   <div class="co-hero">
     <div class="container">
       <div class="inner">
         <h1>Secure <em>Checkout</em></h1>
-        <p>Review your order and complete your purchase</p>
+        <p>Payments powered by Stripe · Cards · UPI · Net Banking · Wallets</p>
       </div>
     </div>
   </div>
@@ -217,55 +313,72 @@ a{text-decoration:none;color:inherit}
     </div>
     {% endfor %}
 
-    <!-- Coupon strip -->
+    <!-- Coupon and Offers Section -->
+    {% if available_coupons or available_offers %}
     <div class="coupon-strip">
-      <div class="coupon-label">Promo / Coupon Code</div>
-      {% if coupon_code %}
-        <div class="coupon-applied">
-          <div class="coupon-applied-left">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            <div>
-              <div class="coupon-applied-code">{{ coupon_code }}</div>
-              <div class="coupon-applied-save">Saving Rs. {{ coupon_discount|floatformat:2 }}</div>
+      <div class="coupon-label">🎁 Available Offers & Coupons</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+        {% for c in available_coupons %}
+        <div class="coupon-item" data-coupon-code="{{ c.code }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-md)">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--terra);font-family:monospace">{{ c.code }}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px">
+              {% if c.discount_type == 'percentage' %}{{ c.discount_value }}% off{% else %}₹{{ c.discount_value }} off{% endif %}
+              {% if c.min_order_amount %} · Min ₹{{ c.min_order_amount }}{% endif %}
             </div>
           </div>
-          <form method="POST" action="{% url 'remove_coupon' %}">{% csrf_token %}
-            <button type="submit" class="btn-remove-coupon">Remove ✕</button>
-          </form>
+          <button type="button"
+                  class="apply-coupon-btn"
+                  data-coupon-code="{{ c.code }}"
+                  data-coupon-type="{{ c.discount_type }}"
+                  data-coupon-value="{{ c.discount_value }}"
+                  data-min-order="{{ c.min_order_amount|default:0 }}"
+                  style="padding:6px 12px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--body);transition:var(--transition)">
+            Apply
+          </button>
         </div>
-      {% else %}
-        <form method="POST" action="{% url 'apply_coupon' %}">{% csrf_token %}
-          <div class="coupon-row">
-            <input type="text" name="coupon_code" class="coupon-input" placeholder="ENTER CODE" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
-            <button type="submit" class="btn-coupon">Apply</button>
+        {% endfor %}
+        {% for o in available_offers %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-md)">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--terra)">{{ o.name }}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px">{{ o.description|default:"Special offer" }}</div>
           </div>
-        </form>
-      {% endif %}
+          <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:10px;background:var(--success-pale);color:var(--success)">Active</span>
+        </div>
+        {% endfor %}
+      </div>
     </div>
-
+    {% endif %}
+    
     <div class="co-grid">
       <div>
+
         <!-- Delivery Address -->
         <div class="co-card">
           <div class="co-card-head">
             <h3>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
               </svg>
               Delivery Address
             </h3>
             <a href="{% url 'address_add' %}?next=checkout" class="hd-link">
-              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add New
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>Add New
             </a>
           </div>
           <div class="co-card-body">
             {% if addresses %}
             <div class="addr-list">
               {% for addr in addresses %}
-              <div class="addr-option {% if addr.pk|stringformat:'s' == selected_id %}selected{% endif %}" data-addr-id="{{ addr.pk }}" onclick="selectAddr('{{ addr.pk }}')">
+              <div class="addr-option {% if addr.pk|stringformat:'s' == selected_id %}selected{% endif %}"
+                   data-addr-id="{{ addr.pk }}" onclick="selectAddr('{{ addr.pk }}')">
                 <label>
-                  <input type="radio" name="_addr_radio" value="{{ addr.pk }}" {% if addr.pk|stringformat:'s' == selected_id %}checked{% endif %}>
+                  <input type="radio" name="_addr_radio" value="{{ addr.pk }}"
+                         {% if addr.pk|stringformat:'s' == selected_id %}checked{% endif %}>
                   <div class="addr-radio"></div>
                   <div class="addr-info">
                     <div class="addr-name">
@@ -278,9 +391,11 @@ a{text-decoration:none;color:inherit}
                     </div>
                     <div class="addr-phone">📞 {{ addr.phone }}</div>
                     <div class="addr-actions">
-                      <a href="{% url 'address_edit' addr.pk %}" class="addr-act-btn" onclick="event.stopPropagation()">Edit</a>
+                      <a href="{% url 'address_edit' addr.pk %}" class="addr-act-btn"
+                         onclick="event.stopPropagation()">Edit</a>
                       {% if not addr.is_default %}
-                      <form method="POST" action="{% url 'address_set_default' addr.pk %}" style="display:inline" onclick="event.stopPropagation()">
+                      <form method="POST" action="{% url 'address_set_default' addr.pk %}"
+                            style="display:inline" onclick="event.stopPropagation()">
                         {% csrf_token %}
                         <button type="submit" class="addr-act-btn">Set as Default</button>
                       </form>
@@ -295,8 +410,9 @@ a{text-decoration:none;color:inherit}
             <p style="color:var(--muted);font-size:13px;margin-bottom:12px">No saved addresses yet.</p>
             {% endif %}
             <a href="{% url 'address_add' %}?next=checkout" class="btn-add-addr">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add New Address
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>Add New Address
             </a>
           </div>
         </div>
@@ -310,7 +426,9 @@ a{text-decoration:none;color:inherit}
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
               </svg>
               Order Items
-              <span style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400">({{ cart_items|length }})</span>
+              <span style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400">
+                ({{ cart_items|length }})
+              </span>
             </h3>
             <a href="{% url 'cart_detail' %}" class="hd-link">Edit Cart</a>
           </div>
@@ -319,11 +437,14 @@ a{text-decoration:none;color:inherit}
             <div class="oi-row">
               <div class="oi-img">
                 {% if item.product.images.first and item.product.images.first.image %}
-                  <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                  <img src="{{ item.product.images.first.image.url }}"
+                       alt="{{ item.product.name }}" loading="lazy">
                 {% else %}
                   <div class="oi-img-empty">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
-                      <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.3">
+                      <rect x="3" y="3" width="18" height="18" rx="3"/>
+                      <polyline points="21 15 16 10 5 21"/>
                     </svg>
                   </div>
                 {% endif %}
@@ -337,8 +458,8 @@ a{text-decoration:none;color:inherit}
                 </div>
               </div>
               <div class="oi-price-col">
-                <div class="oi-unit-price">Rs. {{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
-                <div class="oi-line-total">Rs. {{ item.line_total|floatformat:2 }}</div>
+                <div class="oi-unit-price">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
+                <div class="oi-line-total">₹{{ item.line_total|floatformat:2 }}</div>
               </div>
             </div>
             {% endfor %}
@@ -350,24 +471,30 @@ a{text-decoration:none;color:inherit}
           <div class="co-card-head">
             <h3>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                <rect x="1" y="4" width="22" height="16" rx="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
               </svg>
               Payment Method
             </h3>
           </div>
           <div class="co-card-body">
-            <!-- Razorpay -->
-            <div class="pay-option selected" data-pay-method="razorpay" onclick="selectPayment('razorpay')">
+
+            <!-- Stripe -->
+            <div class="pay-option selected" data-pay-method="stripe"
+                 onclick="selectPayment('stripe')">
               <label>
-                <input type="radio" name="_pay_radio" value="razorpay" checked>
+                <input type="radio" name="_pay_radio" value="stripe" checked>
                 <div class="pay-radio"></div>
-                <div class="pay-logo rzp">Pay</div>
+                <div class="pay-logo stripe">Stripe</div>
                 <div class="pay-info">
                   <div class="pay-name">
-                    Razorpay
+                    Stripe
                     <span class="pay-tag green">Recommended</span>
                   </div>
-                  <div class="pay-sub">UPI · Cards · Net Banking · Wallets · EMI</div>
+                  <div class="pay-sub">
+                    Credit / Debit Cards &nbsp;·&nbsp; UPI &nbsp;·&nbsp;
+                    Net Banking &nbsp;·&nbsp; Wallets &nbsp;·&nbsp; EMI
+                  </div>
                 </div>
               </label>
             </div>
@@ -381,13 +508,16 @@ a{text-decoration:none;color:inherit}
                 <div class="pay-info">
                   <div class="pay-name">
                     Cash on Delivery
-                    {% if cod_fee > 0 %}<span class="pay-tag amber">+Rs. {{ cod_fee }} fee</span>{% endif %}
+                    {% if cod_fee > 0 %}
+                    <span class="pay-tag amber">+₹{{ cod_fee }} fee</span>
+                    {% endif %}
                   </div>
                   <div class="pay-sub">Pay when your order arrives at your door</div>
                 </div>
               </label>
             </div>
-            
+
+            <!-- Wallet -->
             {% if wallet_balance and wallet_balance > 0 %}
             <div class="pay-option" data-pay-method="wallet" onclick="selectPayment('wallet')">
               <label>
@@ -397,14 +527,14 @@ a{text-decoration:none;color:inherit}
                 <div class="pay-info">
                   <div class="pay-name">
                     Veska Wallet
-                    <span class="wallet-bal-chip">Rs. {{ wallet_balance|floatformat:2 }} available</span>
+                    <span class="wallet-bal-chip">₹{{ wallet_balance|floatformat:2 }} available</span>
                   </div>
                   <div class="pay-sub">
                     Pay instantly using your wallet balance
                     {% if wallet_balance >= grand_total %}
-                      · <strong style="color:var(--success)">Full order covered ✓</strong>
+                    · <strong style="color:var(--success)">Full order covered ✓</strong>
                     {% else %}
-                      · Partial payment supported
+                    · Partial payment supported
                     {% endif %}
                   </div>
                 </div>
@@ -412,21 +542,30 @@ a{text-decoration:none;color:inherit}
               <div class="wallet-deduct-row" id="walletDeductRow">
                 <div class="wdr-label">Amount to use from wallet</div>
                 <div class="wdr-row">
-                  <input type="number" id="walletAmount" class="wdr-input" placeholder="Enter amount" min="1" max="{{ grand_total|floatformat:0 }}" step="1" value="{{ grand_total|floatformat:0 }}">
-                  <button type="button" class="btn-wdr-apply" id="applyWalletBtn" onclick="applyWalletPayment()">Apply</button>
+                  <input type="number" id="walletAmount" class="wdr-input"
+                         placeholder="Enter amount" min="1"
+                         max="{{ grand_total|floatformat:0 }}" step="1"
+                         value="{{ grand_total|floatformat:0 }}">
+                  <button type="button" class="btn-wdr-apply" id="applyWalletBtn"
+                          onclick="applyWalletPayment()">Apply</button>
                 </div>
                 <div class="wdr-hint" id="walletInfo">
-                  Available: Rs. {{ wallet_balance|floatformat:2 }} &nbsp;|&nbsp;
-                  Order total: Rs. {{ grand_total|floatformat:2 }}
+                  Available: ₹{{ wallet_balance|floatformat:2 }} &nbsp;|&nbsp;
+                  Order total: ₹{{ grand_total|floatformat:2 }}
                 </div>
                 <div id="walletAppliedBadge" style="display:none" class="wdr-applied">
-                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg width="13" height="13" fill="none" stroke="currentColor"
+                       stroke-width="2.5" viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                   <span id="walletAppliedText"></span>
-                  <button type="button" class="btn-wdr-remove" onclick="resetWalletPayment()">✕ Reset</button>
+                  <button type="button" class="btn-wdr-remove"
+                          onclick="resetWalletPayment()">✕ Reset</button>
                 </div>
               </div>
             </div>
             {% endif %}
+
           </div>
         </div>
 
@@ -434,84 +573,85 @@ a{text-decoration:none;color:inherit}
         <div class="co-card">
           <div class="co-card-head">
             <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" width="15" height="15">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
               Order Notes
-              <span style="font-family:var(--body);font-size:11.5px;color:var(--muted-lt);font-weight:300;font-style:italic">optional</span>
+              <span style="font-family:var(--body);font-size:11.5px;color:var(--muted-lt);
+                           font-weight:300;font-style:italic">optional</span>
             </h3>
           </div>
           <div class="co-card-body">
-            <textarea id="orderNotes" class="notes-field" placeholder="Delivery instructions, landmark, special requests…"></textarea>
+            <textarea id="orderNotes" class="notes-field"
+                      placeholder="Delivery instructions, landmark, special requests…"></textarea>
           </div>
         </div>
-      </div>
 
-      <!-- Order Summary Sidebar -->
+      </div><!-- /left col -->
+
+      <!-- ── Summary sidebar ── -->
       <div>
         <div class="summary-card">
           <div class="sum-head"><h3>Order Summary</h3></div>
           <div class="sum-body">
             <div class="sum-row">
               <span>Subtotal ({{ cart_items|length }} item{{ cart_items|length|pluralize }})</span>
-              <span class="val">Rs. {{ subtotal|floatformat:2 }}</span>
+              <span class="val" id="subtotalVal">₹{{ subtotal|floatformat:2 }}</span>
             </div>
-
-            {% if coupon_code %}
-            <div class="sum-row saving">
-              <span>Coupon ({{ coupon_code }})</span>
-              <span class="val">−Rs. {{ coupon_discount|floatformat:2 }}</span>
+            <div class="sum-row saving" id="couponRow" style="display:none">
+              <span>Coupon (<span id="couponCode">-</span>)</span>
+              <span class="val" id="couponDiscountVal">−₹0</span>
             </div>
-            {% endif %}
-
             {% if shipping == 0 %}
             <div class="sum-row free"><span>Shipping</span><span class="val">FREE</span></div>
             {% else %}
-            <div class="sum-row"><span>Shipping</span><span class="val">Rs. {{ shipping|floatformat:2 }}</span></div>
+            <div class="sum-row"><span>Shipping</span><span class="val">₹{{ shipping|floatformat:2 }}</span></div>
             {% endif %}
-
             <div class="sum-row wallet-row" id="walletDiscountRow" style="display:none">
               <span>Wallet deduction</span>
-              <span class="val" id="walletDiscountVal">−Rs. 0</span>
+              <span class="val" id="walletDiscountVal">−₹0</span>
             </div>
-
             <div class="sum-divider"></div>
-
             <div class="sum-total">
               <span class="lbl">Total to Pay</span>
-              <span class="val" id="grandTotalVal">Rs. {{ grand_total|floatformat:2 }}</span>
-            </div>
-
-            <div id="remainingAmountInfo" style="display:none;margin-top:10px;padding:8px;background:var(--warning-pale);border-radius:var(--radius-sm);font-size:12px;">
-              Via Razorpay: <strong id="remainingAmount"></strong>
+              <span class="val" id="grandTotalVal">₹{{ grand_total|floatformat:2 }}</span>
             </div>
 
             {% if shipping > 0 %}
             <div style="margin-top:14px">
               <div class="free-ship-hint">
-                🚚 Add Rs. {{ free_threshold|add:"-"|add:subtotal|floatformat:0 }} more for free shipping
+                🚚 Add ₹{{ free_threshold|add:"-"|add:subtotal|floatformat:0 }} more for free shipping
               </div>
               <div class="free-ship-track">
-                <div class="free-ship-fill" style="width:{% widthratio subtotal free_threshold 100 %}%"></div>
+                <div class="free-ship-fill"
+                     style="width:{% widthratio subtotal free_threshold 100 %}%"></div>
               </div>
             </div>
             {% else %}
             <div class="free-ship-hint" style="margin-top:12px">🎉 You've unlocked free shipping!</div>
             {% endif %}
 
-            <button type="button" class="btn-place-order" id="placeOrderBtn" onclick="handlePlaceOrder()" {% if not addresses %}disabled{% endif %}>
-              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <!-- CTA -->
+            <button type="button" class="btn-place-order" id="placeOrderBtn"
+                    onclick="handlePlaceOrder()"
+                    {% if not addresses %}disabled{% endif %}>
+              <svg width="15" height="15" fill="none" stroke="currentColor"
+                   stroke-width="2" viewBox="0 0 24 24">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
-              <span id="btnLabel">Place Order</span>
+              <span id="btnLabel">Pay with Stripe · ₹{{ grand_total|floatformat:2 }}</span>
             </button>
 
-            <div class="rzp-secure-note" id="rzpSecureNote">
-              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            <!-- Stripe secure note -->
+            <div class="stripe-secure-note" id="stripeSecureNote">
+              <svg width="10" height="10" fill="none" stroke="currentColor"
+                   stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-              Secured by Razorpay · 256-bit SSL
+              Secured by <span class="stripe-badge">Stripe</span> · 256-bit SSL encryption
             </div>
 
             {% if not addresses %}
@@ -519,23 +659,27 @@ a{text-decoration:none;color:inherit}
             {% endif %}
 
             <a href="{% url 'cart_detail' %}" class="btn-back-cart">
-              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-              Back to Cart
+              <svg width="12" height="12" fill="none" stroke="currentColor"
+                   stroke-width="2.5" viewBox="0 0 24 24">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>Back to Cart
             </a>
 
             <div class="trust-strip">
               <div class="trust-item">🔒 Your payment is secure &amp; encrypted</div>
-              <div class="trust-item">🚚 Free shipping above Rs. 999</div>
+              <div class="trust-item">🚚 Free shipping above ₹999</div>
               <div class="trust-item">↩️ Easy 30-day returns</div>
               <div class="trust-item">📞 24/7 customer support</div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
+    </div><!-- /co-grid -->
+  </div><!-- /container -->
+</div><!-- /co-page -->
+
+<!-- Spinner -->
 <div class="spinner-overlay" id="spinnerOverlay">
   <div class="spinner-box">
     <div class="spinner"></div>
@@ -544,69 +688,208 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
-// Django context variables
-const ORIGINAL_TOTAL = parseFloat('{{ grand_total|floatformat:2 }}');
-const WALLET_BALANCE = parseFloat('{{ wallet_balance|default:"0" }}');
-const CSRF_TOKEN = '{{ csrf_token }}';
-const HAS_ADDRESS = '{{ addresses|yesno:"true,false" }}';
-const RZP_KEY_ID = '{{ razorpay_key_id }}';
+/* ── Django context ── */
+const ORIGINAL_TOTAL   = parseFloat('{{ grand_total|floatformat:2 }}');
+const SUBTOTAL         = parseFloat('{{ subtotal|floatformat:2 }}');
+const SHIPPING         = parseFloat('{{ shipping|floatformat:2 }}');
+const WALLET_BALANCE   = parseFloat('{{ wallet_balance|default:"0" }}');
+const CSRF_TOKEN       = '{{ csrf_token }}';
+const HAS_ADDRESS      = {{ addresses|yesno:"true,false" }};
+const STRIPE_URL       = "{% url 'stripe_create_checkout' %}";
+const PLACE_ORDER_URL  = "{% url 'place_order' %}";
+const APPLY_COUPON_URL = "{% url 'apply_coupon' %}";
 
-// State variables
-let selectedPaymentMethod = 'razorpay';
-let selectedAddressId = '{{ selected_id }}';
-let walletPaymentAmount = 0;
-let walletApplied = false;
-let currentTotal = ORIGINAL_TOTAL;
+/* ── State ── */
+let selectedPaymentMethod = 'stripe';
+let selectedAddressId     = '{{ selected_id }}';
+let walletPaymentAmount   = 0;
+let walletApplied         = false;
+let currentTotal          = ORIGINAL_TOTAL;
+let appliedCoupon         = null;
+let couponDiscount        = 0;
 
-// Helper Functions
+/* ── Toast Notification System ── */
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast-notification ${type}`;
+  
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+  
+  toast.innerHTML = `
+    <div class="toast-icon">${icons[type] || icons.info}</div>
+    <div class="toast-content">${message}</div>
+    <div class="toast-close">×</div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  const closeBtn = toast.querySelector('.toast-close');
+  closeBtn.addEventListener('click', () => {
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  });
+  
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, 5000);
+}
+
+/* ── Helpers ── */
 function showSpinner(msg) {
   document.getElementById('spinnerMsg').textContent = msg || 'Processing…';
   document.getElementById('spinnerOverlay').style.display = 'flex';
 }
-
 function hideSpinner() {
   document.getElementById('spinnerOverlay').style.display = 'none';
 }
 
+function updateTotalsDisplay() {
+  document.getElementById('grandTotalVal').textContent = `₹${currentTotal.toFixed(2)}`;
+  if (couponDiscount > 0) {
+    document.getElementById('couponRow').style.display = 'flex';
+    document.getElementById('couponDiscountVal').textContent = `−₹${couponDiscount.toFixed(2)}`;
+  }
+}
+
 function updateBtn() {
-  const btn = document.getElementById('placeOrderBtn');
-  const label = document.getElementById('btnLabel');
-  const noteEl = document.getElementById('rzpSecureNote');
-  const method = selectedPaymentMethod;
+  const btn    = document.getElementById('placeOrderBtn');
+  const label  = document.getElementById('btnLabel');
+  const note   = document.getElementById('stripeSecureNote');
 
   if (!HAS_ADDRESS || !selectedAddressId) {
     btn.disabled = true;
     label.textContent = 'Select a delivery address';
     return;
   }
-
   btn.disabled = false;
 
-  if (method === 'razorpay') {
-    const payAmt = walletApplied ? currentTotal : ORIGINAL_TOTAL;
+  const method = selectedPaymentMethod;
+
+  if (method === 'stripe') {
+    const payAmt = walletApplied ? currentTotal : currentTotal;
     if (walletApplied && currentTotal === 0) {
-      label.textContent = `Pay with Wallet · Rs. ${walletPaymentAmount.toFixed(2)}`;
-      noteEl.style.display = 'none';
+      label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
+      note.style.display = 'none';
     } else {
-      label.textContent = payAmt > 0 ? `Pay via Razorpay · Rs. ${payAmt.toFixed(2)}` : `Pay with Wallet · Rs. ${walletPaymentAmount.toFixed(2)}`;
-      noteEl.style.display = payAmt > 0 ? 'flex' : 'none';
+      label.textContent = `Pay with Stripe · ₹${payAmt.toFixed(2)}`;
+      note.style.display = 'flex';
     }
   } else if (method === 'cod') {
-    label.textContent = `Place Order (COD) · Rs. ${ORIGINAL_TOTAL.toFixed(2)}`;
-    noteEl.style.display = 'none';
+    label.textContent  = `Place Order (COD) · ₹${currentTotal.toFixed(2)}`;
+    note.style.display = 'none';
   } else if (method === 'wallet') {
+    note.style.display = 'none';
     if (!walletApplied) {
       label.textContent = 'Apply wallet amount first ↑';
     } else if (currentTotal > 0) {
-      label.textContent = `Insufficient wallet balance (Rs. ${currentTotal.toFixed(2)} remaining)`;
+      label.textContent = `Insufficient wallet (₹${currentTotal.toFixed(2)} remaining)`;
       btn.disabled = true;
     } else {
-      label.textContent = `Pay with Wallet · Rs. ${walletPaymentAmount.toFixed(2)}`;
+      label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
     }
-    noteEl.style.display = 'none';
   }
 }
 
+/* ── Coupon Application with AJAX ── */
+// Make sure this matches your URL pattern
+
+async function quickApplyCoupon(couponCode, discountType, discountValue, minOrder) {
+    console.log('Attempting to apply coupon:', couponCode);
+    
+    const button = event.currentTarget;
+    const originalText = button.innerText;
+    
+    // Check minimum order requirement
+    const subtotal = {{ subtotal|default:0 }};
+    if (minOrder > 0 && subtotal < minOrder) {
+        showToast(`Minimum order amount of ₹${minOrder} required for this coupon`, 'warning');
+        return;
+    }
+    
+    // Show loading state
+    button.innerText = 'Applying...';
+    button.disabled = true;
+    button.style.opacity = '0.6';
+    
+    try {
+        const response = await fetch(APPLY_COUPON_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                coupon_code: couponCode
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Response from server:', data);
+        
+        if (data.success) {
+            // Show success message
+            showToast(data.message, 'success');
+            
+            // Update the UI with new totals
+            if (data.new_total !== undefined) {
+                // Update grand total display
+                const grandTotalElement = document.getElementById('grandTotalVal');
+                if (grandTotalElement) {
+                    grandTotalElement.textContent = `₹${data.new_total.toFixed(2)}`;
+                }
+                
+                // Update the button label
+                const btnLabel = document.getElementById('btnLabel');
+                if (btnLabel) {
+                    btnLabel.textContent = `Pay with Stripe · ₹${data.new_total.toFixed(2)}`;
+                }
+                
+                // Update currentTotal variable
+                currentTotal = data.new_total;
+            }
+            
+            // Mark coupon as applied in UI
+            button.textContent = 'Applied ✓';
+            button.style.background = 'var(--success)';
+            
+            // Disable all other coupon buttons
+            document.querySelectorAll('.apply-coupon-btn').forEach(btn => {
+                if (btn !== button) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                }
+            });
+            
+            // Optionally reload the page after a short delay to refresh all totals
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+            
+        } else {
+            showToast(data.error || 'Failed to apply coupon', 'error');
+            button.innerText = originalText;
+            button.disabled = false;
+            button.style.opacity = '1';
+        }
+    } catch (error) {
+        console.error('Error applying coupon:', error);
+        showToast('Network error. Please try again.', 'error');
+        button.innerText = originalText;
+        button.disabled = false;
+        button.style.opacity = '1';
+    }
+}
+
+/* ── Address select ── */
 function selectAddr(addressId) {
   selectedAddressId = addressId;
   document.querySelectorAll('.addr-option').forEach(el => el.classList.remove('selected'));
@@ -615,6 +898,7 @@ function selectAddr(addressId) {
   updateBtn();
 }
 
+/* ── Payment method ── */
 function selectPayment(method) {
   selectedPaymentMethod = method;
   document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('selected'));
@@ -624,235 +908,184 @@ function selectPayment(method) {
   updateBtn();
 }
 
+/* ── Wallet ── */
 function applyWalletPayment() {
-  const input = document.getElementById('walletAmount');
+  const input  = document.getElementById('walletAmount');
   const amount = parseFloat(input.value);
-
-  if (isNaN(amount) || amount <= 0) {
-    alert('Please enter a valid amount greater than 0.');
-    return;
+  if (isNaN(amount) || amount <= 0) { 
+    showToast('Enter a valid amount greater than 0.', 'warning');
+    return; 
   }
-  if (amount > WALLET_BALANCE) {
-    alert(`Insufficient wallet balance. Available: Rs. ${WALLET_BALANCE.toFixed(2)}`);
-    return;
+  if (amount > WALLET_BALANCE) { 
+    showToast(`Max wallet balance: ₹${WALLET_BALANCE.toFixed(2)}`, 'warning');
+    return; 
   }
-  if (amount > ORIGINAL_TOTAL) {
-    alert(`Amount cannot exceed the order total of Rs. ${ORIGINAL_TOTAL.toFixed(2)}`);
-    return;
+  if (amount > currentTotal) { 
+    showToast(`Cannot exceed order total ₹${currentTotal.toFixed(2)}`, 'warning');
+    return; 
   }
 
   walletPaymentAmount = amount;
-  walletApplied = true;
-  currentTotal = Math.max(ORIGINAL_TOTAL - walletPaymentAmount, 0);
+  walletApplied       = true;
+  currentTotal        = Math.max(currentTotal - walletPaymentAmount, 0);
 
   document.getElementById('walletDiscountRow').style.display = 'flex';
-  document.getElementById('walletDiscountVal').textContent = `−Rs. ${walletPaymentAmount.toFixed(2)}`;
-  document.getElementById('grandTotalVal').textContent = `Rs. ${currentTotal.toFixed(2)}`;
-
-  if (currentTotal > 0) {
-    document.getElementById('remainingAmountInfo').style.display = 'block';
-    document.getElementById('remainingAmount').textContent = `Rs. ${currentTotal.toFixed(2)}`;
-  } else {
-    document.getElementById('remainingAmountInfo').style.display = 'none';
-  }
+  document.getElementById('walletDiscountVal').textContent   = `−₹${walletPaymentAmount.toFixed(2)}`;
+  document.getElementById('grandTotalVal').textContent       = `₹${currentTotal.toFixed(2)}`;
 
   input.disabled = true;
-  const applyBtn = document.getElementById('applyWalletBtn');
-  applyBtn.disabled = true;
-  applyBtn.textContent = 'Applied ✓';
-  document.getElementById('walletAppliedText').textContent = `Rs. ${walletPaymentAmount.toFixed(2)} will be deducted from your wallet`;
+  const btn = document.getElementById('applyWalletBtn');
+  btn.disabled = true; 
+  btn.textContent = 'Applied ✓';
+  document.getElementById('walletAppliedText').textContent =
+    `₹${walletPaymentAmount.toFixed(2)} will be deducted from your wallet`;
   document.getElementById('walletAppliedBadge').style.display = 'flex';
+  
+  showToast(`₹${walletPaymentAmount.toFixed(2)} applied from wallet`, 'success');
   updateBtn();
 }
 
 function resetWalletState() {
-  walletPaymentAmount = 0;
-  walletApplied = false;
-  currentTotal = ORIGINAL_TOTAL;
-
+  walletPaymentAmount = 0; 
+  walletApplied = false; 
+  currentTotal = ORIGINAL_TOTAL - couponDiscount;
+  if (currentTotal < 0) currentTotal = 0;
+  
   document.getElementById('walletDiscountRow').style.display = 'none';
-  document.getElementById('grandTotalVal').textContent = `Rs. ${ORIGINAL_TOTAL.toFixed(2)}`;
-  document.getElementById('remainingAmountInfo').style.display = 'none';
-
+  document.getElementById('grandTotalVal').textContent = `₹${currentTotal.toFixed(2)}`;
+  
   const input = document.getElementById('walletAmount');
-  if (input) {
-    input.disabled = false;
-    input.value = ORIGINAL_TOTAL.toFixed(0);
+  if (input) { 
+    input.disabled = false; 
+    input.value = currentTotal.toFixed(0);
   }
-  const applyBtn = document.getElementById('applyWalletBtn');
-  if (applyBtn) {
-    applyBtn.disabled = false;
-    applyBtn.textContent = 'Apply';
+  const btn = document.getElementById('applyWalletBtn');
+  if (btn) { 
+    btn.disabled = false; 
+    btn.textContent = 'Apply'; 
   }
   const badge = document.getElementById('walletAppliedBadge');
   if (badge) badge.style.display = 'none';
 }
-
-function resetWalletPayment() {
-  resetWalletState();
+function resetWalletPayment() { 
+  resetWalletState(); 
   updateBtn();
+  showToast('Wallet payment reset', 'info');
 }
 
-// COD / Wallet order
-async function placeNonRazorpayOrder(method) {
+/* ── COD / Wallet order POST ── */
+async function placeDirectOrder(method) {
   const btn = document.getElementById('placeOrderBtn');
   btn.disabled = true;
   showSpinner('Placing your order…');
-
   try {
-    const res = await fetch("{% url 'place_order' %}", {
+    const res  = await fetch(PLACE_ORDER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
       body: JSON.stringify({
-        address_id: selectedAddressId,
+        address_id:     selectedAddressId,
         payment_method: method,
-        wallet_amount: walletPaymentAmount,
-        notes: document.getElementById('orderNotes').value,
+        wallet_amount:  walletPaymentAmount,
+        notes:          document.getElementById('orderNotes').value,
+        coupon_code:    appliedCoupon,
       }),
     });
     const data = await res.json();
     hideSpinner();
-
     if (data.success) {
-      window.location.href = data.redirect_url;
+      showToast('Order placed successfully! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = data.redirect_url;
+      }, 1000);
     } else {
-      alert(data.error || 'Order failed. Please try again.');
-      btn.disabled = false;
+      showToast(data.error || 'Order failed. Please try again.', 'error');
+      btn.disabled = false; 
       updateBtn();
     }
   } catch (e) {
     hideSpinner();
-    console.error('Order placement error:', e);
-    alert('Network error. Please try again.');
-    btn.disabled = false;
+    showToast('Network error. Please try again.', 'error');
+    btn.disabled = false; 
     updateBtn();
   }
 }
 
-// Razorpay flow
-async function openRazorpay() {
-  if (!selectedAddressId) {
-    alert('Please select a delivery address.');
-    return;
+/* ── Stripe Checkout Session ── */
+async function initiateStripeCheckout() {
+  if (!selectedAddressId) { 
+    showToast('Please select a delivery address.', 'warning');
+    return; 
+  }
+  if (walletApplied && currentTotal === 0) { 
+    placeDirectOrder('wallet'); 
+    return; 
   }
 
-  if (currentTotal <= 0) {
-    placeNonRazorpayOrder('wallet');
-    return;
-  }
-
-  showSpinner('Creating your order...');
-
+  showSpinner('Redirecting to Stripe…');
   try {
-    const response = await fetch("{% url 'razorpay_create_order' %}", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": CSRF_TOKEN
-      },
+    const res  = await fetch(STRIPE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
       body: JSON.stringify({
-        address_id: selectedAddressId,
+        address_id:    selectedAddressId,
         wallet_amount: walletPaymentAmount,
-        notes: document.getElementById('orderNotes').value,
-      })
+        notes:         document.getElementById('orderNotes').value,
+        coupon_code:   appliedCoupon,
+      }),
     });
-
-    const data = await response.json();
+    const data = await res.json();
     hideSpinner();
-
-    if (data.success) {
-      var options = {
-        key: data.key_id,
-        amount: data.amount,
-        currency: data.currency,
-        order_id: data.razorpay_order_id,
-        name: "Veska",
-        description: "Order Payment",
-        prefill: data.prefill,
-        theme: {
-          color: "#b56744"
-        },
-        modal: {
-          ondismiss: function() {
-            window.location.href = `/payment/failure/?razorpay_order_id=${data.razorpay_order_id}`;
-          }
-        },
-        handler: function (response) {
-          fetch("{% url 'razorpay_verify_payment' %}", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": CSRF_TOKEN
-            },
-            body: JSON.stringify({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature,
-              order_uuid: data.order_uuid
-            })
-          })
-          .then(res => res.json())
-          .then(verifyData => {
-            if (verifyData.success) {
-              window.location.href = verifyData.redirect_url;
-            } else {
-              window.location.href = verifyData.redirect_url || `/payment/failure/?uuid=${data.order_uuid}`;
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            window.location.href = `/payment/failure/?uuid=${data.order_uuid}`;
-          });
-        }
-      };
-      
-      var rzp = new Razorpay(options);
-      rzp.open();
+    if (data.success && data.checkout_url) {
+      window.location.href = data.checkout_url;
     } else {
-      alert(data.error || 'Failed to create order. Please try again.');
+      showToast(data.error || 'Could not start Stripe checkout. Please try again.', 'error');
     }
-  } catch (error) {
+  } catch (e) {
     hideSpinner();
-    console.error('Error:', error);
-    alert('Network error. Please try again.');
+    showToast('Network error. Please try again.', 'error');
   }
 }
 
-// Main action dispatcher
+/* ── Main dispatcher ── */
 function handlePlaceOrder() {
-  if (!selectedAddressId) {
-    alert('Please select a delivery address.');
-    return;
+  if (!selectedAddressId) { 
+    showToast('Please select a delivery address.', 'warning');
+    return; 
   }
-
   const method = selectedPaymentMethod;
 
-  if (method === 'razorpay') {
-    if (walletApplied && currentTotal === 0) {
-      placeNonRazorpayOrder('wallet');
-    } else {
-      openRazorpay();
+  if (method === 'stripe')  { initiateStripeCheckout(); }
+  else if (method === 'cod') { placeDirectOrder('cod'); }
+  else if (method === 'wallet') {
+    if (!walletApplied) { 
+      showToast('Press Apply to confirm wallet amount.', 'warning');
+      return; 
     }
-  } else if (method === 'cod') {
-    placeNonRazorpayOrder('cod');
-  } else if (method === 'wallet') {
-    if (!walletApplied) {
-      alert('Please press Apply to confirm the wallet amount.');
-      return;
+    if (currentTotal > 0) { 
+      showToast(`Wallet insufficient. Remaining: ₹${currentTotal.toFixed(2)}`, 'warning');
+      return; 
     }
-    if (currentTotal > 0) {
-      alert(`Wallet balance is insufficient. Remaining: Rs. ${currentTotal.toFixed(2)}`);
-      return;
-    }
-    placeNonRazorpayOrder('wallet');
+    placeDirectOrder('wallet');
   }
 }
 
-// 
-document.addEventListener('DOMContentLoaded', function() {
-  selectPayment('razorpay');
+/* ── Initialize Apply Coupon Buttons ── */
+document.addEventListener('DOMContentLoaded', () => {
+  selectPayment('stripe');
   updateBtn();
-  console.log('Razorpay Key ID:', RZP_KEY_ID);
+  
+  // Attach event listeners to all apply coupon buttons
+  document.querySelectorAll('.apply-coupon-btn').forEach(btn => {
+    btn.removeEventListener('click', btn._listener);
+    const couponCode = btn.getAttribute('data-coupon-code');
+    const discountType = btn.getAttribute('data-coupon-type');
+    const discountValue = parseFloat(btn.getAttribute('data-coupon-value'));
+    const minOrder = parseFloat(btn.getAttribute('data-min-order'));
+    
+    const handler = () => quickApplyCoupon(couponCode, discountType, discountValue, minOrder);
+    btn.addEventListener('click', handler);
+    btn._listener = handler;
+  });
 });
 </script>
 {% endblock %}
