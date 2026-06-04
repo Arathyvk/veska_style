@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - Veska</title>
+<title>{% block title %}Veska{% endblock %}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,7 +21,7 @@ nav a{text-decoration:none;color:var(--black);text-transform:uppercase;font-size
 nav a:hover{color:var(--btn)}
 
 .header-icons{display:flex;align-items:center;gap:20px}
-.header-icons a{color:var(--black);font-size:1.1rem;text-decoration:none;transition:color .2s}
+.header-icons a{color:var(--black);font-size:1.1rem;text-decoration:none;transition:color .2s;position:relative}
 .header-icons a:hover{color:var(--btn)}
 
 .user-menu{display:flex;align-items:center;gap:10px;position:relative}
@@ -90,6 +90,70 @@ nav a:hover{color:var(--btn)}
   white-space: nowrap;
 }
 .login-btn-wrap a:hover{background:var(--btn);color:#fff}
+
+/* Cart Counter Styles */
+.cart-link {
+  position: relative;
+  display: inline-block;
+}
+
+.cart-count {
+  position: absolute;
+  top: -8px;
+  right: -12px;
+  background: #8c5c52;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  font-family: 'Jost', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+}
+
+.cart-count:empty {
+  display: none;
+}
+
+.cart-count.bump {
+  animation: bump 0.3s ease-out;
+}
+
+@keyframes bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* Wishlist counter (optional) */
+.wishlist-link {
+  position: relative;
+}
+
+.wishlist-count {
+  position: absolute;
+  top: -8px;
+  right: -12px;
+  background: #8c5c52;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
 
 @keyframes fadeOutSlide {
   0%   { opacity: 1; max-width: 200px; padding: 0; }
@@ -183,10 +247,9 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
 @media(max-width:640px){header{padding:14px 20px}nav ul{gap:14px}main{padding:30px 16px}.card{padding:28px 18px}.social-btns{flex-direction:column}}
 @media(max-width:480px){nav{display:none}.footer-container{grid-template-columns:1fr}}
 </style>
+{% block extra_css %}{% endblock %}
 </head>
 <body>
-
-
 
 <header>
   <div class="logo">
@@ -199,17 +262,16 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
     <li><a href="{% url 'home' %}">Home</a></li>
     <li><a href="{% url 'product_shop' %}">Shop</a></li>
     <li><a href="{% url 'contact_us' %}">Contact Us</a></li>
-    <li><a href="{% url  'about_us' %}">About Us</a></li>
+    <li><a href="{% url 'about_us' %}">About Us</a></li>
   </ul></nav>
 
   <div class="header-icons">
-
     {% if user.is_authenticated %}
     <div class="user-menu">
       <span class="username-label">{{ user.username }}</span>
       <div class="dropdown">
         <div class="letter-avatar" id="userAvatar">
-             {{ user.first_name}}
+          {{ user.first_name }}
         </div>
         <div class="dropdown-content" id="dropdownMenu">
           <a href="{% url 'account_profile' %}"><i class="fa-regular fa-user" style="margin-right:7px;font-size:12px"></i>Profile</a>
@@ -217,7 +279,6 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
         </div>
       </div>
     </div>
-
     {% else %}
     <div class="login-btn-wrap" id="loginBtnWrap">
       <a href="{% url 'login' %}">
@@ -227,22 +288,29 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
     </div>
     {% endif %}
 
-    <a href="{% url 'wishlist_detail' %}"><i class="fa-regular fa-heart"></i></a>
-    <a href="{% url 'cart_detail' %}"><i class="fa-solid fa-shopping-cart"></i></a>
+    <a href="{% url 'wishlist_detail' %}" class="wishlist-link" id="wishlistLink">
+      <i class="fa-regular fa-heart"></i>
+      <span class="wishlist-count" id="wishlistCount"{% if not wishlist_nav_count %} style="display:none"{% endif %}>{{ wishlist_nav_count|default:0 }}</span>
+    </a>
+    
+    <a href="{% url 'cart_detail' %}" class="cart-link" id="cartLink" aria-label="Cart">
+      <i class="fa-solid fa-shopping-cart"></i>
+      <span class="cart-count" id="cartCount"{% if not cart_nav_count %} style="display:none"{% endif %}>{{ cart_nav_count|default:0 }}</span>
+    </a>
   </div>
 
-  <div class="toast-container position-fixed top-0 end-0 p-3">
-    {% for message in messages %}
-    <div class="toast align-items-center text-bg-{{ message.tags }} border-0"
-         role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body">{{ message }}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                data-bs-dismiss="toast"></button>
+      <div class="toast-container position-fixed top-0 end-0 p-3">
+        {% for message in messages %}
+        <div class="toast align-items-center text-bg-{{ message.tags }} border-0"
+            role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+        {% endfor %}
       </div>
-    </div>
-    {% endfor %}
-  </div>
 </header>
 
 <main>
@@ -282,36 +350,130 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
 </footer>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+(function () {
+  const CART_COUNT_URL = "{% url 'cart_count' %}";
 
-  document.querySelectorAll('.toast').forEach(function(el) {
-    new bootstrap.Toast(el, { delay: 3000 }).show();
+  function updateBadge(el, count, bump) {
+    if (!el) return;
+    const old = parseInt(el.textContent, 10) || 0;
+    const n = parseInt(count, 10) || 0;
+    if (n > 0) {
+      el.textContent = n > 99 ? '99+' : String(n);
+      el.style.display = 'inline-flex';
+      if (bump && n !== old) {
+        el.classList.add('bump');
+        setTimeout(() => el.classList.remove('bump'), 300);
+      }
+    } else {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  }
+
+  function applyCountData(data, bumpCart) {
+    updateBadge(document.getElementById('cartCount'), data.total_items || 0, bumpCart);
+    if (data.wishlist_count !== undefined) {
+      updateBadge(document.getElementById('wishlistCount'), data.wishlist_count || 0, false);
+    }
+  }
+
+  function refreshNavCounts(bumpCart) {
+    return fetch(CART_COUNT_URL, {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(data => {
+        applyCountData(data, bumpCart);
+        return data;
+      });
+  }
+
+  window.updateNavbarCartCount = function (count) {
+    updateBadge(document.getElementById('cartCount'), count, true);
+  };
+
+  window.triggerCartUpdate = function () {
+    return refreshNavCounts(true);
+  };
+
+  window.triggerWishlistUpdate = function () {
+    return refreshNavCounts(false);
+  };
+
+  document.addEventListener('cartUpdated', () => refreshNavCounts(true));
+  document.addEventListener('wishlistUpdated', () => refreshNavCounts(false));
+
+  function isCartForm(form) {
+    const action = (form.getAttribute('action') || '').toLowerCase();
+    return (
+      action.includes('/cart_user/') ||
+      action.includes('cart/add') ||
+      action.includes('cart/update') ||
+      action.includes('cart/remove') ||
+      action.includes('cart/clear') ||
+      action.includes('add-with-size')
+    );
+  }
+
+  document.addEventListener('submit', function (e) {
+    const form = e.target;
+    if (!form || form.tagName !== 'FORM' || !isCartForm(form)) return;
+    if (form.dataset.fullPage === '1') return;
+
+    e.preventDefault();
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (data.total_items !== undefined) {
+          applyCountData(data, true);
+        }
+        if (data.reload && window.location.pathname.includes('/cart_user')) {
+          window.location.reload();
+          return;
+        }
+        if (data.message && typeof showToast === 'function') {
+          showToast(data.message, ok ? 'success' : 'error');
+        }
+        if (!ok && data.message && typeof showToast !== 'function') {
+          alert(data.message);
+        }
+        document.dispatchEvent(new CustomEvent('cartUpdated', { detail: data }));
+      })
+      .catch(() => refreshNavCounts(true))
+      .finally(() => {
+        if (submitBtn) submitBtn.disabled = false;
+      });
   });
 
-  const avatar = document.getElementById("userAvatar");
-  const menu   = document.getElementById("dropdownMenu");
+  document.addEventListener('DOMContentLoaded', function () {
+    refreshNavCounts(false);
 
-  if (avatar && menu) {
-    avatar.addEventListener("click", function(e) {
-      e.stopPropagation();
-      menu.classList.toggle("active");
-    });
-    document.addEventListener("click", function(e) {
-      if (!menu.contains(e.target)) menu.classList.remove("active");
-    });
-  }
+    document.querySelectorAll('.toast').forEach(el =>
+      new bootstrap.Toast(el, { delay: 3000 }).show()
+    );
 
-  const flash = document.getElementById("welcomeFlash");
-  if (flash) {
-    setTimeout(() => flash.classList.add("show"), 100);
-    setTimeout(() => {
-      flash.style.transition = "opacity .5s ease, transform .3s ease";
-      flash.style.opacity = "0";
-      flash.style.transform = "translateY(-8px)";
-    }, 5000);
-  }
-
-});
+    const avatar = document.getElementById('userAvatar');
+    const menu = document.getElementById('dropdownMenu');
+    if (avatar && menu) {
+      avatar.addEventListener('click', ev => {
+        ev.stopPropagation();
+        menu.classList.toggle('active');
+      });
+      document.addEventListener('click', ev => {
+        if (!menu.contains(ev.target)) menu.classList.remove('active');
+      });
+    }
+  });
+})();
 </script>
 </body>
 </html>
