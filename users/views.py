@@ -19,12 +19,12 @@ from core.otp import gen_otp, send_otp_email, is_otp_expired, save_otp_to_sessio
 def is_valid_email(email):
     return re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email)
 
+
 def home_view(request):
     name = (
         f"{request.user.first_name} {request.user.last_name}"
         if request.user.is_authenticated else ""
     )
- 
 
     featured_products = (
         Product.objects
@@ -33,6 +33,7 @@ def home_view(request):
         .order_by('-created_at')[:8]
     )
  
+
     return render(request, "landing.html", {
         "name":     name,
         "products": featured_products,

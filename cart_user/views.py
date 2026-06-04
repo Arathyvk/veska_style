@@ -1,27 +1,39 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 
 from cart_user.models import Cart, CartItem, MAX_QTY_PER_ITEM
+from cart_user.cart_helpers import (
+    get_cart,
+    cart_count_payload,
+    wants_json,
+)
 from product_admin.models import Product, ProductVariant
-from wishlist_user.models import Wishlist 
+from wishlist_user.models import Wishlist
 
 ITEMS_PER_PAGE   = 12
-MAX_QTY_PER_ITEM = 10
-FREE_SHIPPING    = 999
+FREE_SHIPPING    = 99
 SHIPPING_FEE     = 79
 
 
 def _get_cart(request):
-    if request.user.is_authenticated:
-        cart,_ = Cart.objects.get_or_create(user=request.user)
-        return cart
-    
-    request.session.save()
+    return get_cart(request)
 
-    cart,_ = Cart.objects.get_or_create(user=None)
-    return cart
+
+def _json_or_redirect(request, cart, redirect_to, message=None, level='success', extra=None):
+    if message and not wants_json(request):
+        getattr(messages, level)(request, message)
+    if wants_json(request):
+        payload = cart_count_payload(request, cart)
+        if message:
+            payload['message'] = message
+        if extra:
+            payload.update(extra)
+        return JsonResponse(payload)
+    if message:
+        getattr(messages, level)(request, message)
+    return redirect(redirect_to)
 
  
 def _get_wishlist(request):
@@ -37,7 +49,11 @@ def _wishlist_ids(request):
     if not  wl:
         return set()
     return set(wl.products.values_list('id', flat=True))
+
  
+def get_cart_count(request):
+    cart = get_cart(request)
+    return JsonResponse(cart_count_payload(request, cart))
 
 
 
@@ -77,14 +93,24 @@ def cart_add(request, slug):
     if wl:
         wl.products.remove(product)
  
+    next_url = request.POST.get('next', 'product_shop')
     if created:
-        messages.success(request, f'"{product.name}" added to cart!')
+        msg = f'"{product.name}" added to cart!'
     else:
-        messages.success(request, f'Cart updated — {capped} × {product.name}.')
+        msg = f'Cart updated — {capped} × {product.name}.'
     if capped < new_qty:
+        if wants_json(request):
+            return JsonResponse({
+                **cart_count_payload(request, cart),
+                'success': True,
+                'message': msg,
+                'warning': f'Max {MAX_QTY_PER_ITEM} per item allowed.',
+            })
         messages.warning(request, f'Max {MAX_QTY_PER_ITEM} per item allowed.')
- 
-    return redirect(request.POST.get('next', 'product_shop'))
+        messages.success(request, msg)
+        return redirect(next_url)
+
+    return _json_or_redirect(request, cart, next_url, msg)
  
 
  
@@ -127,8 +153,7 @@ def cart_update(request, item_id):
         new_qty = item.quantity - 1
     elif action == 'remove':
         item.delete()
-        messages.info(request, 'Item removed.')
-        return redirect('cart_detail')
+        return _json_or_redirect(request, cart, 'cart_detail', 'Item removed.', 'info')
     else:
         try:
             new_qty = int(request.POST.get('quantity', item.quantity))
@@ -137,28 +162,29 @@ def cart_update(request, item_id):
  
     if new_qty <= 0:
         item.delete()
-        messages.info(request, 'Item removed from cart.')
-        return redirect('cart_detail')
- 
+        return _json_or_redirect(request, cart, 'cart_detail', 'Item removed from cart.', 'info')
+
     available     = item.available_stock
     capped        = min(new_qty, available, MAX_QTY_PER_ITEM)
     item.quantity = capped
     item.save()
-    return redirect('cart_detail')
+    return _json_or_redirect(request, cart, 'cart_detail', extra={'reload': True})
  
 
 @require_POST
 def cart_remove(request, item_id):
     cart = _get_cart(request)
     CartItem.objects.filter(pk=item_id, cart=cart).delete()
-    messages.success(request, 'Item removed from cart.')
-    return redirect('cart_detail')
- 
- 
+    return _json_or_redirect(
+        request, cart, 'cart_detail', 'Item removed from cart.', 'success', {'reload': True}
+    )
+
+
 @require_POST
 def cart_clear(request):
     cart = _get_cart(request)
     cart.items.all().delete()
-    messages.success(request, "Cart cleared.")
-    return redirect('cart_detail')
+    return _json_or_redirect(
+        request, cart, 'cart_detail', 'Cart cleared.', 'success', {'reload': True}
+    )
   

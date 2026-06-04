@@ -1,5 +1,5 @@
 import re
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -7,7 +7,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Min, Max, Avg
 
 from product_admin.models import Product, ProductReview, ProductVariant
-from cart_user.models     import Cart,CartItem
+from cart_user.models import Cart, CartItem
+from cart_user.cart_helpers import get_cart, cart_count_payload, wants_json
 from wishlist_user.models import Wishlist
 
 ITEMS_PER_PAGE   = 12
@@ -55,18 +56,7 @@ def _sanitize_search(raw: str) -> str:
 
 
 def _get_cart(request):
-    if not request.session.session_key:
-        request.session.create()
-    if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(
-            user=request.user,
-            defaults={'session_key': request.session.session_key}
-        )
-        return cart
-    cart, _ = Cart.objects.get_or_create(
-        session_key=request.session.session_key, user=None
-    )
-    return cart
+    return get_cart(request)
 
 
 def _get_wishlist(request):
@@ -342,7 +332,12 @@ def cart_add_with_size(request):
             cart_item.quantity = variant.stock
         cart_item.save()
     
-    messages.success(request, f'{product.name} (Size: {size}) added to cart')
+    msg = f'{product.name} (Size: {size}) added to cart'
+    if wants_json(request):
+        payload = cart_count_payload(request, cart)
+        payload['message'] = msg
+        return JsonResponse(payload)
+    messages.success(request, msg)
     return redirect(next_url)
 
 
