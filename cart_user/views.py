@@ -117,6 +117,10 @@ def cart_add(request, slug):
 def cart_detail(request):
     cart  = _get_cart(request)
     items = list(cart.items.all())
+    
+    print(f"[DEBUG] Session cart_id: {request.session.get('cart_id')}, Cart object id: {cart.id}")
+    for item in items:
+        print(f"[DEBUG]   - item_id={item.id}, product={item.product.name}, quantity={item.quantity}")
  
     blocked_items  = [i for i in items if not i.is_available]
     ok_items       = [i for i in items if i.is_available]
@@ -139,36 +143,57 @@ def cart_detail(request):
         'remaining_free':     remaining_free,
         'max_qty':            MAX_QTY_PER_ITEM,
     })
+
     
 
 @require_POST
 def cart_update(request, item_id):
+    print(f"\n[DEBUG] cart_update called - item_id={item_id}, POST data={request.POST}")
+    
     cart = _get_cart(request)
     item = get_object_or_404(CartItem, pk=item_id, cart=cart)
+    print(f"[DEBUG] Found item: {item}, current quantity={item.quantity}")
  
     action = request.POST.get('action', '')
+    print(f"[DEBUG] action={action}")
+    
     if action == 'increase':
         new_qty = item.quantity + 1
+        print(f"[DEBUG] Increasing: {item.quantity} -> {new_qty}")
     elif action == 'decrease':
         new_qty = item.quantity - 1
+        print(f"[DEBUG] Decreasing: {item.quantity} -> {new_qty}")
     elif action == 'remove':
         item.delete()
-        return _json_or_redirect(request, cart, 'cart_detail', 'Item removed.', 'info')
+        messages.success(request, 'Item removed.')
+        return redirect('cart_detail')
     else:
         try:
             new_qty = int(request.POST.get('quantity', item.quantity))
+            
         except (ValueError, TypeError):
             new_qty = item.quantity
  
     if new_qty <= 0:
         item.delete()
-        return _json_or_redirect(request, cart, 'cart_detail', 'Item removed from cart.', 'info')
+        print(f"[DEBUG] Deleted item (qty <= 0)")
+        messages.success(request, 'Item removed from cart.')
+        return redirect('cart_detail')
 
     available     = item.available_stock
     capped        = min(new_qty, available, MAX_QTY_PER_ITEM)
+    print(f"[DEBUG] available_stock={available}, capped={capped}, MAX_QTY={MAX_QTY_PER_ITEM}")
+    
     item.quantity = capped
     item.save()
-    return _json_or_redirect(request, cart, 'cart_detail', extra={'reload': True})
+    print(f"[DEBUG] SAVED: item.quantity={item.quantity}")
+    
+    request.session.modified = True 
+    print(f"[DEBUG] VERIFIED from DB: item.quantity={item.quantity}")
+    
+    return redirect('cart_detail')
+
+
  
 
 @require_POST

@@ -53,7 +53,7 @@ class CartItem(models.Model):
     def available_stock(self):
         if self.variant:
             return self.variant.stock
-        return self.product.total_stock
+        return self.product.stock
 
     @property
     def is_in_stock(self):

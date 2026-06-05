@@ -1,10 +1,11 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST, require_GET
 import json
+from django.utils import timezone as tz
 from django.core.paginator import Paginator
 from django.db import models
 from decimal import Decimal
@@ -95,171 +96,115 @@ def user_coupon_list(request):
 @require_POST
 @login_required(login_url='login')
 def apply_coupon(request):
-    try:
-        if request.headers.get('Content-Type') == 'application/json':
-            data = json.loads(request.body)
-            coupon_code = data.get('coupon_code', '').strip().upper()
-        else:
-            coupon_code = request.POST.get('coupon_code', '').strip().upper()
-        
-        print(f"[DEBUG] Applying coupon: {coupon_code}")
-        
-        if not coupon_code:
-            return JsonResponse({
-                'success': False,
-                'error': 'Please enter a coupon code.'
-            }, status=400)
-        
+    # Support both JSON (AJAX from checkout page) and form POST
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
+    if is_ajax:
         try:
-            coupon = Coupon.objects.get(code__iexact=coupon_code, is_active=True)
-        except Coupon.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'error': f'"{coupon_code}" is not a valid coupon code.'
-            }, status=400)
-        
-        if CouponUsage.objects.filter(user=request.user, coupon=coupon).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'You have already used this coupon.'
-            }, status=400)
-        
-        if coupon.usage_limit and coupon.times_used >= coupon.usage_limit:
-            return JsonResponse({
-                'success': False,
-                'error': 'This coupon has reached its usage limit.'
-            }, status=400)
-        
-        now = timezone.now()
-        if coupon.valid_from and now < coupon.valid_from:
-            return JsonResponse({
-                'success': False,
-                'error': f'Coupon valid from {coupon.valid_from.strftime("%Y-%m-%d")}'
-            }, status=400)
-        
-        if coupon.valid_until and now > coupon.valid_until:
-            return JsonResponse({
-                'success': False,
-                'error': 'Coupon has expired.'
-            }, status=400)
-        
-        cart = _get_cart(request)
-        cart_items = cart.items.select_related('variant', 'variant__product', 'product').all()
-        
-        if not cart_items.exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Your cart is empty.'
-            }, status=400)
-        
-        subtotal = Decimal('0')
-        for item in cart_items:
-            if hasattr(item, 'variant') and item.variant and hasattr(item.variant, 'price') and item.variant.price:
-                price = item.variant.price
-            elif hasattr(item, 'product') and hasattr(item.product, 'price'):
-                price = item.product.price
-            else:
-                price = Decimal('0')
-            subtotal += price * item.quantity
-        
-        print(f"[DEBUG] Cart subtotal: ₹{subtotal}")
-        
-        if coupon.min_order_value and subtotal < coupon.min_order_value:
-            return JsonResponse({
-                'success': False,
-                'error': f'Minimum order of ₹{coupon.min_order_value} required for this coupon.'
-            }, status=400)
-        
-        if coupon.discount_type == 'percentage' or coupon.discount_type == 'PERCENTAGE':
-            discount = (subtotal * coupon.value / 100).quantize(Decimal('0.01'))
-            if coupon.max_discount and coupon.max_discount > 0:
-                discount = min(discount, coupon.max_discount)
-        else: 
-            discount = coupon.value
-        
-        if discount > subtotal:
-            discount = subtotal
-        
-        request.session['coupon_code'] = coupon.code
-        request.session['coupon_discount'] = str(discount)
-        request.session.modified = True
-        
-        FREE_SHIPPING_THRESHOLD = Decimal('999')
-        SHIPPING_CHARGE = Decimal('79')
-        
-        shipping = SHIPPING_CHARGE if subtotal < FREE_SHIPPING_THRESHOLD else Decimal('0')
-        after_coupon = subtotal - discount
-        new_total = after_coupon + shipping
-        
-        print(f"[DEBUG] Discount: ₹{discount}, New total: ₹{new_total}")
-        
+            body = json.loads(request.body)
+            code = body.get('coupon_code', '').strip().upper()
+        except (json.JSONDecodeError, KeyError):
+            return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
+    else:
+        code = request.POST.get('coupon_code', '').strip().upper()
+
+    if not code:
+        err = 'Please enter a coupon code.'
+        return JsonResponse({'success': False, 'error': err}) if is_ajax else (
+            messages.error(request, err) or redirect('checkout'))
+
+    # Already applied?
+    if request.session.get('coupon_code'):
+        err = 'A coupon is already applied. Remove it first.'
+        return JsonResponse({'success': False, 'error': err}) if is_ajax else (
+            messages.warning(request, err) or redirect('checkout'))
+
+    try:
+        coupon = Coupon.objects.get(code__iexact=code, is_active=True)
+    except Coupon.DoesNotExist:
+        err = f'"{code}" is not a valid coupon code.'
+        return JsonResponse({'success': False, 'error': err}) if is_ajax else (
+            messages.error(request, err) or redirect('checkout'))
+
+    now = tz.now()
+    # Date validity check
+    if coupon.valid_from and coupon.valid_from > now:
+        err = 'This coupon is not yet active.'
+        return JsonResponse({'success': False, 'error': err}) if is_ajax else (
+            messages.error(request, err) or redirect('checkout'))
+    if coupon.valid_until and coupon.valid_until < now:
+        err = 'This coupon has expired.'
+        return JsonResponse({'success': False, 'error': err}) if is_ajax else (
+            messages.error(request, err) or redirect('checkout'))
+
+    # Usage limit
+    if coupon.usage_limit and coupon.times_used >= coupon.usage_limit:
+        err = 'This coupon has reached its usage limit.'
+        return JsonResponse({'success': False, 'error': err}) if is_ajax else (
+            messages.error(request, err) or redirect('checkout'))
+
+    # Per-user limit
+    user_usage_count = CouponUsage.objects.filter(
+        user=request.user, coupon=coupon
+    ).count()
+    per_user_limit = getattr(coupon, 'per_user_limit', 1) or 1
+    if user_usage_count >= per_user_limit:
+        err = 'You have already used this coupon.'
+        return JsonResponse({'success': False, 'error': err}) if is_ajax else (
+            messages.error(request, err) or redirect('checkout'))
+
+    cart     = _get_cart(request)
+    subtotal = sum(_item_price(i) * i.quantity for i in cart.items.all())
+
+    if coupon.min_order_amount and subtotal < coupon.min_order_amount:
+        err = f'Minimum order of ₹{coupon.min_order_amount} required for this coupon.'
+        return JsonResponse({'success': False, 'error': err}) if is_ajax else (
+            messages.error(request, err) or redirect('checkout'))
+
+    # Calculate discount
+    if coupon.discount_type == 'percentage':
+        discount = (subtotal * Decimal(str(coupon.discount_value)) / 100).quantize(Decimal('0.01'))
+        if hasattr(coupon, 'max_discount_amount') and coupon.max_discount_amount:
+            discount = min(discount, coupon.max_discount_amount)
+    else:
+        discount = Decimal(str(coupon.discount_value))
+
+    # Cap discount at subtotal
+    discount = min(discount, subtotal)
+
+    request.session['coupon_code']     = coupon.code
+    request.session['coupon_discount'] = str(discount)
+
+    shipping = SHIPPING_CHARGE if subtotal < FREE_SHIPPING_THRESHOLD else Decimal('0')
+    new_total = max(subtotal - discount + shipping, Decimal('0'))
+
+    if is_ajax:
         return JsonResponse({
-            'success': True,
-            'message': f'Coupon "{coupon.code}" applied! You saved ₹{discount:.2f}',
-            'discount': float(discount),
-            'subtotal': float(subtotal),
-            'new_total': float(new_total),
-            'coupon_code': coupon.code,
-            'shipping': float(shipping)
+            'success':      True,
+            'message':      f'Coupon "{coupon.code}" applied — you save ₹{discount:.2f}!',
+            'coupon_code':  coupon.code,
+            'discount':     float(discount),
+            'new_total':    float(new_total),
+            'new_subtotal': float(subtotal),
+            'shipping':     float(shipping),
         })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': 'Invalid request format.'
-        }, status=400)
-    except Exception as e:
-        print(f"[ERROR] apply_coupon: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+
+    messages.success(request, f'Coupon "{coupon.code}" applied — you save ₹{discount:.2f}!')
+    return redirect('checkout')
 
 
-
-@require_http_methods(['POST'])
+@require_POST
 @login_required(login_url='login')
 def remove_coupon(request):
-    try:
-        request.session.pop('coupon_code', None)
-        request.session.pop('coupon_discount', None)
-        request.session.modified = True
-        
-        cart = _get_cart(request)
-        cart_items = cart.items.select_related('variant', 'variant__product', 'product').all()
-        
-        if cart_items.exists():
-            subtotal = Decimal('0')
-            for item in cart_items:
-                price = _item_price(item)
-                subtotal += price * item.quantity
-            
-            shipping = SHIPPING_CHARGE if subtotal < FREE_SHIPPING_THRESHOLD else Decimal('0')
-            new_total = subtotal + shipping
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Coupon removed.',
-                'subtotal': float(subtotal),
-                'new_total': float(new_total),
-                'shipping': float(shipping),
-                'discount': 0
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'error': 'Cart is empty.'
-            }, status=400)
-            
-    except Exception as e:
-        print(f"[ERROR] remove_coupon: {str(e)}")
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
+    request.session.pop('coupon_code',     None)
+    request.session.pop('coupon_discount', None)
+    
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    if is_ajax:
+        return JsonResponse({'success': True, 'message': 'Coupon removed.'})
+    
+    messages.success(request, 'Coupon removed.')
+    return redirect('checkout')
 
 
 @login_required

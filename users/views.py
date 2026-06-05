@@ -6,10 +6,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
+from allauth.socialaccount.models import SocialApp
+from django.contrib.sites.models import Site
 
 
 from .models import User
-from django.core.exceptions import ValidationError
 from product_admin.models import Product
 from cart_user.models import Cart
  
@@ -397,10 +398,7 @@ def reset_password(request):
             return redirect("forgot_password")
  
     return render(request, "reset_password.html")
- 
 
-from allauth.socialaccount.models import SocialApp
-from django.contrib.sites.models import Site
 
 
 def debug_social(request):

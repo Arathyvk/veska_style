@@ -313,43 +313,68 @@ a{text-decoration:none;color:inherit}
     </div>
     {% endfor %}
 
+    
     <!-- Coupon and Offers Section -->
-    {% if available_coupons or available_offers %}
-    <div class="coupon-strip">
-      <div class="coupon-label">🎁 Available Offers & Coupons</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-        {% for c in available_coupons %}
-        <div class="coupon-item" data-coupon-code="{{ c.code }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-md)">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--terra);font-family:monospace">{{ c.code }}</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-top:2px">
-              {% if c.discount_type == 'percentage' %}{{ c.discount_value }}% off{% else %}₹{{ c.discount_value }} off{% endif %}
-              {% if c.min_order_amount %} · Min ₹{{ c.min_order_amount }}{% endif %}
-            </div>
-          </div>
-          <button type="button"
-                  class="apply-coupon-btn"
-                  data-coupon-code="{{ c.code }}"
-                  data-coupon-type="{{ c.discount_type }}"
-                  data-coupon-value="{{ c.discount_value }}"
-                  data-min-order="{{ c.min_order_amount|default:0 }}"
-                  style="padding:6px 12px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--body);transition:var(--transition)">
-            Apply
-          </button>
-        </div>
-        {% endfor %}
-        {% for o in available_offers %}
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-md)">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--terra)">{{ o.name }}</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-top:2px">{{ o.description|default:"Special offer" }}</div>
-          </div>
-          <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:10px;background:var(--success-pale);color:var(--success)">Active</span>
-        </div>
-        {% endfor %}
+<div class="coupon-strip">
+  <div class="coupon-label">🎁 Coupons & Offers</div>
+
+  <!-- Manual coupon entry -->
+  {% if not coupon_code %}
+  <div class="coupon-row" style="margin-bottom:12px">
+    <input type="text" id="couponInput" class="coupon-input"
+           placeholder="Enter coupon code" maxlength="30"
+           oninput="this.value=this.value.toUpperCase()">
+    <button type="button" class="btn-coupon" onclick="manualApplyCoupon()">Apply</button>
+  </div>
+  {% endif %}
+
+  <!-- Applied coupon indicator -->
+  {% if coupon_code %}
+  <div class="coupon-applied" style="margin-bottom:12px">
+    <div class="coupon-applied-left">
+      <svg width="15" height="15" fill="none" stroke="currentColor"
+           stroke-width="2.5" viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <div>
+        <div class="coupon-applied-code">{{ coupon_code }}</div>
+        <div class="coupon-applied-save">You save ₹{{ coupon_discount|floatformat:2 }}</div>
       </div>
     </div>
-    {% endif %}
+    <form method="POST" action="{% url 'remove_coupon' %}" style="display:inline">
+      {% csrf_token %}
+      <button type="submit" class="btn-remove-coupon">✕ Remove</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- Available coupons — paginated via JS -->
+  {% if available_coupons and not coupon_code %}
+  <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+       color:var(--muted);margin-bottom:8px">Available Coupons</div>
+  <div id="couponList" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div id="couponPagination" style="display:flex;align-items:center;
+       justify-content:space-between;margin-top:10px;font-size:12px;color:var(--muted)">
+    <button onclick="prevCouponPage()" id="couponPrevBtn"
+            style="background:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+                   padding:5px 12px;font-size:12px;cursor:pointer;font-family:var(--body);
+                   transition:var(--transition)"
+            onmouseover="this.style.borderColor='var(--terra)';this.style.color='var(--terra)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+      ← Prev
+    </button>
+    <span id="couponPageInfo"></span>
+    <button onclick="nextCouponPage()" id="couponNextBtn"
+            style="background:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+                   padding:5px 12px;font-size:12px;cursor:pointer;font-family:var(--body);
+                   transition:var(--transition)"
+            onmouseover="this.style.borderColor='var(--terra)';this.style.color='var(--terra)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+      Next →
+    </button>
+  </div>
+
+
     
     <div class="co-grid">
       <div>
@@ -589,7 +614,7 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
 
-      </div><!-- /left col -->
+      </div>
 
       <!-- ── Summary sidebar ── -->
       <div>
@@ -675,9 +700,9 @@ a{text-decoration:none;color:inherit}
         </div>
       </div>
 
-    </div><!-- /co-grid -->
-  </div><!-- /container -->
-</div><!-- /co-page -->
+    </div>
+  </div>
+</div>
 
 <!-- Spinner -->
 <div class="spinner-overlay" id="spinnerOverlay">
@@ -694,7 +719,7 @@ const SUBTOTAL         = parseFloat('{{ subtotal|floatformat:2 }}');
 const SHIPPING         = parseFloat('{{ shipping|floatformat:2 }}');
 const WALLET_BALANCE   = parseFloat('{{ wallet_balance|default:"0" }}');
 const CSRF_TOKEN       = '{{ csrf_token }}';
-const HAS_ADDRESS      = {{ addresses|yesno:"true,false" }};
+const HAS_ADDRESS      = "{{ addresses|yesno:"true,false" }}";
 const STRIPE_URL       = "{% url 'stripe_create_checkout' %}";
 const PLACE_ORDER_URL  = "{% url 'place_order' %}";
 const APPLY_COUPON_URL = "{% url 'apply_coupon' %}";
@@ -808,7 +833,7 @@ async function quickApplyCoupon(couponCode, discountType, discountValue, minOrde
     const originalText = button.innerText;
     
     // Check minimum order requirement
-    const subtotal = {{ subtotal|default:0 }};
+    const subtotal = "{{ subtotal|default:0 }}";
     if (minOrder > 0 && subtotal < minOrder) {
         showToast(`Minimum order amount of ₹${minOrder} required for this coupon`, 'warning');
         return;

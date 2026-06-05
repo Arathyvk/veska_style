@@ -276,24 +276,24 @@ button,input{font-family:var(--body)}
               {% endif %}
 
                 <div class="qty-wrap">
-
+                  <!-- DECREASE form -->
+                  <div class="qty-wrap">
+    <!-- DECREASE form -->
                   <form method="POST" action="{% url 'cart_update' item.id %}" class="qty-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="decrease">
-                       <button type="submit" class="qty-btn" {% if item.quantity <= 1 %}disabled{% endif %}>
-                        −
-                    </button>
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="decrease">
+                      <button type="submit" class="qty-btn" {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
                   </form>
 
                   <span class="qty-num">{{ item.quantity }}</span>
 
+                  <!-- INCREASE form -->
                   <form method="POST" action="{% url 'cart_update' item.id %}" class="qty-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="increase">
-                    <button type="submit" class="qty-btn"
-                      {% if item.quantity >= item.max_allowed %}disabled{% endif %}>+</button>
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="increase">
+                      <button type="submit" class="qty-btn">+</button>
                   </form>
-
+              </div>
                 </div>
             </div>
 
@@ -407,4 +407,19 @@ button,input{font-family:var(--body)}
 
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to all quantity forms
+    document.querySelectorAll('.qty-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitted!', {
+                action: this.action,
+                method: this.method,
+                formData: new FormData(this)
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -114,7 +114,7 @@ class Order(models.Model):
     country       = models.CharField(max_length=60)
 
     subtotal           = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    coupon_code        = models.CharField(max_length=50, blank=True)
+    coupon_code        = models.CharField(max_length=50, blank=True, default='')
     discount_amount    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_charge    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     wallet_amount_used = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -123,15 +123,6 @@ class Order(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='phonepe')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
     status         = models.CharField(max_length=20, choices=STATUS_CHOICES,  default='pending')
-
-    phonepe_payment_id = models.CharField(
-        max_length=100, blank=True, default='',
-        help_text='PhonePe transactionId returned after successful payment',
-    )
-    phonepe_response   = models.JSONField(
-        null=True, blank=True,
-        help_text='Raw PhonePe status-check response payload (for audit)',
-    )
 
     delivered_at          = models.DateTimeField(null=True, blank=True)
     return_reason         = models.TextField(blank=True, null=True)

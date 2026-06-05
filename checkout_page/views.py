@@ -13,6 +13,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone as tz
 from django.views.decorators.http import require_POST, require_http_methods
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 from cart_user.models import Cart
 from order_user.models import Order, OrderItem
@@ -364,6 +366,25 @@ def stripe_create_checkout_session(request):
 
 
 
+def _send_order_confirmation_email(order, user):
+    try:
+        subject = f'Order Confirmed #{str(order.uuid)[:8].upper()} — Veska'
+        body = render_to_string('emails/order_confirmation.txt', {
+            'order': order,
+            'user':  user,
+            'items': order.items.all(),
+        })
+        send_mail(
+            subject,
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=True,   
+        )
+    except Exception as e:
+        print(f'[EMAIL ERROR] Could not send order confirmation: {e}')
+
+
 @login_required(login_url='login')
 def payment_success(request):
     session_id = request.GET.get('session_id')
@@ -376,8 +397,6 @@ def payment_success(request):
         session = stripe.checkout.Session.retrieve(session_id)
         print(f"[DEBUG] payment_success - session_id={session_id}, payment_status={session.payment_status}")
 
-        # Accept both 'paid' and 'unpaid' statuses; unpaid can occur with async methods (UPI)
-        # The key indicator is that the session was successfully created and the customer reached this page
         if session.payment_status not in ('paid', 'unpaid'):
             messages.error(request, 'Payment session invalid.')
             return redirect('payment_cancel')
@@ -386,7 +405,8 @@ def payment_success(request):
         payment = get_object_or_404(StripePayment, session_id=session_id, user=request.user)
 
         if payment.order:
-            return redirect('order_success', uuid=payment.order.uuid)
+            _send_order_confirmation_email(order, request.user)
+            return redirect('order_success', uuid=order.uuid)
 
         metadata = dict(session.metadata)
 
@@ -722,7 +742,8 @@ def place_order(request):
             cart.items.all().delete()
             for key in ('coupon_code', 'coupon_discount'):
                 request.session.pop(key, None)
- 
+                
+            _send_order_confirmation_email(order, request.user)
         return JsonResponse({
             'success':      True,
             'order_uuid':   str(order.uuid),
