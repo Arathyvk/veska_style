@@ -27,20 +27,22 @@
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
 a{text-decoration:none;color:inherit}
 
-/* Toast Notifications */
-.toast-notification{position:fixed;top:20px;right:20px;z-index:10000;min-width:280px;max-width:400px;background:var(--warm-white);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:slideIn 0.3s ease;border-left:4px solid;}
+/* Toast */
+.toast-notification{position:fixed;top:20px;right:20px;z-index:10000;min-width:280px;max-width:400px;
+  background:var(--warm-white);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);
+  padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;
+  animation:slideIn 0.3s ease;border-left:4px solid;}
 .toast-notification.success{border-left-color:var(--success);background:var(--success-pale)}
 .toast-notification.error{border-left-color:var(--danger);background:var(--danger-pale)}
 .toast-notification.warning{border-left-color:var(--warning);background:var(--warning-pale)}
 .toast-notification.info{border-left-color:var(--terra);background:var(--terra-pale)}
-.toast-icon{font-size:20px}
-.toast-content{flex:1;font-size:13px;font-weight:500;color:var(--ink)}
+.toast-icon{font-size:20px}.toast-content{flex:1;font-size:13px;font-weight:500;color:var(--ink)}
 .toast-close{cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:0 4px}
 .toast-close:hover{color:var(--ink)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
 
-/* ── Hero ── */
+/* Hero */
 .co-hero{background:var(--charcoal);padding:38px 0 30px;position:relative;overflow:hidden}
 .co-hero::before{content:'';position:absolute;right:-80px;top:-80px;width:380px;height:380px;
   border-radius:50%;border:70px solid rgba(181,103,68,.08);pointer-events:none}
@@ -69,12 +71,12 @@ a{text-decoration:none;color:inherit}
 .msg-bar.error{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
 .msg-bar.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.2)}
 
-/* ── Coupon ── */
-.coupon-strip{margin:4px 0 16px;padding:14px 18px;background:var(--warm-white);
+/* Coupon Strip */
+.coupon-strip{margin:4px 0 16px;padding:16px 18px;background:var(--warm-white);
   border:1px solid var(--border);border-radius:var(--radius-lg)}
-.coupon-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
-  color:var(--muted);margin-bottom:8px}
-.coupon-row{display:flex;gap:8px}
+.coupon-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.coupon-row{display:flex;gap:8px;margin-bottom:12px}
 .coupon-input{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);
   padding:10px 13px;font-size:13px;font-weight:600;letter-spacing:.5px;
   font-family:monospace;background:var(--parchment);color:var(--ink);outline:none;transition:border .18s}
@@ -82,24 +84,58 @@ a{text-decoration:none;color:inherit}
 .btn-coupon{background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);
   padding:10px 16px;font-family:var(--body);font-size:12.5px;font-weight:600;
   cursor:pointer;white-space:nowrap;transition:background .2s}
-.btn-coupon:hover{background:var(--terra)}
+.btn-coupon:hover:not(:disabled){background:var(--terra)}
+.btn-coupon:disabled{opacity:.6;cursor:not-allowed}
+
+/* Applied coupon */
 .coupon-applied{display:flex;align-items:center;justify-content:space-between;
   background:var(--success-pale);border:1px solid rgba(58,125,90,.2);
-  border-radius:var(--radius-md);padding:10px 14px}
+  border-radius:var(--radius-md);padding:12px 14px;margin-bottom:12px}
 .coupon-applied-left{display:flex;align-items:center;gap:9px}
-.coupon-applied-left svg{color:var(--success)}
+.coupon-applied-left svg{color:var(--success);flex-shrink:0}
 .coupon-applied-code{font-size:13px;font-weight:700;color:var(--success)}
 .coupon-applied-save{font-size:11px;color:var(--success);margin-top:2px}
-.btn-remove-coupon{background:none;border:none;font-family:var(--body);
-  font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline}
-.btn-remove-coupon:hover{color:var(--danger)}
+.btn-remove-coupon{background:var(--danger-pale);border:1px solid rgba(181,51,51,.2);
+  border-radius:var(--radius-sm);font-family:var(--body);padding:6px 12px;
+  font-size:11.5px;font-weight:600;color:var(--danger);cursor:pointer;transition:var(--transition)}
+.btn-remove-coupon:hover{background:var(--danger);color:#fff}
 
+/* Available coupons list */
+.avail-coupons-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px}
+.coupon-chip{display:flex;align-items:center;justify-content:space-between;
+  border:1.5px dashed var(--border);border-radius:var(--radius-md);
+  padding:10px 14px;background:var(--parchment);transition:var(--transition);gap:10px}
+.coupon-chip:hover{border-color:var(--terra);background:var(--terra-pale)}
+.coupon-chip.invalid{opacity:.6;filter:grayscale(.4)}
+.coupon-chip-left{flex:1;min-width:0}
+.coupon-chip-code{font-size:13px;font-weight:700;font-family:monospace;color:var(--ink);letter-spacing:.3px}
+.coupon-chip-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.coupon-chip-save{font-size:10.5px;color:var(--success);font-weight:600;margin-top:3px}
+.coupon-chip-error{font-size:10.5px;color:var(--warning);margin-top:3px}
+.btn-chip-apply{background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-sm);
+  padding:7px 13px;font-size:11.5px;font-weight:600;cursor:pointer;
+  font-family:var(--body);white-space:nowrap;transition:background .2s;flex-shrink:0}
+.btn-chip-apply:hover:not(:disabled){background:var(--terra)}
+.btn-chip-apply:disabled{background:var(--sand);color:var(--muted-lt);cursor:not-allowed}
+
+/* Pagination */
+.coupon-pagination{display:flex;align-items:center;justify-content:space-between;
+  margin-top:12px;padding-top:10px;border-top:1px solid var(--border-lt)}
+.cpg-btn{background:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:5px 14px;font-size:12px;cursor:pointer;font-family:var(--body);
+  color:var(--muted);transition:var(--transition)}
+.cpg-btn:hover:not(:disabled){border-color:var(--terra);color:var(--terra)}
+.cpg-btn:disabled{opacity:.4;cursor:not-allowed}
+.cpg-info{font-size:12px;color:var(--muted)}
+
+/* Page layout */
 .co-page{padding-bottom:80px;min-height:100vh;background:var(--cream)}
 .container{max-width:1080px;margin:0 auto;padding:0 24px}
 .co-grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
 @media(max-width:860px){.co-grid{grid-template-columns:1fr}}
 
-/* ── Cards ── */
+/* Cards */
 .co-card{background:var(--warm-white);border:1px solid var(--border);border-radius:var(--radius-xl);
   overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-xs)}
 .co-card-head{padding:14px 20px;background:var(--parchment);border-bottom:1px solid var(--border-lt);
@@ -107,21 +143,19 @@ a{text-decoration:none;color:inherit}
 .co-card-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:var(--ink);
   display:flex;align-items:center;gap:9px}
 .co-card-head h3 svg{width:15px;height:15px;color:var(--terra);flex-shrink:0}
-.co-card-head .hd-link{font-size:12px;color:var(--terra);font-weight:600;
-  display:flex;align-items:center;gap:5px}
+.co-card-head .hd-link{font-size:12px;color:var(--terra);font-weight:600;display:flex;align-items:center;gap:5px}
 .co-card-head .hd-link:hover{color:var(--terra-deep)}
 .co-card-body{padding:16px 20px}
 
-/* ── Address ── */
+/* Address */
 .addr-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.addr-option{border:2px solid var(--border);border-radius:var(--radius-lg);
-  overflow:hidden;cursor:pointer;transition:var(--transition)}
+.addr-option{border:2px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:var(--transition)}
 .addr-option.selected{border-color:var(--terra);background:var(--terra-pale)}
 .addr-option label{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer;width:100%}
 .addr-option input[type=radio]{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
-.addr-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);
-  flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
-  transition:var(--transition);background:var(--warm-white);position:relative}
+.addr-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;
+  margin-top:2px;display:flex;align-items:center;justify-content:center;transition:var(--transition);
+  background:var(--warm-white);position:relative}
 .addr-option.selected .addr-radio{border-color:var(--terra);background:var(--terra)}
 .addr-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;
   opacity:0;transition:opacity .15s;position:absolute}
@@ -143,7 +177,7 @@ a{text-decoration:none;color:inherit}
   transition:var(--transition);text-decoration:none}
 .btn-add-addr:hover{border-color:var(--terra);color:var(--terra);background:var(--terra-pale)}
 
-/* ── Order items ── */
+/* Order items */
 .oi-row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-lt)}
 .oi-row:last-child{border-bottom:none;padding-bottom:0}
 .oi-img{width:54px;height:68px;border-radius:var(--radius-sm);overflow:hidden;
@@ -151,23 +185,21 @@ a{text-decoration:none;color:inherit}
 .oi-img img{width:100%;height:100%;object-fit:cover}
 .oi-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
 .oi-body{flex:1;min-width:0}
-.oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-  color:var(--muted-lt);margin-bottom:3px}
-.oi-name{font-family:var(--head);font-size:15px;font-weight:500;color:var(--ink);
-  line-height:1.25;margin-bottom:4px}
+.oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted-lt);margin-bottom:3px}
+.oi-name{font-family:var(--head);font-size:15px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
 .oi-meta{font-size:11.5px;color:var(--muted-lt)}
 .oi-price-col{text-align:right;flex-shrink:0;min-width:72px}
 .oi-unit-price{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
 .oi-line-total{font-family:var(--head);font-size:16px;font-weight:600;color:var(--charcoal)}
 
-/* ── Notes ── */
+/* Notes */
 .notes-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
   padding:10px 14px;font-family:var(--body);font-size:13px;background:var(--parchment);
   color:var(--ink);outline:none;resize:vertical;min-height:68px;transition:var(--transition)}
 .notes-field:focus{border-color:var(--terra);background:#fff}
 .notes-field::placeholder{color:var(--muted-lt)}
 
-/* ── Payment methods ── */
+/* Payment */
 .pay-option{border:2px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;
   cursor:pointer;transition:var(--transition);margin-bottom:10px}
 .pay-option:last-child{margin-bottom:0}
@@ -183,27 +215,19 @@ a{text-decoration:none;color:inherit}
 .pay-option.selected .pay-radio::after{opacity:1}
 .pay-logo{width:52px;height:30px;border-radius:6px;flex-shrink:0;display:flex;
   align-items:center;justify-content:center;font-size:9px;font-weight:800;letter-spacing:.4px}
-.pay-logo.stripe{background:var(--stripe);color:#fff;font-size:10px;font-weight:700;
-  letter-spacing:.2px;font-family:var(--body)}
+.pay-logo.stripe{background:var(--stripe);color:#fff;font-size:10px;font-weight:700;letter-spacing:.2px;font-family:var(--body)}
 .pay-logo.cod{background:var(--sand);color:var(--charcoal);font-size:20px}
-.pay-logo.wlt{background:var(--terra-pale);border:1px solid rgba(181,103,68,.2);
-  color:var(--terra);font-size:20px}
+.pay-logo.wlt{background:var(--terra-pale);border:1px solid rgba(181,103,68,.2);color:var(--terra);font-size:20px}
 .pay-info{flex:1;min-width:0}
-.pay-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pay-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .pay-sub{font-size:11.5px;color:var(--muted-lt);line-height:1.5}
-.pay-tag{font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
-  padding:2px 8px;border-radius:10px}
+.pay-tag{font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:10px}
 .pay-tag.green{background:var(--success-pale);color:var(--success)}
 .pay-tag.amber{background:var(--warning-pale);color:var(--warning)}
 .wallet-bal-chip{display:inline-flex;align-items:center;gap:5px;background:var(--success-pale);
   color:var(--success);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
-
-/* ── Wallet deduct ── */
-.wallet-deduct-row{padding:10px 16px 14px 50px;border-top:1px solid rgba(181,103,68,.12);
-  background:rgba(247,237,229,.6)}
-.wdr-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-  color:var(--muted);margin-bottom:7px}
+.wallet-deduct-row{padding:10px 16px 14px 50px;border-top:1px solid rgba(181,103,68,.12);background:rgba(247,237,229,.6)}
+.wdr-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
 .wdr-row{display:flex;gap:8px;align-items:center}
 .wdr-input{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);
   padding:8px 12px;font-size:13px;font-family:var(--body);color:var(--ink);
@@ -218,18 +242,16 @@ a{text-decoration:none;color:inherit}
 .wdr-applied{display:flex;align-items:center;gap:8px;margin-top:8px;
   background:var(--success-pale);border:1px solid rgba(58,125,90,.18);
   border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--success);font-weight:500}
-.btn-wdr-remove{margin-left:auto;background:none;border:none;cursor:pointer;
-  font-size:11px;color:var(--muted-lt);font-family:var(--body)}
+.btn-wdr-remove{margin-left:auto;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted-lt);font-family:var(--body)}
 .btn-wdr-remove:hover{color:var(--danger)}
 
-/* ── Summary card ── */
+/* Summary */
 .summary-card{background:var(--warm-white);border:1px solid var(--border);
   border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px;box-shadow:var(--shadow-sm)}
 .sum-head{padding:18px 20px;background:var(--charcoal)}
 .sum-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:#fff}
 .sum-body{padding:18px 20px}
-.sum-row{display:flex;justify-content:space-between;align-items:center;
-  font-size:13px;padding:7px 0;color:var(--muted)}
+.sum-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;color:var(--muted)}
 .sum-row .val{color:var(--ink);font-weight:500}
 .sum-row.free .val,.sum-row.saving .val,.sum-row.wallet-row .val{color:var(--success);font-weight:600}
 .sum-divider{height:1px;background:var(--border);margin:8px 0}
@@ -242,14 +264,17 @@ a{text-decoration:none;color:inherit}
 .free-ship-track{margin-top:6px;height:4px;background:var(--sand);border-radius:3px;overflow:hidden}
 .free-ship-fill{height:100%;background:var(--success);border-radius:3px;transition:width .5s ease}
 
-/* ── Stripe note ── */
-.stripe-secure-note{display:flex;align-items:center;justify-content:center;gap:6px;
-  font-size:11px;color:var(--muted-lt);margin-top:10px}
-.stripe-secure-note svg{color:var(--stripe);flex-shrink:0}
-.stripe-badge{display:inline-flex;align-items:center;gap:4px;background:var(--stripe-pale);
-  color:var(--stripe);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
+/* Applied coupon in summary */
+.sum-coupon-chip{background:var(--success-pale);border:1px solid rgba(58,125,90,.18);
+  border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:4px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sum-coupon-chip-code{font-size:11.5px;font-weight:700;color:var(--success);font-family:monospace}
+.sum-coupon-chip-amt{font-size:12px;color:var(--success);font-weight:600}
+.btn-sum-remove-coupon{background:none;border:none;cursor:pointer;color:var(--muted-lt);
+  font-size:16px;line-height:1;padding:0;transition:color .15s}
+.btn-sum-remove-coupon:hover{color:var(--danger)}
 
-/* ── CTA ── */
+/* CTA */
 .btn-place-order{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
   padding:15px;margin-top:16px;background:var(--charcoal);color:#fff;border:none;
   border-radius:var(--radius-md);font-family:var(--body);font-size:14px;font-weight:600;
@@ -261,26 +286,23 @@ a{text-decoration:none;color:inherit}
   border-radius:var(--radius-md);font-family:var(--body);font-size:13px;cursor:pointer;
   transition:var(--transition);text-decoration:none}
 .btn-back-cart:hover{border-color:var(--terra);color:var(--terra)}
-.trust-strip{margin-top:18px;padding-top:14px;border-top:1px solid var(--border-lt);
-  display:flex;flex-direction:column;gap:7px}
+.trust-strip{margin-top:18px;padding-top:14px;border-top:1px solid var(--border-lt);display:flex;flex-direction:column;gap:7px}
 .trust-item{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
 .no-addr-note{background:var(--danger-pale);border:1px solid rgba(181,51,51,.2);
-  border-radius:var(--radius-md);padding:10px 14px;margin-top:12px;font-size:12px;
-  color:var(--danger);line-height:1.6}
+  border-radius:var(--radius-md);padding:10px 14px;margin-top:12px;font-size:12px;color:var(--danger);line-height:1.6}
+.stripe-secure-note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted-lt);margin-top:10px}
+.stripe-secure-note svg{color:var(--stripe);flex-shrink:0}
+.stripe-badge{display:inline-flex;align-items:center;gap:4px;background:var(--stripe-pale);color:var(--stripe);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
 
-/* ── Spinner ── */
-.spinner-overlay{position:fixed;inset:0;background:rgba(30,26,23,.45);display:none;
-  align-items:center;justify-content:center;z-index:9999}
-.spinner-box{background:var(--warm-white);border-radius:var(--radius-lg);
-  padding:32px 40px;text-align:center;box-shadow:var(--shadow-lg)}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--terra);
-  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+/* Spinner */
+.spinner-overlay{position:fixed;inset:0;background:rgba(30,26,23,.45);display:none;align-items:center;justify-content:center;z-index:9999}
+.spinner-box{background:var(--warm-white);border-radius:var(--radius-lg);padding:32px 40px;text-align:center;box-shadow:var(--shadow-lg)}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--terra);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner-box p{font-size:13px;color:var(--muted);font-weight:500}
 </style>
 
 <div class="co-page">
-  <!-- Hero -->
   <div class="co-hero">
     <div class="container">
       <div class="inner">
@@ -313,69 +335,53 @@ a{text-decoration:none;color:inherit}
     </div>
     {% endfor %}
 
-    
-    <!-- Coupon and Offers Section -->
-<div class="coupon-strip">
-  <div class="coupon-label">🎁 Coupons & Offers</div>
+    <!-- ══ COUPON STRIP ══ -->
+    <div class="coupon-strip">
+      <div class="coupon-label">🎁 Coupons &amp; Offers</div>
 
-  <!-- Manual coupon entry -->
-  {% if not coupon_code %}
-  <div class="coupon-row" style="margin-bottom:12px">
-    <input type="text" id="couponInput" class="coupon-input"
-           placeholder="Enter coupon code" maxlength="30"
-           oninput="this.value=this.value.toUpperCase()">
-    <button type="button" class="btn-coupon" onclick="manualApplyCoupon()">Apply</button>
-  </div>
-  {% endif %}
+      {% if coupon_code %}
+        <!-- Coupon already applied -->
+        <div class="coupon-applied">
+          <div class="coupon-applied-left">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <div>
+              <div class="coupon-applied-code">{{ coupon_code }}</div>
+              <div class="coupon-applied-save">You save ₹{{ coupon_discount|floatformat:2 }}</div>
+            </div>
+          </div>
+          <!-- Remove coupon -->
+          <form method="POST" action="{% url 'remove_coupon' %}" style="display:inline">
+            {% csrf_token %}
+            <button type="submit" class="btn-remove-coupon">✕ Remove Coupon</button>
+          </form>
+        </div>
+      {% else %}
+        <!-- Manual entry -->
+        <div class="coupon-row">
+          <input type="text" id="couponInput" class="coupon-input"
+                 placeholder="Enter coupon code" maxlength="30"
+                 oninput="this.value=this.value.toUpperCase()"
+                 onkeydown="if(event.key==='Enter')manualApplyCoupon()">
+          <button type="button" class="btn-coupon" id="manualApplyBtn" onclick="manualApplyCoupon()">Apply</button>
+        </div>
 
-  <!-- Applied coupon indicator -->
-  {% if coupon_code %}
-  <div class="coupon-applied" style="margin-bottom:12px">
-    <div class="coupon-applied-left">
-      <svg width="15" height="15" fill="none" stroke="currentColor"
-           stroke-width="2.5" viewBox="0 0 24 24">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-      <div>
-        <div class="coupon-applied-code">{{ coupon_code }}</div>
-        <div class="coupon-applied-save">You save ₹{{ coupon_discount|floatformat:2 }}</div>
-      </div>
+        <!-- Available coupons with pagination -->
+        {% if available_coupons %}
+        <div class="avail-coupons-label">Available Coupons</div>
+        <a href="{% url 'admin_coupon_list' %}"></a>
+        <div id="couponList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div class="coupon-pagination">
+          <button class="cpg-btn" id="couponPrevBtn" onclick="prevCouponPage()" disabled>← Prev</button>
+          <span class="cpg-info" id="couponPageInfo"></span>
+          <button class="cpg-btn" id="couponNextBtn" onclick="nextCouponPage()">Next →</button>
+        </div>
+        {% endif %}
+      {% endif %}
     </div>
-    <form method="POST" action="{% url 'remove_coupon' %}" style="display:inline">
-      {% csrf_token %}
-      <button type="submit" class="btn-remove-coupon">✕ Remove</button>
-    </form>
-  </div>
-  {% endif %}
+    <!-- ══ END COUPON STRIP ══ -->
 
-  <!-- Available coupons — paginated via JS -->
-  {% if available_coupons and not coupon_code %}
-  <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-       color:var(--muted);margin-bottom:8px">Available Coupons</div>
-  <div id="couponList" style="display:flex;flex-direction:column;gap:8px"></div>
-  <div id="couponPagination" style="display:flex;align-items:center;
-       justify-content:space-between;margin-top:10px;font-size:12px;color:var(--muted)">
-    <button onclick="prevCouponPage()" id="couponPrevBtn"
-            style="background:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-                   padding:5px 12px;font-size:12px;cursor:pointer;font-family:var(--body);
-                   transition:var(--transition)"
-            onmouseover="this.style.borderColor='var(--terra)';this.style.color='var(--terra)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-      ← Prev
-    </button>
-    <span id="couponPageInfo"></span>
-    <button onclick="nextCouponPage()" id="couponNextBtn"
-            style="background:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-                   padding:5px 12px;font-size:12px;cursor:pointer;font-family:var(--body);
-                   transition:var(--transition)"
-            onmouseover="this.style.borderColor='var(--terra)';this.style.color='var(--terra)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-      Next →
-    </button>
-  </div>
-
-
-    
     <div class="co-grid">
       <div>
 
@@ -451,9 +457,7 @@ a{text-decoration:none;color:inherit}
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
               </svg>
               Order Items
-              <span style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400">
-                ({{ cart_items|length }})
-              </span>
+              <span style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400">({{ cart_items|length }})</span>
             </h3>
             <a href="{% url 'cart_detail' %}" class="hd-link">Edit Cart</a>
           </div>
@@ -462,14 +466,11 @@ a{text-decoration:none;color:inherit}
             <div class="oi-row">
               <div class="oi-img">
                 {% if item.product.images.first and item.product.images.first.image %}
-                  <img src="{{ item.product.images.first.image.url }}"
-                       alt="{{ item.product.name }}" loading="lazy">
+                  <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" loading="lazy">
                 {% else %}
                   <div class="oi-img-empty">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="1.3">
-                      <rect x="3" y="3" width="18" height="18" rx="3"/>
-                      <polyline points="21 15 16 10 5 21"/>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+                      <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
                     </svg>
                   </div>
                 {% endif %}
@@ -496,53 +497,34 @@ a{text-decoration:none;color:inherit}
           <div class="co-card-head">
             <h3>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="1" y="4" width="22" height="16" rx="2"/>
-                <line x1="1" y1="10" x2="23" y2="10"/>
+                <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
               </svg>
               Payment Method
             </h3>
           </div>
           <div class="co-card-body">
-
-            <!-- Stripe -->
-            <div class="pay-option selected" data-pay-method="stripe"
-                 onclick="selectPayment('stripe')">
+            <div class="pay-option selected" data-pay-method="stripe" onclick="selectPayment('stripe')">
               <label>
                 <input type="radio" name="_pay_radio" value="stripe" checked>
                 <div class="pay-radio"></div>
                 <div class="pay-logo stripe">Stripe</div>
                 <div class="pay-info">
-                  <div class="pay-name">
-                    Stripe
-                    <span class="pay-tag green">Recommended</span>
-                  </div>
-                  <div class="pay-sub">
-                    Credit / Debit Cards &nbsp;·&nbsp; UPI &nbsp;·&nbsp;
-                    Net Banking &nbsp;·&nbsp; Wallets &nbsp;·&nbsp; EMI
-                  </div>
+                  <div class="pay-name">Stripe <span class="pay-tag green">Recommended</span></div>
+                  <div class="pay-sub">Credit / Debit Cards · UPI · Net Banking · Wallets · EMI</div>
                 </div>
               </label>
             </div>
-
-            <!-- COD -->
             <div class="pay-option" data-pay-method="cod" onclick="selectPayment('cod')">
               <label>
                 <input type="radio" name="_pay_radio" value="cod">
                 <div class="pay-radio"></div>
                 <div class="pay-logo cod">💵</div>
                 <div class="pay-info">
-                  <div class="pay-name">
-                    Cash on Delivery
-                    {% if cod_fee > 0 %}
-                    <span class="pay-tag amber">+₹{{ cod_fee }} fee</span>
-                    {% endif %}
-                  </div>
+                  <div class="pay-name">Cash on Delivery {% if cod_fee > 0 %}<span class="pay-tag amber">+₹{{ cod_fee }} fee</span>{% endif %}</div>
                   <div class="pay-sub">Pay when your order arrives at your door</div>
                 </div>
               </label>
             </div>
-
-            <!-- Wallet -->
             {% if wallet_balance and wallet_balance > 0 %}
             <div class="pay-option" data-pay-method="wallet" onclick="selectPayment('wallet')">
               <label>
@@ -550,17 +532,9 @@ a{text-decoration:none;color:inherit}
                 <div class="pay-radio"></div>
                 <div class="pay-logo wlt">👛</div>
                 <div class="pay-info">
-                  <div class="pay-name">
-                    Veska Wallet
-                    <span class="wallet-bal-chip">₹{{ wallet_balance|floatformat:2 }} available</span>
-                  </div>
-                  <div class="pay-sub">
-                    Pay instantly using your wallet balance
-                    {% if wallet_balance >= grand_total %}
-                    · <strong style="color:var(--success)">Full order covered ✓</strong>
-                    {% else %}
-                    · Partial payment supported
-                    {% endif %}
+                  <div class="pay-name">Veska Wallet <span class="wallet-bal-chip">₹{{ wallet_balance|floatformat:2 }} available</span></div>
+                  <div class="pay-sub">Pay instantly using your wallet balance
+                    {% if wallet_balance >= grand_total %}· <strong style="color:var(--success)">Full order covered ✓</strong>{% else %}· Partial payment supported{% endif %}
                   </div>
                 </div>
               </label>
@@ -571,26 +545,19 @@ a{text-decoration:none;color:inherit}
                          placeholder="Enter amount" min="1"
                          max="{{ grand_total|floatformat:0 }}" step="1"
                          value="{{ grand_total|floatformat:0 }}">
-                  <button type="button" class="btn-wdr-apply" id="applyWalletBtn"
-                          onclick="applyWalletPayment()">Apply</button>
+                  <button type="button" class="btn-wdr-apply" id="applyWalletBtn" onclick="applyWalletPayment()">Apply</button>
                 </div>
                 <div class="wdr-hint" id="walletInfo">
-                  Available: ₹{{ wallet_balance|floatformat:2 }} &nbsp;|&nbsp;
-                  Order total: ₹{{ grand_total|floatformat:2 }}
+                  Available: ₹{{ wallet_balance|floatformat:2 }} &nbsp;|&nbsp; Order total: ₹{{ grand_total|floatformat:2 }}
                 </div>
                 <div id="walletAppliedBadge" style="display:none" class="wdr-applied">
-                  <svg width="13" height="13" fill="none" stroke="currentColor"
-                       stroke-width="2.5" viewBox="0 0 24 24">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                   <span id="walletAppliedText"></span>
-                  <button type="button" class="btn-wdr-remove"
-                          onclick="resetWalletPayment()">✕ Reset</button>
+                  <button type="button" class="btn-wdr-remove" onclick="resetWalletPayment()">✕ Reset</button>
                 </div>
               </div>
             </div>
             {% endif %}
-
           </div>
         </div>
 
@@ -598,47 +565,67 @@ a{text-decoration:none;color:inherit}
         <div class="co-card">
           <div class="co-card-head">
             <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2" width="15" height="15">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
               Order Notes
-              <span style="font-family:var(--body);font-size:11.5px;color:var(--muted-lt);
-                           font-weight:300;font-style:italic">optional</span>
+              <span style="font-family:var(--body);font-size:11.5px;color:var(--muted-lt);font-weight:300;font-style:italic">optional</span>
             </h3>
           </div>
           <div class="co-card-body">
-            <textarea id="orderNotes" class="notes-field"
-                      placeholder="Delivery instructions, landmark, special requests…"></textarea>
+            <textarea id="orderNotes" class="notes-field" placeholder="Delivery instructions, landmark, special requests…"></textarea>
           </div>
         </div>
 
       </div>
 
-      <!-- ── Summary sidebar ── -->
+      <!-- Summary sidebar -->
       <div>
         <div class="summary-card">
           <div class="sum-head"><h3>Order Summary</h3></div>
           <div class="sum-body">
+
             <div class="sum-row">
               <span>Subtotal ({{ cart_items|length }} item{{ cart_items|length|pluralize }})</span>
               <span class="val" id="subtotalVal">₹{{ subtotal|floatformat:2 }}</span>
             </div>
-            <div class="sum-row saving" id="couponRow" style="display:none">
-              <span>Coupon (<span id="couponCode">-</span>)</span>
+
+            <!-- Coupon discount row — shown when coupon is applied -->
+            {% if coupon_code %}
+            <div class="sum-row saving" id="couponSummaryRow">
+              <span>Coupon discount</span>
+              <span class="val" id="couponDiscountVal">−₹{{ coupon_discount|floatformat:2 }}</span>
+            </div>
+            <!-- Coupon chip in summary with remove button -->
+            <div class="sum-coupon-chip" id="couponSummaryChip">
+              <span class="sum-coupon-chip-code">🏷 {{ coupon_code }}</span>
+              <span class="sum-coupon-chip-amt">−₹{{ coupon_discount|floatformat:2 }}</span>
+              <form method="POST" action="{% url 'remove_coupon' %}" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" class="btn-sum-remove-coupon" title="Remove coupon">×</button>
+              </form>
+            </div>
+            {% else %}
+            <div class="sum-row saving" id="couponSummaryRow" style="display:none">
+              <span>Coupon (<span id="couponCodeLabel">-</span>)</span>
               <span class="val" id="couponDiscountVal">−₹0</span>
             </div>
+            {% endif %}
+
             {% if shipping == 0 %}
             <div class="sum-row free"><span>Shipping</span><span class="val">FREE</span></div>
             {% else %}
             <div class="sum-row"><span>Shipping</span><span class="val">₹{{ shipping|floatformat:2 }}</span></div>
             {% endif %}
+
             <div class="sum-row wallet-row" id="walletDiscountRow" style="display:none">
               <span>Wallet deduction</span>
               <span class="val" id="walletDiscountVal">−₹0</span>
             </div>
+
             <div class="sum-divider"></div>
+
             <div class="sum-total">
               <span class="lbl">Total to Pay</span>
               <span class="val" id="grandTotalVal">₹{{ grand_total|floatformat:2 }}</span>
@@ -646,35 +633,27 @@ a{text-decoration:none;color:inherit}
 
             {% if shipping > 0 %}
             <div style="margin-top:14px">
-              <div class="free-ship-hint">
-                🚚 Add ₹{{ free_threshold|add:"-"|add:subtotal|floatformat:0 }} more for free shipping
-              </div>
+              <div class="free-ship-hint">🚚 Add ₹{{ free_threshold|add:"-"|add:subtotal|floatformat:0 }} more for free shipping</div>
               <div class="free-ship-track">
-                <div class="free-ship-fill"
-                     style="width:{% widthratio subtotal free_threshold 100 %}%"></div>
+                <div class="free-ship-fill" style="width:{% widthratio subtotal free_threshold 100 %}%"></div>
               </div>
             </div>
             {% else %}
             <div class="free-ship-hint" style="margin-top:12px">🎉 You've unlocked free shipping!</div>
             {% endif %}
 
-            <!-- CTA -->
             <button type="button" class="btn-place-order" id="placeOrderBtn"
                     onclick="handlePlaceOrder()"
                     {% if not addresses %}disabled{% endif %}>
-              <svg width="15" height="15" fill="none" stroke="currentColor"
-                   stroke-width="2" viewBox="0 0 24 24">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
               <span id="btnLabel">Pay with Stripe · ₹{{ grand_total|floatformat:2 }}</span>
             </button>
 
-            <!-- Stripe secure note -->
             <div class="stripe-secure-note" id="stripeSecureNote">
-              <svg width="10" height="10" fill="none" stroke="currentColor"
-                   stroke-width="2" viewBox="0 0 24 24">
-                <rect x="3" y="11" width="18" height="11" rx="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
               Secured by <span class="stripe-badge">Stripe</span> · 256-bit SSL encryption
             </div>
@@ -684,8 +663,7 @@ a{text-decoration:none;color:inherit}
             {% endif %}
 
             <a href="{% url 'cart_detail' %}" class="btn-back-cart">
-              <svg width="12" height="12" fill="none" stroke="currentColor"
-                   stroke-width="2.5" viewBox="0 0 24 24">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <polyline points="15 18 9 12 15 6"/>
               </svg>Back to Cart
             </a>
@@ -699,7 +677,6 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -713,52 +690,67 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
-/* ── Django context ── */
+/* ── Django context injected safely ── */
 const ORIGINAL_TOTAL   = parseFloat('{{ grand_total|floatformat:2 }}');
 const SUBTOTAL         = parseFloat('{{ subtotal|floatformat:2 }}');
 const SHIPPING         = parseFloat('{{ shipping|floatformat:2 }}');
 const WALLET_BALANCE   = parseFloat('{{ wallet_balance|default:"0" }}');
 const CSRF_TOKEN       = '{{ csrf_token }}';
-const HAS_ADDRESS      = "{{ addresses|yesno:"true,false" }}";
+const HAS_ADDRESS      = {{ addresses|yesno:"true,false" }};
 const STRIPE_URL       = "{% url 'stripe_create_checkout' %}";
 const PLACE_ORDER_URL  = "{% url 'place_order' %}";
 const APPLY_COUPON_URL = "{% url 'apply_coupon' %}";
 
-/* ── State ── */
+/* Pre-applied coupon state (from session/Django) */
+let INITIAL_COUPON_CODE     = "{{ coupon_code|default:'' }}";
+let INITIAL_COUPON_DISCOUNT = parseFloat('{{ coupon_discount|default:"0" }}');
+
+/* ── All available coupons from Django context ── */
+const ALL_COUPONS = [
+  {% for item in available_coupons %}
+  {
+    code:          "{{ item.coupon.code }}",
+    description:   "{{ item.coupon.description|default:''|escapejs }}",
+    discount_type: "{{ item.coupon.discount_type }}",
+    value:         parseFloat("{{ item.coupon.value }}"),
+    max_discount:  {% if item.coupon.max_discount %}parseFloat("{{ item.coupon.max_discount }}"){% else %}null{% endif %},
+    min_order:     parseFloat("{{ item.coupon.min_order_value|default:'0' }}"),
+    is_valid:      {{ item.is_valid|yesno:"true,false" }},
+    saved_amount:  parseFloat("{{ item.saved_amount|default:'0' }}"),
+    valid_message: "{{ item.valid_message|default:''|escapejs }}",
+  },
+  {% endfor %}
+];
+
+/* ── Pagination state ── */
+const COUPONS_PER_PAGE = 3;
+let couponPage = 0;
+
+/* ── App state ── */
 let selectedPaymentMethod = 'stripe';
 let selectedAddressId     = '{{ selected_id }}';
 let walletPaymentAmount   = 0;
 let walletApplied         = false;
+let couponDiscount        = INITIAL_COUPON_DISCOUNT;
+let appliedCoupon         = INITIAL_COUPON_CODE || null;
 let currentTotal          = ORIGINAL_TOTAL;
-let appliedCoupon         = null;
-let couponDiscount        = 0;
 
-/* ── Toast Notification System ── */
+/* ══════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════ */
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast-notification ${type}`;
-  
-  const icons = {
-    success: '✅',
-    error: '❌',
-    warning: '⚠️',
-    info: 'ℹ️'
-  };
-  
+  const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
   toast.innerHTML = `
     <div class="toast-icon">${icons[type] || icons.info}</div>
     <div class="toast-content">${message}</div>
-    <div class="toast-close">×</div>
-  `;
-  
+    <div class="toast-close">×</div>`;
   document.body.appendChild(toast);
-  
-  const closeBtn = toast.querySelector('.toast-close');
-  closeBtn.addEventListener('click', () => {
+  toast.querySelector('.toast-close').addEventListener('click', () => {
     toast.style.animation = 'slideOut 0.3s ease';
     setTimeout(() => toast.remove(), 300);
   });
-  
   setTimeout(() => {
     if (toast.parentNode) {
       toast.style.animation = 'slideOut 0.3s ease';
@@ -767,188 +759,188 @@ function showToast(message, type = 'info') {
   }, 5000);
 }
 
-/* ── Helpers ── */
+/* ══════════════════════════════════════════════════
+   COUPON PAGINATION RENDERER
+══════════════════════════════════════════════════ */
+function renderCouponPage() {
+  const list = document.getElementById('couponList');
+  const prevBtn = document.getElementById('couponPrevBtn');
+  const nextBtn = document.getElementById('couponNextBtn');
+  const pageInfo = document.getElementById('couponPageInfo');
+  if (!list) return;
+
+  const totalPages = Math.ceil(ALL_COUPONS.length / COUPONS_PER_PAGE);
+  const start = couponPage * COUPONS_PER_PAGE;
+  const slice = ALL_COUPONS.slice(start, start + COUPONS_PER_PAGE);
+
+  list.innerHTML = slice.map(c => {
+    const discText = c.discount_type === 'percentage' || c.discount_type === 'PERCENTAGE'
+      ? `${c.value}% OFF${c.max_discount ? ' (up to ₹' + c.max_discount + ')' : ''}`
+      : `₹${c.value} OFF`;
+    const minText = c.min_order > 0 ? ` · Min order ₹${c.min_order}` : '';
+    const saveText = c.is_valid && c.saved_amount > 0
+      ? `<div class="coupon-chip-save">You save ₹${c.saved_amount.toFixed(2)}</div>` : '';
+    const errText = !c.is_valid && c.valid_message
+      ? `<div class="coupon-chip-error">⚠ ${c.valid_message}</div>` : '';
+
+    return `
+      <div class="coupon-chip ${c.is_valid ? '' : 'invalid'}">
+        <div class="coupon-chip-left">
+          <div class="coupon-chip-code">${c.code}</div>
+          <div class="coupon-chip-desc">${c.description || discText}${minText}</div>
+          ${saveText}${errText}
+        </div>
+        <button class="btn-chip-apply"
+                ${!c.is_valid ? 'disabled' : ''}
+                onclick="applyCouponFromChip('${c.code}')">
+          ${c.is_valid ? 'Apply' : 'N/A'}
+        </button>
+      </div>`;
+  }).join('');
+
+  if (pageInfo) pageInfo.textContent = `${couponPage + 1} / ${totalPages || 1}`;
+  if (prevBtn)  prevBtn.disabled = (couponPage === 0);
+  if (nextBtn)  nextBtn.disabled = (couponPage >= totalPages - 1);
+}
+
+function prevCouponPage() { if (couponPage > 0) { couponPage--; renderCouponPage(); } }
+function nextCouponPage() {
+  const totalPages = Math.ceil(ALL_COUPONS.length / COUPONS_PER_PAGE);
+  if (couponPage < totalPages - 1) { couponPage++; renderCouponPage(); }
+}
+
+/* ══════════════════════════════════════════════════
+   COUPON APPLICATION
+══════════════════════════════════════════════════ */
+async function _doApplyCoupon(code) {
+  if (!code) { showToast('Please enter a coupon code.', 'warning'); return; }
+
+  const res = await fetch(APPLY_COUPON_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRF_TOKEN,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({ coupon_code: code }),
+  });
+  return res.json();
+}
+
+/* Called by the manual input + Apply button */
+async function manualApplyCoupon() {
+  const input = document.getElementById('couponInput');
+  const btn   = document.getElementById('manualApplyBtn');
+  const code  = (input ? input.value : '').trim().toUpperCase();
+  if (!code) { showToast('Please enter a coupon code.', 'warning'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Applying…';
+  try {
+    const data = await _doApplyCoupon(code);
+    if (data.success) {
+      showToast(data.message, 'success');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showToast(data.error || 'Invalid coupon.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Apply';
+    }
+  } catch {
+    showToast('Network error. Please try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Apply';
+  }
+}
+
+/* Called by clicking Apply on a coupon chip */
+async function applyCouponFromChip(code) {
+  /* find and disable the clicked button */
+  const buttons = document.querySelectorAll('.btn-chip-apply');
+  let clickedBtn = null;
+  buttons.forEach(b => {
+    if (b.closest('.coupon-chip')?.querySelector('.coupon-chip-code')?.textContent === code) {
+      clickedBtn = b;
+    }
+  });
+  if (clickedBtn) { clickedBtn.disabled = true; clickedBtn.textContent = 'Applying…'; }
+
+  try {
+    const data = await _doApplyCoupon(code);
+    if (data.success) {
+      showToast(data.message, 'success');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showToast(data.error || 'Could not apply coupon.', 'error');
+      if (clickedBtn) { clickedBtn.disabled = false; clickedBtn.textContent = 'Apply'; }
+    }
+  } catch {
+    showToast('Network error. Please try again.', 'error');
+    if (clickedBtn) { clickedBtn.disabled = false; clickedBtn.textContent = 'Apply'; }
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════ */
 function showSpinner(msg) {
   document.getElementById('spinnerMsg').textContent = msg || 'Processing…';
   document.getElementById('spinnerOverlay').style.display = 'flex';
 }
-function hideSpinner() {
-  document.getElementById('spinnerOverlay').style.display = 'none';
-}
-
-function updateTotalsDisplay() {
-  document.getElementById('grandTotalVal').textContent = `₹${currentTotal.toFixed(2)}`;
-  if (couponDiscount > 0) {
-    document.getElementById('couponRow').style.display = 'flex';
-    document.getElementById('couponDiscountVal').textContent = `−₹${couponDiscount.toFixed(2)}`;
-  }
-}
+function hideSpinner() { document.getElementById('spinnerOverlay').style.display = 'none'; }
 
 function updateBtn() {
-  const btn    = document.getElementById('placeOrderBtn');
-  const label  = document.getElementById('btnLabel');
-  const note   = document.getElementById('stripeSecureNote');
-
+  const btn   = document.getElementById('placeOrderBtn');
+  const label = document.getElementById('btnLabel');
+  const note  = document.getElementById('stripeSecureNote');
   if (!HAS_ADDRESS || !selectedAddressId) {
     btn.disabled = true;
     label.textContent = 'Select a delivery address';
     return;
   }
   btn.disabled = false;
-
   const method = selectedPaymentMethod;
-
   if (method === 'stripe') {
-    const payAmt = walletApplied ? currentTotal : currentTotal;
-    if (walletApplied && currentTotal === 0) {
-      label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
-      note.style.display = 'none';
-    } else {
-      label.textContent = `Pay with Stripe · ₹${payAmt.toFixed(2)}`;
-      note.style.display = 'flex';
-    }
+    label.textContent = `Pay with Stripe · ₹${currentTotal.toFixed(2)}`;
+    note.style.display = 'flex';
   } else if (method === 'cod') {
     label.textContent  = `Place Order (COD) · ₹${currentTotal.toFixed(2)}`;
     note.style.display = 'none';
   } else if (method === 'wallet') {
     note.style.display = 'none';
-    if (!walletApplied) {
-      label.textContent = 'Apply wallet amount first ↑';
-    } else if (currentTotal > 0) {
-      label.textContent = `Insufficient wallet (₹${currentTotal.toFixed(2)} remaining)`;
-      btn.disabled = true;
-    } else {
-      label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
-    }
+    if (!walletApplied)           label.textContent = 'Apply wallet amount first ↑';
+    else if (currentTotal > 0) { label.textContent = `Insufficient wallet (₹${currentTotal.toFixed(2)} remaining)`; btn.disabled = true; }
+    else                          label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
   }
 }
 
-/* ── Coupon Application with AJAX ── */
-// Make sure this matches your URL pattern
-
-async function quickApplyCoupon(couponCode, discountType, discountValue, minOrder) {
-    console.log('Attempting to apply coupon:', couponCode);
-    
-    const button = event.currentTarget;
-    const originalText = button.innerText;
-    
-    // Check minimum order requirement
-    const subtotal = "{{ subtotal|default:0 }}";
-    if (minOrder > 0 && subtotal < minOrder) {
-        showToast(`Minimum order amount of ₹${minOrder} required for this coupon`, 'warning');
-        return;
-    }
-    
-    // Show loading state
-    button.innerText = 'Applying...';
-    button.disabled = true;
-    button.style.opacity = '0.6';
-    
-    try {
-        const response = await fetch(APPLY_COUPON_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': CSRF_TOKEN,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                coupon_code: couponCode
-            })
-        });
-        
-        const data = await response.json();
-        console.log('Response from server:', data);
-        
-        if (data.success) {
-            // Show success message
-            showToast(data.message, 'success');
-            
-            // Update the UI with new totals
-            if (data.new_total !== undefined) {
-                // Update grand total display
-                const grandTotalElement = document.getElementById('grandTotalVal');
-                if (grandTotalElement) {
-                    grandTotalElement.textContent = `₹${data.new_total.toFixed(2)}`;
-                }
-                
-                // Update the button label
-                const btnLabel = document.getElementById('btnLabel');
-                if (btnLabel) {
-                    btnLabel.textContent = `Pay with Stripe · ₹${data.new_total.toFixed(2)}`;
-                }
-                
-                // Update currentTotal variable
-                currentTotal = data.new_total;
-            }
-            
-            // Mark coupon as applied in UI
-            button.textContent = 'Applied ✓';
-            button.style.background = 'var(--success)';
-            
-            // Disable all other coupon buttons
-            document.querySelectorAll('.apply-coupon-btn').forEach(btn => {
-                if (btn !== button) {
-                    btn.disabled = true;
-                    btn.style.opacity = '0.5';
-                }
-            });
-            
-            // Optionally reload the page after a short delay to refresh all totals
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-            
-        } else {
-            showToast(data.error || 'Failed to apply coupon', 'error');
-            button.innerText = originalText;
-            button.disabled = false;
-            button.style.opacity = '1';
-        }
-    } catch (error) {
-        console.error('Error applying coupon:', error);
-        showToast('Network error. Please try again.', 'error');
-        button.innerText = originalText;
-        button.disabled = false;
-        button.style.opacity = '1';
-    }
-}
-
-/* ── Address select ── */
+/* ══════════════════════════════════════════════════
+   ADDRESS / PAYMENT SELECT
+══════════════════════════════════════════════════ */
 function selectAddr(addressId) {
   selectedAddressId = addressId;
   document.querySelectorAll('.addr-option').forEach(el => el.classList.remove('selected'));
-  const el = document.querySelector(`.addr-option[data-addr-id="${addressId}"]`);
-  if (el) el.classList.add('selected');
+  document.querySelector(`.addr-option[data-addr-id="${addressId}"]`)?.classList.add('selected');
   updateBtn();
 }
 
-/* ── Payment method ── */
 function selectPayment(method) {
   selectedPaymentMethod = method;
   document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('selected'));
-  const el = document.querySelector(`.pay-option[data-pay-method="${method}"]`);
-  if (el) el.classList.add('selected');
+  document.querySelector(`.pay-option[data-pay-method="${method}"]`)?.classList.add('selected');
   if (method !== 'wallet') resetWalletState();
   updateBtn();
 }
 
-/* ── Wallet ── */
+/* ══════════════════════════════════════════════════
+   WALLET
+══════════════════════════════════════════════════ */
 function applyWalletPayment() {
   const input  = document.getElementById('walletAmount');
   const amount = parseFloat(input.value);
-  if (isNaN(amount) || amount <= 0) { 
-    showToast('Enter a valid amount greater than 0.', 'warning');
-    return; 
-  }
-  if (amount > WALLET_BALANCE) { 
-    showToast(`Max wallet balance: ₹${WALLET_BALANCE.toFixed(2)}`, 'warning');
-    return; 
-  }
-  if (amount > currentTotal) { 
-    showToast(`Cannot exceed order total ₹${currentTotal.toFixed(2)}`, 'warning');
-    return; 
-  }
+  if (isNaN(amount) || amount <= 0) { showToast('Enter a valid amount.', 'warning'); return; }
+  if (amount > WALLET_BALANCE)      { showToast(`Max wallet: ₹${WALLET_BALANCE.toFixed(2)}`, 'warning'); return; }
+  if (amount > currentTotal)        { showToast(`Cannot exceed order total ₹${currentTotal.toFixed(2)}`, 'warning'); return; }
 
   walletPaymentAmount = amount;
   walletApplied       = true;
@@ -957,48 +949,33 @@ function applyWalletPayment() {
   document.getElementById('walletDiscountRow').style.display = 'flex';
   document.getElementById('walletDiscountVal').textContent   = `−₹${walletPaymentAmount.toFixed(2)}`;
   document.getElementById('grandTotalVal').textContent       = `₹${currentTotal.toFixed(2)}`;
-
   input.disabled = true;
   const btn = document.getElementById('applyWalletBtn');
-  btn.disabled = true; 
-  btn.textContent = 'Applied ✓';
-  document.getElementById('walletAppliedText').textContent =
-    `₹${walletPaymentAmount.toFixed(2)} will be deducted from your wallet`;
+  btn.disabled = true; btn.textContent = 'Applied ✓';
+  document.getElementById('walletAppliedText').textContent = `₹${walletPaymentAmount.toFixed(2)} will be deducted from your wallet`;
   document.getElementById('walletAppliedBadge').style.display = 'flex';
-  
   showToast(`₹${walletPaymentAmount.toFixed(2)} applied from wallet`, 'success');
   updateBtn();
 }
 
 function resetWalletState() {
-  walletPaymentAmount = 0; 
-  walletApplied = false; 
+  walletPaymentAmount = 0; walletApplied = false;
   currentTotal = ORIGINAL_TOTAL - couponDiscount;
   if (currentTotal < 0) currentTotal = 0;
-  
   document.getElementById('walletDiscountRow').style.display = 'none';
   document.getElementById('grandTotalVal').textContent = `₹${currentTotal.toFixed(2)}`;
-  
   const input = document.getElementById('walletAmount');
-  if (input) { 
-    input.disabled = false; 
-    input.value = currentTotal.toFixed(0);
-  }
+  if (input) { input.disabled = false; input.value = currentTotal.toFixed(0); }
   const btn = document.getElementById('applyWalletBtn');
-  if (btn) { 
-    btn.disabled = false; 
-    btn.textContent = 'Apply'; 
-  }
+  if (btn)   { btn.disabled = false; btn.textContent = 'Apply'; }
   const badge = document.getElementById('walletAppliedBadge');
-  if (badge) badge.style.display = 'none';
+  if (badge)  badge.style.display = 'none';
 }
-function resetWalletPayment() { 
-  resetWalletState(); 
-  updateBtn();
-  showToast('Wallet payment reset', 'info');
-}
+function resetWalletPayment() { resetWalletState(); updateBtn(); showToast('Wallet payment reset', 'info'); }
 
-/* ── COD / Wallet order POST ── */
+/* ══════════════════════════════════════════════════
+   ORDER PLACEMENT
+══════════════════════════════════════════════════ */
 async function placeDirectOrder(method) {
   const btn = document.getElementById('placeOrderBtn');
   btn.disabled = true;
@@ -1018,34 +995,22 @@ async function placeDirectOrder(method) {
     const data = await res.json();
     hideSpinner();
     if (data.success) {
-      showToast('Order placed successfully! Redirecting...', 'success');
-      setTimeout(() => {
-        window.location.href = data.redirect_url;
-      }, 1000);
+      showToast('Order placed! Redirecting…', 'success');
+      setTimeout(() => window.location.href = data.redirect_url, 1000);
     } else {
       showToast(data.error || 'Order failed. Please try again.', 'error');
-      btn.disabled = false; 
-      updateBtn();
+      btn.disabled = false; updateBtn();
     }
-  } catch (e) {
+  } catch {
     hideSpinner();
     showToast('Network error. Please try again.', 'error');
-    btn.disabled = false; 
-    updateBtn();
+    btn.disabled = false; updateBtn();
   }
 }
 
-/* ── Stripe Checkout Session ── */
 async function initiateStripeCheckout() {
-  if (!selectedAddressId) { 
-    showToast('Please select a delivery address.', 'warning');
-    return; 
-  }
-  if (walletApplied && currentTotal === 0) { 
-    placeDirectOrder('wallet'); 
-    return; 
-  }
-
+  if (!selectedAddressId) { showToast('Please select a delivery address.', 'warning'); return; }
+  if (walletApplied && currentTotal === 0) { placeDirectOrder('wallet'); return; }
   showSpinner('Redirecting to Stripe…');
   try {
     const res  = await fetch(STRIPE_URL, {
@@ -1060,57 +1025,33 @@ async function initiateStripeCheckout() {
     });
     const data = await res.json();
     hideSpinner();
-    if (data.success && data.checkout_url) {
-      window.location.href = data.checkout_url;
-    } else {
-      showToast(data.error || 'Could not start Stripe checkout. Please try again.', 'error');
-    }
-  } catch (e) {
+    if (data.success && data.checkout_url) window.location.href = data.checkout_url;
+    else showToast(data.error || 'Could not start Stripe checkout.', 'error');
+  } catch {
     hideSpinner();
     showToast('Network error. Please try again.', 'error');
   }
 }
 
-/* ── Main dispatcher ── */
 function handlePlaceOrder() {
-  if (!selectedAddressId) { 
-    showToast('Please select a delivery address.', 'warning');
-    return; 
-  }
+  if (!selectedAddressId) { showToast('Please select a delivery address.', 'warning'); return; }
   const method = selectedPaymentMethod;
-
-  if (method === 'stripe')  { initiateStripeCheckout(); }
-  else if (method === 'cod') { placeDirectOrder('cod'); }
+  if      (method === 'stripe') initiateStripeCheckout();
+  else if (method === 'cod')    placeDirectOrder('cod');
   else if (method === 'wallet') {
-    if (!walletApplied) { 
-      showToast('Press Apply to confirm wallet amount.', 'warning');
-      return; 
-    }
-    if (currentTotal > 0) { 
-      showToast(`Wallet insufficient. Remaining: ₹${currentTotal.toFixed(2)}`, 'warning');
-      return; 
-    }
+    if (!walletApplied)      { showToast('Press Apply to confirm wallet amount.', 'warning'); return; }
+    if (currentTotal > 0)    { showToast(`Wallet insufficient. Remaining: ₹${currentTotal.toFixed(2)}`, 'warning'); return; }
     placeDirectOrder('wallet');
   }
 }
 
-/* ── Initialize Apply Coupon Buttons ── */
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   selectPayment('stripe');
+  renderCouponPage();   // draw first page of coupons
   updateBtn();
-  
-  // Attach event listeners to all apply coupon buttons
-  document.querySelectorAll('.apply-coupon-btn').forEach(btn => {
-    btn.removeEventListener('click', btn._listener);
-    const couponCode = btn.getAttribute('data-coupon-code');
-    const discountType = btn.getAttribute('data-coupon-type');
-    const discountValue = parseFloat(btn.getAttribute('data-coupon-value'));
-    const minOrder = parseFloat(btn.getAttribute('data-min-order'));
-    
-    const handler = () => quickApplyCoupon(couponCode, discountType, discountValue, minOrder);
-    btn.addEventListener('click', handler);
-    btn._listener = handler;
-  });
 });
 </script>
 {% endblock %}
