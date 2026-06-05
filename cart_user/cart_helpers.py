@@ -10,13 +10,19 @@ def ensure_session(request):
 
 def get_cart(request):
     if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(
-            user=request.user,
-            defaults={'session_key': ensure_session(request)},
-        )
+        cart, _ = Cart.objects.get_or_create(user=request.user)
         return cart
-    session_key = ensure_session(request)
-    cart, _ = Cart.objects.get_or_create(session_key=session_key, user=None)
+    
+    cart_id = request.session.get('cart_id')
+    if cart_id:
+        try:
+            return Cart.objects.get(pk=cart_id)
+        except Cart.DoesNotExist:
+            pass 
+    
+    cart = Cart.objects.create()
+    request.session['cart_id'] = cart.id
+    request.session.modified = True  
     return cart
 
 

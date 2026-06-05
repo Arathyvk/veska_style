@@ -1,5 +1,6 @@
 {% extends "admin_base.html" %}
 {% load static %}
+{% load tz %}
 {% block title %}Order #{{ order.order_number }} · Admin · Veska{% endblock %}
 {% block content %}
 <style>
@@ -81,6 +82,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .ipg.active{background:var(--terra);border-color:var(--terra);color:#1a1714;font-weight:700}
 .ipg.off{opacity:.3;pointer-events:none}
 
+.addr-text{font-size:12.5px;color:var(--muted);line-height:1.65}
 
 .table-footer{width:100%;padding:16px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--card)}
 .page-info{font-size:15px;color:var(--muted)}
@@ -241,27 +243,79 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
         {% endif %}
       </div>
 
+<!--  Price Summary card's cb div -->
+
       <div class="card">
         <div class="ch"><h3>Price Summary</h3></div>
         <div class="cb">
-          <div class="pr"><span>Subtotal</span><span class="v">₹{{ order.subtotal|floatformat:2 }}</span></div>
-          {% if order.discount %}<div class="pr dis"><span>Discount{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</span><span class="v">−₹{{ order.discount|floatformat:2 }}</span></div>{% endif %}
-          <div class="pr"><span>Shipping</span><span class="v">{% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span></div>
-          {% if order.tax %}<div class="pr"><span>Tax</span><span class="v">₹{{ order.tax|floatformat:2 }}</span></div>{% endif %}
-          <div class="pr-total"><span>Total</span><span style="color:var(--terra2)">₹{{ order.total|floatformat:2 }}</span></div>
+        <div class="pr">
+          <span>Subtotal</span>
+          <span class="v">₹{{ order.subtotal|floatformat:2 }}</span>
+        </div>
+
+        {% if order.discount_amount %}
+        <div class="pr dis">
+          <span>
+            Coupon discount
+            {% if order.coupon_code %}
+              <span style="font-family:monospace;font-size:11px;
+                    background:var(--terra-pale);color:var(--terra2);
+                    padding:1px 6px;border-radius:4px;margin-left:4px">
+                {{ order.coupon_code }}
+              </span>
+            {% endif %}
+          </span>
+          <span class="v">−₹{{ order.discount_amount|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+
+        {% if order.wallet_amount_used %}
+        <div class="pr dis">
+          <span>Wallet used</span>
+          <span class="v">−₹{{ order.wallet_amount_used|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+
+        <div class="pr">
+          <span>Shipping</span>
+          <span class="v">
+            {% if order.shipping_charge == 0 %}FREE
+            {% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}
+          </span>
+        </div>
+
+        <div class="pr-total">
+          <span>Total</span>
+          <span style="color:var(--terra2)">₹{{ order.total|floatformat:2 }}</span>
         </div>
       </div>
 
-      <div class="card">
-        <div class="ch"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Delivery Address</h3></div>
-        <div class="cb">
-          <div class="addr-box">
-            <div class="addr-name">{{ order.full_name }}</div>
-            <div>{{ order.address_one_line }}</div>
-            <div style="margin-top:4px;color:var(--muted)">📞 {{ order.phone }}</div>
-          </div>
-        </div>
+<!-- REPLACE the entire Delivery Address card -->
+<div class="card">
+  <div class="ch">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Delivery Address
+    </h3>
+  </div>
+  <div class="cb">
+    <div class="addr-box">
+      <div class="addr-name">{{ order.full_name }}</div>
+      <div class="addr-text">
+        {{ order.address_line1 }}
+        {% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}
       </div>
+      <div class="addr-text">
+        {{ order.city }}, {{ order.state }} — {{ order.pincode }}
+      </div>
+      <div class="addr-text">{{ order.country }}</div>
+      <div style="margin-top:6px;color:var(--muted)">📞 {{ order.phone }}</div>
+    </div>
+  </div>
+</div>
 
       {% if order.notes %}<div class="card"><div class="ch"><h3>Order Notes</h3></div><div class="cb"><p style="font-size:13px;color:var(--muted2);line-height:1.7">{{ order.notes }}</p></div></div>{% endif %}
       {% if order.cancel_reason or order.return_reason %}
@@ -316,9 +370,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
         <div style="font-weight:700;font-size:15px;color:var(--text)">
           {{ name }}
         </div>
-        <div style="font-size:15px;color:var(--muted)">
-          {{ order.user.email|default:"-" }}
-        </div>
+       
       </div>
 
     </div>

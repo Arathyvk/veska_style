@@ -1,5 +1,6 @@
 {% extends "admin_base.html" %}
 {% load static %}
+{% load tz %}
 {% block title %}Orders · Admin · Veska{% endblock %}
 {% block content %}
 <style>
@@ -235,7 +236,10 @@ button,input,select{font-family:var(--body)}
         {% for order in orders %}
         <tr>
           <td><div class="order-id"><a href="{% url 'admin_order_detail' order.uuid %}">#{{ order.uuid }}</a></div></td>
-          <td><div class="date-main">{{ order.created_at|date:"d M Y" }}</div><div class="date-time">{{ order.created_at|date:"g:i A" }}</div></td>
+          <td>
+            <div class="date-main">{{ order.created_at|localtime|date:"d M Y" }}</div>
+            <div class="date-time">{{ order.created_at|localtime|date:"g:i A" }}</div>
+          </td>          
           <td>
             <div class="user-name">{{ order.full_name }}</div>
             {% if order.user %}<div class="user-email">{{ order.user.email }}</div>{% endif %}
