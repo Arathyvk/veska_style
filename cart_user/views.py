@@ -166,19 +166,26 @@ def cart_detail(request):
 
 
 
-
 @require_POST
 def cart_update(request, item_id):
-    cart   = _get_cart(request)
-    item   = get_object_or_404(CartItem, pk=item_id, cart=cart)
+    cart = _get_cart(request)
+    item = get_object_or_404(CartItem, pk=item_id, cart=cart)
     action = request.POST.get('action', '')
-
+    
     if action == 'increase':
         new_qty = item.quantity + 1
     elif action == 'decrease':
         new_qty = item.quantity - 1
     elif action == 'remove':
         item.delete()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': 'Item removed from cart',
+                'cart_count': cart.total_items,
+                'cart_subtotal': str(cart.subtotal),
+                'grand_total': str(cart.subtotal + (0 if cart.subtotal >= FREE_SHIPPING else SHIPPING_FEE))
+            })
         messages.success(request, 'Item removed from cart.')
         return redirect('cart_detail')
     else:
@@ -186,25 +193,45 @@ def cart_update(request, item_id):
             new_qty = int(request.POST.get('quantity', item.quantity))
         except (ValueError, TypeError):
             new_qty = item.quantity
-
+    
     if new_qty <= 0:
         item.delete()
-        messages.success(request, 'Item removed from cart.')
-        return redirect('cart_detail')
-
-    available = item.available_stock
-    if available <= 0:
-        messages.error(request, f'"{item.product.name}" is out of stock.')
-        return redirect('cart_detail')
-
-    capped = min(new_qty, available, MAX_QTY_PER_ITEM)
-    if capped < new_qty:
-        messages.warning(request, f'Only {capped} unit(s) available for "{item.product.name}".')
-
-    item.quantity = capped
-    item.save()
+        message = 'Item removed from cart.'
+        new_quantity = 0
+    else:
+        available = item.available_stock
+        if available <= 0:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': f'"{item.product.name}" is out of stock.'
+                }, status=400)
+            messages.error(request, f'"{item.product.name}" is out of stock.')
+            return redirect('cart_detail')
+        
+        capped = min(new_qty, available, MAX_QTY_PER_ITEM)
+        if capped < new_qty:
+            message = f'Only {capped} unit(s) available for "{item.product.name}".'
+        else:
+            message = f'Quantity updated to {capped}'
+        
+        item.quantity = capped
+        item.save()
+        new_quantity = capped
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'new_quantity': new_quantity,
+            'message': message,
+            'cart_count': cart.total_items,
+            'cart_subtotal': str(cart.subtotal),
+            'grand_total': str(cart.subtotal + (0 if cart.subtotal >= FREE_SHIPPING else SHIPPING_FEE)),
+            'item_total': str(item.line_total if new_quantity > 0 else 0)
+        })
+    
+    messages.success(request, message)
     return redirect('cart_detail')
-
 
 
 

@@ -276,37 +276,22 @@ button,input{font-family:var(--body)}
               {% endif %}
 
                   <div class="qty-wrap">
-                  <!-- DECREASE form -->
-                  <form method="POST" action="{% url 'cart_update' item.id %}" class="qty-form">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="decrease">
-                      <button type="submit" class="qty-btn" {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
-                  </form>
-
-                  <span class="qty-num">{{ item.quantity }}</span>
-
-                  <!-- INCREASE form -->
-                  <form method="POST" action="{% url 'cart_update' item.id %}" class="qty-form">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="increase">
-                      <button type="submit" class="qty-btn">+</button>
-                  </form>
+                      <button type="button" class="qty-btn" data-item-id="{{ item.id }}" data-action="decrease" {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
+                      <span class="qty-num" id="qty-{{ item.id }}">{{ item.quantity }}</span>
+                      <button type="button" class="qty-btn" data-item-id="{{ item.id }}" data-action="increase">+</button>
                   </div>
-              </div>
+            </div>
 
             <div class="item-price-col">
               <div class="item-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
               <div class="item-total">₹{{ item.line_total|floatformat:2 }}</div>
             </div>
 
-            <form method="POST" action="{% url 'cart_remove' item.id %}">
-              {% csrf_token %}
-              <button type="submit" class="btn-remove" title="Remove">
+            <button type="button" class="btn-remove" data-item-id="{{ item.id }}" data-action="remove" title="Remove">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
-              </button>
-            </form>
+            </button>
 
           </div>
           {% endfor %}
@@ -407,16 +392,194 @@ button,input{font-family:var(--body)}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners to all quantity forms
-    document.querySelectorAll('.qty-form').forEach(function(form) {
-        form.addEventListener('submit', function(e) {
-            console.log('Form submitted!', {
-                action: this.action,
-                method: this.method,
-                formData: new FormData(this)
-            });
+    
+    // Handle quantity increase/decrease
+    document.querySelectorAll('.qty-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = this.dataset.itemId;
+            const action = this.dataset.action;
+            updateCartItem(itemId, action);
         });
     });
+    
+    // Handle remove button
+    document.querySelectorAll('.btn-remove').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = this.dataset.itemId;
+            if (confirm('Remove this item from cart?')) {
+                updateCartItem(itemId, 'remove');
+            }
+        });
+    });
+    
+    // Handle clear cart
+    const clearCartBtn = document.querySelector('.btn-clear');
+    if (clearCartBtn) {
+        clearCartBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Remove all items from your cart?')) {
+                clearCart();
+            }
+        });
+    }
 });
+
+function updateCartItem(itemId, action, quantity = null) {
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+    }
+    
+    // Build URL correctly
+    const url = `/cart_user/cart/update/${itemId}/`;
+    
+    // Build form data
+    const formData = new FormData();
+    formData.append('action', action);
+    if (quantity !== null) {
+        formData.append('quantity', quantity);
+    }
+    
+    // Show loading state
+    const qtySpan = document.getElementById(`qty-${itemId}`);
+    if (qtySpan) {
+        qtySpan.style.opacity = '0.5';
+    }
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken.value
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+            return;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.success) {
+            // Update quantity display
+            if (qtySpan && data.new_quantity !== undefined) {
+                if (data.new_quantity > 0) {
+                    qtySpan.textContent = data.new_quantity;
+                    qtySpan.style.opacity = '1';
+                } else {
+                    // Item removed - reload page
+                    window.location.reload();
+                    return;
+                }
+            }
+            
+            // Update item total price
+            if (data.item_total !== undefined) {
+                const itemTotalEl = document.querySelector(`.item-row [data-item-id="${itemId}"] .item-total`);
+                if (itemTotalEl) {
+                    itemTotalEl.textContent = `₹${data.item_total}`;
+                }
+            }
+            
+            // Update cart totals
+            if (data.cart_subtotal !== undefined) {
+                document.querySelector('.sum-row:first-child .val').textContent = `₹${data.cart_subtotal}`;
+                document.querySelector('.total-row .val').textContent = `₹${data.grand_total}`;
+            }
+            
+            // Update cart count in header
+            if (data.cart_count !== undefined) {
+                const cartCount = document.getElementById('cartCount');
+                if (cartCount) {
+                    cartCount.textContent = data.cart_count;
+                    cartCount.style.display = data.cart_count > 0 ? 'inline-flex' : 'none';
+                }
+            }
+            
+            // Show success message
+            if (data.message) {
+                showToast(data.message, 'success');
+            }
+        } else if (data && data.error) {
+            showToast(data.error, 'error');
+            if (qtySpan) qtySpan.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error updating cart', 'error');
+        if (qtySpan) qtySpan.style.opacity = '1';
+    });
+}
+
+function clearCart() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfToken) return;
+    
+    fetch('/cart_user/cart/clear/', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken.value
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error clearing cart', 'error');
+    });
+}
+
+function showToast(message, type) {
+    let toast = document.getElementById('cartToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'cartToast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1e1a17;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            font-family: 'DM Sans', sans-serif;
+            white-space: nowrap;
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    toast.style.background = type === 'error' ? '#b53333' : '#3a7d5a';
+    toast.textContent = message;
+    
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    }, 10);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 3000);
+}
 </script>
 {% endblock %}
