@@ -155,16 +155,18 @@ a{text-decoration:none;color:inherit}
 .badge-oos{background:rgba(30,26,23,.7);color:#fff;backdrop-filter:blur(4px)}
 
 .card-wishlist{
-  position:absolute;top:12px;right:12px;z-index:2;
+  position:absolute;top:12px;right:12px;z-index:10;
   width:32px;height:32px;border-radius:50%;
   background:rgba(255,255,255,.85);backdrop-filter:blur(6px);
   border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:var(--transition);opacity:0;
+  cursor:pointer;transition:var(--transition);
+  opacity:0;
 }
 .product-card:hover .card-wishlist{opacity:1}
-.card-wishlist:hover{background:#fff;border-color:var(--terra)}
-.card-wishlist svg{width:14px;height:14px;color:var(--muted)}
-.card-wishlist:hover svg,.card-wishlist.wishlisted svg{color:var(--terra)}
+.card-wishlist:hover{background:#fff;border-color:var(--terra);transform:scale(1.1)}
+.card-wishlist svg{width:14px;height:14px}
+.card-wishlist.wishlisted{background:#fff0f0;border-color:var(--terra)}
+.card-wishlist:disabled{opacity:0.5;cursor:not-allowed}
 
 .card-body{padding:14px 16px 16px}
 .card-cat{font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--terra);margin-bottom:5px}
@@ -357,6 +359,17 @@ a{text-decoration:none;color:inherit}
   margin-top: 10px;
   text-align: center;
   display: none;
+}
+
+/* Bump animation for wishlist count */
+@keyframes bump {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+#wishlistCount.bump {
+    animation: bump 0.3s ease-out;
 }
 
 @keyframes cardReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
@@ -587,18 +600,19 @@ a{text-decoration:none;color:inherit}
               </div>
             </a>
 
-            <!-- Wishlist Button -->
-            <form method="POST" action="{% url 'wishlist_toggle' product.slug %}"
-                  style="position:absolute;top:12px;right:12px;z-index:10;">
-              {% csrf_token %}
-              <input type="hidden" name="next" value="{{ request.get_full_path }}">
-              <button class="card-wishlist {% if product.pk in wishlist_ids %}wishlisted{% endif %}" type="submit">
-                <svg fill="{% if product.pk in wishlist_ids %}var(--terra){% else %}none{% endif %}"
-                     stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            <!-- Wishlist Button - AJAX Version (No Form Wrapper) -->
+            <button class="card-wishlist {% if product.id in wishlist_ids %}wishlisted{% endif %}"
+                    data-slug="{{ product.slug }}"
+                    data-product-id="{{ product.id }}"
+                    onclick="toggleWishlistShop(this, '{{ product.slug }}', {{ product.id }})">
+                <svg width="14" height="14" 
+                     fill="{% if product.id in wishlist_ids %}var(--terra){% else %}none{% endif %}"
+                     stroke="var(--terra)" 
+                     stroke-width="2" 
+                     viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                 </svg>
-              </button>
-            </form>
+            </button>
 
             <div class="card-body">
               <div class="card-cat">{{ product.category }}</div>
@@ -613,7 +627,11 @@ a{text-decoration:none;color:inherit}
                   <span class="size-badge {% if variant.stock == 0 %}out-of-stock{% endif %}"
                         data-size="{{ variant.size }}"
                         data-stock="{{ variant.stock }}"
-                        onclick="openSizeModal('{{ product.id }}', '{{ product.name|escapejs }}', {{ product.variants.all|safe }}, event)">
+                        onclick="openSizeModal('{{ product.id }}', '{{ product.name|escapejs }}', {
+                            {% for v in product.variants.all %}
+                              '{{ v.size }}': {{ v.stock }}{% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                          }, event)">
                     {{ variant.size }}
                   </span>
                 {% endfor %}
@@ -922,52 +940,131 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-function toggleWishlist(button, slug) {
-    // Get CSRF token from the page
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+function toggleWishlistShop(button, slug, productId) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfToken) {
+        window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+        return;
+    }
     
-    // Send AJAX request to toggle wishlist
-    fetch(`/wishlist/toggle/${slug}/`, {
+    // Disable button while processing
+    button.disabled = true;
+    button.style.opacity = '0.6';
+    
+    const svg = button.querySelector('svg');
+    const wasWishlisted = button.classList.contains('wishlisted');
+    
+    // Use the correct URL pattern
+    const url = `/wishlist/toggle/${slug}/`;
+    
+    fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
+            'X-CSRFToken': csrfToken.value,
             'X-Requested-With': 'XMLHttpRequest'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({})
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+            throw new Error('Please login');
+        }
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            // Toggle the wishlisted class on the button
             if (data.is_wishlisted) {
                 button.classList.add('wishlisted');
-                button.querySelector('svg').setAttribute('fill', 'var(--terra)');
-                showToast('Added to wishlist!', 'success');
+                svg.setAttribute('fill', 'var(--terra)');
+                showToastMessage('Added to wishlist!', 'success');
             } else {
                 button.classList.remove('wishlisted');
-                button.querySelector('svg').setAttribute('fill', 'none');
-                showToast('Removed from wishlist', 'info');
+                svg.setAttribute('fill', 'none');
+                showToastMessage('Removed from wishlist', 'info');
             }
             
-            // Update wishlist count in header if exists
-            if (data.wishlist_count !== undefined) {
-                const wishlistCount = document.getElementById('wishlistCount');
-                if (wishlistCount) {
-                    if (data.wishlist_count > 0) {
-                        wishlistCount.textContent = data.wishlist_count;
-                        wishlistCount.style.display = 'inline-flex';
-                    } else {
-                        wishlistCount.style.display = 'none';
-                    }
+            // Update wishlist count in header
+            const wishlistCount = document.getElementById('wishlistCount');
+            if (wishlistCount && data.wishlist_count !== undefined) {
+                if (data.wishlist_count > 0) {
+                    wishlistCount.textContent = data.wishlist_count;
+                    wishlistCount.style.display = 'inline-flex';
+                    wishlistCount.classList.add('bump');
+                    setTimeout(() => wishlistCount.classList.remove('bump'), 300);
+                } else {
+                    wishlistCount.style.display = 'none';
                 }
             }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showToast('Please login to add to wishlist', 'error');
+        showToastMessage('Error: ' + error.message, 'error');
+        // Revert UI on error
+        if (wasWishlisted) {
+            button.classList.add('wishlisted');
+            svg.setAttribute('fill', 'var(--terra)');
+        } else {
+            button.classList.remove('wishlisted');
+            svg.setAttribute('fill', 'none');
+        }
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.style.opacity = '1';
     });
+}
+
+function showToastMessage(message, type) {
+    let toast = document.getElementById('customToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'customToast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1e1a17;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+            font-family: 'DM Sans', sans-serif;
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    if (type === 'success') {
+        toast.style.background = '#3a7d5a';
+    } else if (type === 'error') {
+        toast.style.background = '#b53333';
+    } else {
+        toast.style.background = '#1e1a17';
+    }
+    
+    toast.textContent = message;
+    
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    }, 10);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 3000);
 }
 </script>
 {% endblock %}
