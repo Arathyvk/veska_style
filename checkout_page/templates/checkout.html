@@ -700,10 +700,14 @@ const HAS_ADDRESS      = {{ addresses|yesno:"true,false" }};
 const STRIPE_URL       = "{% url 'stripe_create_checkout' %}";
 const PLACE_ORDER_URL  = "{% url 'place_order' %}";
 const APPLY_COUPON_URL = "{% url 'apply_coupon' %}";
+const COUPON_DISCOUNT_AMOUNT = parseFloat('{{ coupon_discount|default:"0" }}');
 
-/* Pre-applied coupon state (from session/Django) */
+/* ── Pre-applied coupon state (from session/Django) ── */
 let INITIAL_COUPON_CODE     = "{{ coupon_code|default:'' }}";
 let INITIAL_COUPON_DISCOUNT = parseFloat('{{ coupon_discount|default:"0" }}');
+
+/* ── Base total without wallet (already includes coupon discount) ── */
+const BASE_TOTAL_WITHOUT_WALLET = ORIGINAL_TOTAL;
 
 /* ── All available coupons from Django context ── */
 const ALL_COUPONS = [
@@ -721,6 +725,17 @@ const ALL_COUPONS = [
   },
   {% endfor %}
 ];
+
+/* ── Debug logs ── */
+console.log('=== CHECKOUT DEBUG ===');
+console.log('ORIGINAL_TOTAL:', ORIGINAL_TOTAL);
+console.log('SUBTOTAL:', SUBTOTAL);
+console.log('SHIPPING:', SHIPPING);
+console.log('COUPON_DISCOUNT_AMOUNT:', COUPON_DISCOUNT_AMOUNT);
+console.log('BASE_TOTAL_WITHOUT_WALLET:', BASE_TOTAL_WITHOUT_WALLET);
+console.log('WALLET_BALANCE:', WALLET_BALANCE);
+console.log('INITIAL_COUPON_CODE:', INITIAL_COUPON_CODE);
+console.log('======================');
 
 /* ── Pagination state ── */
 const COUPONS_PER_PAGE = 3;
@@ -773,6 +788,14 @@ function renderCouponPage() {
   const start = couponPage * COUPONS_PER_PAGE;
   const slice = ALL_COUPONS.slice(start, start + COUPONS_PER_PAGE);
 
+  if (slice.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:10px;color:var(--muted)">No coupons available</div>';
+    if (pageInfo) pageInfo.textContent = '0 / 0';
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
+    return;
+  }
+
   list.innerHTML = slice.map(c => {
     const discText = c.discount_type === 'percentage' || c.discount_type === 'PERCENTAGE'
       ? `${c.value}% OFF${c.max_discount ? ' (up to ₹' + c.max_discount + ')' : ''}`
@@ -813,7 +836,7 @@ function nextCouponPage() {
    COUPON APPLICATION
 ══════════════════════════════════════════════════ */
 async function _doApplyCoupon(code) {
-  if (!code) { showToast('Please enter a coupon code.', 'warning'); return; }
+  if (!code) { showToast('Please enter a coupon code.', 'warning'); return null; }
 
   const res = await fetch(APPLY_COUPON_URL, {
     method: 'POST',
@@ -855,7 +878,6 @@ async function manualApplyCoupon() {
 
 /* Called by clicking Apply on a coupon chip */
 async function applyCouponFromChip(code) {
-  /* find and disable the clicked button */
   const buttons = document.querySelectorAll('.btn-chip-apply');
   let clickedBtn = null;
   buttons.forEach(b => {
@@ -893,24 +915,32 @@ function updateBtn() {
   const btn   = document.getElementById('placeOrderBtn');
   const label = document.getElementById('btnLabel');
   const note  = document.getElementById('stripeSecureNote');
+  
   if (!HAS_ADDRESS || !selectedAddressId) {
     btn.disabled = true;
     label.textContent = 'Select a delivery address';
     return;
   }
+  
   btn.disabled = false;
   const method = selectedPaymentMethod;
+  
   if (method === 'stripe') {
     label.textContent = `Pay with Stripe · ₹${currentTotal.toFixed(2)}`;
-    note.style.display = 'flex';
+    if (note) note.style.display = 'flex';
   } else if (method === 'cod') {
     label.textContent  = `Place Order (COD) · ₹${currentTotal.toFixed(2)}`;
-    note.style.display = 'none';
+    if (note) note.style.display = 'none';
   } else if (method === 'wallet') {
-    note.style.display = 'none';
-    if (!walletApplied)           label.textContent = 'Apply wallet amount first ↑';
-    else if (currentTotal > 0) { label.textContent = `Insufficient wallet (₹${currentTotal.toFixed(2)} remaining)`; btn.disabled = true; }
-    else                          label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
+    if (note) note.style.display = 'none';
+    if (!walletApplied) {
+      label.textContent = 'Apply wallet amount first ↑';
+    } else if (currentTotal > 0) { 
+      label.textContent = `Insufficient wallet (₹${currentTotal.toFixed(2)} remaining)`; 
+      btn.disabled = true; 
+    } else {
+      label.textContent = `Pay with Wallet · ₹${walletPaymentAmount.toFixed(2)}`;
+    }
   }
 }
 
@@ -920,14 +950,16 @@ function updateBtn() {
 function selectAddr(addressId) {
   selectedAddressId = addressId;
   document.querySelectorAll('.addr-option').forEach(el => el.classList.remove('selected'));
-  document.querySelector(`.addr-option[data-addr-id="${addressId}"]`)?.classList.add('selected');
+  const selectedEl = document.querySelector(`.addr-option[data-addr-id="${addressId}"]`);
+  if (selectedEl) selectedEl.classList.add('selected');
   updateBtn();
 }
 
 function selectPayment(method) {
   selectedPaymentMethod = method;
   document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('selected'));
-  document.querySelector(`.pay-option[data-pay-method="${method}"]`)?.classList.add('selected');
+  const selectedEl = document.querySelector(`.pay-option[data-pay-method="${method}"]`);
+  if (selectedEl) selectedEl.classList.add('selected');
   if (method !== 'wallet') resetWalletState();
   updateBtn();
 }
@@ -936,42 +968,90 @@ function selectPayment(method) {
    WALLET
 ══════════════════════════════════════════════════ */
 function applyWalletPayment() {
-  const input  = document.getElementById('walletAmount');
+  const input = document.getElementById('walletAmount');
   const amount = parseFloat(input.value);
-  if (isNaN(amount) || amount <= 0) { showToast('Enter a valid amount.', 'warning'); return; }
-  if (amount > WALLET_BALANCE)      { showToast(`Max wallet: ₹${WALLET_BALANCE.toFixed(2)}`, 'warning'); return; }
-  if (amount > currentTotal)        { showToast(`Cannot exceed order total ₹${currentTotal.toFixed(2)}`, 'warning'); return; }
+  
+  if (isNaN(amount) || amount <= 0) { 
+    showToast('Enter a valid amount.', 'warning'); 
+    return; 
+  }
+  
+  if (amount > WALLET_BALANCE) { 
+    showToast(`Max wallet: ₹${WALLET_BALANCE.toFixed(2)}`, 'warning'); 
+    return; 
+  }
+  
+  if (amount > BASE_TOTAL_WITHOUT_WALLET) { 
+    showToast(`Cannot exceed order total ₹${BASE_TOTAL_WITHOUT_WALLET.toFixed(2)}`, 'warning'); 
+    return; 
+  }
 
   walletPaymentAmount = amount;
-  walletApplied       = true;
-  currentTotal        = Math.max(currentTotal - walletPaymentAmount, 0);
+  walletApplied = true;
+  currentTotal = BASE_TOTAL_WITHOUT_WALLET - walletPaymentAmount;
+  if (currentTotal < 0) currentTotal = 0;
 
-  document.getElementById('walletDiscountRow').style.display = 'flex';
-  document.getElementById('walletDiscountVal').textContent   = `−₹${walletPaymentAmount.toFixed(2)}`;
-  document.getElementById('grandTotalVal').textContent       = `₹${currentTotal.toFixed(2)}`;
+  const walletRow = document.getElementById('walletDiscountRow');
+  const walletVal = document.getElementById('walletDiscountVal');
+  const grandTotalVal = document.getElementById('grandTotalVal');
+  
+  if (walletRow) walletRow.style.display = 'flex';
+  if (walletVal) walletVal.textContent = `−₹${walletPaymentAmount.toFixed(2)}`;
+  if (grandTotalVal) grandTotalVal.textContent = `₹${currentTotal.toFixed(2)}`;
+  
   input.disabled = true;
   const btn = document.getElementById('applyWalletBtn');
-  btn.disabled = true; btn.textContent = 'Applied ✓';
-  document.getElementById('walletAppliedText').textContent = `₹${walletPaymentAmount.toFixed(2)} will be deducted from your wallet`;
-  document.getElementById('walletAppliedBadge').style.display = 'flex';
+  if (btn) {
+    btn.disabled = true; 
+    btn.textContent = 'Applied ✓';
+  }
+  
+  const appliedText = document.getElementById('walletAppliedText');
+  if (appliedText) appliedText.textContent = `₹${walletPaymentAmount.toFixed(2)} will be deducted from your wallet`;
+  
+  const appliedBadge = document.getElementById('walletAppliedBadge');
+  if (appliedBadge) appliedBadge.style.display = 'flex';
+  
   showToast(`₹${walletPaymentAmount.toFixed(2)} applied from wallet`, 'success');
   updateBtn();
 }
 
 function resetWalletState() {
-  walletPaymentAmount = 0; walletApplied = false;
-  currentTotal = ORIGINAL_TOTAL - couponDiscount;
+  walletPaymentAmount = 0; 
+  walletApplied = false;
+  currentTotal = BASE_TOTAL_WITHOUT_WALLET;
   if (currentTotal < 0) currentTotal = 0;
-  document.getElementById('walletDiscountRow').style.display = 'none';
-  document.getElementById('grandTotalVal').textContent = `₹${currentTotal.toFixed(2)}`;
+  
+  const walletRow = document.getElementById('walletDiscountRow');
+  const grandTotalVal = document.getElementById('grandTotalVal');
+  
+  if (walletRow) walletRow.style.display = 'none';
+  if (grandTotalVal) grandTotalVal.textContent = `₹${currentTotal.toFixed(2)}`;
+  
   const input = document.getElementById('walletAmount');
-  if (input) { input.disabled = false; input.value = currentTotal.toFixed(0); }
+  if (input) { 
+    input.disabled = false; 
+    input.value = currentTotal.toFixed(0); 
+    input.max = currentTotal.toFixed(0);
+  }
+  
   const btn = document.getElementById('applyWalletBtn');
-  if (btn)   { btn.disabled = false; btn.textContent = 'Apply'; }
+  if (btn) { 
+    btn.disabled = false; 
+    btn.textContent = 'Apply'; 
+  }
+  
   const badge = document.getElementById('walletAppliedBadge');
-  if (badge)  badge.style.display = 'none';
+  if (badge) badge.style.display = 'none';
+  
+  updateBtn();
 }
-function resetWalletPayment() { resetWalletState(); updateBtn(); showToast('Wallet payment reset', 'info'); }
+
+function resetWalletPayment() { 
+  resetWalletState(); 
+  updateBtn(); 
+  showToast('Wallet payment reset', 'info'); 
+}
 
 /* ══════════════════════════════════════════════════
    ORDER PLACEMENT
@@ -988,7 +1068,7 @@ async function placeDirectOrder(method) {
         address_id:     selectedAddressId,
         payment_method: method,
         wallet_amount:  walletPaymentAmount,
-        notes:          document.getElementById('orderNotes').value,
+        notes:          document.getElementById('orderNotes')?.value || '',
         coupon_code:    appliedCoupon,
       }),
     });
@@ -999,18 +1079,26 @@ async function placeDirectOrder(method) {
       setTimeout(() => window.location.href = data.redirect_url, 1000);
     } else {
       showToast(data.error || 'Order failed. Please try again.', 'error');
-      btn.disabled = false; updateBtn();
+      btn.disabled = false; 
+      updateBtn();
     }
   } catch {
     hideSpinner();
     showToast('Network error. Please try again.', 'error');
-    btn.disabled = false; updateBtn();
+    btn.disabled = false; 
+    updateBtn();
   }
 }
 
 async function initiateStripeCheckout() {
-  if (!selectedAddressId) { showToast('Please select a delivery address.', 'warning'); return; }
-  if (walletApplied && currentTotal === 0) { placeDirectOrder('wallet'); return; }
+  if (!selectedAddressId) { 
+    showToast('Please select a delivery address.', 'warning'); 
+    return; 
+  }
+  if (walletApplied && currentTotal === 0) { 
+    placeDirectOrder('wallet'); 
+    return; 
+  }
   showSpinner('Redirecting to Stripe…');
   try {
     const res  = await fetch(STRIPE_URL, {
@@ -1019,14 +1107,17 @@ async function initiateStripeCheckout() {
       body: JSON.stringify({
         address_id:    selectedAddressId,
         wallet_amount: walletPaymentAmount,
-        notes:         document.getElementById('orderNotes').value,
+        notes:         document.getElementById('orderNotes')?.value || '',
         coupon_code:   appliedCoupon,
       }),
     });
     const data = await res.json();
     hideSpinner();
-    if (data.success && data.checkout_url) window.location.href = data.checkout_url;
-    else showToast(data.error || 'Could not start Stripe checkout.', 'error');
+    if (data.success && data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      showToast(data.error || 'Could not start Stripe checkout.', 'error');
+    }
   } catch {
     hideSpinner();
     showToast('Network error. Please try again.', 'error');
@@ -1034,13 +1125,24 @@ async function initiateStripeCheckout() {
 }
 
 function handlePlaceOrder() {
-  if (!selectedAddressId) { showToast('Please select a delivery address.', 'warning'); return; }
+  if (!selectedAddressId) { 
+    showToast('Please select a delivery address.', 'warning'); 
+    return; 
+  }
   const method = selectedPaymentMethod;
-  if      (method === 'stripe') initiateStripeCheckout();
-  else if (method === 'cod')    placeDirectOrder('cod');
-  else if (method === 'wallet') {
-    if (!walletApplied)      { showToast('Press Apply to confirm wallet amount.', 'warning'); return; }
-    if (currentTotal > 0)    { showToast(`Wallet insufficient. Remaining: ₹${currentTotal.toFixed(2)}`, 'warning'); return; }
+  if (method === 'stripe') {
+    initiateStripeCheckout();
+  } else if (method === 'cod') {
+    placeDirectOrder('cod');
+  } else if (method === 'wallet') {
+    if (!walletApplied) { 
+      showToast('Press Apply to confirm wallet amount.', 'warning'); 
+      return; 
+    }
+    if (currentTotal > 0) { 
+      showToast(`Wallet insufficient. Remaining: ₹${currentTotal.toFixed(2)}`, 'warning'); 
+      return; 
+    }
     placeDirectOrder('wallet');
   }
 }
@@ -1050,7 +1152,7 @@ function handlePlaceOrder() {
 ══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   selectPayment('stripe');
-  renderCouponPage();   // draw first page of coupons
+  renderCouponPage();
   updateBtn();
 });
 </script>

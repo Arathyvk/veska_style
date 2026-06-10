@@ -409,9 +409,17 @@ a{text-decoration:none;color:inherit}
       </div>
       <div class="card-body">
         <div class="addr-block">
-          <div class="addr-name">{{ order.full_name }}</div>
-          <div class="addr-text">{{ order.address_one_line }}</div>
-          <div class="addr-phone">📞 {{ order.phone }}</div>
+           <div class="cb">
+          <div class="addr-box">
+            <div class="addr-name">{{ order.full_name }}</div>
+            <div class="addr-text">
+              {{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}
+            </div>
+            <div class="addr-text">{{ order.city }}, {{ order.state }} — {{ order.pincode }}</div>
+            <div class="addr-text">{{ order.country }}</div>
+            <div style="margin-top:6px;color:var(--muted);font-size:12px">📞 {{ order.phone }}</div>
+          </div>
+        </div>
         </div>
       </div>
     </div>
