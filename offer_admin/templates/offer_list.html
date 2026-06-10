@@ -359,7 +359,7 @@ tr:hover td {
           <td>
             <div class="actions">
               <a href="{% url 'offer_edit' offer.uuid %}" class="btn-icon btn-edit">Edit</a>
-              <form method="POST" action="{% url 'offer_toggle' offer.uuid %}" style="display: inline;">
+              <form method="POST" action="{% url 'offer_add' %}" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn-icon btn-toggle">
                   {% if offer.is_active %}Deactivate{% else %}Activate{% endif %}

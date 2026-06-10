@@ -7,7 +7,7 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model  = Product
-        fields = ['name', 'price', 'color', 'category', 'stock', 'description', 'is_active', 'is_featured']
+        fields = ['name', 'price', 'color', 'category', 'stock', 'description', 'is_active', 'is_featured', 'is_shop_active']  # Added is_shop_active
         widgets = {
             'name': forms.TextInput(attrs={
                 'class'      : 'finput',
@@ -36,7 +36,15 @@ class ProductForm(forms.ModelForm):
                 'placeholder': 'Describe the product — material, use, style…',
                 'rows'       : '4',
             }),
-            'is_active': forms.CheckboxInput(),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'toggle-input',
+            }),
+            'is_featured': forms.CheckboxInput(attrs={
+                'class': 'toggle-input',
+            }),
+            'is_shop_active': forms.CheckboxInput(attrs={
+                'class': 'toggle-input',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -47,6 +55,11 @@ class ProductForm(forms.ModelForm):
         self.fields['category'].empty_label = "— Select —"
         # Override label_from_instance to show category name
         self.fields['category'].label_from_instance = lambda obj: obj.name
+        
+        # Make checkbox fields not required (they default to False)
+        self.fields['is_active'].required = False
+        self.fields['is_featured'].required = False
+        self.fields['is_shop_active'].required = False
 
     def clean_price(self):
         price = self.cleaned_data.get('price')

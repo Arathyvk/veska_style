@@ -275,10 +275,8 @@ button,input{font-family:var(--body)}
                 <span class="status-badge badge-low">Only {{ item.available_stock }} left</span>
               {% endif %}
 
-                <div class="qty-wrap">
-                  <!-- DECREASE form -->
                   <div class="qty-wrap">
-    <!-- DECREASE form -->
+                  <!-- DECREASE form -->
                   <form method="POST" action="{% url 'cart_update' item.id %}" class="qty-form">
                       {% csrf_token %}
                       <input type="hidden" name="action" value="decrease">
@@ -293,9 +291,8 @@ button,input{font-family:var(--body)}
                       <input type="hidden" name="action" value="increase">
                       <button type="submit" class="qty-btn">+</button>
                   </form>
+                  </div>
               </div>
-                </div>
-            </div>
 
             <div class="item-price-col">
               <div class="item-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>

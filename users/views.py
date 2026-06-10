@@ -120,7 +120,6 @@ def logout_view(request):
     return redirect("login")
 
 
-
 @never_cache
 def signup_view(request):
     errors = {}

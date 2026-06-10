@@ -17,7 +17,6 @@
   --shadow-md:0 6px 24px rgba(30,26,23,.1);--shadow-lg:0 16px 48px rgba(30,26,23,.14);
   --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
   --transition:all .2s cubic-bezier(.4,0,.2,1);
-  --head:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink)}
@@ -344,78 +343,75 @@ button,input,textarea{font-family:var(--body)}
       </div>
       {% endif %}
 
-      {% if stock_status != 'out_of_stock' %}
-      <form method="POST" action="{% url 'cart_add' product.slug %}" class="add-cart-form" id="addCartForm">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.get_full_path }}">
 
-        {% if variants %}
-        <div style="margin-bottom:20px">
-          <div class="selector-label">
-            Size — <span id="selectedSizeLabel" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px">Select a size</span>
-          </div>
-          <div class="size-grid">
-            {% for variant in variants %}
-            <button type="button"
-                    class="size-btn {% if variant.stock == 0 %}oos-size{% endif %}"
-                    data-size="{{ variant.size }}"
-                    data-stock="{{ variant.stock }}"
-                    onclick="selectSize(this)"
-                    {% if variant.stock == 0 %}title="Out of stock"{% endif %}>
-              {{ variant.size }}
-            </button>
-            {% endfor %}
-          </div>
-          <input type="hidden" name="size" id="sizeInput" value="">
-          <div id="sizeError" style="font-size:12px;color:var(--danger);display:none;margin-top:-12px;margin-bottom:12px">
-            Please select a size.
-          </div>
-        </div>
-        {% endif %}
+{% if stock_status != 'out_of_stock' %}
+<!-- Main Form for Add to Cart and Buy Now -->
+<form method="POST" action="{% url 'cart_add' product.slug %}" class="add-cart-form" data-full-page="1" id="mainCartForm">
+    {% csrf_token %}
+    
+    <!-- Redirect after add to cart (stay on same page) -->
+    <input type="hidden" name="next" value="{{ request.path }}">
+    
+    <!-- Hidden input for size -->
+    <input type="hidden" name="size" id="sizeInput" value="">
+    
+    <!-- Size selector -->
+    <div class="selector-label">SELECT SIZE</div>
+    <div class="size-grid">
+        {% for variant in variants %}
+        <button type="button" 
+                class="size-btn {% if variant.stock == 0 %}oos-size{% endif %}"
+                data-size="{{ variant.size }}"
+                data-stock="{{ variant.stock }}"
+                onclick="selectSize(this)">
+            {{ variant.size }}
+        </button>
+        {% endfor %}
+    </div>
+    <div id="sizeError" style="display:none;color:red;margin-bottom:15px;">
+        Please select a size
+    </div>
 
-        <div class="qty-row">
-          <div class="qty-ctrl">
+    <!-- Quantity selector -->
+    <div class="selector-label">QUANTITY</div>
+    <div class="qty-row">
+        <div class="qty-ctrl">
             <button type="button" class="qty-btn-ui" onclick="adjustQty(-1)">−</button>
-            <input type="number" name="quantity" id="qtyInput" class="qty-input"
-                   value="1" min="1" max="{{ max_qty }}" readonly>
+            <input type="number" name="quantity" id="qtyInput" class="qty-input" 
+                   value="1" min="1" max="{{ max_qty }}">
             <button type="button" class="qty-btn-ui" onclick="adjustQty(1)">+</button>
-          </div>
-          <span class="qty-label">Max {{ max_qty }} per order</span>
         </div>
+    </div>
 
-        <div class="cta-row">
-          
-          <form method="POST" action="{% url 'cart_add' product.slug %}">
-            {% csrf_token %}
-
-          <button type="submit" name="action" value="add_cart" class="btn-add-cart"
-                  onclick="return validateSize()">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-            </svg>
-            {% if user.is_authenticated %}Add to Cart{% else %}Login to Add{% endif %}
-          </button>
-          </form>
-
-          <button type="submit" name="action" value="buy_now" class="btn-buy-now"
-                  onclick="return validateSizeBuyNow()">
+    <!-- Action Buttons Row -->
+    <div class="cta-row">
+        <button type="submit" name="action" value="add_cart" class="btn-add-cart">
+            Add to Cart
+        </button>
+        <button type="submit" name="action" value="buy_now" class="btn-buy-now"
+                onclick="return validateSizeBuyNow()">
             Buy Now
-          </button>
+        </button>
+    </div>
+</form>
 
-          <form method="POST" action="{% url 'wishlist_toggle' product.slug %}" style="display:contents">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="submit" class="btn-wishlist {% if in_wishlist %}wishlisted{% endif %}">
-              <svg viewBox="0 0 24 24" fill="{% if in_wishlist %}var(--terra){% else %}none{% endif %}"
-                   stroke="currentColor" stroke-width="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-            </button>
-          </form>
-        </div>
-      </form>
-      {% endif %}
+<!-- Separate Wishlist Form - NOT inside the cart form -->
+<form method="POST" action="{% url 'wishlist_toggle' product.slug %}" id="wishlistForm" style="display: inline;">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+   <button type="button" 
+        class="btn-wishlist {% if in_wishlist %}wishlisted{% endif %}" 
+        data-slug="{{ product.slug }}"
+        onclick="toggleWishlist(this, '{{ product.slug }}')">
+    <svg viewBox="0 0 24 24" 
+         fill="{% if in_wishlist %}var(--terra){% else %}none{% endif %}"
+         stroke="currentColor" 
+         stroke-width="2">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+</button>
+</form>
+{% endif %}
 
       <div class="divider"></div>
 
@@ -635,6 +631,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 const hasVariants = {{ variants|length }} > 0;
 let selectedSize = '';
+
+
 function selectSize(btn) {
   if (btn.classList.contains('oos-size')) return;
   document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
@@ -662,17 +660,13 @@ function adjustQty(dir) {
 function validateSize() {
   if (hasVariants && !selectedSize) {
     document.getElementById('sizeError').style.display = 'block';
-    document.getElementById('sizeError').scrollIntoView({behavior:'smooth',block:'nearest'});
     return false;
   }
   return true;
 }
 
 function validateSizeBuyNow() {
-  if (!validateSize()) return false;
-  const nextInput = document.querySelector('#addCartForm [name=next]');
-  if (nextInput) nextInput.value = '/cart/';
-  return true;
+  return validateSize();
 }
 
 function toggleAccordion(head) {
@@ -715,5 +709,53 @@ document.addEventListener('keydown', e => {
     if (img) { img.style.transform=''; img.style.transformOrigin=''; }
   }
 });
+
+function toggleWishlist(button, slug) {
+    // Get CSRF token from the page
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Send AJAX request to toggle wishlist
+    fetch(`/wishlist/toggle/${slug}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Toggle the wishlisted class on the button
+            if (data.is_wishlisted) {
+                button.classList.add('wishlisted');
+                button.querySelector('svg').setAttribute('fill', 'var(--terra)');
+                showToast('Added to wishlist!', 'success');
+            } else {
+                button.classList.remove('wishlisted');
+                button.querySelector('svg').setAttribute('fill', 'none');
+                showToast('Removed from wishlist', 'info');
+            }
+            
+            // Update wishlist count in header if exists
+            if (data.wishlist_count !== undefined) {
+                const wishlistCount = document.getElementById('wishlistCount');
+                if (wishlistCount) {
+                    if (data.wishlist_count > 0) {
+                        wishlistCount.textContent = data.wishlist_count;
+                        wishlistCount.style.display = 'inline-flex';
+                    } else {
+                        wishlistCount.style.display = 'none';
+                    }
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Please login to add to wishlist', 'error');
+    });
+}
 </script>
 {% endblock %}

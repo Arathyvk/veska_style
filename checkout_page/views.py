@@ -50,13 +50,15 @@ def _get_cart(request):
     return cart
 
 
-def _calc_totals(subtotal: Decimal, coupon_discount: Decimal = Decimal('0'),
+def _calc_totals(subtotal: Decimal, offer_discount: Decimal = Decimal('0'),
+                 coupon_discount: Decimal = Decimal('0'),
                  wallet_used: Decimal = Decimal('0')) -> dict:
-    shipping     = SHIPPING_CHARGE if subtotal < FREE_SHIPPING_THRESHOLD else Decimal('0')
-    after_coupon = subtotal - coupon_discount
-    grand        = max(after_coupon + shipping - wallet_used, Decimal('0'))
+    after_discounts = subtotal - offer_discount - coupon_discount
+    shipping        = SHIPPING_CHARGE if after_discounts < FREE_SHIPPING_THRESHOLD else Decimal('0')
+    grand           = max(after_discounts + shipping - wallet_used, Decimal('0'))
     return {
         'subtotal':        subtotal,
+        'offer_discount':  offer_discount,
         'shipping':        shipping,
         'coupon_discount': coupon_discount,
         'wallet_used':     wallet_used,
@@ -124,7 +126,6 @@ def _enrich_coupons(coupons_qs, subtotal, user):
     return result
 
 
-
 @login_required(login_url='login')
 def address_add(request):
     errors, data = {}, {}
@@ -186,8 +187,6 @@ def address_set_default(request, pk):
     addr.save(update_fields=['is_default'])
     messages.success(request, f'"{addr.full_name}" set as default.')
     return redirect('checkout')
-
-
 
 
 @require_POST
@@ -286,33 +285,69 @@ def remove_coupon(request):
     return redirect('checkout')
 
 
-
-
 @login_required(login_url='login')
 def checkout(request):
-    cart       = _get_cart(request)
+    cart = _get_cart(request)
     cart_items = cart.items.select_related('variant', 'variant__product', 'product').all()
 
     if not cart_items.exists():
         messages.warning(request, 'Your cart is empty.')
         return redirect('cart_detail')
 
-    subtotal        = sum(_item_price(i) * i.quantity for i in cart_items)
-    coupon_code     = request.session.get('coupon_code', '')
+    subtotal = sum(_item_price(i) * i.quantity for i in cart_items)
+    coupon_code = request.session.get('coupon_code', '')
     coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
 
     if coupon_code:
         try:
             Coupon.objects.get(code=coupon_code, is_active=True)
         except Coupon.DoesNotExist:
-            coupon_code     = ''
+            coupon_code = ''
             coupon_discount = Decimal('0')
-            request.session.pop('coupon_code',     None)
+            request.session.pop('coupon_code', None)
             request.session.pop('coupon_discount', None)
 
-    totals    = _calc_totals(subtotal, coupon_discount)
+    # Calculate offer discount
+    now = tz.now()
+    offer_discount = Decimal('0')
+    offer_details_list = []
+    
+    for item in cart_items:
+        product = item.product
+        product_offers = BaseOffer.objects.filter(
+            offer_type='PRODUCT', products=product,
+            is_active=True, start_date__lte=now, end_date__gte=now,
+        )
+        category_offers = BaseOffer.objects.filter(
+            offer_type='CATEGORY', categories=product.category,
+            is_active=True, start_date__lte=now, end_date__gte=now,
+        )
+        all_offers = list(product_offers) + list(category_offers)
+        best_discount = Decimal('0')
+        best_offer_name = ''
+        
+        for offer in all_offers:
+            item_price = _item_price(item)
+            if offer.discount_type == 'PERCENTAGE':
+                disc = (item_price * offer.discount_value / 100).quantize(Decimal('0.01'))
+            else:
+                disc = min(offer.discount_value, item_price)
+            disc_total = disc * item.quantity
+            if disc_total > best_discount:
+                best_discount = disc_total
+                best_offer_name = offer.name if hasattr(offer, 'name') else 'Offer'
+        
+        offer_discount += best_discount
+        if best_discount > 0 and best_offer_name:
+            offer_details_list.append(f"{best_offer_name}")
+
+    # ✅ Save offer discount to session
+    request.session['offer_discount'] = str(offer_discount)
+    request.session['offer_details'] = ', '.join(set(offer_details_list)) if offer_details_list else ''
+
+    totals = _calc_totals(subtotal, offer_discount, coupon_discount)
     addresses = request.user.addresses.all()
-    selected  = addresses.filter(is_default=True).first() or addresses.first()
+    selected = addresses.filter(is_default=True).first() or addresses.first()
 
     try:
         wallet_balance = Wallet.objects.get(user=request.user).balance
@@ -322,14 +357,12 @@ def checkout(request):
     enriched_items = []
     for item in cart_items:
         enriched_items.append({
-            'product':    item.product,
-            'variant':    item.variant,
-            'quantity':   item.quantity,
+            'product': item.product,
+            'variant': item.variant,
+            'quantity': item.quantity,
             'unit_price': _item_price(item),
             'line_total': _item_price(item) * item.quantity,
         })
-
-    now = tz.now()
 
     raw_coupons = Coupon.objects.filter(
         is_active=True,
@@ -346,20 +379,22 @@ def checkout(request):
     )
 
     return render(request, 'checkout.html', {
-        'cart_items':       enriched_items,
-        'subtotal':         totals['subtotal'],
-        'coupon_code':      coupon_code,
-        'coupon_discount':  totals['coupon_discount'],
-        'shipping':         totals['shipping'],
-        'grand_total':      totals['grand_total'],
-        'addresses':        addresses,
-        'selected_id':      str(selected.id) if selected else '',
-        'free_threshold':   FREE_SHIPPING_THRESHOLD,
-        'wallet_balance':   wallet_balance,
-        'cod_fee':          COD_FEE,
+        'cart_items': enriched_items,
+        'subtotal': totals['subtotal'],
+        'offer_discount': offer_discount,
+        'offer_details': request.session.get('offer_details', ''),
+        'coupon_code': coupon_code,
+        'coupon_discount': totals['coupon_discount'],
+        'shipping': totals['shipping'],
+        'grand_total': totals['grand_total'],
+        'addresses': addresses,
+        'selected_id': str(selected.id) if selected else '',
+        'free_threshold': FREE_SHIPPING_THRESHOLD,
+        'wallet_balance': wallet_balance,
+        'cod_fee': COD_FEE,
         'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
-        'available_coupons': available_coupons,   
-        'available_offers':  available_offers,
+        'available_coupons': available_coupons,
+        'available_offers': available_offers,
     })
 
 
@@ -369,32 +404,39 @@ def checkout(request):
 @require_http_methods(['POST'])
 def stripe_create_checkout_session(request):
     try:
-        data          = json.loads(request.body)
-        address_id    = data.get('address_id')
+        data = json.loads(request.body)
+        address_id = data.get('address_id')
         wallet_amount = Decimal(str(data.get('wallet_amount', '0')))
-        notes         = data.get('notes', '')
+        notes = data.get('notes', '')
 
         if not address_id:
             return JsonResponse({'error': 'Please select a delivery address.'}, status=400)
 
-        address    = get_object_or_404(Address, id=address_id, user=request.user)
-        cart       = _get_cart(request)
+        address = get_object_or_404(Address, id=address_id, user=request.user)
+        cart = _get_cart(request)
         cart_items = cart.items.select_related('variant', 'product').all()
 
         if not cart_items.exists():
             return JsonResponse({'error': 'Cart is empty'}, status=400)
 
+        # Calculate subtotal from cart items
         subtotal = sum(_item_price(item) * item.quantity for item in cart_items)
 
-        coupon_code     = request.session.get('coupon_code', '')
+        # Get coupon data from session
+        coupon_code = request.session.get('coupon_code', '')
         coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
+        
+        # ✅ FIX: Get offer discount from session BEFORE using it
+        offer_discount = Decimal(str(request.session.get('offer_discount', '0')))
 
-        shipping_amount = SHIPPING_CHARGE if (subtotal - coupon_discount) < FREE_SHIPPING_THRESHOLD else Decimal('0')
-        amount_to_pay   = max(subtotal - coupon_discount + shipping_amount - wallet_amount, Decimal('0'))
+        # Calculate shipping and final amount
+        shipping_amount = SHIPPING_CHARGE if (subtotal - coupon_discount - offer_discount) < FREE_SHIPPING_THRESHOLD else Decimal('0')
+        amount_to_pay = max(subtotal - coupon_discount - offer_discount + shipping_amount - wallet_amount, Decimal('0'))
 
         if amount_to_pay == 0:
             return JsonResponse({'success': True, 'wallet_only': True, 'amount': 0})
 
+        # Create Stripe checkout session
         checkout_session = stripe.checkout.Session.create(
             customer_email=request.user.email,
             payment_method_types=['card'],
@@ -403,7 +445,7 @@ def stripe_create_checkout_session(request):
                     'currency': 'inr',
                     'unit_amount': int(amount_to_pay * 100),
                     'product_data': {
-                        'name':        'Veska Order',
+                        'name': 'Veska Order',
                         'description': f'{cart_items.count()} item(s) – Total ₹{amount_to_pay}',
                     },
                 },
@@ -411,42 +453,48 @@ def stripe_create_checkout_session(request):
             }],
             mode='payment',
             success_url=request.build_absolute_uri(reverse('payment_success')) + '?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=request.build_absolute_uri(reverse('payment_cancel'))   + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=request.build_absolute_uri(reverse('payment_cancel')) + '?session_id={CHECKOUT_SESSION_ID}',
             metadata={
-                'cart_id':         str(cart.id),
-                'user_id':         str(request.user.pk),
-                'address_id':      str(address_id),
-                'wallet_amount':   str(wallet_amount),
-                'notes':           notes,
-                'coupon_code':     coupon_code,
+                'cart_id': str(cart.id),
+                'user_id': str(request.user.pk),
+                'address_id': str(address_id),
+                'wallet_amount': str(wallet_amount),
+                'notes': notes,
+                'coupon_code': coupon_code,
                 'coupon_discount': str(coupon_discount),
                 'shipping_amount': str(shipping_amount),
-                'subtotal':        str(subtotal),
+                'offer_discount': str(offer_discount),
+                'subtotal': str(subtotal),
             },
         )
 
+        # Save payment record
         StripePayment.objects.create(
             user=request.user,
             session_id=checkout_session.id,
             amount=amount_to_pay,
             status='pending',
             metadata={
-                'cart_id':       str(cart.id),
-                'address_id':    str(address_id),
+                'cart_id': str(cart.id),
+                'address_id': str(address_id),
                 'wallet_amount': str(wallet_amount),
-                'notes':         notes,
-                'coupon_code':   coupon_code,
+                'notes': notes,
+                'coupon_code': coupon_code,
+                'coupon_discount': str(coupon_discount),
+                'offer_discount': str(offer_discount),
+                'subtotal': str(subtotal),
             },
         )
 
         return JsonResponse({
-            'success':      True,
+            'success': True,
             'checkout_url': checkout_session.url,
-            'session_id':   checkout_session.id,
+            'session_id': checkout_session.id,
         })
 
     except Exception as e:
-        import traceback; traceback.print_exc()
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
 
 
@@ -472,14 +520,11 @@ def payment_success(request):
 
     payment_status = session.payment_status
     session_status = session.status
-    print(f'[payment_success] session_id={session_id} '
-          f'payment_status={payment_status} session_status={session_status}')
+    print(f'[payment_success] session_id={session_id} payment_status={payment_status} session_status={session_status}')
 
     if payment_status not in ('paid', 'no_payment_required'):
         print(f'[payment_success] Rejecting — payment_status={payment_status}')
-        messages.error(request,
-            'Payment is not confirmed yet. '
-            'If you completed payment, please wait a few minutes and try again.')
+        messages.error(request, 'Payment is not confirmed yet. If you completed payment, please wait a few minutes and try again.')
         return redirect('payment_cancel')
 
     try:
@@ -487,12 +532,9 @@ def payment_success(request):
     except StripePayment.DoesNotExist:
         try:
             payment = StripePayment.objects.get(session_id=session_id)
-            print(f'[payment_success] User mismatch: '
-                  f'payment.user={payment.user_id}, request.user={request.user.pk}')
+            print(f'[payment_success] User mismatch: payment.user={payment.user_id}, request.user={request.user.pk}')
         except StripePayment.DoesNotExist:
-            messages.error(request,
-                f'Payment record not found. Please contact support. '
-                f'Session ID: {session_id}')
+            messages.error(request, f'Payment record not found. Please contact support. Session ID: {session_id}')
             return redirect('payment_cancel')
 
     if payment.order:
@@ -500,25 +542,25 @@ def payment_success(request):
         _send_order_confirmation_email(payment.order, request.user)
         return redirect('order_success', uuid=payment.order.uuid)
 
-  
     try:
-        raw_meta = payment.metadata        
+        raw_meta = payment.metadata
         
-        address_id      = int(raw_meta.get('address_id') or 0)
-        wallet_amount   = Decimal(str(raw_meta.get('wallet_amount')   or '0'))
-        notes           = raw_meta.get('notes')           or ''
-        coupon_code     = raw_meta.get('coupon_code')     or ''
+        address_id = int(raw_meta.get('address_id') or 0)
+        wallet_amount = Decimal(str(raw_meta.get('wallet_amount') or '0'))
+        notes = raw_meta.get('notes') or ''
+        coupon_code = raw_meta.get('coupon_code') or ''
         coupon_discount = Decimal(str(raw_meta.get('coupon_discount') or '0'))
         shipping_amount = Decimal(str(raw_meta.get('shipping_amount') or '0'))
-        subtotal        = Decimal(str(raw_meta.get('subtotal')        or '0'))
-        cart_id         = int(raw_meta.get('cart_id') or 0)
+        subtotal = Decimal(str(raw_meta.get('subtotal') or '0'))
+        cart_id = int(raw_meta.get('cart_id') or 0)
+        offer_discount = Decimal(str(raw_meta.get('offer_discount') or '0'))  # ✅ Now this will have value
+        offer_details = request.session.get('offer_details', '')  # Get from session if available
     except (ValueError, TypeError) as e:
         print(f'[payment_success] Metadata parse error: {e}')
         messages.error(request, 'Order data is corrupted. Please contact support.')
         return redirect('payment_cancel')
 
-    print(f'[payment_success] address_id={address_id} cart_id={cart_id} '
-          f'subtotal={subtotal} coupon={coupon_code} shipping={shipping_amount}')
+    print(f'[payment_success] address_id={address_id} cart_id={cart_id} subtotal={subtotal} coupon={coupon_code} coupon_discount={coupon_discount} offer_discount={offer_discount}')
 
     if not address_id:
         messages.error(request, 'Delivery address missing from payment data.')
@@ -533,21 +575,20 @@ def payment_success(request):
             messages.error(request, 'Delivery address not found. Please contact support.')
             return redirect('payment_cancel')
 
-    cart       = None
+    cart = None
     cart_items = []
     if cart_id:
         try:
-            cart       = Cart.objects.get(id=cart_id, user=request.user)
+            cart = Cart.objects.get(id=cart_id, user=request.user)
             cart_items = list(cart.items.select_related('variant', 'product').all())
         except Cart.DoesNotExist:
             print(f'[payment_success] Cart {cart_id} not found for user {request.user.pk}')
 
     if not cart_items:
-        payment.status            = 'completed'
+        payment.status = 'completed'
         payment.payment_intent_id = session.payment_intent
         payment.save(update_fields=['status', 'payment_intent_id'])
-        messages.success(request,
-            'Your payment was successful! Our team will confirm your order shortly.')
+        messages.success(request, 'Your payment was successful! Our team will confirm your order shortly.')
         return redirect('home')
 
     total_paid = Decimal(str(session.amount_total or 0)) / 100
@@ -565,8 +606,8 @@ def payment_success(request):
                 pincode=address.pincode,
                 country=address.country,
                 subtotal=subtotal,
-                coupon_code=coupon_code,
-                discount_amount=coupon_discount,
+                offer_discount=offer_discount,
+                offer_details=offer_details,  # ✅ Save offer details
                 shipping_charge=shipping_amount,
                 wallet_amount_used=wallet_amount,
                 total=total_paid,
@@ -578,7 +619,7 @@ def payment_success(request):
 
             for item in cart_items:
                 price = _item_price(item)
-                img   = item.product.images.first()
+                img = item.product.images.first()
                 OrderItem.objects.create(
                     order=order,
                     product=item.product,
@@ -626,27 +667,23 @@ def payment_success(request):
 
             if cart:
                 cart.items.all().delete()
-
-            for key in ('coupon_code', 'coupon_discount'):
+            for key in ('coupon_code', 'coupon_discount', 'offer_discount', 'offer_details'):
                 request.session.pop(key, None)
 
-            payment.order             = order
-            payment.status            = 'completed'
+            payment.order = order
+            payment.status = 'completed'
             payment.payment_intent_id = session.payment_intent
             payment.save()
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        messages.error(request,
-            f'Your payment was received but we could not create your order. '
-            f'Please contact support with session ID: {session_id}')
+        messages.error(request, f'Your payment was received but we could not create your order. Please contact support with session ID: {session_id}')
         return redirect('home')
 
     _send_order_confirmation_email(order, request.user)
 
     return redirect('order_success', uuid=order.uuid)
- 
 
 
 @login_required(login_url='login')
@@ -763,6 +800,7 @@ def place_order(request):
             wallet_used = min(wallet_amount, wb)
         else:
             wallet_used = Decimal('0')
+        offer_discount = Decimal(str(request.session.get('offer_discount', '0')))
 
         totals = _calc_totals(subtotal, coupon_discount, wallet_used)
 
@@ -788,6 +826,7 @@ def place_order(request):
                 country=address.country,
                 subtotal=totals['subtotal'],
                 coupon_code=coupon_code,
+                offer_discount=totals['offer_discount'],
                 discount_amount=totals['coupon_discount'],
                 shipping_charge=totals['shipping'],
                 wallet_amount_used=wallet_used,
@@ -840,7 +879,7 @@ def place_order(request):
                 )
 
             cart.items.all().delete()
-            for key in ('coupon_code', 'coupon_discount'):
+            for key in ('coupon_code', 'coupon_discount', 'offer_discount'):
                 request.session.pop(key, None)
 
             _send_order_confirmation_email(order, request.user)

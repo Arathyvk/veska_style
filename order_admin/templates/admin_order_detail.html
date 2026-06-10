@@ -4,10 +4,21 @@
 {% block title %}Order #{{ order.order_number }} · Admin · Veska{% endblock %}
 {% block content %}
 <style>
-:root{--bg:#1a1714;--card:#252118;--card2:#2e2925;--card3:#342e28;--border:#3a342c;--border2:#4a4038;--text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;--terra:#c9967a;--terra2:#e8b49a;--terra-pale:rgba(201,150,122,.12);--green:#4caf7d;--green-pale:rgba(76,175,125,.14);--red:#e05252;--red-pale:rgba(224,82,82,.14);--orange:#e09a52;--orange-pale:rgba(224,154,82,.14);--blue:#5b8dee;--blue-pale:rgba(91,141,238,.14);--radius:6px;--radius-lg:10px;--radius-xl:14px;--head:'Georgia',serif;--body:system-ui,-apple-system,sans-serif;}
+:root{
+  --bg:#1a1714;--card:#252118;--card2:#2e2925;--card3:#342e28;
+  --border:#3a342c;--border2:#4a4038;
+  --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
+  --terra:#c9967a;--terra2:#e8b49a;--terra-pale:rgba(201,150,122,.12);
+  --green:#4caf7d;--green-pale:rgba(76,175,125,.14);
+  --red:#e05252;--red-pale:rgba(224,82,82,.14);
+  --orange:#e09a52;--orange-pale:rgba(224,154,82,.14);
+  --blue:#5b8dee;--blue-pale:rgba(91,141,238,.14);
+  --radius:6px;--radius-lg:10px;--radius-xl:14px;
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
-a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:var(--body)}
+a{text-decoration:none;color:inherit}
+button,input,select,textarea{font-family:var(--body)}
 
 .wrap{padding:24px 28px 60px;max-width:104pc;margin:0 auto}
 .back-lnk{display:inline-flex;align-items:center;gap:6px;font-size:15px;color:var(--muted);margin-bottom:18px;transition:color .15s}
@@ -36,22 +47,31 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .cb{padding:16px 17px}
 
 .itbl{width:100%;border-collapse:collapse}
-.itbl th{padding:9px 12px;font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);text-align:left;background:var(--card2)}
-.itbl td{padding:26px 12px;border-bottom:1px solid rgba(58,52,44,.4);vertical-align:middle;font-size:14px}
+.itbl th{padding:9px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);text-align:left;background:var(--card2)}
+.itbl td{padding:14px 12px;border-bottom:1px solid rgba(58,52,44,.4);vertical-align:middle;font-size:13px}
 .itbl tr:last-child td{border-bottom:none}
 .item-img{width:44px;height:54px;border-radius:var(--radius);overflow:hidden;background:var(--card2);border:1px solid var(--border);flex-shrink:0}
 .item-img img{width:100%;height:100%;object-fit:cover}
 .item-name-cell{display:flex;gap:10px;align-items:center}
-.item-name{font-weight:600;color:var(--text);font-size:14px}
-.item-link{font-size:14px;color:var(--terra);margin-top:2px;display:block}
+.item-name{font-weight:600;color:var(--text);font-size:13px}
+.item-link{font-size:12px;color:var(--terra);margin-top:2px;display:block}
 
-.pr{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;color:var(--muted);border-bottom:1px solid rgba(58,52,44,.3)}
+.pr{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;color:var(--muted);border-bottom:1px solid rgba(58,52,44,.3)}
 .pr:last-child{border-bottom:none}
 .pr .v{color:var(--text);font-weight:500}
-.pr.dis{color:var(--green)}.pr.dis .v{color:var(--green)}
-.pr-total{display:flex;justify-content:space-between;font-family:var(--head);font-size:19px;font-weight:700;color:var(--text);padding-top:10px}
+.pr.dis .v{color:var(--green)}
+.pr.dis{color:var(--green)}
+.pr-total{display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:var(--text);padding-top:10px;margin-top:4px;border-top:1px solid var(--border)}
 
-.ir{display:flex;justify-content:space-between;font-size:15px;padding:6px 0;border-bottom:1px solid rgba(58,52,44,.3)}
+.refund-box{background:rgba(91,141,238,.08);border:1px solid rgba(91,141,238,.25);border-radius:var(--radius-lg);padding:13px 15px;margin-top:14px}
+.refund-box-title{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+.rr{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;color:var(--muted);border-bottom:1px solid rgba(91,141,238,.15)}
+.rr:last-child{border-bottom:none}
+.rr .v{color:var(--text);font-weight:500}
+.rr.gateway{font-size:13px;font-weight:700;color:var(--blue);padding-top:8px;margin-top:4px;border-top:1px solid rgba(91,141,238,.3);border-bottom:none}
+.rr.wallet-row .v{color:var(--green)}
+
+.ir{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(58,52,44,.3)}
 .ir:last-child{border-bottom:none}
 .ir-lbl{color:var(--muted)}
 .ir-val{color:var(--text);font-weight:600;text-align:right}
@@ -60,100 +80,57 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
 .sc-head{padding:12px 17px;background:linear-gradient(135deg,#2e2925,#3a332c);display:flex;align-items:center;gap:8px}
 .sc-head h3{font-size:15px;font-weight:700;color:var(--text)}
 .sc-body{padding:16px 17px}
-.sc-lbl{font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);margin-bottom:7px}
-.sc-sel{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:10px 28px 10px 12px;font-size:15px;outline:none;cursor:pointer;appearance:none;transition:.15s;margin-bottom:10px;
+.sc-lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);margin-bottom:7px}
+.sc-sel{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:10px 28px 10px 12px;font-size:13px;outline:none;cursor:pointer;appearance:none;transition:.15s;margin-bottom:10px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%238a7d72' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 10px center}
-.sc-sel:focus{border-color:var(--terra)}.sc-sel option{background:var(--card2)}
-.cancel-wrap{display:none;margin-bottom:10px}.cancel-wrap.show{display:block}
-.cancel-ta{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:9px 12px;font-size:15px;resize:vertical;min-height:70px;outline:none;transition:.15s}
+.sc-sel:focus{border-color:var(--terra)}
+.sc-sel option{background:var(--card2)}
+.cancel-wrap{display:none;margin-bottom:10px}
+.cancel-wrap.show{display:block}
+.cancel-ta{width:100%;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);border-radius:var(--radius-lg);padding:9px 12px;font-size:13px;resize:vertical;min-height:70px;outline:none;transition:.15s}
 .cancel-ta:focus{border-color:var(--red)}
-.btn-update{width:100%;padding:11px;background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-lg);font-size:15px;font-weight:700;cursor:pointer;transition:.18s}
+.btn-update{width:100%;padding:11px;background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-lg);font-size:14px;font-weight:700;cursor:pointer;transition:.18s}
 .btn-update:hover{background:var(--terra2)}
 
 .u-avatar{width:38px;height:38px;border-radius:50%;background:var(--terra-pale);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--terra);flex-shrink:0}
-.addr-box{background:var(--card2);border-radius:var(--radius-lg);padding:11px 13px;font-size:14px;line-height:1.6;color:var(--muted2)}
+.addr-box{background:var(--card2);border-radius:var(--radius-lg);padding:11px 13px;font-size:13px;line-height:1.6;color:var(--muted2)}
 .addr-name{font-weight:700;color:var(--text);margin-bottom:3px}
-.item-pag{display:flex;align-items:center;justify-content:space-between;padding:12px 0 0;border-top:1px solid rgba(58,52,44,.4);gap:12px;flex-wrap:wrap}
-.item-pag-info{font-size:15px;color:var(--muted)}
+.addr-text{font-size:12px;color:var(--muted);line-height:1.65}
+
+.item-pag{display:flex;align-items:center;justify-content:space-between;padding:12px 17px;border-top:1px solid rgba(58,52,44,.4);gap:12px;flex-wrap:wrap}
+.item-pag-info{font-size:12px;color:var(--muted)}
 .item-pag-links{display:flex;align-items:center;gap:4px}
-.ipg{display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;border-radius:var(--radius);border:1px solid var(--border2);font-size:15px;font-weight:500;color:var(--muted2);background:var(--card2);text-decoration:none}
+.ipg{display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;border-radius:var(--radius);border:1px solid var(--border2);font-size:12px;font-weight:500;color:var(--muted2);background:var(--card2);text-decoration:none}
 .ipg:hover{border-color:var(--terra);color:var(--terra2)}
 .ipg.active{background:var(--terra);border-color:var(--terra);color:#1a1714;font-weight:700}
 .ipg.off{opacity:.3;pointer-events:none}
 
-.addr-text{font-size:12.5px;color:var(--muted);line-height:1.65}
-
 .table-footer{width:100%;padding:16px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--card)}
-.page-info{font-size:15px;color:var(--muted)}
+.page-info{font-size:12px;color:var(--muted)}
 .page-info strong{color:var(--text)}
-.pagination{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.pg-btn{min-width:70px;height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--muted2);display:flex;align-items:center;
-  justify-content:center;font-size:15px;font-weight:600;text-decoration:none;transition:var(--transition)}
-
+.pagination{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pg-btn{min-width:60px;height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--muted2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;text-decoration:none}
 .pg-btn:hover{border-color:var(--terra);color:var(--terra2)}
+.pg-btn.disabled{opacity:.35;pointer-events:none}
+.pg-num{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--muted2);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:12px;font-weight:600}
+.pg-num:hover{border-color:var(--terra);color:var(--terra2)}
+.pg-num.active{background:var(--terra);border-color:var(--terra);color:#1a1714}
 
-.pg-btn.disabled{
-  opacity:.35;
-  pointer-events:none;
-}
+.discount-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 8px;border-radius:6px;width:fit-content}
+.discount-badge.offer{background:var(--green-pale);color:var(--green)}
+.discount-badge.coupon{background:var(--terra-pale);color:var(--terra2)}
+.discount-badge svg{width:11px;height:11px}
 
-
-.pg-num{
-  width:34px;
-  height:34px;
-
-  border-radius:8px;
-  border:1px solid var(--border2);
-
-  background:var(--card2);
-  color:var(--muted2);
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  text-decoration:none;
-
-  font-size:15px;
-  font-weight:600;
-
-  transition:var(--transition);
-}
-
-.pg-num:hover{
-  border-color:var(--terra);
-  color:var(--terra2);
-}
-
-.pg-num.active{
-  background:var(--terra);
-  border-color:var(--terra);
-  color:#1a1714;
-}
-
-
-.dots{
-  color:var(--muted);
-  padding:0 4px;
-}
-
-@media (max-width:768px){
-
-  .table-footer{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-  .pagination{
-    width:100%;
-    justify-content:flex-start;
-  }
-
+@media(max-width:768px){
+  .table-footer{flex-direction:column;align-items:flex-start}
+  .pagination{width:100%;justify-content:flex-start}
 }
 </style>
 
 <div class="wrap">
+
+ 
   <a href="{% url 'admin_order_list' %}" class="back-lnk">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
     Back to Orders
@@ -168,31 +145,45 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
   </div>
 
   <div class="det-grid">
+
     <div>
+
       <div class="card">
-        <div class="ch"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Items ({{ order.items.count }})</h3></div>
+        <div class="ch">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            Items ({{ order.items.count }})
+          </h3>
+        </div>
         <div style="padding:0">
           <table class="itbl">
-            <thead><tr><th>Product</th><th>Size</th><th>Qty</th><th>Unit</th><th>Total</th><th>Status</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Product</th><th>Size</th><th>Qty</th>
+                <th>Unit</th><th>Total</th><th>Status</th>
+              </tr>
+            </thead>
             <tbody>
               {% for item in items %}
               <tr>
                 <td>
                   <div class="item-name-cell">
                     <div class="item-img">
-                      {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
-                      {% else %}<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg></div>{% endif %}
-                    </div>
-                        <div>
-                          <div class="item-name">{{ item.product_name }}</div>
-
-                          {% if item.product_slug %}
-                            <a href="{% url 'product_detail' item.product_slug %}" class="item-link" target="_blank">
-                              View ↗
-                            </a>
-                          {% endif %}
-                        </div>                  
+                      {% if item.image_url %}
+                        <img src="{{ item.image_url }}" alt="{{ item.product_name }}" loading="lazy">
+                      {% else %}
+                        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg>
                         </div>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <div class="item-name">{{ item.product_name }}</div>
+                      {% if item.product_slug %}
+                        <a href="{% url 'product_detail' item.product_slug %}" class="item-link" target="_blank">View ↗</a>
+                      {% endif %}
+                    </div>
+                  </div>
                 </td>
                 <td>{{ item.size|default:"—" }}</td>
                 <td style="font-weight:600">{{ item.quantity }}</td>
@@ -200,9 +191,9 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
                 <td style="font-weight:700;color:var(--terra2)">₹{{ item.line_total|floatformat:2 }}</td>
                 <td>
                   {% if item.is_cancelled %}
-                    <span style="background:var(--red-pale);color:var(--red);padding:2px 7px;border-radius:8px;font-size:15px;font-weight:700">Cancelled</span>
+                    <span style="background:var(--red-pale);color:var(--red);padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700">Cancelled</span>
                   {% else %}
-                    <span style="background:var(--green-pale);color:var(--green);padding:2px 7px;border-radius:8px;font-size:14px;font-weight:700">Active</span>
+                    <span style="background:var(--green-pale);color:var(--green);padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700">Active</span>
                   {% endif %}
                 </td>
               </tr>
@@ -212,139 +203,274 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
         </div>
 
         {% if items_page_obj.paginator.num_pages > 1 %}
-          <div class="item-pag">
-            <div class="item-pag-info">
-              Showing <strong>{{ items_page_obj.start_index }}–{{ items_page_obj.end_index }}</strong> of
-              <strong>{{ items_page_obj.paginator.count }}</strong>
-              item{{ items_page_obj.paginator.count|pluralize }}
+        <div class="item-pag">
+          <div class="item-pag-info">
+            Showing <strong>{{ items_page_obj.start_index }}–{{ items_page_obj.end_index }}</strong> of
+            <strong>{{ items_page_obj.paginator.count }}</strong> item{{ items_page_obj.paginator.count|pluralize }}
+          </div>
+          <div class="item-pag-links">
+            {% if items_page_obj.has_previous %}
+              <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ items_page_obj.previous_page_number }}" class="ipg">‹ Prev</a>
+            {% else %}
+              <span class="ipg off">‹ Prev</span>
+            {% endif %}
+
+            {% for num in items_page_obj.paginator.page_range %}
+              {% if num == items_page_obj.number %}
+                <span class="ipg active">{{ num }}</span>
+              {% elif num > items_page_obj.number|add:"-3" and num < items_page_obj.number|add:"3" %}
+                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ num }}" class="ipg">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if items_page_obj.has_next %}
+              <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ items_page_obj.next_page_number }}" class="ipg">Next ›</a>
+            {% else %}
+              <span class="ipg off">Next ›</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <div class="ch">
+          <h3>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Price Summary
+          </h3>
+        </div>
+        <div class="cb">
+          
+          <div class="pr">
+            <span>Subtotal ({{ order.items.count }} item{{ order.items.count|pluralize }})</span>
+            <span class="v">₹{{ order.subtotal|floatformat:2 }}</span>
+          </div>
+
+        
+
+{% if offer_discount and offer_discount > 0 %}
+<div class="pr dis" style="flex-direction: column; align-items: flex-start; gap: 8px; padding-bottom: 10px;">
+    <div style="display: flex; justify-content: space-between; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span>Offer discount</span>
+            {% if order.offer_details %}
+            <div class="discount-badge offer">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <span>{{ order.offer_details }}</span>
             </div>
-            <div class="item-pag-links">
-              {% if items_page_obj.has_previous %}
-                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ items_page_obj.previous_page_number }}" class="ipg">‹ Prev</a>
-              {% else %}
-                <span class="ipg off">‹ Prev</span>
-              {% endif %}
+            {% endif %}
+        </div>
+        <span class="v">-₹{{ offer_discount|floatformat:2 }}</span>
+    </div>
+</div>
+{% endif %}
 
-              {% for num in items_page_obj.paginator.page_range %}
-                {% if num == items_page_obj.number %}
-                  <span class="ipg active">{{ num }}</span>
-                {% elif num > items_page_obj.number|add:"-3" and num < items_page_obj.number|add:"3" %}
-                  <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ num }}" class="ipg">{{ num }}</a>
+        {% if coupon_discount and coupon_discount > 0 %}
+        <div class="pr dis" style="flex-direction: column; align-items: flex-start; gap: 8px; padding-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span>Coupon discount</span>
+                    {% if order.coupon_code %}
+                    <div class="discount-badge coupon">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4M4 6v12c0 1.1.9 2 2 2h14v-4"/>
+                            <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h2v-4h-2z"/>
+                        </svg>
+                        <span><strong>{{ order.coupon_code }}</strong></span>
+                    </div>
+                    {% endif %}
+                </div>
+                <span class="v">-₹{{ coupon_discount|floatformat:2 }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+
+          {% if order.wallet_amount_used and order.wallet_amount_used > 0 %}
+          <div class="pr dis">
+            <span>Wallet used</span>
+            <span class="v">-₹{{ order.wallet_amount_used|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+
+          {# Shipping Section #}
+          <div class="pr">
+            <span>Shipping</span>
+            <span class="v">
+              {% if order.shipping_charge == 0 %}
+                <span style="color: var(--green);">FREE</span>
+                {% if order.subtotal < 999 %}
+                <div style="font-size: 10px; color: var(--green); margin-top: 4px;">
+                  🎉 You've unlocked free shipping!
+                </div>
                 {% endif %}
-              {% endfor %}
-
-              {% if items_page_obj.has_next %}
-                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}items_page={{ items_page_obj.next_page_number }}" class="ipg">Next ›</a>
               {% else %}
-                <span class="ipg off">Next ›</span>
+                ₹{{ order.shipping_charge|floatformat:2 }}
               {% endif %}
+            </span>
+          </div>
+
+          <div class="pr-total" style="margin-top: 12px; padding-top: 12px;">
+            <span style="font-size: 16px; font-weight: 700;">Total to Pay</span>
+            <span style="font-size: 18px; font-weight: 800; color: var(--terra2);">₹{{ order.total|floatformat:2 }}</span>
+          </div>
+
+          <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--terra)" stroke-width="2">
+                  <rect x="2" y="6" width="20" height="12" rx="2"/>
+                  <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                <span style="font-size: 12px; color: var(--muted2);">Pay with</span>
+                <span style="font-weight: 700; font-size: 13px; color: var(--text);">{{ order.get_payment_method_display }}</span>
+              </div>
+              <span style="font-size: 18px; font-weight: 700; color: var(--terra2);">₹{{ order.total|floatformat:2 }}</span>
             </div>
           </div>
-        {% endif %}
-      </div>
 
-<!--  Price Summary card's cb div -->
+        
+
+          {% if order.status == 'cancelled' or order.status == 'return_requested' or order.status == 'returned' %}
+          <div class="refund-box" style="margin-top: 16px;">
+            <div class="refund-box-title">Refund breakdown</div>
+            
+            <div class="rr">
+              <span>Amount collected (total paid)</span>
+              <span class="v">₹{{ order.total|floatformat:2 }}</span>
+            </div>
+
+            {% if order.wallet_amount_used %}
+            <div class="rr wallet-row">
+              <span>Wallet amount to restore</span>
+              <span class="v">₹{{ wallet_to_restore|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+
+            {% if coupon_discount %}
+            <div class="rr">
+              <span>Coupon savings (already deducted — not collected)</span>
+              <span class="v" style="color:var(--muted)">₹{{ coupon_discount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+
+            {% if offer_discount %}
+            <div class="rr">
+              <span>Offer savings (already deducted — not collected)</span>
+              <span class="v" style="color:var(--muted)">₹{{ offer_discount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+
+            <div class="rr gateway">
+              <span>Refund to original payment method</span>
+              <span>₹{{ refund_to_gateway|floatformat:2 }}</span>
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
 
       <div class="card">
-        <div class="ch"><h3>Price Summary</h3></div>
+        <div class="ch">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            Delivery Address
+          </h3>
+        </div>
         <div class="cb">
-        <div class="pr">
-          <span>Subtotal</span>
-          <span class="v">₹{{ order.subtotal|floatformat:2 }}</span>
-        </div>
-
-        {% if order.discount_amount %}
-        <div class="pr dis">
-          <span>
-            Coupon discount
-            {% if order.coupon_code %}
-              <span style="font-family:monospace;font-size:11px;
-                    background:var(--terra-pale);color:var(--terra2);
-                    padding:1px 6px;border-radius:4px;margin-left:4px">
-                {{ order.coupon_code }}
-              </span>
-            {% endif %}
-          </span>
-          <span class="v">−₹{{ order.discount_amount|floatformat:2 }}</span>
-        </div>
-        {% endif %}
-
-        {% if order.wallet_amount_used %}
-        <div class="pr dis">
-          <span>Wallet used</span>
-          <span class="v">−₹{{ order.wallet_amount_used|floatformat:2 }}</span>
-        </div>
-        {% endif %}
-
-        <div class="pr">
-          <span>Shipping</span>
-          <span class="v">
-            {% if order.shipping_charge == 0 %}FREE
-            {% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}
-          </span>
-        </div>
-
-        <div class="pr-total">
-          <span>Total</span>
-          <span style="color:var(--terra2)">₹{{ order.total|floatformat:2 }}</span>
+          <div class="addr-box">
+            <div class="addr-name">{{ order.full_name }}</div>
+            <div class="addr-text">
+              {{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}
+            </div>
+            <div class="addr-text">{{ order.city }}, {{ order.state }} — {{ order.pincode }}</div>
+            <div class="addr-text">{{ order.country }}</div>
+            <div style="margin-top:6px;color:var(--muted);font-size:12px">📞 {{ order.phone }}</div>
+          </div>
         </div>
       </div>
 
-<!-- REPLACE the entire Delivery Address card -->
-<div class="card">
-  <div class="ch">
-    <h3>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-        <circle cx="12" cy="10" r="3"/>
-      </svg>
-      Delivery Address
-    </h3>
-  </div>
-  <div class="cb">
-    <div class="addr-box">
-      <div class="addr-name">{{ order.full_name }}</div>
-      <div class="addr-text">
-        {{ order.address_line1 }}
-        {% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}
+      {% if order.notes %}
+      <div class="card">
+        <div class="ch"><h3>Order Notes</h3></div>
+        <div class="cb"><p style="font-size:13px;color:var(--muted2);line-height:1.7">{{ order.notes }}</p></div>
       </div>
-      <div class="addr-text">
-        {{ order.city }}, {{ order.state }} — {{ order.pincode }}
-      </div>
-      <div class="addr-text">{{ order.country }}</div>
-      <div style="margin-top:6px;color:var(--muted)">📞 {{ order.phone }}</div>
-    </div>
-  </div>
-</div>
+      {% endif %}
 
-      {% if order.notes %}<div class="card"><div class="ch"><h3>Order Notes</h3></div><div class="cb"><p style="font-size:13px;color:var(--muted2);line-height:1.7">{{ order.notes }}</p></div></div>{% endif %}
       {% if order.cancel_reason or order.return_reason %}
       <div class="card">
-        <div class="ch"><h3>Notes & Reasons</h3></div>
+        <div class="ch"><h3>Notes &amp; Reasons</h3></div>
         <div class="cb">
-          {% if order.cancel_reason %}<div style="margin-bottom:12px"><div style="font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--red);margin-bottom:4px">Cancel Reason</div><div style="color:var(--muted2)">{{ order.cancel_reason }}</div></div>{% endif %}
-          {% if order.return_reason %}<div><div style="font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--orange);margin-bottom:4px">Return Reason</div><div style="color:var(--muted2)">{{ order.return_reason }}</div></div>{% endif %}
+          {% if order.cancel_reason %}
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--red);margin-bottom:4px">Cancel Reason</div>
+            <div style="color:var(--muted2);font-size:13px">{{ order.cancel_reason }}</div>
+          </div>
+          {% endif %}
+          {% if order.return_reason %}
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--orange);margin-bottom:4px">Return Reason</div>
+            <div style="color:var(--muted2);font-size:13px">{{ order.return_reason }}</div>
+          </div>
+          {% endif %}
         </div>
       </div>
       {% endif %}
+
     </div>
 
     <div>
+       {% if request.GET.email_sent %}
+        <div class="email-notify-banner" style="
+          background: var(--green-pale);
+          border: 1px solid var(--green);
+          border-radius: var(--radius-lg);
+          padding: 12px 16px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        ">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <polyline points="22 7 12 13 2 7"/>
+      </svg>
+      <div style="flex: 1; color: var(--green); font-size: 13px; font-weight: 500;">
+        ✓ Customer notified via email about this status update.
+      </div>
+      <button onclick="this.parentElement.remove()" style="background: none; border: none; color: var(--green); cursor: pointer;">✕</button>
+    </div>
+  {% endif %}
+
+
       <div class="sc-card">
-        <div class="sc-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--terra2)" stroke-width="2.5"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/></svg><h3>Update Status</h3></div>
+        <div class="sc-head">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--terra2)" stroke-width="2.5"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/></svg>
+          <h3>Update Status</h3>
+        </div>
         <div class="sc-body">
           <div class="sc-lbl">Current</div>
-          <div style="margin-bottom:14px"><span class="sb sb-{{ order.status }}"><span class="dot"></span>{{ order.get_status_display }}</span></div>
+          <div style="margin-bottom:14px">
+            <span class="sb sb-{{ order.status }}"><span class="dot"></span>{{ order.get_status_display }}</span>
+          </div>
           <form method="POST" action="{% url 'admin_order_update_status' order.uuid %}">
             {% csrf_token %}
             <div class="sc-lbl" style="margin-bottom:6px">Change to</div>
             <select name="status" class="sc-sel" id="statusSel" onchange="handleSC(this)">
-                {% for val, label in status_choices %}
-                  <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>
-                    {{ label }}
-                  </option>
-                {% endfor %}
-              </select>
+              {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
             <div class="cancel-wrap" id="cancelWrap">
               <div class="sc-lbl" style="margin-bottom:6px">Cancel Reason (optional)</div>
               <textarea name="cancel_reason" class="cancel-ta" placeholder="Reason…">{{ order.cancel_reason }}</textarea>
@@ -355,30 +481,24 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
       </div>
 
       <div class="card">
-        <div class="ch"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Customer</h3></div>
-        <div class="cb">
-{% if order.user %}
-  {% with name=order.user.get_full_name|default:order.user.email|default:"User" %}
-
-    <div style="display:flex;gap:11px;align-items:center;margin-bottom:13px">
-
-      <div class="u-avatar">
-        {{ name|default:"U"|slice:":1"|upper }}
-      </div>
-
-      <div>
-        <div style="font-weight:700;font-size:15px;color:var(--text)">
-          {{ name }}
+        <div class="ch">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Customer
+          </h3>
         </div>
-       
-      </div>
-
-    </div>
-
-  {% endwith %}
-{% endif %}
+        <div class="cb">
+          {% if order.user %}
+            {% with name=order.user.get_full_name|default:order.user.email|default:"User" %}
+            <div style="display:flex;gap:11px;align-items:center;margin-bottom:13px">
+              <div class="u-avatar">{{ name|slice:":1"|upper }}</div>
+              <div style="font-weight:700;font-size:14px;color:var(--text)">{{ name }}</div>
+            </div>
+            {% endwith %}
+          {% endif %}
           <div class="ir"><span class="ir-lbl">Name</span><span class="ir-val">{{ order.full_name }}</span></div>
           <div class="ir"><span class="ir-lbl">Phone</span><span class="ir-val">{{ order.phone }}</span></div>
+          <div class="ir"><span class="ir-lbl">Email</span><span class="ir-val">{{ order.user.email|default:"N/A" }}</span></div>
           <div class="ir"><span class="ir-lbl">City</span><span class="ir-val">{{ order.city }}, {{ order.state }}</span></div>
           <div class="ir"><span class="ir-lbl">Country</span><span class="ir-val">{{ order.country }}</span></div>
         </div>
@@ -391,57 +511,58 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:va
           <div class="ir"><span class="ir-lbl">Placed</span><span class="ir-val">{{ order.created_at|date:"d M Y, g:i A" }}</span></div>
           <div class="ir"><span class="ir-lbl">Updated</span><span class="ir-val">{{ order.updated_at|date:"d M Y, g:i A" }}</span></div>
           <div class="ir"><span class="ir-lbl">Payment</span><span class="ir-val">{{ order.get_payment_method_display }}</span></div>
-          {% if order.cancelled_at %}<div class="ir"><span class="ir-lbl">Cancelled</span><span class="ir-val" style="color:var(--red)">{{ order.cancelled_at|date:"d M Y" }}</span></div>{% endif %}
-          {% if order.return_requested_at %}<div class="ir"><span class="ir-lbl">Return Req.</span><span class="ir-val" style="color:var(--orange)">{{ order.return_requested_at|date:"d M Y" }}</span></div>{% endif %}
+          {% if order.cancelled_at %}
+          <div class="ir"><span class="ir-lbl">Cancelled</span><span class="ir-val" style="color:var(--red)">{{ order.cancelled_at|date:"d M Y" }}</span></div>
+          {% endif %}
+          {% if order.return_requested_at %}
+          <div class="ir"><span class="ir-lbl">Return Req.</span><span class="ir-val" style="color:var(--orange)">{{ order.return_requested_at|date:"d M Y" }}</span></div>
+          {% endif %}
         </div>
       </div>
+
     </div>
+
   </div>
-{% if items_page_obj and items_page_obj.paginator.num_pages > 1 %}
-<div class="table-footer">
-
-  <span class="page-info">
-    Page {{ items_page_obj.number }} of {{ items_page_obj.paginator.num_pages }}
-    &nbsp;·&nbsp;
-    {{ items_page_obj.paginator.count }} item{{ items_page_obj.paginator.count|pluralize }}
-  </span>
-
-  <div class="pagination">
-
-    {% if items_page_obj.has_previous %}
-      <a href="?items_page={{ items_page_obj.previous_page_number }}"
-         class="pg-btn">Prev</a>
-    {% else %}
-      <span class="pg-btn disabled">Prev</span>
-    {% endif %}
-
-    {% for num in items_page_obj.paginator.page_range %}
-
-      {% if num == items_page_obj.number %}
-        <span class="pg-num active">{{ num }}</span>
-
-      {% elif num >= items_page_obj.number|add:"-2" and num <= items_page_obj.number|add:"2" %}
-        <a href="?items_page={{ num }}"
-           class="pg-num">{{ num }}</a>
-
+  
+  {% if items_page_obj and items_page_obj.paginator.num_pages > 1 %}
+  <div class="table-footer">
+    <span class="page-info">
+      Page <strong>{{ items_page_obj.number }}</strong> of <strong>{{ items_page_obj.paginator.num_pages }}</strong>
+      &nbsp;·&nbsp;
+      {{ items_page_obj.paginator.count }} item{{ items_page_obj.paginator.count|pluralize }}
+    </span>
+    <div class="pagination">
+      {% if items_page_obj.has_previous %}
+        <a href="?items_page={{ items_page_obj.previous_page_number }}" class="pg-btn">Prev</a>
+      {% else %}
+        <span class="pg-btn disabled">Prev</span>
       {% endif %}
 
-    {% endfor %}
+      {% for num in items_page_obj.paginator.page_range %}
+        {% if num == items_page_obj.number %}
+          <span class="pg-num active">{{ num }}</span>
+        {% elif num >= items_page_obj.number|add:"-2" and num <= items_page_obj.number|add:"2" %}
+          <a href="?items_page={{ num }}" class="pg-num">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
 
-    {% if items_page_obj.has_next %}
-      <a href="?items_page={{ items_page_obj.next_page_number }}"
-         class="pg-btn">Next</a>
-    {% else %}
-      <span class="pg-btn disabled">Next</span>
-    {% endif %}
-
+      {% if items_page_obj.has_next %}
+        <a href="?items_page={{ items_page_obj.next_page_number }}" class="pg-btn">Next</a>
+      {% else %}
+        <span class="pg-btn disabled">Next</span>
+      {% endif %}
+    </div>
   </div>
+  {% endif %}
 
-</div>
-{% endif %}
-</div>
+</div>{# end .wrap #}
+
 <script>
-function handleSC(sel){document.getElementById('cancelWrap').classList.toggle('show',sel.value==='cancelled')}
-document.addEventListener('DOMContentLoaded',()=>handleSC(document.getElementById('statusSel')));
+function handleSC(sel) {
+  document.getElementById('cancelWrap').classList.toggle('show', sel.value === 'cancelled');
+}
+document.addEventListener('DOMContentLoaded', function() {
+  handleSC(document.getElementById('statusSel'));
+});
 </script>
 {% endblock %}

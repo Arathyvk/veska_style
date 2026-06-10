@@ -921,5 +921,53 @@ document.addEventListener('DOMContentLoaded', function() {
     if (body) body.style.display = '';
   });
 });
+
+function toggleWishlist(button, slug) {
+    // Get CSRF token from the page
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Send AJAX request to toggle wishlist
+    fetch(`/wishlist/toggle/${slug}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Toggle the wishlisted class on the button
+            if (data.is_wishlisted) {
+                button.classList.add('wishlisted');
+                button.querySelector('svg').setAttribute('fill', 'var(--terra)');
+                showToast('Added to wishlist!', 'success');
+            } else {
+                button.classList.remove('wishlisted');
+                button.querySelector('svg').setAttribute('fill', 'none');
+                showToast('Removed from wishlist', 'info');
+            }
+            
+            // Update wishlist count in header if exists
+            if (data.wishlist_count !== undefined) {
+                const wishlistCount = document.getElementById('wishlistCount');
+                if (wishlistCount) {
+                    if (data.wishlist_count > 0) {
+                        wishlistCount.textContent = data.wishlist_count;
+                        wishlistCount.style.display = 'inline-flex';
+                    } else {
+                        wishlistCount.style.display = 'none';
+                    }
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Please login to add to wishlist', 'error');
+    });
+}
 </script>
 {% endblock %}

@@ -25,7 +25,6 @@ def _order_number():
     return f'VES-{date_part}-{unique_part}'
 
 
-
 class Coupon(models.Model):
     DISCOUNT_TYPE_CHOICES = [
         ('flat',    'Flat Amount Off'),
@@ -72,8 +71,6 @@ class Coupon(models.Model):
         return min(discount, subtotal)
 
 
-
-
 class Order(models.Model):
 
     STATUS_CHOICES = [
@@ -96,13 +93,13 @@ class Order(models.Model):
     ]
 
     PAYMENT_METHOD = [
-        ('phonepe', 'PhonePe'),         
+        ('stripe',  'Stripe'),
         ('cod',     'Cash on Delivery'),
         ('wallet',  'Wallet'),
     ]
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='orders')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
 
     full_name     = models.CharField(max_length=120)
     phone         = models.CharField(max_length=20)
@@ -117,17 +114,21 @@ class Order(models.Model):
     coupon_code        = models.CharField(max_length=50, blank=True, default='')
     discount_amount    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_charge    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    offer_details      = models.CharField(max_length=255, blank=True, null=True)
+    offer_discount     = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     wallet_amount_used = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total              = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='phonepe')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='stripe')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
-    status         = models.CharField(max_length=20, choices=STATUS_CHOICES,  default='pending')
+    status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
     delivered_at          = models.DateTimeField(null=True, blank=True)
+    cancelled_at          = models.DateTimeField(null=True, blank=True)
     return_reason         = models.TextField(blank=True, null=True)
     return_notes          = models.TextField(blank=True, null=True)
     return_requested_at   = models.DateTimeField(blank=True, null=True)
+    cancel_reason         = models.TextField(blank=True, null=True)
 
     notes      = models.TextField(blank=True)
     paid_at    = models.DateTimeField(null=True, blank=True)
@@ -138,7 +139,7 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Order #{self.uuid} — {self.user.email}"
+        return f"Order #{self.order_number} — {self.user.email}"
 
     @property
     def order_number(self):
@@ -159,29 +160,42 @@ class Order(models.Model):
             return self.delivered_at + timedelta(days=RETURN_DAYS)
         return None
 
+    def get_payment_method_display(self):
+        payment_display = {
+            'stripe': 'Stripe',
+            'cod': 'Cash on Delivery',
+            'wallet': 'Wallet'
+        }
+        return payment_display.get(self.payment_method, self.payment_method)
 
+    def get_status_display(self):
+        status_display = dict(self.STATUS_CHOICES)
+        return status_display.get(self.status, self.status)
 
 
 class OrderItem(models.Model):
 
-    order        = models.ForeignKey(
-        'order_user.Order', on_delete=models.CASCADE, related_name='items'
-    )
-    product      = models.ForeignKey(
-        'product_admin.Product', on_delete=models.SET_NULL, null=True
-    )
-    variant      = models.ForeignKey(
-        'product_admin.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True
-    )
+    CANCEL_STATUS_CHOICES = [
+        ('none',      'None'),
+        ('requested', 'Requested'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    order = models.ForeignKey('order_user.Order', on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey('product_admin.Product', on_delete=models.SET_NULL, null=True)
+    variant = models.ForeignKey('product_admin.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
     product_name = models.CharField(max_length=255)
     product_slug = models.SlugField(max_length=255)
-    size         = models.CharField(max_length=20, blank=True)
-    image_url    = models.URLField(blank=True)
-    unit_price   = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity     = models.PositiveIntegerField()
+    size = models.CharField(max_length=20, blank=True)
+    image_url = models.URLField(blank=True)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField()
+    
+    line_total = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
+    is_cancelled = models.BooleanField(default=False)
     cancel_status = models.CharField(
         max_length=20,
-        choices=[('none', 'None'), ('requested', 'Requested'), ('cancelled', 'Cancelled')],
+        choices=CANCEL_STATUS_CHOICES,
         default='none',
     )
     cancel_reason = models.TextField(blank=True)
@@ -189,6 +203,6 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.product_name} × {self.quantity}"
 
-    @property
-    def line_total(self):
-        return self.unit_price * self.quantity
+    def save(self, *args, **kwargs):
+        self.line_total = self.unit_price * self.quantity
+        super().save(*args, **kwargs)

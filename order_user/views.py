@@ -8,6 +8,8 @@ from django.http import HttpResponse
 from datetime import timedelta
 from decimal import Decimal
 from django.db import transaction as db_tx
+from order_user.order_email import send_order_confirmation
+
 
 from order_user.models import Order, OrderItem
 from return_admin.models import ReturnRequest, RETURN_DAYS, NON_RETURNABLE_CATEGORIES
@@ -92,10 +94,13 @@ def order_detail(request, uuid):
         })
 
 
-
 @login_required
 def order_success(request, uuid):
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
+    session_key = f"order_confirmed_{uuid}"
+    if not request.session.get(session_key):
+        send_order_confirmation(order)          
+        request.session[session_key] = True
     return render(request, 'order_success.html', {'order': order})
 
 
@@ -227,6 +232,7 @@ def return_order(request, uuid):
         'days_left' : days_left,
     })
 
+
 @login_required
 def return_request(request, uuid, item_id):
 
@@ -346,46 +352,57 @@ def download_invoice(request, uuid):
         from reportlab.lib.enums import TA_RIGHT, TA_CENTER
         import io
 
-        buf      = io.BytesIO()
-        doc      = SimpleDocTemplate(buf, pagesize=A4,
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=A4,
                        leftMargin=20*mm, rightMargin=20*mm,
-                       topMargin=18*mm, bottomMargin=18*mm)
-        styles   = getSampleStyleSheet()
-        W, _     = A4
+                       topMargin=18*mm, bottomMargin=18*mm,
+                       title=f"Invoice_{order.uuid}")
+        
+        styles = getSampleStyleSheet()
+        W, _ = A4
         usable_w = W - 40*mm
 
         def ps(name, **kw):
             return ParagraphStyle(name, **kw)
 
-        s_head   = ps('h', fontSize=9,   fontName='Helvetica-Bold',
-                       textColor=colors.HexColor('#2e2925'))
-        s_body   = ps('b', fontSize=8.5, fontName='Helvetica',
-                       textColor=colors.HexColor('#2e2925'), leading=13)
-        s_right  = ps('r', fontSize=8.5, fontName='Helvetica',
-                       alignment=TA_RIGHT, textColor=colors.HexColor('#2e2925'))
-        s_center = ps('c', fontSize=8,   fontName='Helvetica',
-                       alignment=TA_CENTER, textColor=colors.HexColor('#b0a699'))
-
-        TERRA  = colors.HexColor('#b56744')
-        LIGHT  = colors.HexColor('#f2ede6')
+        WHITE = colors.HexColor('#FFFFFF')
+        LIGHT_GRAY = colors.HexColor('#F5F5F5')
+        MEDIUM_GRAY = colors.HexColor('#E0E0E0')
+        DARK_GRAY = colors.HexColor('#999999')
+        TERRA = colors.HexColor('#b56744')
+        TERRA_LIGHT = colors.HexColor('#f7ede5')
         BORDER = colors.HexColor('#e0d9d0')
-        INK    = colors.HexColor('#2e2925')
+        
+        s_head = ps('h', fontSize=9, fontName='Helvetica-Bold',
+                   textColor=WHITE)
+        s_body = ps('b', fontSize=8.5, fontName='Helvetica',
+                   textColor=WHITE, leading=13)
+        s_right = ps('r', fontSize=8.5, fontName='Helvetica',
+                   alignment=TA_RIGHT, textColor=WHITE)
+        s_center = ps('c', fontSize=8, fontName='Helvetica',
+                   alignment=TA_CENTER, textColor=DARK_GRAY)
 
         story = []
 
-        ht = Table([[
-            Paragraph('<font name="Helvetica-Bold" size="20" color="#2e2925">VESKA</font><br/>'
+        header_data = [[
+            Paragraph('<font name="Helvetica-Bold" size="20" color="#FFFFFF">VESKA</font><br/>'
                       '<font name="Helvetica" size="8" color="#b56744">Fashion · Style · Elegance</font>',
                       styles['Normal']),
             Paragraph(
-                f'<font name="Helvetica-Bold" size="14" color="#2e2925">INVOICE</font><br/>'
-                f'<font name="Helvetica" size="8" color="#7a6f66">#{order.uuid}</font><br/>'
-                f'<font name="Helvetica" size="8" color="#7a6f66">'
+                f'<font name="Helvetica-Bold" size="14" color="#FFFFFF">INVOICE</font><br/>'
+                f'<font name="Helvetica" size="8" color="#D0D0D0">#{order.uuid}</font><br/>'
+                f'<font name="Helvetica" size="8" color="#D0D0D0">'
                 f'{order.created_at.strftime("%d %B %Y")}</font>',
                 ps('hr', alignment=TA_RIGHT)
             ),
-        ]], colWidths=[usable_w*0.6, usable_w*0.4])
-        ht.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'MIDDLE'),('BOTTOMPADDING',(0,0),(-1,-1),8)]))
+        ]]
+        
+        ht = Table(header_data, colWidths=[usable_w*0.6, usable_w*0.4])
+        ht.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+            ('BACKGROUND', (0,0), (-1,-1), colors.black),  
+        ]))
         story.append(ht)
         story.append(HRFlowable(width=usable_w, thickness=1.5, color=TERRA, spaceAfter=10))
         
@@ -403,33 +420,45 @@ def download_invoice(request, uuid):
         
         address_one_line = ', '.join(address_parts)
 
-        bt = Table([
-            [Paragraph('<b>Bill To</b>', s_head), Paragraph('<b>Order Info</b>', s_head)],
+        bt_data = [
+            [Paragraph('<b color="#FFFFFF">Bill To</b>', s_head), 
+             Paragraph('<b color="#FFFFFF">Order Info</b>', s_head)],
             [Paragraph(f'{order.full_name}<br/>{order.phone}', s_body),
-             Paragraph(f'Order: <b>#{order.uuid}</b>', s_body)],
+             Paragraph(f'Order: <b color="#FFFFFF">#{order.uuid}</b>', s_body)],
             [Paragraph(address_one_line, s_body),
              Paragraph(f'Date: {order.created_at.strftime("%d %b %Y, %I:%M %p")}', s_body)],
-            [Paragraph('', s_body), Paragraph(f'Status: <b>{order.get_status_display()}</b>', s_body)],
-            [Paragraph('', s_body), Paragraph(f'Payment: {order.get_payment_method_display()}', s_body)],
-        ], colWidths=[usable_w*0.55, usable_w*0.45])
+            [Paragraph('', s_body), 
+             Paragraph(f'Status: <b color="#FFFFFF">{order.get_status_display()}</b>', s_body)],
+            [Paragraph('', s_body), 
+             Paragraph(f'Payment: {order.get_payment_method_display()}', s_body)],
+        ]
+        
+        bt = Table(bt_data, colWidths=[usable_w*0.55, usable_w*0.45])
         bt.setStyle(TableStyle([
-            ('VALIGN',(0,0),(-1,-1),'TOP'),('BOTTOMPADDING',(0,0),(-1,-1),4),
-            ('BACKGROUND',(0,0),(-1,0),LIGHT),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+            ('BACKGROUND', (0,0), (-1,-1), colors.black), 
+            ('TEXTCOLOR', (0,0), (-1,-1), WHITE),
         ]))
         story.append(bt)
         story.append(Spacer(1, 10))
 
         col_w = [usable_w*0.42, usable_w*0.13, usable_w*0.15, usable_w*0.15, usable_w*0.15]
-        rows  = [[
-            Paragraph('<b>Product</b>', s_head),
-            Paragraph('<b>Size</b>',   ps('ch',  alignment=TA_CENTER, fontSize=9, fontName='Helvetica-Bold')),
-            Paragraph('<b>Qty</b>',    ps('ch2', alignment=TA_CENTER, fontSize=9, fontName='Helvetica-Bold')),
-            Paragraph('<b>Unit Price</b>', ps('rh', alignment=TA_RIGHT, fontSize=9, fontName='Helvetica-Bold')),
-            Paragraph('<b>Total</b>',  ps('rh2', alignment=TA_RIGHT, fontSize=9, fontName='Helvetica-Bold')),
+        
+        rows = [[
+            Paragraph('<b color="#FFFFFF">Product</b>', s_head),
+            Paragraph('<b color="#FFFFFF">Size</b>', ps('ch', alignment=TA_CENTER, fontSize=9, 
+                       fontName='Helvetica-Bold', textColor=WHITE)),
+            Paragraph('<b color="#FFFFFF">Qty</b>', ps('ch2', alignment=TA_CENTER, fontSize=9, 
+                       fontName='Helvetica-Bold', textColor=WHITE)),
+            Paragraph('<b color="#FFFFFF">Unit Price</b>', ps('rh', alignment=TA_RIGHT, fontSize=9, 
+                       fontName='Helvetica-Bold', textColor=WHITE)),
+            Paragraph('<b color="#FFFFFF">Total</b>', ps('rh2', alignment=TA_RIGHT, fontSize=9, 
+                       fontName='Helvetica-Bold', textColor=WHITE)),
         ]]
 
         for it in items:
-            note = ' <font color="#b53333">(cancelled)</font>' if it.cancel_status == 'cancelled' else ''
+            note = ' <font color="#ff6b6b">(cancelled)</font>' if it.cancel_status == 'cancelled' else ''
             
             size_value = getattr(it, 'size', None) or getattr(it, 'size_name', None) or '—'
             
@@ -440,20 +469,26 @@ def download_invoice(request, uuid):
             
             rows.append([
                 Paragraph(f'{it.product_name}{note}', s_body),
-                Paragraph(str(size_value), ps('cc',  alignment=TA_CENTER, fontSize=8.5, fontName='Helvetica')),
-                Paragraph(str(it.quantity), ps('ccc', alignment=TA_CENTER, fontSize=8.5, fontName='Helvetica')),
+                Paragraph(str(size_value), ps('cc', alignment=TA_CENTER, fontSize=8.5, 
+                           fontName='Helvetica', textColor=WHITE)),
+                Paragraph(str(it.quantity), ps('ccc', alignment=TA_CENTER, fontSize=8.5, 
+                           fontName='Helvetica', textColor=WHITE)),
                 Paragraph(f'₹{it.unit_price:.2f}', s_right),
                 Paragraph(f'₹{line_total:.2f}', s_right),
             ])
 
         item_table = Table(rows, colWidths=col_w, repeatRows=1)
         item_table.setStyle(TableStyle([
-            ('BACKGROUND',(0,0),(-1,0),INK),('TEXTCOLOR',(0,0),(-1,0),colors.white),
-            ('GRID',(0,0),(-1,-1),0.4,BORDER),
-            ('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,LIGHT]),
-            ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
-            ('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5),
-            ('LEFTPADDING',(0,0),(-1,-1),6),('RIGHTPADDING',(0,0),(-1,-1),6),
+            ('BACKGROUND', (0,0), (-1,0), colors.black),
+            ('TEXTCOLOR', (0,0), (-1,0), WHITE),
+            ('GRID', (0,0), (-1,-1), 0.4, BORDER),
+            ('BACKGROUND', (0,1), (-1,-1), colors.black),  # Black background for data rows
+            ('TEXTCOLOR', (0,1), (-1,-1), WHITE),  # White text
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('TOPPADDING', (0,0), (-1,-1), 5),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+            ('LEFTPADDING', (0,0), (-1,-1), 6),
+            ('RIGHTPADDING', (0,0), (-1,-1), 6),
         ]))
         story.append(item_table)
         story.append(Spacer(1, 8))
@@ -461,28 +496,36 @@ def download_invoice(request, uuid):
         def tot_row(label, value, bold=False):
             fn = 'Helvetica-Bold' if bold else 'Helvetica'
             fs = 9 if bold else 8.5
+            text_color = TERRA if bold else WHITE
             return ['', '', '',
-                    Paragraph(label, ps(f'l{label}', fontSize=fs, fontName=fn, alignment=TA_RIGHT, textColor=INK)),
-                    Paragraph(value, ps(f'v{label}', fontSize=fs, fontName=fn, alignment=TA_RIGHT, textColor=INK))]
+                    Paragraph(f'<font color="{text_color.hexval()}">{label}</font>', 
+                             ps(f'l{label}', fontSize=fs, fontName=fn, alignment=TA_RIGHT, 
+                                textColor=text_color)),
+                    Paragraph(f'<font color="{text_color.hexval()}">{value}</font>', 
+                             ps(f'v{label}', fontSize=fs, fontName=fn, alignment=TA_RIGHT, 
+                                textColor=text_color))]
 
         tot_rows = [tot_row('Subtotal', f'₹{order.subtotal:.2f}')]
         if order.discount_amount:
             tot_rows.append(tot_row(f'Discount ({order.coupon_code})', f'−₹{order.discount_amount:.2f}'))
-        tot_rows.append(tot_row('Shipping',
-            'FREE' if order.shipping_charge == 0 else f'₹{order.shipping_charge:.2f}'))
+        tot_rows.append(tot_row('Shipping', 'FREE' if order.shipping_charge == 0 else f'₹{order.shipping_charge:.2f}'))
         tot_rows.append(tot_row('TOTAL', f'₹{order.total:.2f}', bold=True))
 
         tot_table = Table(tot_rows, colWidths=col_w)
         tot_table.setStyle(TableStyle([
-            ('LINEABOVE',(3,len(tot_rows)-1),(-1,len(tot_rows)-1),1,TERRA),
-            ('TOPPADDING',(0,0),(-1,-1),3),('BOTTOMPADDING',(0,0),(-1,-1),3),
+            ('BACKGROUND', (0,0), (-1,-1), colors.black),
+            ('TEXTCOLOR', (0,0), (-1,-1), WHITE),
+            ('LINEABOVE', (3, len(tot_rows)-1), (-1, len(tot_rows)-1), 1, TERRA),
+            ('TOPPADDING', (0,0), (-1,-1), 3),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
         ]))
         story.append(tot_table)
         story.append(Spacer(1, 16))
         story.append(HRFlowable(width=usable_w, thickness=0.5, color=BORDER, spaceAfter=8))
+        
         story.append(Paragraph(
-            'Thank you for shopping with Veska! '
-            'For queries contact support@veska.in · www.veska.in', s_center))
+            '<font color="#D0D0D0">Thank you for shopping with Veska! '
+            'For queries contact support@veska.in · www.veska.in</font>', s_center))
 
         doc.build(story)
         buf.seek(0)
@@ -491,13 +534,13 @@ def download_invoice(request, uuid):
             f'attachment; filename="Veska_Invoice_{order.uuid}.pdf"')
         return response
 
-    except ImportError:
+    except ImportError as e:
+        print(f"ReportLab import error: {e}")
         return _html_invoice_fallback(request, order, items)
 
 
 def _html_invoice_fallback(request, order, items):
     return render(request, 'invoice_html.html', {'order': order, 'items': items})
-
 
 
 
