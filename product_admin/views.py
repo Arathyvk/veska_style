@@ -247,7 +247,7 @@ def product_edit(request, uuid):
         'variant_form': ProductVariantForm(),
         'product':      product,
         'action':       'edit',
-        'categories':   categories, \
+        'categories':   categories, 
     })
 
 @never_cache

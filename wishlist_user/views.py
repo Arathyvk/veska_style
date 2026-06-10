@@ -59,7 +59,7 @@ def wishlist_toggle(request, slug):
         wl.products.add(product)
         messages.success(request, f'"{product.name}" saved to wishlist!')
   
-    return redirect(request.POST.get('next', 'product_shop'))
+    return redirect('wishlist_detail')
  
 
  

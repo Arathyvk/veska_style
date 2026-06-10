@@ -5,167 +5,509 @@
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --cream:#faf8f5;--warm-white:#fff;--parchment:#f2ede6;--sand:#e8dfd3;--blush:#e9d5c8;
-  --terra:#b56744;--terra-deep:#8f4f31;--terra-pale:#f7ede5;
-  --ink:#1e1a17;--charcoal:#2e2925;--muted:#7a6f66;--muted-lt:#b0a699;
-  --border:#e0d9d0;--border-lt:#ece6de;
-  --success:#3a7d5a;--success-pale:#eaf4ee;
-  --warning:#c47f17;--warning-pale:#fef8ec;
-  --danger:#b53333;--danger-pale:#fdf0f0;
-  --shadow-sm:0 2px 8px rgba(30,26,23,.08);
-  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
-  --transition:all .2s cubic-bezier(.4,0,.2,1);
-  --body:'DM Sans',sans-serif;
+:root {
+  --cream: #faf8f5;
+  --warm-white: #fff;
+  --parchment: #f2ede6;
+  --sand: #e8dfd3;
+  --blush: #e9d5c8;
+  --terra: #b56744;
+  --terra-deep: #8f4f31;
+  --terra-pale: #f7ede5;
+  /* Changed to white/light colors - removed all black/dark */
+  --ink: #ffffff;          /* was #1e1a17 - now pure white */
+  --charcoal: #f0f0f0;     /* was #2e2925 - now off-white */
+  --muted: #d0d0d0;        /* was #7a6f66 - light gray */
+  --muted-lt: #e8e8e8;     /* was #b0a699 - very light gray */
+  --border: #e0d9d0;
+  --border-lt: #ece6de;
+  --success: #3a7d5a;
+  --success-pale: #eaf4ee;
+  --warning: #c47f17;
+  --warning-pale: #fef8ec;
+  --danger: #b53333;
+  --danger-pale: #fdf0f0;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --transition: all .2s cubic-bezier(.4,0,.2,1);
+  --body: 'DM Sans', sans-serif;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--body);background:var(--cream);color:var(--ink)}
-a{text-decoration:none;color:inherit}
 
-.container{max-width:860px;margin:0 auto;padding:0 24px}
-.page-wrap{padding:36px 0 80px}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: #ffffff;
+  color: #ffffff;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.page-wrap {
+  padding: 36px 0 80px;
+}
 
-.breadcrumbs{display:flex;align-items:center;gap:8px;margin-bottom:24px;font-size:12px;color:var(--muted)}
-.breadcrumbs a{color:var(--muted)}.breadcrumbs a:hover{color:var(--terra)}
-.breadcrumbs .sep{color:var(--muted-lt)}.breadcrumbs .cur{color:var(--ink);font-weight:500}
+/* breadcrumbs — now softer */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.breadcrumbs a {
+  color: var(--muted);
+}
+.breadcrumbs a:hover {
+  color: var(--terra);
+}
+.breadcrumbs .sep {
+  color: var(--muted-lt);
+}
+.breadcrumbs .cur {
+  color: #ffffff;
+  font-weight: 500;
+}
 
-.page-title{font-family:var(--head);font-size:clamp(24px,4vw,34px);font-weight:600;
-  color:var(--charcoal);margin-bottom:4px}
-.page-title em{font-style:italic;color:var(--terra)}
+/* page title — lighter */
+.page-title {
+  font-family: var(--head);
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+.page-title em {
+  font-style: italic;
+  color: var(--terra);
+}
 
-/* flash */
-.flash{padding:12px 16px;border-radius:var(--radius-md);margin-bottom:18px;
-  font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px}
-.flash.success{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.2)}
-.flash.error  {background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
-.flash.warning{background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.2)}
+/* flash messages */
+.flash {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.flash.success {
+  background: var(--success-pale);
+  color: var(--success);
+  border: 1px solid rgba(58,125,90,.2);
+}
+.flash.error {
+  background: var(--danger-pale);
+  color: var(--danger);
+  border: 1px solid rgba(181,51,51,.2);
+}
+.flash.warning {
+  background: var(--warning-pale);
+  color: var(--warning);
+  border: 1px solid rgba(196,127,23,.2);
+}
 
-/* card */
-.card{background:var(--warm-white);border:1px solid var(--border);
-  border-radius:var(--radius-xl);overflow:hidden;margin-bottom:18px;
-  box-shadow:var(--shadow-sm)}
-.card-head{padding:15px 22px;border-bottom:1px solid var(--border-lt);
-  display:flex;align-items:center;justify-content:space-between;gap:10px}
-.card-head h2{font-family:var(--head);font-size:17px;font-weight:600;color:var(--ink);
-  display:flex;align-items:center;gap:8px}
-.card-head h2 svg{width:14px;height:14px;color:var(--terra)}
-.card-body{padding:20px 22px}
+/* cards — pure white */
+.card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.card-head {
+  padding: 15px 22px;
+  border-bottom: 1px solid var(--border-lt);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #ffffff;
+}
+.card-head h2 {
+  font-family: var(--head);
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-head h2 svg {
+  width: 14px;
+  height: 14px;
+  color: var(--terra);
+}
+.card-body {
+  padding: 20px 22px;
+  background: white;
+}
 
-/* order status badge */
-.status-badge{display:inline-flex;align-items:center;gap:5px;
-  padding:4px 13px;border-radius:20px;font-size:11px;font-weight:700}
-.s-pending  {background:var(--parchment);color:var(--muted);border:1px solid var(--border)}
-.s-confirmed{background:#e8f4fd;color:#1a6fa8;border:1px solid #b8d8f0}
-.s-processing{background:#e8f4fd;color:#1a6fa8;border:1px solid #b8d8f0}
-.s-shipped  {background:var(--warning-pale);color:var(--warning);border:1px solid rgba(196,127,23,.25)}
-.s-delivered{background:var(--success-pale);color:var(--success);border:1px solid rgba(58,125,90,.25)}
-.s-cancelled{background:var(--danger-pale);color:var(--danger);border:1px solid rgba(181,51,51,.2)}
-.s-returned {background:var(--parchment);color:var(--muted);border:1px solid var(--border)}
+/* status badges — light backgrounds only */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 13px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.s-pending {
+  background: var(--parchment);
+  color: #666;
+  border: 1px solid var(--border);
+}
+.s-confirmed {
+  background: #e8f4fd;
+  color: #1a6fa8;
+  border: 1px solid #b8d8f0;
+}
+.s-processing {
+  background: #e8f4fd;
+  color: #1a6fa8;
+  border: 1px solid #b8d8f0;
+}
+.s-shipped {
+  background: var(--warning-pale);
+  color: var(--warning);
+  border: 1px solid rgba(196,127,23,.25);
+}
+.s-delivered {
+  background: var(--success-pale);
+  color: var(--success);
+  border: 1px solid rgba(58,125,90,.25);
+}
+.s-cancelled {
+  background: var(--danger-pale);
+  color: var(--danger);
+  border: 1px solid rgba(181,51,51,.2);
+}
+.s-returned {
+  background: var(--parchment);
+  color: #6c6c6c;
+  border: 1px solid var(--border);
+}
 
 /* info rows */
-.info-row{display:flex;justify-content:space-between;align-items:flex-start;
-  padding:8px 0;border-bottom:1px solid var(--border-lt);gap:12px;font-size:13px}
-.info-row:last-child{border-bottom:none}
-.info-label{color:var(--muted);flex-shrink:0}
-.info-value{color:var(--ink);font-weight:500;text-align:right}
-
-/* order item row */
-.item-row{display:flex;gap:14px;align-items:flex-start;padding:16px 0;
-  border-bottom:1px solid var(--border-lt)}
-.item-row:last-child{border-bottom:none;padding-bottom:0}
-.item-img{width:68px;height:82px;border-radius:var(--radius-md);overflow:hidden;
-  background:var(--parchment);flex-shrink:0;border:1px solid var(--border-lt)}
-.item-img img{width:100%;height:100%;object-fit:cover}
-.item-body{flex:1;min-width:0}
-.item-name{font-family:var(--head);font-size:15px;font-weight:600;
-  color:var(--charcoal);margin-bottom:4px;line-height:1.3}
-.item-meta{font-size:12px;color:var(--muted-lt);margin-bottom:10px;line-height:1.6}
-.item-price{font-family:var(--head);font-size:16px;font-weight:700;
-  color:var(--terra-deep);white-space:nowrap}
-
-/* ── RETURN BUTTON STATES ── */
-
-/* 1. Active return button — order delivered, within window, no existing return */
-.btn-return{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:8px 18px;border-radius:var(--radius-md);
-  font-size:12.5px;font-weight:600;cursor:pointer;
-  background:var(--terra-pale);color:var(--terra-deep);
-  border:1.5px solid var(--blush);transition:var(--transition);
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-lt);
+  gap: 12px;
+  font-size: 13px;
 }
-.btn-return:hover{background:var(--terra);color:#fff;border-color:var(--terra)}
-
-/* 2. Return already submitted */
-.btn-return-submitted{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:8px 18px;border-radius:var(--radius-md);
-  font-size:12.5px;font-weight:600;
-  background:var(--warning-pale);color:var(--warning);
-  border:1.5px solid rgba(196,127,23,.3);cursor:default;
+.info-row:last-child {
+  border-bottom: none;
+}
+.info-label {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.info-value {
+  color: #ffffff;
+  font-weight: 500;
+  text-align: right;
 }
 
-/* 3. Return approved/completed */
-.btn-return-done{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:8px 18px;border-radius:var(--radius-md);
-  font-size:12.5px;font-weight:600;
-  background:var(--success-pale);color:var(--success);
-  border:1.5px solid rgba(58,125,90,.25);cursor:default;
+/* order item row — fully white */
+.item-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-lt);
+  background: white;
+}
+.item-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.item-img {
+  width: 68px;
+  height: 82px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--parchment);
+  flex-shrink: 0;
+  border: 1px solid var(--border-lt);
+}
+.item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.item-body {
+  flex: 1;
+  min-width: 0;
+}
+.item-name {
+  font-family: var(--head);
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.item-meta {
+  font-size: 12px;
+  color: var(--muted-lt);
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+.item-price {
+  font-family: var(--head);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--terra-deep);
+  white-space: nowrap;
 }
 
-/* 4. Deadline expired — button shown but disabled */
-.btn-return-expired{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:8px 18px;border-radius:var(--radius-md);
-  font-size:12.5px;font-weight:500;
-  background:var(--parchment);color:var(--muted-lt);
-  border:1.5px solid var(--border);cursor:not-allowed;
-  text-decoration:line-through;opacity:.65;
+/* ── RETURN BUTTON STATES (all white/light friendly) ── */
+
+.btn-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--terra-pale);
+  color: var(--terra-deep);
+  border: 1.5px solid var(--blush);
+  transition: var(--transition);
+}
+.btn-return:hover {
+  background: var(--terra);
+  color: #fff;
+  border-color: var(--terra);
+}
+.btn-return-submitted {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--warning-pale);
+  color: var(--warning);
+  border: 1.5px solid rgba(196,127,23,.3);
+  cursor: default;
+}
+.btn-return-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--success-pale);
+  color: var(--success);
+  border: 1.5px solid rgba(58,125,90,.25);
+  cursor: default;
+}
+.btn-return-expired {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 500;
+  background: var(--parchment);
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+  cursor: not-allowed;
+  text-decoration: line-through;
+  opacity: .65;
+}
+.btn-return-unavailable {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 500;
+  background: var(--parchment);
+  color: var(--muted);
+  border: 1.5px dashed var(--border);
+  cursor: not-allowed;
+  opacity: .45;
+}
+.deadline-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+.deadline-ok {
+  background: var(--success-pale);
+  color: var(--success);
+}
+.deadline-warn {
+  background: var(--warning-pale);
+  color: var(--warning);
+}
+.deadline-exp {
+  background: var(--danger-pale);
+  color: var(--danger);
 }
 
-/* 5. Not yet delivered — hidden/disabled */
-.btn-return-unavailable{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:8px 18px;border-radius:var(--radius-md);
-  font-size:12.5px;font-weight:500;
-  background:var(--parchment);color:var(--muted-lt);
-  border:1.5px dashed var(--border);cursor:not-allowed;opacity:.45;
+/* order timeline — lighter */
+.order-timeline {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+.tl-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 80px;
+  position: relative;
+}
+.tl-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+.tl-step.done:not(:last-child)::after {
+  background: var(--success);
+}
+.tl-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  z-index: 1;
+  position: relative;
+  transition: var(--transition);
+  color: #6c6c6c;
+}
+.tl-step.done .tl-dot {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+  font-weight: 700;
+}
+.tl-step.active .tl-dot {
+  background: var(--terra);
+  border-color: var(--terra);
+  color: #fff;
+  font-weight: 700;
+}
+.tl-step.cancelled .tl-dot {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.tl-step-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #d0d0d0;
+  margin-top: 7px;
+  text-align: center;
+}
+.tl-step.done .tl-step-label,
+.tl-step.active .tl-step-label {
+  color: #ffffff;
 }
 
-/* deadline countdown */
-.deadline-tag{display:inline-flex;align-items:center;gap:4px;
-  font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:10px;margin-left:6px}
-.deadline-ok  {background:var(--success-pale);color:var(--success)}
-.deadline-warn{background:var(--warning-pale);color:var(--warning)}
-.deadline-exp {background:var(--danger-pale);color:var(--danger)}
+/* summary — light colors */
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 6px 0;
+  color: var(--muted);
+}
+.sum-row .val {
+  color: #ffffff;
+  font-weight: 500;
+}
+.sum-divider {
+  height: 1px;
+  background: var(--border-lt);
+  margin: 8px 0;
+}
+.sum-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0 0;
+  font-family: var(--head);
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
 
-/* order timeline */
-.order-timeline{display:flex;gap:0;overflow-x:auto;padding:4px 0}
-.tl-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:80px;position:relative}
-.tl-step:not(:last-child)::after{content:'';position:absolute;top:14px;left:50%;
-  width:100%;height:2px;background:var(--border);z-index:0}
-.tl-step.done:not(:last-child)::after{background:var(--success)}
-.tl-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);
-  background:var(--warm-white);display:flex;align-items:center;justify-content:center;
-  font-size:11px;z-index:1;position:relative;transition:var(--transition)}
-.tl-step.done .tl-dot{background:var(--success);border-color:var(--success);color:#fff;font-weight:700}
-.tl-step.active .tl-dot{background:var(--terra);border-color:var(--terra);color:#fff;font-weight:700}
-.tl-step.cancelled .tl-dot{background:var(--danger);border-color:var(--danger);color:#fff}
-.tl-step-label{font-size:10.5px;font-weight:600;color:var(--muted);margin-top:7px;text-align:center}
-.tl-step.done .tl-step-label,.tl-step.active .tl-step-label{color:var(--ink)}
+/* back button */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--muted);
+  transition: var(--transition);
+  background: white;
+}
+.btn-back:hover {
+  border-color: var(--terra);
+  color: var(--terra);
+}
 
-/* summary */
-.sum-row{display:flex;justify-content:space-between;font-size:13px;
-  padding:6px 0;color:var(--muted)}
-.sum-row .val{color:var(--ink);font-weight:500}
-.sum-divider{height:1px;background:var(--border-lt);margin:8px 0}
-.sum-total{display:flex;justify-content:space-between;padding:8px 0 0;
-  font-family:var(--head);font-size:20px;font-weight:700;color:var(--ink)}
-
-.btn-back{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;
-  border:1.5px solid var(--border);border-radius:var(--radius-md);
-  font-size:13px;color:var(--muted);transition:var(--transition)}
-.btn-back:hover{border-color:var(--terra);color:var(--terra)}
+/* additional white background fixes */
+.navbar, .footer, header, .breadcrumbs, .page-wrap, body {
+  background-color: #ffffff;
+}
+.container, .card, .card-body, .card-head {
+  background-color: #ffffff;
+}
+.tl-dot {
+  background-color: #ffffff;
+}
 </style>
 
 <div class="page-wrap">
@@ -437,4 +779,179 @@ a{text-decoration:none;color:inherit}
 
 </div>
 </div>
+
+{% comment %}
+#############################################
+# INVOICE GENERATION - FULLY WHITE STYLED   #
+# Replaces all remaining black/dark colors  #
+#############################################
+{% endcomment %}
+{% block extra_invoice %}
+@login_required
+def download_invoice(request, uuid):
+    order = get_object_or_404(Order, uuid=uuid, user=request.user)
+    items = order.items.all()
+
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+        from reportlab.lib.units import mm
+        from reportlab.platypus import (
+            SimpleDocTemplate, Table, TableStyle, Paragraph,
+            Spacer, HRFlowable
+        )
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.enums import TA_RIGHT, TA_CENTER
+        import io
+
+        buf      = io.BytesIO()
+        doc      = SimpleDocTemplate(buf, pagesize=A4,
+                       leftMargin=20*mm, rightMargin=20*mm,
+                       topMargin=18*mm, bottomMargin=18*mm)
+        styles   = getSampleStyleSheet()
+        W, _     = A4
+        usable_w = W - 40*mm
+
+        def ps(name, **kw):
+            return ParagraphStyle(name, **kw)
+
+        # White-style color definitions for invoice (replacing all dark/black)
+        s_head   = ps('h', fontSize=9,   fontName='Helvetica-Bold',
+                       textColor=colors.HexColor('#6c6c6c'))  # soft gray instead of dark
+        s_body   = ps('b', fontSize=8.5, fontName='Helvetica',
+                       textColor=colors.HexColor('#5a5a5a'), leading=13)
+        s_right  = ps('r', fontSize=8.5, fontName='Helvetica',
+                       alignment=TA_RIGHT, textColor=colors.HexColor('#5a5a5a'))
+        s_center = ps('c', fontSize=8,   fontName='Helvetica',
+                       alignment=TA_CENTER, textColor=colors.HexColor('#9e9e9e'))
+
+        TERRA  = colors.HexColor('#b56744')
+        LIGHT  = colors.HexColor('#faf8f5')   # off-white for backgrounds
+        BORDER = colors.HexColor('#e0d9d0')
+        INK    = colors.HexColor('#6c6c6c')    # replaced #2e2925 with soft gray
+
+        story = []
+
+        ht = Table([[
+            Paragraph('<font name="Helvetica-Bold" size="20" color="#6c6c6c">VESKA</font><br/>'
+                      '<font name="Helvetica" size="8" color="#b56744">Fashion · Style · Elegance</font>',
+                      styles['Normal']),
+            Paragraph(
+                f'<font name="Helvetica-Bold" size="14" color="#6c6c6c">INVOICE</font><br/>'
+                f'<font name="Helvetica" size="8" color="#9e9e9e">#{order.uuid}</font><br/>'
+                f'<font name="Helvetica" size="8" color="#9e9e9e">'
+                f'{order.created_at.strftime("%d %B %Y")}</font>',
+                ps('hr', alignment=TA_RIGHT)
+            ),
+        ]], colWidths=[usable_w*0.6, usable_w*0.4])
+        ht.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'MIDDLE'),('BOTTOMPADDING',(0,0),(-1,-1),8)]))
+        story.append(ht)
+        story.append(HRFlowable(width=usable_w, thickness=1.5, color=TERRA, spaceAfter=10))
+        
+        address_parts = []
+        if hasattr(order, 'address_line1') and order.address_line1:
+            address_parts.append(order.address_line1)
+        if hasattr(order, 'address_line2') and order.address_line2:
+            address_parts.append(order.address_line2)
+        if hasattr(order, 'city') and order.city:
+            address_parts.append(order.city)
+        if hasattr(order, 'state') and order.state:
+            address_parts.append(order.state)
+        if hasattr(order, 'pincode') and order.pincode:
+            address_parts.append(order.pincode)
+        
+        address_one_line = ', '.join(address_parts)
+
+        bt = Table([
+            [Paragraph('<b>Bill To</b>', s_head), Paragraph('<b>Order Info</b>', s_head)],
+            [Paragraph(f'{order.full_name}<br/>{order.phone}', s_body),
+             Paragraph(f'Order: <b>#{order.uuid}</b>', s_body)],
+            [Paragraph(address_one_line, s_body),
+             Paragraph(f'Date: {order.created_at.strftime("%d %b %Y, %I:%M %p")}', s_body)],
+            [Paragraph('', s_body), Paragraph(f'Status: <b>{order.get_status_display()}</b>', s_body)],
+            [Paragraph('', s_body), Paragraph(f'Payment: {order.get_payment_method_display()}', s_body)],
+        ], colWidths=[usable_w*0.55, usable_w*0.45])
+        bt.setStyle(TableStyle([
+            ('VALIGN',(0,0),(-1,-1),'TOP'),('BOTTOMPADDING',(0,0),(-1,-1),4),
+            ('BACKGROUND',(0,0),(-1,0),LIGHT),
+        ]))
+        story.append(bt)
+        story.append(Spacer(1, 10))
+
+        col_w = [usable_w*0.42, usable_w*0.13, usable_w*0.15, usable_w*0.15, usable_w*0.15]
+        rows  = [[
+            Paragraph('<b>Product</b>', s_head),
+            Paragraph('<b>Size</b>',   ps('ch',  alignment=TA_CENTER, fontSize=9, fontName='Helvetica-Bold', textColor=INK)),
+            Paragraph('<b>Qty</b>',    ps('ch2', alignment=TA_CENTER, fontSize=9, fontName='Helvetica-Bold', textColor=INK)),
+            Paragraph('<b>Unit Price</b>', ps('rh', alignment=TA_RIGHT, fontSize=9, fontName='Helvetica-Bold', textColor=INK)),
+            Paragraph('<b>Total</b>',  ps('rh2', alignment=TA_RIGHT, fontSize=9, fontName='Helvetica-Bold', textColor=INK)),
+        ]]
+
+        for it in items:
+            note = ' <font color="#b53333">(cancelled)</font>' if it.cancel_status == 'cancelled' else ''
+            
+            size_value = getattr(it, 'size', None) or getattr(it, 'size_name', None) or '—'
+            
+            if hasattr(it, 'line_total') and it.line_total:
+                line_total = it.line_total
+            else:
+                line_total = it.quantity * it.unit_price
+            
+            rows.append([
+                Paragraph(f'{it.product_name}{note}', s_body),
+                Paragraph(str(size_value), ps('cc',  alignment=TA_CENTER, fontSize=8.5, fontName='Helvetica', textColor='#5a5a5a')),
+                Paragraph(str(it.quantity), ps('ccc', alignment=TA_CENTER, fontSize=8.5, fontName='Helvetica', textColor='#5a5a5a')),
+                Paragraph(f'₹{it.unit_price:.2f}', s_right),
+                Paragraph(f'₹{line_total:.2f}', s_right),
+            ])
+
+        item_table = Table(rows, colWidths=col_w, repeatRows=1)
+        item_table.setStyle(TableStyle([
+            ('BACKGROUND',(0,0),(-1,0),INK),('TEXTCOLOR',(0,0),(-1,0),colors.white),
+            ('GRID',(0,0),(-1,-1),0.4,BORDER),
+            ('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,LIGHT]),
+            ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+            ('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5),
+            ('LEFTPADDING',(0,0),(-1,-1),6),('RIGHTPADDING',(0,0),(-1,-1),6),
+        ]))
+        story.append(item_table)
+        story.append(Spacer(1, 8))
+
+        def tot_row(label, value, bold=False):
+            fn = 'Helvetica-Bold' if bold else 'Helvetica'
+            fs = 9 if bold else 8.5
+            text_color = INK if not bold else colors.HexColor('#b56744')  # terra for total
+            return ['', '', '',
+                    Paragraph(label, ps(f'l{label}', fontSize=fs, fontName=fn, alignment=TA_RIGHT, textColor=text_color)),
+                    Paragraph(value, ps(f'v{label}', fontSize=fs, fontName=fn, alignment=TA_RIGHT, textColor=text_color))]
+
+        tot_rows = [tot_row('Subtotal', f'₹{order.subtotal:.2f}')]
+        if order.discount_amount:
+            tot_rows.append(tot_row(f'Discount ({order.coupon_code})', f'−₹{order.discount_amount:.2f}'))
+        tot_rows.append(tot_row('Shipping',
+            'FREE' if order.shipping_charge == 0 else f'₹{order.shipping_charge:.2f}'))
+        tot_rows.append(tot_row('TOTAL', f'₹{order.total:.2f}', bold=True))
+
+        tot_table = Table(tot_rows, colWidths=col_w)
+        tot_table.setStyle(TableStyle([
+            ('LINEABOVE',(3,len(tot_rows)-1),(-1,len(tot_rows)-1),1,TERRA),
+            ('TOPPADDING',(0,0),(-1,-1),3),('BOTTOMPADDING',(0,0),(-1,-1),3),
+        ]))
+        story.append(tot_table)
+        story.append(Spacer(1, 16))
+        story.append(HRFlowable(width=usable_w, thickness=0.5, color=BORDER, spaceAfter=8))
+        story.append(Paragraph(
+            'Thank you for shopping with Veska! '
+            'For queries contact support@veska.in · www.veska.in', s_center))
+
+        doc.build(story)
+        buf.seek(0)
+        response = HttpResponse(buf, content_type='application/pdf')
+        response['Content-Disposition'] = (
+            f'attachment; filename="Veska_Invoice_{order.uuid}.pdf"')
+        return response
+
+    except ImportError:
+        return _html_invoice_fallback(request, order, items)
+{% endblock extra_invoice %}
 {% endblock %}

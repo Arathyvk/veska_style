@@ -17,6 +17,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 LOW_STOCK_THRESHOLD = 5
+EXCLUDED_STATUSES = ["cancelled", "returned", "return_requested"]
 
 
 def is_admin(user):
@@ -39,7 +40,9 @@ def _monthly_revenue(year):
                 created_at__year=year,
                 created_at__month=month,
                 payment_status="paid",
-            ).aggregate(s=Sum("total"))["s"]
+            )
+            .exclude(status__in=EXCLUDED_STATUSES)
+            .aggregate(s=Sum("total"))["s"]
             or 0
         )
         data.append(float(total))
@@ -62,68 +65,119 @@ def admin_dashboard(request):
         day=1, hour=0, minute=0, second=0, microsecond=0
     )
 
+    
     revenue_this = (
         Order.objects.filter(
-            created_at__gte=this_month_start, payment_status="paid"
-        ).aggregate(s=Sum("total"))["s"]
+            created_at__gte=this_month_start,
+            payment_status="paid",
+        )
+        .exclude(status__in=EXCLUDED_STATUSES)
+        .aggregate(s=Sum("total"))["s"]
         or 0
     )
+
     revenue_last = (
         Order.objects.filter(
             created_at__gte=last_month_start,
             created_at__lte=last_month_end,
             payment_status="paid",
-        ).aggregate(s=Sum("total"))["s"]
+        )
+        .exclude(status__in=EXCLUDED_STATUSES)
+        .aggregate(s=Sum("total"))["s"]
         or 0
     )
+
     revenue_all = (
-        Order.objects.filter(payment_status="paid").aggregate(s=Sum("total"))["s"] or 0
-    )
-
-    orders_this = Order.objects.filter(created_at__gte=this_month_start).count()
-    orders_last = Order.objects.filter(
-        created_at__gte=last_month_start, created_at__lte=last_month_end
-    ).count()
-    orders_total = Order.objects.count()
-
-    items_this = (
-        OrderItem.objects.filter(
-            order__created_at__gte=this_month_start
-        ).aggregate(s=Sum("quantity"))["s"]
+        Order.objects.filter(payment_status="paid")
+        .exclude(status__in=EXCLUDED_STATUSES)
+        .aggregate(s=Sum("total"))["s"]
         or 0
     )
+
+    
+    items_this = (
+        OrderItem.objects.filter(order__created_at__gte=this_month_start)
+        .exclude(order__status__in=EXCLUDED_STATUSES)
+        .aggregate(s=Sum("quantity"))["s"]
+        or 0
+    )
+
     items_last = (
         OrderItem.objects.filter(
             order__created_at__gte=last_month_start,
             order__created_at__lte=last_month_end,
-        ).aggregate(s=Sum("quantity"))["s"]
+        )
+        .exclude(order__status__in=EXCLUDED_STATUSES)
+        .aggregate(s=Sum("quantity"))["s"]
         or 0
     )
 
-    customers_this = User.objects.filter(
-        is_staff=False, date_joined__gte=this_month_start
-    ).count()
-    customers_last = User.objects.filter(
-        is_staff=False,
-        date_joined__gte=last_month_start,
-        date_joined__lte=last_month_end,
-    ).count()
+    
+    orders_this = (
+        Order.objects.filter(created_at__gte=this_month_start)
+        .exclude(status__in=EXCLUDED_STATUSES)
+        .count()
+    )
+
+    orders_last = (
+        Order.objects.filter(
+            created_at__gte=last_month_start,
+            created_at__lte=last_month_end,
+        )
+        .exclude(status__in=EXCLUDED_STATUSES)
+        .count()
+    )
+
+    orders_total = (
+        Order.objects.exclude(status__in=EXCLUDED_STATUSES).count()
+    )
+
+    
+    customers_this = (
+        User.objects.filter(
+            is_staff=False,
+            date_joined__gte=this_month_start
+        ).count()
+    )
+    
+    customers_last = (
+        User.objects.filter(
+            is_staff=False,
+            date_joined__gte=last_month_start,
+            date_joined__lte=last_month_end,
+        ).count()
+    )
+    
     customers_total = User.objects.filter(is_staff=False).count()
 
+    
     status_counts = {}
-    for status, _ in [
-        ("pending", ""),
-        ("confirmed", ""),
-        ("processing", ""),
-        ("shipped", ""),
-        ("delivered", ""),
-        ("cancelled", ""),
-        ("return_requested", ""),
-        ("returned", ""),
-    ]:
+    for status in ["pending", "confirmed", "processing", "shipped", "delivered", 
+                   "cancelled", "return_requested", "returned"]:
         status_counts[status] = Order.objects.filter(status=status).count()
 
-    month_labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    today_orders = (
+        Order.objects.filter(created_at__gte=today_start)
+        .exclude(status__in=EXCLUDED_STATUSES)
+        .count()
+    )
+    
+    today_revenue = (
+        Order.objects.filter(
+            created_at__gte=today_start,
+            payment_status="paid"
+        )
+        .exclude(status__in=EXCLUDED_STATUSES)
+        .aggregate(s=Sum("total"))["s"]
+        or 0
+    )
+
+    
+    month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     chart_revenue = _monthly_revenue(current_year)
 
     recent_orders = (
@@ -132,50 +186,54 @@ def admin_dashboard(request):
         .order_by("-created_at")[:8]
     )
 
-    low_stock = Product.objects.filter(
-        stock__gt=0, stock__lte=LOW_STOCK_THRESHOLD
-    ).order_by("stock")[:8]
-
+    
+    low_stock = (
+        Product.objects.filter(stock__gt=0, stock__lte=LOW_STOCK_THRESHOLD)
+        .order_by("stock")[:8]
+    )
+    
     out_of_stock = Product.objects.filter(stock=0).count()
 
+    
     top_products = (
-        OrderItem.objects.values("product__name")
+        OrderItem.objects
+        .exclude(order__status__in=EXCLUDED_STATUSES)
+        .values("product__name")
         .annotate(sold=Sum("quantity"))
         .order_by("-sold")[:5]
     )
 
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_orders = Order.objects.filter(created_at__gte=today_start).count()
-    today_revenue = (
-        Order.objects.filter(
-            created_at__gte=today_start, payment_status="paid"
-        ).aggregate(s=Sum("total"))["s"]
-        or 0
-    )
-
+    
     context = {
         "revenue": revenue_all,
         "revenue_this": revenue_this,
         "revenue_pct": _pct_change(revenue_this, revenue_last),
+        
         "orders_count": orders_total,
         "orders_this": orders_this,
         "orders_pct": _pct_change(orders_this, orders_last),
+        
         "items_sold": items_this,
         "items_pct": _pct_change(items_this, items_last),
+        
         "customers": customers_total,
         "customers_this": customers_this,
         "customers_pct": _pct_change(customers_this, customers_last),
+        
         "chart_labels": json.dumps(month_labels),
         "chart_revenue": json.dumps(chart_revenue),
+        
         "status_counts": status_counts,
         "recent_orders": recent_orders,
         "low_stock": low_stock,
         "out_of_stock": out_of_stock,
         "top_products": top_products,
+        
         "current_year": current_year,
         "today_orders": today_orders,
         "today_revenue": today_revenue,
     }
+    
     return render(request, "dashboard.html", context)
 
 

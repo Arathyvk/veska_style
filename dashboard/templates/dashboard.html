@@ -24,8 +24,6 @@
   --amber:    #e09a3c;
   --blue:     #5b9bd5;
   --radius:   10px;
-  --head:     'Playfair Display', serif;
-  --body:     'DM Sans', sans-serif;
   --shadow:   0 4px 24px rgba(0,0,0,.35);
 }
 
@@ -45,12 +43,12 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
   color: var(--text); letter-spacing: -.3px;
 }
 .dash-heading h1 em { font-style: italic; color: var(--rose2); }
-.dash-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.dash-meta { font-size: 15px; color: var(--muted); margin-top: 3px; }
 
 .dash-actions { display: flex; align-items: center; gap: 10px; }
 .year-select {
   background: var(--card2); border: 1px solid var(--border2);
-  border-radius: 20px; color: var(--muted2); font-size: 12px; font-weight: 500;
+  border-radius: 20px; color: var(--muted2); font-size: 15px; font-weight: 500;
   padding: 6px 14px; cursor: pointer; font-family: var(--body); outline: none;
   transition: border-color .15s;
 }
@@ -58,7 +56,7 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 .btn-orders {
   display: inline-flex; align-items: center; gap: 7px;
   background: linear-gradient(135deg, var(--rose), #a06848);
-  color: #fff; font-size: 12px; font-weight: 600;
+  color: #fff; font-size: 15px; font-weight: 600;
   padding: 8px 18px; border-radius: 20px; border: none; cursor: pointer;
   font-family: var(--body); box-shadow: 0 3px 12px rgba(201,150,122,.3);
   transition: opacity .2s; text-decoration: none;
@@ -72,7 +70,7 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 .today-chip {
   display: flex; align-items: center; gap: 8px;
   background: var(--card2); border: 1px solid var(--border);
-  border-radius: 20px; padding: 7px 16px; font-size: 12px;
+  border-radius: 20px; padding: 7px 16px; font-size: 15px;
 }
 .today-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rose); animation: pulse 2s infinite; }
 .today-chip strong { color: var(--text); font-weight: 600; }
@@ -80,7 +78,7 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 
 /* ── section label ── */
 .section-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+  font-size: 15px; font-weight: 700; letter-spacing: 1.2px;
   text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
 }
 
@@ -113,21 +111,21 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
   justify-content: center; font-size: 15px; flex-shrink: 0;
 }
 .kpi-label {
-  font-size: 11px; font-weight: 600; color: var(--muted2);
+  font-size: 15px; font-weight: 600; color: var(--muted2);
   text-transform: uppercase; letter-spacing: .7px;
 }
 .kpi-badge {
-  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+  font-size: 15px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
 }
 .kpi-badge.up   { background: rgba(76,175,125,.15); color: var(--green); }
 .kpi-badge.down { background: rgba(224,82,82,.15);  color: var(--red); }
 .kpi-badge.flat { background: rgba(176,160,144,.15); color: var(--muted2); }
 
 .kpi-value {
-  font-family: var(--head); font-size: 28px; font-weight: 600;
+   font-size: 28px; font-weight: 600;
   color: var(--text); line-height: 1;
 }
-.kpi-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.kpi-sub { font-size: 15px; color: var(--muted); margin-top: 2px; }
 
 /* ── main grid ── */
 .dash-grid {
@@ -161,7 +159,7 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 .view-details-btn {
   display: inline-flex; align-items: center; gap: 5px;
   background: var(--card2); border: 1px solid var(--border2);
-  border-radius: 20px; font-size: 11.5px; font-weight: 600;
+  border-radius: 20px; font-size: 15px; font-weight: 600;
   color: var(--muted2); padding: 5px 14px; text-decoration: none;
   transition: all .15s;
 }
@@ -180,7 +178,7 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 .status-rows { display: flex; flex-direction: column; gap: 10px; }
 .status-row  { display: flex; flex-direction: column; gap: 5px; }
 .status-row-top {
-  display: flex; align-items: center; justify-content: space-between; font-size: 12px;
+  display: flex; align-items: center; justify-content: space-between; font-size: 15px;
 }
 .status-row-label { color: var(--muted2); font-weight: 500; }
 .status-row-count { color: var(--text); font-weight: 700; }
@@ -189,7 +187,7 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
 .status-total-chip {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
-  font-size: 12px; color: var(--muted2);
+  font-size: 15px; color: var(--muted2);
 }
 .status-total-chip strong { color: var(--text); font-weight: 700; }
 
@@ -212,14 +210,14 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
   font-family: var(--head); font-size: 15px; font-weight: 500; color: var(--text);
 }
 .tbl-card-head a {
-  font-size: 11px; color: var(--rose); text-decoration: none; font-weight: 600;
+  font-size: 15px; color: var(--rose); text-decoration: none; font-weight: 600;
 }
 .tbl-card-head a:hover { color: var(--rose2); }
 .tbl-scroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
 thead tr { background: var(--card2); }
 th {
-  padding: 9px 14px; text-align: left; font-size: 10px; font-weight: 700;
+  padding: 9px 14px; text-align: left; font-size: 15px; font-weight: 700;
   letter-spacing: .8px; text-transform: uppercase; color: var(--muted);
   border-bottom: 1px solid var(--border); white-space: nowrap;
 }
@@ -235,7 +233,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
 
 /* ── status pills ── */
 .pill {
-  display: inline-block; font-size: 10px; font-weight: 700;
+  display: inline-block; font-size: 15px; font-weight: 700;
   padding: 2px 9px; border-radius: 20px; letter-spacing: .3px;
 }
 .pill-pending    { background: rgba(224,154,60,.15);  color: var(--amber); }
@@ -260,15 +258,15 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
 .stock-item:last-child { border-bottom: none; }
 .stock-item:hover { background: rgba(201,150,122,.04); }
 .stock-name {
-  font-size: 13px; color: var(--text); font-weight: 500;
+  font-size: 15px; color: var(--text); font-weight: 500;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
 }
 .stock-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.stock-qty { font-size: 12px; font-weight: 700; }
+.stock-qty { font-size: 15px; font-weight: 700; }
 .stock-qty.critical { color: var(--red); }
 .stock-qty.low      { color: var(--amber); }
 .stock-edit {
-  font-size: 10px; background: var(--card3); border: 1px solid var(--border2);
+  font-size: 15px; background: var(--card3); border: 1px solid var(--border2);
   color: var(--muted2); padding: 2px 8px; border-radius: 4px;
   text-decoration: none; transition: all .15s;
 }
@@ -277,7 +275,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 18px; background: rgba(224,82,82,.07);
   border-top: 1px solid rgba(224,82,82,.15);
-  font-size: 12px; color: var(--red); font-weight: 600;
+  font-size: 15px; color: var(--red); font-weight: 600;
 }
 
 /* ── right col extras ── */
@@ -292,16 +290,16 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
 .top-prod-row:last-child { border-bottom: none; }
 .top-prod-row:hover { background: rgba(201,150,122,.04); }
 .top-rank {
-  width: 22px; height: 22px; border-radius: 50%; font-size: 10px; font-weight: 700;
+  width: 22px; height: 22px; border-radius: 50%; font-size: 15px; font-weight: 700;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   background: var(--card3); color: var(--muted2);
 }
 .top-rank.gold   { background: rgba(224,154,60,.2); color: var(--amber); }
 .top-rank.silver { background: rgba(176,160,144,.2); color: #b0a090; }
 .top-rank.bronze { background: rgba(201,150,122,.15); color: var(--rose); }
-.top-prod-name { flex: 1; font-size: 12.5px; color: var(--text); font-weight: 500;
+.top-prod-name { flex: 1; font-size: 15px; color: var(--text); font-weight: 500;
                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.top-prod-sold { font-size: 12px; font-weight: 700; color: var(--rose2); flex-shrink: 0; }
+.top-prod-sold { font-size: 15px; font-weight: 700; color: var(--rose2); flex-shrink: 0; }
 
 /* ── quick actions ── */
 .quick-actions {
@@ -311,7 +309,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
 .qa-btn {
   display: flex; align-items: center; gap: 7px; padding: 10px 12px;
   background: var(--card2); border: 1px solid var(--border2);
-  border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--muted2);
+  border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--muted2);
   text-decoration: none; transition: all .15s;
 }
 .qa-btn:hover { border-color: var(--rose); color: var(--rose2); background: var(--card3); }
@@ -320,7 +318,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
 /* ── footer ── */
 .dash-footer {
   text-align: center; padding: 24px 0 0;
-  font-size: 12px; color: var(--muted); border-top: 1px solid var(--border);
+  font-size: 15px; color: var(--muted); border-top: 1px solid var(--border);
   margin-top: 36px;
 }
 
@@ -591,7 +589,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
               </td>
               <td>
                 <strong>{{ order.full_name }}</strong><br>
-                <span style="font-size:11px;color:var(--muted)">{{ order.user.email }}</span>
+                <span style="font-size:15px;color:var(--muted)">{{ order.user.email }}</span>
               </td>
               <td><strong>₹{{ order.total|floatformat:0 }}</strong></td>
               <td><span class="pill pill-{{ order.status }}">{{ order.status|title }}</span></td>
@@ -672,7 +670,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
             </div>
           </div>
           {% empty %}
-          <div style="padding:20px 18px;color:var(--muted);font-size:13px">
+          <div style="padding:20px 18px;color:var(--muted);font-size:15px">
             ✓ All products sufficiently stocked
           </div>
           {% endfor %}
@@ -701,7 +699,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
             <span class="top-prod-sold">{{ item.sold }} sold</span>
           </div>
           {% empty %}
-          <div style="padding:20px 18px;color:var(--muted);font-size:13px">No sales data yet.</div>
+          <div style="padding:20px 18px;color:var(--muted);font-size:15px">No sales data yet.</div>
           {% endfor %}
         </div>
       </div>

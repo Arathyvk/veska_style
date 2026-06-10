@@ -4,7 +4,7 @@ from . import views
 urlpatterns = [
 
      path('',views.admin_order_list,name='admin_order_list'),
-     path('orders/<uuid:uuid>/',views.order_detail,name='admin_order_detail'),
+     path('admin_orders/<uuid:uuid>/',views.admin_order_detail,name='admin_order_detail'),
      path('orders/<uuid:uuid>/status/',views.order_update_status,name='admin_order_update_status'),
      path('orders/<uuid:uuid>/send_status/',views._send_status_update_email,name='_send_status_update_email'),
      path('inventory/',views.inventory_list,name='admin_inventory_list'),

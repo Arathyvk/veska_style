@@ -275,16 +275,15 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
   <div class="frow">
     <label class="flabel">Category <span class="req">*</span></label>
 
-    <select name="category" class="fselect" required>
-      <option value="">— Select —</option>
+<select name="category" class="fselect" required>
+    <option value="">Choose Category</option>
 
-      {% for value, label in form.fields.category.choices %}
-        <option value="{{ value }}"
-          {% if form.category.value == value %}selected{% endif %}>
-          {{ label }}
+    {% for category in categories %}
+        <option value="{{ category.id }}">
+            {{ category.name }}
         </option>
-      {% endfor %}
-    </select>
+    {% endfor %}
+</select>
 
     {% if form.category.errors %}
       <div class="ferror">{{ form.category.errors.0 }}</div>

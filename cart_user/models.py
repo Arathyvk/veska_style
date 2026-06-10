@@ -34,6 +34,13 @@ class Cart(models.Model):
         return self.items.select_related('product', 'variant').filter(
             product__is_active=True
         )
+    
+
+    @property
+    def available_stock(self):
+        if self.variant:
+            return self.variant.stock
+        return self.product.total_stock  
 
 
 class CartItem(models.Model):
