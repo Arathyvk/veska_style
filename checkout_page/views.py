@@ -54,17 +54,16 @@ def _calc_totals(subtotal: Decimal, offer_discount: Decimal = Decimal('0'),
                  coupon_discount: Decimal = Decimal('0'),
                  wallet_used: Decimal = Decimal('0')) -> dict:
     after_discounts = subtotal - offer_discount - coupon_discount
-    shipping        = SHIPPING_CHARGE if after_discounts < FREE_SHIPPING_THRESHOLD else Decimal('0')
-    grand           = max(after_discounts + shipping - wallet_used, Decimal('0'))
+    shipping = SHIPPING_CHARGE if after_discounts < FREE_SHIPPING_THRESHOLD else Decimal('0')
+    grand = max(after_discounts + shipping - wallet_used, Decimal('0'))
     return {
-        'subtotal':        subtotal,
-        'offer_discount':  offer_discount,
-        'shipping':        shipping,
+        'subtotal': subtotal,
+        'offer_discount': offer_discount,
+        'shipping': shipping,
         'coupon_discount': coupon_discount,
-        'wallet_used':     wallet_used,
-        'grand_total':     grand,
+        'wallet_used': wallet_used,
+        'grand_total': grand,
     }
-
 
 def _item_price(item):
     return item.variant.price if (item.variant and item.variant.price) else item.product.price
@@ -341,11 +340,15 @@ def checkout(request):
         if best_discount > 0 and best_offer_name:
             offer_details_list.append(f"{best_offer_name}")
 
-    # ✅ Save offer discount to session
     request.session['offer_discount'] = str(offer_discount)
     request.session['offer_details'] = ', '.join(set(offer_details_list)) if offer_details_list else ''
 
-    totals = _calc_totals(subtotal, offer_discount, coupon_discount)
+    # FIXED: Use the corrected calculation
+    totals = _calc_totals(
+        subtotal=subtotal,
+        offer_discount=offer_discount,
+        coupon_discount=coupon_discount
+    )
     addresses = request.user.addresses.all()
     selected = addresses.filter(is_default=True).first() or addresses.first()
 
@@ -468,7 +471,6 @@ def stripe_create_checkout_session(request):
             },
         )
 
-        # Save payment record
         StripePayment.objects.create(
             user=request.user,
             session_id=checkout_session.id,
@@ -553,8 +555,8 @@ def payment_success(request):
         shipping_amount = Decimal(str(raw_meta.get('shipping_amount') or '0'))
         subtotal = Decimal(str(raw_meta.get('subtotal') or '0'))
         cart_id = int(raw_meta.get('cart_id') or 0)
-        offer_discount = Decimal(str(raw_meta.get('offer_discount') or '0'))  # ✅ Now this will have value
-        offer_details = request.session.get('offer_details', '')  # Get from session if available
+        offer_discount = Decimal(str(raw_meta.get('offer_discount') or '0'))  
+        offer_details = request.session.get('offer_details', '') 
     except (ValueError, TypeError) as e:
         print(f'[payment_success] Metadata parse error: {e}')
         messages.error(request, 'Order data is corrupted. Please contact support.')
@@ -607,7 +609,7 @@ def payment_success(request):
                 country=address.country,
                 subtotal=subtotal,
                 offer_discount=offer_discount,
-                offer_details=offer_details,  # ✅ Save offer details
+                offer_details=offer_details,  
                 shipping_charge=shipping_amount,
                 wallet_amount_used=wallet_amount,
                 total=total_paid,
@@ -779,12 +781,14 @@ def place_order(request):
 
         coupon_code     = request.session.get('coupon_code', '')
         coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
-        coupon_obj      = None
+        offer_discount  = Decimal(str(request.session.get('offer_discount', '0')))
+        
+        coupon_obj = None
         if coupon_code:
             try:
                 coupon_obj = Coupon.objects.get(code=coupon_code, is_active=True)
             except Coupon.DoesNotExist:
-                coupon_code     = ''
+                coupon_code = ''
                 coupon_discount = Decimal('0')
 
         try:
@@ -800,9 +804,14 @@ def place_order(request):
             wallet_used = min(wallet_amount, wb)
         else:
             wallet_used = Decimal('0')
-        offer_discount = Decimal(str(request.session.get('offer_discount', '0')))
 
-        totals = _calc_totals(subtotal, coupon_discount, wallet_used)
+        # FIXED: Pass all parameters correctly
+        totals = _calc_totals(
+            subtotal=subtotal,
+            offer_discount=offer_discount,
+            coupon_discount=coupon_discount,
+            wallet_used=wallet_used
+        )
 
         if payment_method == 'wallet' and totals['grand_total'] > 0:
             return JsonResponse({

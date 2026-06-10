@@ -66,6 +66,7 @@
 
         <!-- Full Name -->
         <div class="frow">
+          <div class="addr-name">{{ order.full_name }}</div>
           <label class="flabel">Full Name <span class="req">*</span></label>
           <input class="finput {% if errors.full_name %}has-error{% endif %}" type="text" name="full_name"
                  value="{% if action == 'edit' %}{{ address.full_name }}{% else %}{{ data.full_name|default:'' }}{% endif %}"
