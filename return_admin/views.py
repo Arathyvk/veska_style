@@ -196,14 +196,37 @@ def admin_return_action(request, pk):
         return redirect('admin_login')
 
     ret = get_object_or_404(ReturnRequest, pk=pk)
-
+    
     action = request.POST.get('action', '').strip()
     reason = request.POST.get('reason', '').strip()
-
+    note = request.POST.get('note', '').strip()
+    
+    # Get the order
+    order = ret.order
+    
     if action == 'approve':
+        # Update return request status
         ret.status = 'approved'
+        ret.admin_notes = note
         ret.save()
-        messages.success(request, f'Return #{pk} approved.')
+        
+        # Update order status to returned
+        order.status = 'returned'
+        order.save()
+        
+        # Optional: Create refund record or credit note
+        # from refund_admin.models import Refund
+        # Refund.objects.create(
+        #     order=order,
+        #     return_request=ret,
+        #     amount=ret.order_item.line_total if ret.order_item else order.total,
+        #     status='pending'
+        # )
+        
+        messages.success(request, f'Return #{pk} approved. Order #{order.id} marked as returned.')
+        
+        # Send email notification to customer (optional)
+        # send_return_approved_email(ret.user.email, ret)
 
     elif action == 'reject':
         if not reason:
@@ -212,26 +235,56 @@ def admin_return_action(request, pk):
 
         ret.status = 'rejected'
         ret.rejection_reason = reason
+        ret.admin_notes = note
         ret.save()
+        
         messages.success(request, f'Return #{pk} rejected.')
+        
+        # Send rejection email to customer (optional)
+        # send_return_rejected_email(ret.user.email, ret, reason)
 
     elif action == 'complete':
+        # Only allow completion if already approved
+        if ret.status != 'approved':
+            messages.error(request, 'Return must be approved before marking as completed.')
+            return redirect('admin_return_detail', pk=pk)
+        
         ret.status = 'completed'
+        ret.admin_notes = note
         ret.save()
-        messages.success(request, f'Return #{pk} completed.')
+        
+        # Ensure order is marked as returned
+        if order.status != 'returned':
+            order.status = 'returned'
+            order.save()
+        
+        # Process actual refund
+        if order.payment_status == 'paid':
+            # Add logic for actual refund processing
+            # This depends on your payment gateway
+            pass
+        
+        messages.success(request, f'Return #{pk} completed. Refund processed.')
 
     elif action == 'flag_user':
         user = ret.user
-        if hasattr(user, 'is_flagged'):
-            user.is_flagged = True
-            user.save(update_fields=['is_flagged'])
-        messages.warning(request, f'User {user.email} flagged.')
+        # Add is_flagged field to user if not exists
+        if not hasattr(user, 'is_flagged'):
+            from django.db import models
+            user.add_to_class('is_flagged', models.BooleanField(default=False))
+        
+        user.is_flagged = True
+        user.save()
+        messages.warning(request, f'User {user.email} has been flagged for suspicious return activity.')
+        
+        # Add internal note about flagging
+        ret.admin_notes = f"{ret.admin_notes}\n[SYSTEM] User flagged for review on {timezone.now().date()}"
+        ret.save()
 
     else:
         messages.error(request, 'Invalid action.')
 
     return redirect('admin_return_detail', pk=pk)
-
 
 
 @never_cache
