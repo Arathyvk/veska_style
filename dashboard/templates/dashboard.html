@@ -532,11 +532,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
       <span>Today's orders</span>
       <strong>{{ today_orders|default:"0" }}</strong>
     </div>
-    <div class="today-chip">
-      <span class="dot"></span>
-      <span>Today's revenue</span>
-      <strong>₹{{ today_revenue|floatformat:0|default:"0" }}</strong>
-    </div>
+    
     <div class="today-chip">
       <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
       <span>Total customers</span>
@@ -561,8 +557,8 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
       </div>
       <div>
         <div class="kpi-label">Total Revenue</div>
-        <div class="kpi-value">₹{{ revenue|floatformat:0|default:"0" }}</div>
-        <div class="kpi-sub">₹{{ revenue_this|floatformat:0|default:"0" }} this month</div>
+        <div class="kpi-value">₹{{ revenue|floatformat:0 }}</div>
+        <div class="kpi-sub">₹{{ revenue_this|floatformat:0 }} this month</div>
       </div>
     </div>
 
@@ -574,8 +570,8 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
       </div>
       <div>
         <div class="kpi-label">Total Orders</div>
-        <div class="kpi-value">{{ orders_count|default:"0" }}</div>
-        <div class="kpi-sub">{{ orders_this|default:"0" }} this month</div>
+        <div class="kpi-value">{{ orders_count }}</div>
+        <div class="kpi-sub">{{ orders_this }} this month</div>
       </div>
     </div>
 

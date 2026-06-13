@@ -224,7 +224,7 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
   </div>
 
   <div class="stat-row">
-    <a href="{% url 'admin_inventory_list' %}" class="scard {% if not stock_filter and not status_filter %}on{% endif %}"><div class="scard-lbl">Total</div><div class="scard-val">{{ inv_stats.total }}</div></a>
+    <a href="{% url 'admin_inventory_list' %}" class="scard {% if not stock_filter and not status_filter %}on{% endif %}"><div class="scard-lbl">Total</div><div class="scard-val">{{ inv_stats.subtotal|default:"0" }}</div></a>
     <a href="?status=listed" class="scard {% if status_filter == 'listed' %}on{% endif %}"><div class="scard-lbl">Listed</div><div class="scard-val green">{{ inv_stats.listed }}</div></a>
     <a href="?status=unlisted" class="scard {% if status_filter == 'unlisted' %}on{% endif %}"><div class="scard-lbl">Unlisted</div><div class="scard-val">{{ inv_stats.unlisted }}</div></a>
     <a href="?status=blocked" class="scard {% if status_filter == 'blocked' %}on{% endif %}"><div class="scard-lbl">Blocked</div><div class="scard-val red">{{ inv_stats.blocked }}</div></a>

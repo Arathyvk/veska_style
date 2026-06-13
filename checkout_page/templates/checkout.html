@@ -47,7 +47,7 @@ a{text-decoration:none;color:inherit}
 .co-hero::before{content:'';position:absolute;right:-80px;top:-80px;width:380px;height:380px;
   border-radius:50%;border:70px solid rgba(181,103,68,.08);pointer-events:none}
 .co-hero .inner{position:relative;z-index:1}
-.co-hero h1{font-family:var(--head);font-size:clamp(24px,4vw,40px);font-weight:500;
+.co-hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,4vw,40px);font-weight:500;
   color:#fff;letter-spacing:-.3px;margin-bottom:4px}
 .co-hero h1 em{font-style:italic;color:var(--blush)}
 .co-hero p{font-size:12px;color:rgba(255,255,255,.38);font-weight:300}
@@ -140,7 +140,7 @@ a{text-decoration:none;color:inherit}
   overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-xs)}
 .co-card-head{padding:14px 20px;background:var(--parchment);border-bottom:1px solid var(--border-lt);
   display:flex;align-items:center;justify-content:space-between}
-.co-card-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:var(--ink);
+.co-card-head h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--ink);
   display:flex;align-items:center;gap:9px}
 .co-card-head h3 svg{width:15px;height:15px;color:var(--terra);flex-shrink:0}
 .co-card-head .hd-link{font-size:12px;color:var(--terra);font-weight:600;display:flex;align-items:center;gap:5px}
@@ -186,11 +186,11 @@ a{text-decoration:none;color:inherit}
 .oi-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
 .oi-body{flex:1;min-width:0}
 .oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted-lt);margin-bottom:3px}
-.oi-name{font-family:var(--head);font-size:15px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
+.oi-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
 .oi-meta{font-size:11.5px;color:var(--muted-lt)}
 .oi-price-col{text-align:right;flex-shrink:0;min-width:72px}
 .oi-unit-price{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
-.oi-line-total{font-family:var(--head);font-size:16px;font-weight:600;color:var(--charcoal)}
+.oi-line-total{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--charcoal)}
 
 /* Notes */
 .notes-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
@@ -249,7 +249,7 @@ a{text-decoration:none;color:inherit}
 .summary-card{background:var(--warm-white);border:1px solid var(--border);
   border-radius:var(--radius-xl);overflow:hidden;position:sticky;top:24px;box-shadow:var(--shadow-sm)}
 .sum-head{padding:18px 20px;background:var(--charcoal)}
-.sum-head h3{font-family:var(--head);font-size:18px;font-weight:500;color:#fff}
+.sum-head h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:#fff}
 .sum-body{padding:18px 20px}
 .sum-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;color:var(--muted)}
 .sum-row .val{color:var(--ink);font-weight:500}
@@ -257,7 +257,7 @@ a{text-decoration:none;color:inherit}
 .sum-divider{height:1px;background:var(--border);margin:8px 0}
 .sum-total{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0 0}
 .sum-total .lbl{font-size:17px;color:var(--muted)}
-.sum-total .val{font-family:var(--head);font-size:26px;font-weight:600;color:var(--charcoal)}
+.sum-total .val{ font-size:26px;font-weight:600;color:var(--charcoal)}
 .free-ship-hint{margin-top:12px;padding:9px 12px;background:var(--success-pale);
   border-radius:var(--radius-sm);font-size:11.5px;color:var(--success);font-weight:500;
   display:flex;align-items:center;gap:6px}
@@ -315,7 +315,7 @@ a{text-decoration:none;color:inherit}
   <div class="container">
     <nav class="breadcrumbs">
       <a href="{% url 'home' %}">Home</a><span class="sep">›</span>
-      <a href="{% url 'product_list' %}">Shop</a><span class="sep">›</span>
+      <a href="{% url 'product_shop' %}">Shop</a><span class="sep">›</span>
       <a href="{% url 'cart_detail' %}">Cart</a><span class="sep">›</span>
       <span class="current">Checkout</span>
     </nav>
@@ -370,7 +370,6 @@ a{text-decoration:none;color:inherit}
         <!-- Available coupons with pagination -->
         {% if available_coupons %}
         <div class="avail-coupons-label">Available Coupons</div>
-        <a href="{% url 'admin_coupon_list' %}"></a>
         <div id="couponList" style="display:flex;flex-direction:column;gap:8px"></div>
         <div class="coupon-pagination">
           <button class="cpg-btn" id="couponPrevBtn" onclick="prevCouponPage()" disabled>← Prev</button>
@@ -520,7 +519,7 @@ a{text-decoration:none;color:inherit}
                 <div class="pay-radio"></div>
                 <div class="pay-logo cod">💵</div>
                 <div class="pay-info">
-                  <div class="pay-name">Cash on Delivery {% if cod_fee > 0 %}<span class="pay-tag amber">+₹{{ cod_fee }} fee</span>{% endif %}</div>
+                  <div class="pay-name">Cash on Delivery</div>
                   <div class="pay-sub">Pay when your order arrives at your door</div>
                 </div>
               </label>
@@ -691,23 +690,21 @@ a{text-decoration:none;color:inherit}
 
 <script>
 /* ── Django context injected safely ── */
-const ORIGINAL_TOTAL   = parseFloat('{{ grand_total|floatformat:2 }}');
-const SUBTOTAL         = parseFloat('{{ subtotal|floatformat:2 }}');
-const SHIPPING         = parseFloat('{{ shipping|floatformat:2 }}');
-const WALLET_BALANCE   = parseFloat('{{ wallet_balance|default:"0" }}');
-const CSRF_TOKEN       = '{{ csrf_token }}';
-const HAS_ADDRESS      = {{ addresses|yesno:"true,false" }};
-const STRIPE_URL       = "{% url 'stripe_create_checkout' %}";
-const PLACE_ORDER_URL  = "{% url 'place_order' %}";
-const APPLY_COUPON_URL = "{% url 'apply_coupon' %}";
-const COUPON_DISCOUNT_AMOUNT = parseFloat('{{ coupon_discount|default:"0" }}');
+const GRAND_TOTAL        = parseFloat('{{ grand_total|floatformat:2 }}');
+const SUBTOTAL           = parseFloat('{{ subtotal|floatformat:2 }}');
+const SHIPPING           = parseFloat('{{ shipping|floatformat:2 }}');
+const WALLET_BALANCE     = parseFloat('{{ wallet_balance|default:"0" }}');
+const COUPON_DISCOUNT    = parseFloat('{{ coupon_discount|default:"0" }}');
+const COUPON_CODE        = "{{ coupon_code|default:'' }}";
+const CSRF_TOKEN         = '{{ csrf_token }}';
+const HAS_ADDRESS        = {{ addresses|yesno:"true,false" }};
+const STRIPE_URL         = "{% url 'stripe_create_checkout' %}";
+const PLACE_ORDER_URL    = "{% url 'place_order' %}";
+const APPLY_COUPON_URL   = "{% url 'apply_coupon' %}";
+const SELECTED_ADDRESS_ID = '{{ selected_id }}';
 
-/* ── Pre-applied coupon state (from session/Django) ── */
-let INITIAL_COUPON_CODE     = "{{ coupon_code|default:'' }}";
-let INITIAL_COUPON_DISCOUNT = parseFloat('{{ coupon_discount|default:"0" }}');
-
-/* ── Base total without wallet (already includes coupon discount) ── */
-const BASE_TOTAL_WITHOUT_WALLET = ORIGINAL_TOTAL;
+/* ── Base total (subtotal + shipping - coupon) ── */
+const BASE_TOTAL = SUBTOTAL + SHIPPING - COUPON_DISCOUNT;
 
 /* ── All available coupons from Django context ── */
 const ALL_COUPONS = [
@@ -726,34 +723,24 @@ const ALL_COUPONS = [
   {% endfor %}
 ];
 
-/* ── Debug logs ── */
-console.log('=== CHECKOUT DEBUG ===');
-console.log('ORIGINAL_TOTAL:', ORIGINAL_TOTAL);
-console.log('SUBTOTAL:', SUBTOTAL);
-console.log('SHIPPING:', SHIPPING);
-console.log('COUPON_DISCOUNT_AMOUNT:', COUPON_DISCOUNT_AMOUNT);
-console.log('BASE_TOTAL_WITHOUT_WALLET:', BASE_TOTAL_WITHOUT_WALLET);
-console.log('WALLET_BALANCE:', WALLET_BALANCE);
-console.log('INITIAL_COUPON_CODE:', INITIAL_COUPON_CODE);
-console.log('======================');
+/* ── App state ── */
+let selectedPaymentMethod = 'stripe';
+let selectedAddressId     = SELECTED_ADDRESS_ID;
+let walletPaymentAmount   = 0;
+let walletApplied         = false;
+let currentTotal          = BASE_TOTAL;
 
 /* ── Pagination state ── */
 const COUPONS_PER_PAGE = 3;
 let couponPage = 0;
 
-/* ── App state ── */
-let selectedPaymentMethod = 'stripe';
-let selectedAddressId     = '{{ selected_id }}';
-let walletPaymentAmount   = 0;
-let walletApplied         = false;
-let couponDiscount        = INITIAL_COUPON_DISCOUNT;
-let appliedCoupon         = INITIAL_COUPON_CODE || null;
-let currentTotal          = ORIGINAL_TOTAL;
-
 /* ══════════════════════════════════════════════════
-   TOAST
+   TOAST NOTIFICATION
 ══════════════════════════════════════════════════ */
 function showToast(message, type = 'info') {
+  const existingToast = document.querySelector('.toast-notification');
+  if (existingToast) existingToast.remove();
+  
   const toast = document.createElement('div');
   toast.className = `toast-notification ${type}`;
   const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
@@ -775,7 +762,7 @@ function showToast(message, type = 'info') {
 }
 
 /* ══════════════════════════════════════════════════
-   COUPON PAGINATION RENDERER
+   COUPON PAGINATION
 ══════════════════════════════════════════════════ */
 function renderCouponPage() {
   const list = document.getElementById('couponList');
@@ -822,8 +809,8 @@ function renderCouponPage() {
   }).join('');
 
   if (pageInfo) pageInfo.textContent = `${couponPage + 1} / ${totalPages || 1}`;
-  if (prevBtn)  prevBtn.disabled = (couponPage === 0);
-  if (nextBtn)  nextBtn.disabled = (couponPage >= totalPages - 1);
+  if (prevBtn) prevBtn.disabled = (couponPage === 0);
+  if (nextBtn) nextBtn.disabled = (couponPage >= totalPages - 1);
 }
 
 function prevCouponPage() { if (couponPage > 0) { couponPage--; renderCouponPage(); } }
@@ -850,7 +837,6 @@ async function _doApplyCoupon(code) {
   return res.json();
 }
 
-/* Called by the manual input + Apply button */
 async function manualApplyCoupon() {
   const input = document.getElementById('couponInput');
   const btn   = document.getElementById('manualApplyBtn');
@@ -876,7 +862,6 @@ async function manualApplyCoupon() {
   }
 }
 
-/* Called by clicking Apply on a coupon chip */
 async function applyCouponFromChip(code) {
   const buttons = document.querySelectorAll('.btn-chip-apply');
   let clickedBtn = null;
@@ -909,7 +894,31 @@ function showSpinner(msg) {
   document.getElementById('spinnerMsg').textContent = msg || 'Processing…';
   document.getElementById('spinnerOverlay').style.display = 'flex';
 }
-function hideSpinner() { document.getElementById('spinnerOverlay').style.display = 'none'; }
+
+function hideSpinner() { 
+  document.getElementById('spinnerOverlay').style.display = 'none'; 
+}
+
+function updateUI() {
+  // Update grand total display
+  const grandTotalVal = document.getElementById('grandTotalVal');
+  if (grandTotalVal) {
+    grandTotalVal.textContent = `₹${currentTotal.toFixed(2)}`;
+  }
+  
+  // Update wallet discount row
+  const walletRow = document.getElementById('walletDiscountRow');
+  const walletVal = document.getElementById('walletDiscountVal');
+  if (walletApplied && walletPaymentAmount > 0) {
+    if (walletRow) walletRow.style.display = 'flex';
+    if (walletVal) walletVal.textContent = `−₹${walletPaymentAmount.toFixed(2)}`;
+  } else {
+    if (walletRow) walletRow.style.display = 'none';
+  }
+  
+  // Update button text
+  updateBtn();
+}
 
 function updateBtn() {
   const btn   = document.getElementById('placeOrderBtn');
@@ -929,12 +938,13 @@ function updateBtn() {
     label.textContent = `Pay with Stripe · ₹${currentTotal.toFixed(2)}`;
     if (note) note.style.display = 'flex';
   } else if (method === 'cod') {
-    label.textContent  = `Place Order (COD) · ₹${currentTotal.toFixed(2)}`;
+    label.textContent = `Place Order (COD) · ₹${currentTotal.toFixed(2)}`;
     if (note) note.style.display = 'none';
   } else if (method === 'wallet') {
     if (note) note.style.display = 'none';
     if (!walletApplied) {
       label.textContent = 'Apply wallet amount first ↑';
+      btn.disabled = true;
     } else if (currentTotal > 0) { 
       label.textContent = `Insufficient wallet (₹${currentTotal.toFixed(2)} remaining)`; 
       btn.disabled = true; 
@@ -965,7 +975,7 @@ function selectPayment(method) {
 }
 
 /* ══════════════════════════════════════════════════
-   WALLET
+   WALLET FUNCTIONS
 ══════════════════════════════════════════════════ */
 function applyWalletPayment() {
   const input = document.getElementById('walletAmount');
@@ -981,24 +991,20 @@ function applyWalletPayment() {
     return; 
   }
   
-  if (amount > BASE_TOTAL_WITHOUT_WALLET) { 
-    showToast(`Cannot exceed order total ₹${BASE_TOTAL_WITHOUT_WALLET.toFixed(2)}`, 'warning'); 
+  if (amount > BASE_TOTAL) { 
+    showToast(`Cannot exceed order total ₹${BASE_TOTAL.toFixed(2)}`, 'warning'); 
     return; 
   }
 
   walletPaymentAmount = amount;
   walletApplied = true;
-  currentTotal = BASE_TOTAL_WITHOUT_WALLET - walletPaymentAmount;
+  currentTotal = BASE_TOTAL - walletPaymentAmount;
   if (currentTotal < 0) currentTotal = 0;
 
-  const walletRow = document.getElementById('walletDiscountRow');
-  const walletVal = document.getElementById('walletDiscountVal');
-  const grandTotalVal = document.getElementById('grandTotalVal');
+  // Update UI
+  updateUI();
   
-  if (walletRow) walletRow.style.display = 'flex';
-  if (walletVal) walletVal.textContent = `−₹${walletPaymentAmount.toFixed(2)}`;
-  if (grandTotalVal) grandTotalVal.textContent = `₹${currentTotal.toFixed(2)}`;
-  
+  // Disable input and button
   input.disabled = true;
   const btn = document.getElementById('applyWalletBtn');
   if (btn) {
@@ -1013,26 +1019,22 @@ function applyWalletPayment() {
   if (appliedBadge) appliedBadge.style.display = 'flex';
   
   showToast(`₹${walletPaymentAmount.toFixed(2)} applied from wallet`, 'success');
-  updateBtn();
 }
 
 function resetWalletState() {
   walletPaymentAmount = 0; 
   walletApplied = false;
-  currentTotal = BASE_TOTAL_WITHOUT_WALLET;
+  currentTotal = BASE_TOTAL;
   if (currentTotal < 0) currentTotal = 0;
   
-  const walletRow = document.getElementById('walletDiscountRow');
-  const grandTotalVal = document.getElementById('grandTotalVal');
-  
-  if (walletRow) walletRow.style.display = 'none';
-  if (grandTotalVal) grandTotalVal.textContent = `₹${currentTotal.toFixed(2)}`;
+  updateUI();
   
   const input = document.getElementById('walletAmount');
   if (input) { 
     input.disabled = false; 
-    input.value = currentTotal.toFixed(0); 
-    input.max = currentTotal.toFixed(0);
+    const maxAmount = Math.min(WALLET_BALANCE, BASE_TOTAL);
+    input.value = maxAmount > 0 ? maxAmount.toFixed(0) : '0';
+    input.max = maxAmount.toFixed(0);
   }
   
   const btn = document.getElementById('applyWalletBtn');
@@ -1043,13 +1045,10 @@ function resetWalletState() {
   
   const badge = document.getElementById('walletAppliedBadge');
   if (badge) badge.style.display = 'none';
-  
-  updateBtn();
 }
 
 function resetWalletPayment() { 
   resetWalletState(); 
-  updateBtn(); 
   showToast('Wallet payment reset', 'info'); 
 }
 
@@ -1061,15 +1060,18 @@ async function placeDirectOrder(method) {
   btn.disabled = true;
   showSpinner('Placing your order…');
   try {
-    const res  = await fetch(PLACE_ORDER_URL, {
+    const res = await fetch(PLACE_ORDER_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+      headers: { 
+        'Content-Type': 'application/json', 
+        'X-CSRFToken': CSRF_TOKEN 
+      },
       body: JSON.stringify({
         address_id:     selectedAddressId,
         payment_method: method,
         wallet_amount:  walletPaymentAmount,
         notes:          document.getElementById('orderNotes')?.value || '',
-        coupon_code:    appliedCoupon,
+        coupon_code:    COUPON_CODE || null,
       }),
     });
     const data = await res.json();
@@ -1101,14 +1103,17 @@ async function initiateStripeCheckout() {
   }
   showSpinner('Redirecting to Stripe…');
   try {
-    const res  = await fetch(STRIPE_URL, {
+    const res = await fetch(STRIPE_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+      headers: { 
+        'Content-Type': 'application/json', 
+        'X-CSRFToken': CSRF_TOKEN 
+      },
       body: JSON.stringify({
         address_id:    selectedAddressId,
         wallet_amount: walletPaymentAmount,
         notes:         document.getElementById('orderNotes')?.value || '',
-        coupon_code:   appliedCoupon,
+        coupon_code:   COUPON_CODE || null,
       }),
     });
     const data = await res.json();
@@ -1148,12 +1153,49 @@ function handlePlaceOrder() {
 }
 
 /* ══════════════════════════════════════════════════
-   INIT
+   INITIALIZATION
 ══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
+  // Set initial current total
+  currentTotal = BASE_TOTAL;
+  
+  // Update grand total display
+  const grandTotalVal = document.getElementById('grandTotalVal');
+  if (grandTotalVal) {
+    grandTotalVal.textContent = `₹${currentTotal.toFixed(2)}`;
+  }
+  
+  // Initialize coupon pagination if coupons exist
+  if (ALL_COUPONS.length > 0) {
+    renderCouponPage();
+  }
+  
+  // Set initial wallet input max
+  const walletInput = document.getElementById('walletAmount');
+  if (walletInput) {
+    const maxAmount = Math.min(WALLET_BALANCE, BASE_TOTAL);
+    walletInput.max = maxAmount.toFixed(0);
+    walletInput.value = maxAmount > 0 ? maxAmount.toFixed(0) : '0';
+  }
+  
+  // Set selected payment method
   selectPayment('stripe');
-  renderCouponPage();
+  
+  // Set selected address if exists
+  if (selectedAddressId) {
+    selectAddr(selectedAddressId);
+  }
+  
   updateBtn();
+  
+  // Debug log
+  console.log('=== CHECKOUT INITIALIZED ===');
+  console.log('BASE_TOTAL:', BASE_TOTAL);
+  console.log('SUBTOTAL:', SUBTOTAL);
+  console.log('SHIPPING:', SHIPPING);
+  console.log('COUPON_DISCOUNT:', COUPON_DISCOUNT);
+  console.log('WALLET_BALANCE:', WALLET_BALANCE);
+  console.log('===========================');
 });
 </script>
 {% endblock %}

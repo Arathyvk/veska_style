@@ -421,10 +421,7 @@ button,input,textarea,select{font-family:var(--body)}
           </h3>
         </div>
         <div class="card-body">
-          <div class="info-row">
-            <span class="info-label">Name</span>
-            <span class="info-value">{{ return_request.user.get_full_name|default:"—" }}</span>
-          </div>
+        
           <div class="info-row">
             <span class="info-label">Email</span>
             <span class="info-value" style="font-size:15px">{{ return_request.user.email }}</span>
