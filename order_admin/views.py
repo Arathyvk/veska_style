@@ -76,12 +76,12 @@ def admin_order_list(request):
 
     if query:
         qs = qs.filter(
-            Q(order_number__icontains=query) |
+            Q(full_name__icontains=query) |
             Q(user__email__icontains=query) |
             Q(user__first_name__icontains=query) |
             Q(user__last_name__icontains=query) |
-            Q(user__address_line1__icontains=query) |
-            Q(user__address_line2__icontains=query)
+            Q(phone__icontains=query) |
+            Q(city__icontains=query)
         )
 
     if status_filter:
@@ -118,6 +118,17 @@ def admin_order_list(request):
     filter_qs = filter_qs.urlencode()
 
     all_orders = Order.objects.all()
+
+    delivered_revenue = all_orders.filter(
+        status='delivered'
+    ).aggregate(r=Sum('total'))['r'] or Decimal('0')
+
+    returned_revenue = all_orders.filter(
+        status='returned'
+    ).aggregate(r=Sum('total'))['r'] or Decimal('0')
+
+    net_revenue = delivered_revenue - returned_revenue
+
     stats = {
         'total':            all_orders.count(),
         'pending':          all_orders.filter(status='pending').count(),
@@ -128,7 +139,7 @@ def admin_order_list(request):
         'cancelled':        all_orders.filter(status='cancelled').count(),
         'return_requested': all_orders.filter(status='return_requested').count(),
         'returned':         all_orders.filter(status='returned').count(),
-        'revenue':          all_orders.aggregate(r=Sum('total'))['r'] or 0,
+        'revenue':          net_revenue,
     }
 
     return render(request, 'admin_order_list.html', {
@@ -173,10 +184,11 @@ def admin_order_detail(request, uuid):
     filter_qs  = get_params.urlencode()
 
     wallet_used = Decimal(order.wallet_amount_used or 0)
-    total_paid = Decimal(order.total or 0)
+    subtotal = Decimal(order.subtotal or 0)
+    shipping = Decimal(order.shipping_charge or 0)
     
-    coupon_discount = Decimal(getattr(order, 'discount_amount', 0) or 0)
-    coupon_code = getattr(order, 'coupon_code', '')
+    coupon_discount = Decimal(0)
+    coupon_code = ''
     
     try:
         if hasattr(order, 'coupon_usage') and order.coupon_usage:
@@ -184,6 +196,11 @@ def admin_order_detail(request, uuid):
             coupon_code = order.coupon_usage.coupon.code if order.coupon_usage.coupon else ''
     except:
         pass
+    
+    if coupon_discount == 0 and hasattr(order, 'discount_amount'):
+        coupon_discount = Decimal(order.discount_amount or 0)
+        if hasattr(order, 'coupon_code'):
+            coupon_code = order.coupon_code or ''
     
     offer_discount = Decimal(0)
     offer_details = ''
@@ -194,23 +211,26 @@ def admin_order_detail(request, uuid):
     except:
         pass
     
-    if offer_discount == 0 and coupon_discount > 0:
-        calculated_offer = Decimal(order.subtotal or 0) - Decimal(order.total or 0) - coupon_discount - wallet_used
-        if calculated_offer > 0:
-            offer_discount = calculated_offer
+    final_total = subtotal + shipping - offer_discount - coupon_discount - wallet_used
     
+    if final_total < 0:
+        final_total = Decimal('0')
+    
+    total_paid = final_total 
     refund_to_gateway = max(total_paid - wallet_used, Decimal('0'))
+    wallet_to_restore = wallet_used if wallet_used > 0 else Decimal('0')
 
-    print("=== DISCOUNT DEBUG ===")
+    print("=== ORDER DETAIL DEBUG ===")
     print(f"Order ID: {order.order_number}")
-    print(f"Subtotal: {order.subtotal}")
-    print(f"Total: {order.total}")
-    print(f"Wallet used: {wallet_used}")
-    print(f"Coupon discount: {coupon_discount}")
+    print(f"Subtotal: {subtotal}")
+    print(f"Shipping: {shipping}")
+    print(f"Offer discount: -{offer_discount}")
+    print(f"Coupon discount: -{coupon_discount}")
+    print(f"Wallet used: -{wallet_used}")
+    print(f"FINAL TOTAL: {final_total}")
     print(f"Coupon code: {coupon_code}")
-    print(f"Offer discount: {offer_discount}")
     print(f"Offer details: {offer_details}")
-    print("====================")
+    print("==========================")
 
     return render(request, 'admin_order_detail.html', {
         'order':             order,
@@ -219,11 +239,14 @@ def admin_order_detail(request, uuid):
         'status_choices':    ORDER_STATUS_CHOICES,
         'filter_qs':         filter_qs,
         'refund_to_gateway': refund_to_gateway,
-        'wallet_to_restore': wallet_used,
+        'wallet_to_restore': wallet_to_restore,
         'coupon_discount':   coupon_discount,
         'coupon_code':       coupon_code,
         'offer_discount':    offer_discount,
         'offer_details':     offer_details,
+        'final_total':       final_total,  
+        'subtotal':          subtotal,     
+        'shipping':          shipping,     
     })
 
 
@@ -244,7 +267,7 @@ def order_update_status(request, uuid):
     old_status = order.status
 
     if old_status == new_status:
-        messages.warning(request, 'Status and Email is already set to that value.')
+        messages.warning(request, 'Status is already set to that value.')
         if request.POST.get('next') == 'list':
             return redirect('admin_order_list')
         return redirect('admin_order_detail', uuid=uuid)
@@ -297,7 +320,6 @@ def _send_status_update_email(order, old_status, new_status):
     offer_disc = float(order.offer_discount or 0)
     shipping       = float(getattr(order, 'shipping_charge',  0) or 0)
     wallet_used    = float(getattr(order, 'wallet_amount_used', 0) or 0)
-    total          = float(getattr(order, 'total',            0) or 0)
     coupon_code    = getattr(order, 'coupon_code', '') or ''
     offer_details  = getattr(order, 'offer_details', '') or ''
 
@@ -348,7 +370,7 @@ Your Veska order status has been updated.
   Subtotal          : Rs.{subtotal:.2f}
 {offer_line}{coupon_line}{wallet_line}  Shipping          : {shipping_display}
   ─────────────────────────────
-  Total Paid        : Rs.{total:.2f}
+  Total Paid        : Rs.{subtotal:.2f}
   Payment Method    : {payment_display}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -460,7 +482,7 @@ def inventory_list(request):
     )
 
     inv_stats = {
-        'total':        all_products.count(),
+        'subtotal':     all_products.count(),
         'listed':       all_products.filter(is_listed=True,  is_blocked=False).count(),
         'unlisted':     all_products.filter(is_listed=False).count(),
         'blocked':      all_products.filter(is_blocked=True).count(),
