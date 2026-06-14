@@ -19,30 +19,30 @@ class BaseOffer(models.Model):
         ('FIXED', 'Fixed Amount (₹)'),
     ]
     
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=200)
-    offer_type = models.CharField(max_length=20, choices=OFFER_TYPES)
-    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES, default='PERCENTAGE')
+    uuid           = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name           = models.CharField(max_length=200)
+    offer_type     = models.CharField(max_length=20, choices=OFFER_TYPES)
+    discount_type  = models.CharField(max_length=20, choices=DISCOUNT_TYPES, default='PERCENTAGE')
     discount_value = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     
     products = models.ManyToManyField(Product, blank=True, related_name='offers')
     categories = models.ManyToManyField(Category, blank=True, related_name='offers')
     
-    referral_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    referral_code          = models.CharField(max_length=50, unique=True, null=True, blank=True)
     referral_reward_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    referred_user_reward = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    referred_user_reward   = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
     start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    end_date   = models.DateTimeField()
     
     min_purchase_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     max_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     
-    usage_limit = models.PositiveIntegerField(default=0, help_text="0 = unlimited")
-    used_count = models.PositiveIntegerField(default=0)
+    usage_limit    = models.PositiveIntegerField(default=0, help_text="0 = unlimited")
+    used_count     = models.PositiveIntegerField(default=0)
     per_user_limit = models.PositiveIntegerField(default=1)
     
-    is_active = models.BooleanField(default=True)
+    is_active  = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -88,31 +88,36 @@ class BaseOffer(models.Model):
         return min(discount, amount)
 
 
-class UserOfferUsage(models.Model):
-    user    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                                related_name='offer_usage')
-    offer = models.ForeignKey(BaseOffer, on_delete=models.CASCADE, related_name='user_usage')
-    usage_count = models.PositiveIntegerField(default=0)
-    last_used = models.DateTimeField(null=True, blank=True)
-    
 
+class UserOfferUsage(models.Model):
+    user        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='offer_usage')
+    offer       = models.ForeignKey(BaseOffer, on_delete=models.CASCADE, related_name='user_usage')
+    usage_count = models.PositiveIntegerField(default=0)
+    last_used   = models.DateTimeField(null=True, blank=True)
+    
     class Meta:
         unique_together = ['user', 'offer']
     
-
     def can_use(self):
         return self.usage_count < self.offer.per_user_limit
+    
+    def increment_usage(self):
+        self.usage_count += 1
+        self.last_used = timezone.now()
+        self.save()
+        
+        self.offer.used_count += 1
+        self.offer.save(update_fields=['used_count'])
 
 
 class ReferralCode(models.Model):
     
-    user    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                                related_name='referral_codes')
-    code = models.CharField(max_length=50, unique=True)
+    user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='referral_codes')
+    code            = models.CharField(max_length=50, unique=True)
     total_referrals = models.PositiveIntegerField(default=0)
-    total_earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
+    total_earnings  = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at      = models.DateTimeField(auto_now_add=True)
+    is_active       = models.BooleanField(default=True)
     
 
     def __str__(self):
@@ -121,13 +126,13 @@ class ReferralCode(models.Model):
 
 class ReferralTransaction(models.Model):
     
-    referrer = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='referral_transactions')
+    referrer      = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='referral_transactions')
     referred_user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='referred_by_transactions')
     referral_code = models.ForeignKey(ReferralCode, on_delete=models.CASCADE)
     amount_earned = models.DecimalField(max_digits=10, decimal_places=2)
-    order_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_credited = models.BooleanField(default=False)
+    order_amount  = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at    = models.DateTimeField(auto_now_add=True)
+    is_credited   = models.BooleanField(default=False)
     
     
     def __str__(self):

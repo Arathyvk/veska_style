@@ -183,54 +183,32 @@ def admin_order_detail(request, uuid):
     get_params.pop('items_page', None)
     filter_qs  = get_params.urlencode()
 
-    wallet_used = Decimal(order.wallet_amount_used or 0)
-    subtotal = Decimal(order.subtotal or 0)
-    shipping = Decimal(order.shipping_charge or 0)
-    
-    coupon_discount = Decimal(0)
-    coupon_code = ''
-    
-    try:
-        if hasattr(order, 'coupon_usage') and order.coupon_usage:
-            coupon_discount = Decimal(order.coupon_usage.discount_amount or 0)
-            coupon_code = order.coupon_usage.coupon.code if order.coupon_usage.coupon else ''
-    except:
-        pass
-    
-    if coupon_discount == 0 and hasattr(order, 'discount_amount'):
-        coupon_discount = Decimal(order.discount_amount or 0)
-        if hasattr(order, 'coupon_code'):
-            coupon_code = order.coupon_code or ''
-    
-    offer_discount = Decimal(0)
-    offer_details = ''
-    try:
-        if hasattr(order, 'offer_usage') and order.offer_usage:
-            offer_discount = Decimal(order.offer_usage.discount_amount or 0)
-            offer_details = order.offer_usage.offer.name if order.offer_usage.offer else ''
-    except:
-        pass
-    
-    final_total = subtotal + shipping - offer_discount - coupon_discount - wallet_used
-    
-    if final_total < 0:
-        final_total = Decimal('0')
-    
-    total_paid = final_total 
-    refund_to_gateway = max(total_paid - wallet_used, Decimal('0'))
-    wallet_to_restore = wallet_used if wallet_used > 0 else Decimal('0')
+    wallet_used     = Decimal(order.wallet_amount_used or 0)
+    subtotal        = Decimal(order.subtotal or 0)
+    shipping        = Decimal(order.shipping_charge or 0)
 
-    print("=== ORDER DETAIL DEBUG ===")
-    print(f"Order ID: {order.order_number}")
-    print(f"Subtotal: {subtotal}")
-    print(f"Shipping: {shipping}")
-    print(f"Offer discount: -{offer_discount}")
-    print(f"Coupon discount: -{coupon_discount}")
-    print(f"Wallet used: -{wallet_used}")
-    print(f"FINAL TOTAL: {final_total}")
-    print(f"Coupon code: {coupon_code}")
-    print(f"Offer details: {offer_details}")
-    print("==========================")
+    coupon_code     = getattr(order, 'coupon_code', '') or ''
+    coupon_discount = Decimal(getattr(order, 'discount_amount', 0) or 0)
+
+    if coupon_discount == 0:
+        try:
+            usage = order.coupon_usages.select_related('coupon').first()
+            if usage:
+                coupon_code     = usage.coupon.code
+                coupon_discount = Decimal(usage.discount_amount or 0)
+        except Exception:
+            pass
+
+    offer_discount = Decimal(getattr(order, 'offer_discount', 0) or 0)
+    offer_details  = getattr(order, 'offer_details', '') or ''
+
+    final_total = max(
+        subtotal - offer_discount - coupon_discount + shipping - wallet_used,
+        Decimal('0')
+    )
+
+    refund_to_gateway = max(final_total - wallet_used, Decimal('0'))
+    wallet_to_restore = wallet_used if wallet_used > 0 else Decimal('0')
 
     return render(request, 'admin_order_detail.html', {
         'order':             order,
@@ -238,15 +216,16 @@ def admin_order_detail(request, uuid):
         'items_page_obj':    items_page_obj,
         'status_choices':    ORDER_STATUS_CHOICES,
         'filter_qs':         filter_qs,
-        'refund_to_gateway': refund_to_gateway,
-        'wallet_to_restore': wallet_to_restore,
-        'coupon_discount':   coupon_discount,
-        'coupon_code':       coupon_code,
+        'subtotal':          subtotal,
+        'shipping':          shipping,
         'offer_discount':    offer_discount,
         'offer_details':     offer_details,
-        'final_total':       final_total,  
-        'subtotal':          subtotal,     
-        'shipping':          shipping,     
+        'coupon_discount':   coupon_discount,
+        'coupon_code':       coupon_code,
+        'wallet_used':       wallet_used,
+        'final_total':       final_total,
+        'refund_to_gateway': refund_to_gateway,
+        'wallet_to_restore': wallet_to_restore,
     })
 
 
@@ -317,11 +296,18 @@ def _send_status_update_email(order, old_status, new_status):
     new_label      = new_status.replace('_', ' ').title()
     subtotal       = float(getattr(order, 'subtotal',         0) or 0)
     coupon_disc    = float(getattr(order, 'discount_amount',  0) or 0)
-    offer_disc = float(order.offer_discount or 0)
+    offer_disc     = float(order.offer_discount or 0)
     shipping       = float(getattr(order, 'shipping_charge',  0) or 0)
     wallet_used    = float(getattr(order, 'wallet_amount_used', 0) or 0)
     coupon_code    = getattr(order, 'coupon_code', '') or ''
     offer_details  = getattr(order, 'offer_details', '') or ''
+
+    # ── compute the real final total ──────────────────────────
+    email_total = max(
+        subtotal - offer_disc - coupon_disc + shipping - wallet_used,
+        0.0
+    )
+    # ──────────────────────────────────────────────────────────
 
     try:
         payment_display = order.get_payment_method_display()
@@ -370,7 +356,7 @@ Your Veska order status has been updated.
   Subtotal          : Rs.{subtotal:.2f}
 {offer_line}{coupon_line}{wallet_line}  Shipping          : {shipping_display}
   ─────────────────────────────
-  Total Paid        : Rs.{subtotal:.2f}
+  Total Paid        : Rs.{email_total:.2f}
   Payment Method    : {payment_display}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -407,7 +393,6 @@ This is an automated email. Please do not reply directly.
     except Exception as e:
         print(f'[EMAIL ERROR] Failed to send status update for order #{order_id}: {e}')
         return False
-
 
 
 @staff_member_required(login_url='admin:login')

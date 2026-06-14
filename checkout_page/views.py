@@ -50,12 +50,11 @@ def _get_cart(request):
     return cart
 
 
-def _calc_totals(subtotal: Decimal, offer_discount: Decimal = Decimal('0'),
-                 coupon_discount: Decimal = Decimal('0'),
-                 wallet_used: Decimal = Decimal('0')) -> dict:
-    after_discounts = subtotal - offer_discount - coupon_discount
+def _calc_totals(subtotal, offer_discount=Decimal('0'), coupon_discount=Decimal('0'), wallet_used=Decimal('0')):
+    after_discounts = subtotal - offer_discount - coupon_discount  # ✅ offer_discount IS subtracted
     shipping = SHIPPING_CHARGE if after_discounts < FREE_SHIPPING_THRESHOLD else Decimal('0')
     grand = max(after_discounts + shipping - wallet_used, Decimal('0'))
+    
     return {
         'subtotal': subtotal,
         'offer_discount': offer_discount,

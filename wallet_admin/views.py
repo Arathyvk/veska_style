@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -6,7 +8,6 @@ from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db import transaction
 from decimal import Decimal
-import json
 
 
 from wallet_user.models import Wallet, WalletTransaction
@@ -56,7 +57,7 @@ def admin_wallet_detail(request, wallet_id):
     })
  
  
- 
+
 @login_required
 @user_passes_test(is_admin)
 @require_POST
@@ -98,26 +99,23 @@ def admin_wallet_adjust(request, wallet_id):
  
  
 
- 
 @login_required
 @user_passes_test(is_admin)
 @require_POST
 def admin_approve_return(request, order_id):
-    
     order = get_object_or_404(Order, pk=order_id)
- 
+
     if order.status != 'return_requested':
         messages.error(request, 'This order is not in a returnable state.')
-        return redirect('admin_order_detail', pk=order_id)
- 
+        return redirect('admin_order_detail', uuid=order.uuid)  
+
     with transaction.atomic():
         order.status = 'returned'
         order.save(update_fields=['status'])
         refund_on_return_approval(order)
- 
+
     messages.success(
         request,
-        f"Return approved. ₹{order.grand_total} credited to {order.user.email}'s wallet."
+        f"Return approved. ₹{order.total} credited to {order.user.email}'s wallet."  
     )
-    return redirect('admin_order_detail', pk=order_id)
- 
+    return redirect('admin_order_detail', uuid=order.uuid)  

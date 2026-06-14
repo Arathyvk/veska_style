@@ -87,12 +87,32 @@ def order_detail(request, uuid):
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
     items = order.items.all()
 
-    return render(request, 'order_detail.html', {
-        'order': order,
-        'items': items,
-        'steps': TIMELINE_STEPS
-        })
+    subtotal        = Decimal(order.subtotal or 0)
+    shipping        = Decimal(order.shipping_charge or 0)
+    coupon_discount = Decimal(order.discount_amount or 0)
+    coupon_code     = getattr(order, 'coupon_code', '') or ''
+    offer_discount  = Decimal(getattr(order, 'offer_discount', 0) or 0)
+    offer_details   = getattr(order, 'offer_details', '') or ''
+    wallet_used     = Decimal(order.wallet_amount_used or 0)
 
+    final_total = max(
+        subtotal - offer_discount - coupon_discount + shipping - wallet_used,
+        Decimal('0')
+    )
+
+    return render(request, 'order_detail.html', {
+        'order':            order,
+        'items':            items,
+        'steps':            TIMELINE_STEPS,
+        'subtotal':         subtotal,
+        'shipping':         shipping,
+        'coupon_discount':  coupon_discount,
+        'coupon_code':      coupon_code,
+        'offer_discount':   offer_discount,
+        'offer_details':    offer_details,
+        'wallet_used':      wallet_used,
+        'final_total':      final_total,
+    })
 
 @login_required
 def order_success(request, uuid):
