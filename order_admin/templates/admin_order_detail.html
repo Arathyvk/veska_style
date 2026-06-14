@@ -244,123 +244,114 @@ button,input,select,textarea{font-family:var(--body)}
     </h3>
   </div>
   <div class="cb">
-    
+
     <div class="pr">
       <span>Subtotal ({{ order.items.count }} item{{ order.items.count|pluralize }})</span>
       <span class="v">₹{{ subtotal|floatformat:2 }}</span>
     </div>
 
-    {% if offer_discount and offer_discount > 0 %}
-    <div class="pr dis" style="flex-direction: column; align-items: flex-start; gap: 8px; padding-bottom: 10px;">
-      <div style="display: flex; justify-content: space-between; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <span>Offer discount</span>
-          {% if offer_details %}
-          <div class="discount-badge offer">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            <span>{{ offer_details }}</span>
-          </div>
-          {% endif %}
-        </div>
-        <span class="v">-₹{{ offer_discount|floatformat:2 }}</span>
-      </div>
-    </div>
-    {% endif %}
-
-    {% if coupon_discount and coupon_discount > 0 %}
-    <div class="pr dis" style="flex-direction: column; align-items: flex-start; gap: 8px; padding-bottom: 10px;">
-      <div style="display: flex; justify-content: space-between; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <span>Coupon discount</span>
-          {% if coupon_code %}
-          <div class="discount-badge coupon">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4M4 6v12c0 1.1.9 2 2 2h14v-4"/>
-              <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h2v-4h-2z"/>
-            </svg>
-            <span><strong>{{ coupon_code }}</strong></span>
-          </div>
-          {% endif %}
-        </div>
-        <span class="v">-₹{{ coupon_discount|floatformat:2 }}</span>
-      </div>
-    </div>
-    {% endif %}
-
-    {% if order.wallet_amount_used and order.wallet_amount_used > 0 %}
+    {% if offer_discount > 0 %}
     <div class="pr dis">
-      <span>Wallet used</span>
-      <span class="v">-₹{{ order.wallet_amount_used|floatformat:2 }}</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>Offer discount</span>
+        {% if offer_details %}
+        <div class="discount-badge offer">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+          {{ offer_details }}
+        </div>
+        {% endif %}
+      </div>
+      <span class="v">−₹{{ offer_discount|floatformat:2 }}</span>
     </div>
     {% endif %}
 
-    {# Shipping Section #}
+    {% if coupon_discount > 0 %}
+    <div class="pr dis">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>Coupon discount</span>
+        {% if coupon_code %}
+        <div class="discount-badge coupon">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4M4 6v12c0 1.1.9 2 2 2h14v-4"/>
+            <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h2v-4h-2z"/>
+          </svg>
+          <strong>{{ coupon_code }}</strong>
+        </div>
+        {% endif %}
+      </div>
+      <span class="v">−₹{{ coupon_discount|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+
     <div class="pr">
       <span>Shipping</span>
       <span class="v">
         {% if shipping == 0 %}
-          <span style="color: var(--green);">FREE</span>
+          <span style="color:var(--green)">FREE</span>
         {% else %}
           ₹{{ shipping|floatformat:2 }}
         {% endif %}
       </span>
     </div>
 
-    <div class="pr-total" style="margin-top: 12px; padding-top: 12px;">
-      <span style="font-size: 16px; font-weight: 700;">Total to Pay</span>
-      <span style="font-size: 18px; font-weight: 800; color: var(--terra2);">
-        ₹{{ final_total|floatformat:2 }}
+    {% if wallet_used > 0 %}
+    <div class="pr dis">
+      <span>Wallet used</span>
+      <span class="v">−₹{{ wallet_used|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+
+    <div class="pr-total">
+      <span style="font-size:15px;font-weight:700">Total Paid</span>
+      <span style="font-size:18px;font-weight:800;color:var(--terra2)">₹{{ final_total|floatformat:2 }}</span>
+    </div>
+
+    <div style="margin-top:14px;padding:11px 13px;background:var(--card2);border-radius:var(--radius-lg);
+                display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--terra)" stroke-width="2">
+          <rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+        <span style="font-size:12px;color:var(--muted)">Payment via</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text)">{{ order.get_payment_method_display }}</span>
+      </div>
+      <span style="font-size:13px;font-weight:700;
+        {% if order.payment_status == 'paid' %}color:var(--green)
+        {% elif order.payment_status == 'pending' %}color:var(--orange)
+        {% else %}color:var(--red){% endif %}">
+        {{ order.get_payment_status_display|default:order.payment_status|title }}
       </span>
     </div>
 
-    <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
-      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--terra)" stroke-width="2">
-            <rect x="2" y="6" width="20" height="12" rx="2"/>
-            <line x1="2" y1="10" x2="22" y2="10"/>
-          </svg>
-          <span style="font-size: 12px; color: var(--muted2);">Pay with</span>
-          <span style="font-weight: 700; font-size: 13px; color: var(--text);">{{ order.get_payment_method_display }}</span>
-        </div>
-        <span style="font-size: 18px; font-weight: 700; color: var(--terra2);">
-          ₹{{ final_total|floatformat:2 }}
-        </span>
-      </div>
-    </div>
-
     {% if order.status == 'cancelled' or order.status == 'return_requested' or order.status == 'returned' %}
-    <div class="refund-box" style="margin-top: 16px;">
-      <div class="refund-box-title">Refund breakdown</div>
-      
+    <div class="refund-box" style="margin-top:16px">
+      <div class="refund-box-title">Refund Breakdown</div>
+
       <div class="rr">
-        <span>Amount collected (total paid)</span>
+        <span>Total collected from customer</span>
         <span class="v">₹{{ final_total|floatformat:2 }}</span>
       </div>
-
       {% if wallet_to_restore > 0 %}
       <div class="rr wallet-row">
         <span>Wallet amount to restore</span>
         <span class="v">₹{{ wallet_to_restore|floatformat:2 }}</span>
       </div>
       {% endif %}
-
-      {% if coupon_discount > 0 %}
-      <div class="rr">
-        <span>Coupon savings (already deducted — not collected)</span>
-        <span class="v" style="color:var(--muted)">₹{{ coupon_discount|floatformat:2 }}</span>
-      </div>
-      {% endif %}
-
       {% if offer_discount > 0 %}
       <div class="rr">
-        <span>Offer savings (already deducted — not collected)</span>
+        <span>Offer savings (not collected)</span>
         <span class="v" style="color:var(--muted)">₹{{ offer_discount|floatformat:2 }}</span>
       </div>
       {% endif %}
-
+      {% if coupon_discount > 0 %}
+      <div class="rr">
+        <span>Coupon savings (not collected)</span>
+        <span class="v" style="color:var(--muted)">₹{{ coupon_discount|floatformat:2 }}</span>
+      </div>
+      {% endif %}
       <div class="rr gateway">
         <span>Refund to original payment method</span>
         <span>₹{{ refund_to_gateway|floatformat:2 }}</span>

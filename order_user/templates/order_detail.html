@@ -367,36 +367,107 @@ a{text-decoration:none;color:inherit}
     </div>
 
     <div class="card">
-      <div class="card-head"><h3>Price Details</h3></div>
-      <div class="card-body">
-        <div class="price-row">
-          <span>Subtotal</span><span class="val">₹{{ order.subtotal|floatformat:2 }}</span>
-        </div>
-        {% if order.discount_amount > 0 %}
-        <div class="price-row discount">
-          <span>Discount
-            {% if order.coupon_code %}
-              <span style="font-size:10px;background:var(--success-pale);padding:1px 6px;border-radius:8px;
-                margin-left:4px;font-weight:700;font-family:monospace">{{ order.coupon_code }}</span>
-            {% endif %}
-          </span>
-          <span class="val">− ₹{{ order.discount_amount|floatformat:2 }}</span>
-        </div>
-        {% endif %}
-        <div class="price-row {% if order.shipping_charge == 0 %}free{% endif %}">
-          <span>Shipping</span>
-          <span class="val">{% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
-        </div>
-        <div class="price-divider"></div>
-        <div class="price-total">
-          <span>Total Paid</span>
-          <span>₹{{ order.total|floatformat:2 }}</span>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:8px">
-          💳 {{ order.get_payment_method_display }}
-        </div>
-      </div>
+  <div class="card-head">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+        <line x1="12" y1="1" x2="12" y2="23"/>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      Price Details
+    </h3>
+  </div>
+  <div class="card-body">
+
+    <div class="price-row">
+      <span>Subtotal ({{ items.count }} item{{ items.count|pluralize }})</span>
+      <span class="val">₹{{ subtotal|floatformat:2 }}</span>
     </div>
+
+    {% if offer_discount > 0 %}
+    <div class="price-row discount">
+      <span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+        Offer discount
+        {% if offer_details %}
+        <span style="font-size:10px;background:var(--success-pale);color:var(--success);
+          padding:1px 8px;border-radius:10px;font-weight:700;display:inline-flex;align-items:center;gap:4px">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+          {{ offer_details }}
+        </span>
+        {% endif %}
+      </span>
+      <span class="val">− ₹{{ offer_discount|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+
+    {% if coupon_discount > 0 %}
+    <div class="price-row discount">
+      <span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+        Coupon discount
+        {% if coupon_code %}
+        <span style="font-size:10px;background:var(--success-pale);color:var(--success);
+          padding:1px 8px;border-radius:10px;font-weight:700;font-family:monospace">
+          {{ coupon_code }}
+        </span>
+        {% endif %}
+      </span>
+      <span class="val">− ₹{{ coupon_discount|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+
+    <div class="price-row {% if shipping == 0 %}free{% endif %}">
+      <span>Shipping</span>
+      <span class="val">
+        {% if shipping == 0 %}FREE{% else %}₹{{ shipping|floatformat:2 }}{% endif %}
+      </span>
+    </div>
+
+    {% if wallet_used > 0 %}
+    <div class="price-row discount">
+      <span style="display:flex;align-items:center;gap:7px">
+        Wallet used
+        <span style="font-size:10px;background:var(--success-pale);color:var(--success);
+          padding:1px 8px;border-radius:10px;font-weight:700">
+          👛 Veska Wallet
+        </span>
+      </span>
+      <span class="val">− ₹{{ wallet_used|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+
+    {% if offer_discount > 0 or coupon_discount > 0 or wallet_used > 0 %}
+    <div style="background:var(--success-pale);border:1px solid rgba(58,125,90,.15);
+      border-radius:var(--radius-md);padding:8px 12px;margin:8px 0;
+      display:flex;align-items:center;justify-content:space-between;font-size:12px">
+      <span style="color:var(--success);font-weight:600;display:flex;align-items:center;gap:5px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Total savings on this order
+      </span>
+      <span style="color:var(--success);font-weight:700">
+        ₹{{ offer_discount|add:coupon_discount|add:wallet_used|floatformat:2 }}
+      </span>
+    </div>
+    {% endif %}
+
+    <div class="price-divider"></div>
+
+    <div class="price-total">
+      <span>Total Paid</span>
+      <span>₹{{ final_total|floatformat:2 }}</span>
+    </div>
+
+    <div style="font-size:12px;color:var(--muted);margin-top:8px;
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span>💳 {{ order.get_payment_method_display }}</span>
+      
+    </div>
+
+  </div>
+</div>
 
     <div class="card">
       <div class="card-head">

@@ -190,7 +190,7 @@ a{text-decoration:none;color:inherit}
 .oi-meta{font-size:11.5px;color:var(--muted-lt)}
 .oi-price-col{text-align:right;flex-shrink:0;min-width:72px}
 .oi-unit-price{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
-.oi-line-total{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--charcoal)}
+.oi-line-total{font-size:16px;font-weight:600;color:var(--charcoal)}
 
 /* Notes */
 .notes-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);
@@ -300,6 +300,36 @@ a{text-decoration:none;color:inherit}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--terra);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner-box p{font-size:13px;color:var(--muted);font-weight:500}
+/* Tab switcher */
+.co-tab{background:none;border:none;border-bottom:2px solid transparent;
+  padding:8px 16px;font-family:var(--body);font-size:13px;font-weight:600;
+  color:var(--muted);cursor:pointer;transition:var(--transition);margin-bottom:-1px}
+.co-tab.active{color:var(--terra);border-bottom-color:var(--terra)}
+.co-tab:hover:not(.active){color:var(--ink)}
+.co-tab-badge{font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+  background:var(--success-pale);color:var(--success);padding:2px 7px;border-radius:10px;margin-left:6px}
+
+/* Offers tab — auto-applied chip */
+.offer-chip{display:flex;align-items:center;gap:12px;border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:12px 14px;background:var(--parchment);
+  margin-bottom:8px}
+.offer-chip-icon{font-size:20px;flex-shrink:0;width:32px;text-align:center}
+.offer-chip-body{flex:1;min-width:0}
+.offer-chip-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.offer-chip-desc{font-size:11.5px;color:var(--muted);line-height:1.4}
+.offer-chip-min{font-size:11px;color:var(--muted-lt);margin-top:2px}
+.offer-chip-badge{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:3px 10px;border-radius:10px;flex-shrink:0}
+.offer-chip-badge.applied{background:var(--success-pale);color:var(--success)}
+.offer-chip-badge.expired{background:var(--warning-pale);color:var(--warning)}
+
+/* Offer savings summary bar */
+.offer-savings-bar{display:flex;align-items:center;gap:10px;background:var(--success-pale);
+  border:1px solid rgba(58,125,90,.2);border-radius:var(--radius-md);
+  padding:12px 14px;margin-bottom:12px;color:var(--success)}
+.offer-savings-total{font-size:13px;font-weight:700;color:var(--success)}
+.offer-savings-sub{font-size:11px;color:var(--success);margin-top:2px}
+
 </style>
 
 <div class="co-page">
@@ -335,51 +365,108 @@ a{text-decoration:none;color:inherit}
     </div>
     {% endfor %}
 
-    <!-- ══ COUPON STRIP ══ -->
-    <div class="coupon-strip">
-      <div class="coupon-label">🎁 Coupons &amp; Offers</div>
+    <!-- ══ COUPONS & OFFERS STRIP ══ -->
+<div class="coupon-strip">
 
-      {% if coupon_code %}
-        <!-- Coupon already applied -->
-        <div class="coupon-applied">
-          <div class="coupon-applied-left">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <div>
-              <div class="coupon-applied-code">{{ coupon_code }}</div>
-              <div class="coupon-applied-save">You save ₹{{ coupon_discount|floatformat:2 }}</div>
-            </div>
-          </div>
-          <!-- Remove coupon -->
-          <form method="POST" action="{% url 'remove_coupon' %}" style="display:inline">
-            {% csrf_token %}
-            <button type="submit" class="btn-remove-coupon">✕ Remove Coupon</button>
-          </form>
-        </div>
-      {% else %}
-        <!-- Manual entry -->
-        <div class="coupon-row">
-          <input type="text" id="couponInput" class="coupon-input"
-                 placeholder="Enter coupon code" maxlength="30"
-                 oninput="this.value=this.value.toUpperCase()"
-                 onkeydown="if(event.key==='Enter')manualApplyCoupon()">
-          <button type="button" class="btn-coupon" id="manualApplyBtn" onclick="manualApplyCoupon()">Apply</button>
-        </div>
-
-        <!-- Available coupons with pagination -->
-        {% if available_coupons %}
-        <div class="avail-coupons-label">Available Coupons</div>
-        <div id="couponList" style="display:flex;flex-direction:column;gap:8px"></div>
-        <div class="coupon-pagination">
-          <button class="cpg-btn" id="couponPrevBtn" onclick="prevCouponPage()" disabled>← Prev</button>
-          <span class="cpg-info" id="couponPageInfo"></span>
-          <button class="cpg-btn" id="couponNextBtn" onclick="nextCouponPage()">Next →</button>
-        </div>
-        {% endif %}
+  <!-- Tab switcher -->
+  <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid var(--border);">
+    <button class="co-tab active" id="tabCoupons" onclick="switchCoTab('coupons')">
+      🎁 Coupons
+    </button>
+    <button class="co-tab" id="tabOffers" onclick="switchCoTab('offers')">
+      🏷 Offers
+      {% if offer_discount > 0 %}
+        <span class="co-tab-badge">Auto-applied</span>
       {% endif %}
+    </button>
+  </div>
+
+  <!-- ── COUPONS TAB ── -->
+  <div id="coTabCoupons">
+    {% if coupon_code %}
+      <div class="coupon-applied">
+        <div class="coupon-applied-left">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <div>
+            <div class="coupon-applied-code">{{ coupon_code }}</div>
+            <div class="coupon-applied-save">You save ₹{{ coupon_discount|floatformat:2 }}</div>
+          </div>
+        </div>
+        <form method="POST" action="{% url 'remove_coupon' %}" style="display:inline">
+          {% csrf_token %}
+          <button type="submit" class="btn-remove-coupon">✕ Remove Coupon</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="coupon-row">
+        <input type="text" id="couponInput" class="coupon-input"
+               placeholder="Enter coupon code" maxlength="30"
+               oninput="this.value=this.value.toUpperCase()"
+               onkeydown="if(event.key==='Enter')manualApplyCoupon()">
+        <button type="button" class="btn-coupon" id="manualApplyBtn" onclick="manualApplyCoupon()">Apply</button>
+      </div>
+      {% if available_coupons %}
+      <div class="avail-coupons-label">Available Coupons</div>
+      <div id="couponList" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="coupon-pagination">
+        <button class="cpg-btn" id="couponPrevBtn" onclick="prevCouponPage()" disabled>← Prev</button>
+        <span class="cpg-info" id="couponPageInfo"></span>
+        <button class="cpg-btn" id="couponNextBtn" onclick="nextCouponPage()">Next →</button>
+      </div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- ── OFFERS TAB ── -->
+  <div id="coTabOffers" style="display:none">
+
+    {% if offer_discount > 0 %}
+    <div class="offer-savings-bar">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      <div>
+        <div class="offer-savings-total">Total savings from offers: ₹{{ offer_discount|floatformat:2 }}</div>
+        <div class="offer-savings-sub">Already reflected in your order total</div>
+      </div>
     </div>
-    <!-- ══ END COUPON STRIP ══ -->
+    {% endif %}
+
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px">
+      ✨ These discounts are automatically applied to eligible items in your cart.
+    </div>
+
+    {% if available_offers %}
+      {% for offer in available_offers %}
+      <div class="offer-chip">
+        <div class="offer-chip-icon">
+          {% if offer.offer_type == 'PRODUCT' %}🛍{% elif offer.offer_type == 'CATEGORY' %}🗂{% else %}⭐{% endif %}
+        </div>
+        <div class="offer-chip-body">
+          <div class="offer-chip-name">{{ offer.name }}</div>
+          <div class="offer-chip-desc">
+            {{ offer.get_offer_type_display }} ·
+            {% if offer.discount_type == 'PERCENTAGE' %}{{ offer.discount_value }}% off{% else %}₹{{ offer.discount_value }} off{% endif %}
+            {% if offer.max_discount_amount %} (up to ₹{{ offer.max_discount_amount }}){% endif %}
+          </div>
+          {% if offer.min_purchase_amount > 0 %}
+          <div class="offer-chip-min">Min purchase ₹{{ offer.min_purchase_amount }}</div>
+          {% endif %}
+        </div>
+        {% if offer.is_valid %}
+        <span class="offer-chip-badge applied">Applied</span>
+        {% else %}
+        <span class="offer-chip-badge expired">Expired</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">
+        No active offers right now. Check back soon!
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+<!-- ══ END COUPONS & OFFERS STRIP ══ -->
 
     <div class="co-grid">
       <div>
@@ -590,6 +677,16 @@ a{text-decoration:none;color:inherit}
               <span class="val" id="subtotalVal">₹{{ subtotal|floatformat:2 }}</span>
             </div>
 
+            <!-- ADD THIS BLOCK -->
+            {% if offer_discount > 0 %}
+            <div class="sum-row saving">
+              <span>Offer savings</span>
+              <span class="val">−₹{{ offer_discount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+
+            <!-- existing coupon row below... -->
+             
             <!-- Coupon discount row — shown when coupon is applied -->
             {% if coupon_code %}
             <div class="sum-row saving" id="couponSummaryRow">
@@ -690,11 +787,13 @@ a{text-decoration:none;color:inherit}
 
 <script>
 /* ── Django context injected safely ── */
+// ── Django context injected safely ── 
 const GRAND_TOTAL        = parseFloat('{{ grand_total|floatformat:2 }}');
 const SUBTOTAL           = parseFloat('{{ subtotal|floatformat:2 }}');
 const SHIPPING           = parseFloat('{{ shipping|floatformat:2 }}');
 const WALLET_BALANCE     = parseFloat('{{ wallet_balance|default:"0" }}');
 const COUPON_DISCOUNT    = parseFloat('{{ coupon_discount|default:"0" }}');
+const OFFER_DISCOUNT     = parseFloat('{{ offer_discount|default:"0" }}');  // ADD THIS
 const COUPON_CODE        = "{{ coupon_code|default:'' }}";
 const CSRF_TOKEN         = '{{ csrf_token }}';
 const HAS_ADDRESS        = {{ addresses|yesno:"true,false" }};
@@ -703,8 +802,8 @@ const PLACE_ORDER_URL    = "{% url 'place_order' %}";
 const APPLY_COUPON_URL   = "{% url 'apply_coupon' %}";
 const SELECTED_ADDRESS_ID = '{{ selected_id }}';
 
-/* ── Base total (subtotal + shipping - coupon) ── */
-const BASE_TOTAL = SUBTOTAL + SHIPPING - COUPON_DISCOUNT;
+// FIX: include OFFER_DISCOUNT in base total
+const BASE_TOTAL = SUBTOTAL + SHIPPING - OFFER_DISCOUNT - COUPON_DISCOUNT;
 
 /* ── All available coupons from Django context ── */
 const ALL_COUPONS = [
@@ -1197,5 +1296,13 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('WALLET_BALANCE:', WALLET_BALANCE);
   console.log('===========================');
 });
+
+function switchCoTab(tab) {
+  document.getElementById('coTabCoupons').style.display = tab === 'coupons' ? 'block' : 'none';
+  document.getElementById('coTabOffers').style.display  = tab === 'offers'  ? 'block' : 'none';
+  document.getElementById('tabCoupons').classList.toggle('active', tab === 'coupons');
+  document.getElementById('tabOffers').classList.toggle('active', tab === 'offers');
+}
+
 </script>
 {% endblock %}
