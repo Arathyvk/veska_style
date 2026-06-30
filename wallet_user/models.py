@@ -6,7 +6,7 @@ from decimal import Decimal
 
 
 class Wallet(models.Model):
-    user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="wallet")
+    user            = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="wallet")
     balance         = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     created_at      = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True)
@@ -74,18 +74,20 @@ class WalletTransaction(models.Model):
         (DEBIT,  'Debit'),
     ]
  
-    REASON_CANCELLATION = 'order_cancellation'
-    REASON_RETURN       = 'order_return'
-    REASON_PAYMENT      = 'order_payment'
-    REASON_MANUAL       = 'manual_adjustment'
-    REASON_REFUND       = 'refund'
- 
+    REASON_PURCHASE = 'purchase'
+    REASON_CANCELLATION = 'cancellation'
+    REASON_RETURN = 'return'     
+    REASON_REFERRAL = 'referral'
+    REASON_MANUAL = 'manual'
+    REASON_ORDER = 'order'
+    
     REASON_CHOICES = [
-        (REASON_CANCELLATION, 'Order Cancellation Refund'),
-        (REASON_RETURN,       'Order Return Refund'),
-        (REASON_PAYMENT,      'Order Payment'),
-        (REASON_MANUAL,       'Manual Adjustment'),
-        (REASON_REFUND,       'Refund'),
+        (REASON_PURCHASE, 'Purchase'),
+        (REASON_CANCELLATION, 'Cancellation'),
+        (REASON_RETURN, 'Return'),      
+        (REASON_REFERRAL, 'Referral'),
+        (REASON_MANUAL, 'Manual Adjustment'),
+        (REASON_ORDER, 'Order'),
     ]
  
     wallet           = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
@@ -105,10 +107,7 @@ class WalletTransaction(models.Model):
  
 
     def __str__(self):
-        return (
-            f"{self.get_transaction_type_display()} ₹{self.amount} "
-            f"({self.wallet.user.username}) — {self.get_reason_display()}"
-        )
+        return f"{self.get_transaction_type_display()} - {self.amount} - {self.get_reason_display()}"
  
 
     @property

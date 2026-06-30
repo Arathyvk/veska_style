@@ -11,10 +11,8 @@ from decimal import Decimal
 
 
 from wallet_user.models import Wallet, WalletTransaction
-from wallet_user.views import refund_on_return_approval
+from wallet_user.utils import refund_on_return_approval
 from order_user.models import Order         
-
-
 
 
 def get_or_create_wallet(user):
@@ -24,6 +22,7 @@ def get_or_create_wallet(user):
  
 def is_admin(user):
     return user.is_staff or user.is_superuser
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -41,8 +40,7 @@ def admin_wallet_list(request):
         'search':  search,
     })
  
- 
- 
+  
 @login_required
 @user_passes_test(is_admin)
 def admin_wallet_detail(request, wallet_id):
@@ -55,7 +53,6 @@ def admin_wallet_detail(request, wallet_id):
         'wallet':       wallet,
         'transactions': txn_page,
     })
- 
  
 
 @login_required
@@ -97,7 +94,6 @@ def admin_wallet_adjust(request, wallet_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': 'An error occurred.'})
  
- 
 
 @login_required
 @user_passes_test(is_admin)
@@ -107,15 +103,22 @@ def admin_approve_return(request, order_id):
 
     if order.status != 'return_requested':
         messages.error(request, 'This order is not in a returnable state.')
-        return redirect('admin_order_detail', uuid=order.uuid)  
+        return redirect('admin_order_detail', uuid=order.uuid)
 
     with transaction.atomic():
         order.status = 'returned'
         order.save(update_fields=['status'])
-        refund_on_return_approval(order)
+        refund_amount = refund_on_return_approval(order)
 
-    messages.success(
-        request,
-        f"Return approved. ₹{order.total} credited to {order.user.email}'s wallet."  
-    )
-    return redirect('admin_order_detail', uuid=order.uuid)  
+    if refund_amount:
+        messages.success(
+            request,
+            f"Return approved. ₹{refund_amount} refunded to {order.user.email}'s wallet."
+        )
+    else:
+        messages.warning(
+            request,
+            f"Return marked as approved but no refund was issued "
+            f"(payment method: {order.payment_method}, status: {order.payment_status})."
+        )
+    return redirect('admin_order_detail', uuid=order.uuid)

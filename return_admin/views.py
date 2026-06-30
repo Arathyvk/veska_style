@@ -1,3 +1,7 @@
+import datetime
+import traceback
+
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -7,9 +11,10 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.timezone import now
-import datetime
+
 
 from return_admin.models import ReturnRequest, RETURN_DAYS
+from wallet_user.models import Wallet, WalletTransaction
 
 
 LOW_STOCK = 5
@@ -17,10 +22,8 @@ LOW_STOCK = 5
 NON_RETURNABLE = ['hygiene','personalised', 'final_sale']
 
 
-
 def is_admin(user):
     return user.is_authenticated and user.is_staff
-
 
 
 @never_cache
@@ -55,7 +58,6 @@ def admin_return_list(request):
 
     qs = qs.distinct()
 
-
     stats = qs.aggregate(
         total=Count('id', distinct=True),
         pending=Count('id', filter=Q(status='pending')),
@@ -85,11 +87,6 @@ def admin_return_list(request):
             page_range.append(None)
         page_range.append(p)
         prev = p
-
- 
-    print("QS COUNT:", qs.count())
-    print("PAGE:", page_obj.number)
-
    
     return render(request, 'admin_return_list.html', {
         'returns': page_obj,
@@ -196,90 +193,85 @@ def admin_return_action(request, pk):
         return redirect('admin_login')
 
     ret = get_object_or_404(ReturnRequest, pk=pk)
-    
     action = request.POST.get('action', '').strip()
     reason = request.POST.get('reason', '').strip()
     note = request.POST.get('note', '').strip()
-    
-    # Get the order
     order = ret.order
-    
+
     if action == 'approve':
-        # Update return request status
+        if ret.status != 'pending':
+            messages.error(request, 'This return request is no longer pending.')
+            return redirect('admin_return_detail', pk=pk)
+
         ret.status = 'approved'
         ret.admin_notes = note
-        ret.save()
-        
-        # Update order status to returned
+        ret.save(update_fields=['status', 'admin_notes'])
+
         order.status = 'returned'
-        order.save()
-        
-        # Optional: Create refund record or credit note
-        # from refund_admin.models import Refund
-        # Refund.objects.create(
-        #     order=order,
-        #     return_request=ret,
-        #     amount=ret.order_item.line_total if ret.order_item else order.total,
-        #     status='pending'
-        # )
-        
-        messages.success(request, f'Return #{pk} approved. Order #{order.id} marked as returned.')
-        
-        # Send email notification to customer (optional)
-        # send_return_approved_email(ret.user.email, ret)
+        order.save(update_fields=['status'])
+
+        try:
+            refund_amount = Decimal('0.00')
+            
+            if ret.order_item:
+                refund_amount = ret.order_item.line_total if ret.order_item.line_total else (
+                    ret.order_item.quantity * ret.order_item.unit_price
+                )
+                
+                if order.subtotal and order.subtotal > 0:
+                    total_discount = (order.offer_discount or Decimal('0')) + (order.discount_amount or Decimal('0'))
+                    if total_discount > 0:
+                        discount_rate = total_discount / order.subtotal
+                        item_discount_share = (refund_amount * discount_rate).quantize(Decimal('0.01'))
+                        refund_amount = max(refund_amount - item_discount_share, Decimal('0'))
+            else:
+                refund_amount = order.total
+          
+            if refund_amount <= 0:
+                messages.warning(request, f'Return #{pk} approved but no refund amount available.')
+            else:
+                wallet, created = Wallet.objects.get_or_create(user=order.user)
+
+                wallet.credit(
+                    amount=refund_amount,
+                    reason=WalletTransaction.REASON_RETURN,
+                    order=order,
+                    description=f'Refund for "{ret.order_item.product_name}" from order #{order.order_number}'
+                )
+
+                wallet.refresh_from_db()
+                print(f"Wallet balance after: {wallet.balance}")
+
+                messages.success(
+                    request,
+                    f'Return #{pk} approved. ₹{refund_amount} refunded to {order.user.email}\'s wallet.'
+                )
+
+        except Exception as e:
+            print(f"ERROR in refund: {str(e)}")
+            traceback.print_exc()
+            messages.error(request, f'Return approved but refund failed: {str(e)}')
 
     elif action == 'reject':
         if not reason:
             messages.error(request, 'Please provide a rejection reason.')
             return redirect('admin_return_detail', pk=pk)
-
+            
         ret.status = 'rejected'
         ret.rejection_reason = reason
         ret.admin_notes = note
-        ret.save()
-        
+        ret.save(update_fields=['status', 'rejection_reason', 'admin_notes'])
         messages.success(request, f'Return #{pk} rejected.')
-        
-        # Send rejection email to customer (optional)
-        # send_return_rejected_email(ret.user.email, ret, reason)
 
     elif action == 'complete':
-        # Only allow completion if already approved
         if ret.status != 'approved':
-            messages.error(request, 'Return must be approved before marking as completed.')
+            messages.error(request, 'Return must be approved before completing.')
             return redirect('admin_return_detail', pk=pk)
-        
+            
         ret.status = 'completed'
         ret.admin_notes = note
-        ret.save()
-        
-        # Ensure order is marked as returned
-        if order.status != 'returned':
-            order.status = 'returned'
-            order.save()
-        
-        # Process actual refund
-        if order.payment_status == 'paid':
-            # Add logic for actual refund processing
-            # This depends on your payment gateway
-            pass
-        
-        messages.success(request, f'Return #{pk} completed. Refund processed.')
-
-    elif action == 'flag_user':
-        user = ret.user
-        # Add is_flagged field to user if not exists
-        if not hasattr(user, 'is_flagged'):
-            from django.db import models
-            user.add_to_class('is_flagged', models.BooleanField(default=False))
-        
-        user.is_flagged = True
-        user.save()
-        messages.warning(request, f'User {user.email} has been flagged for suspicious return activity.')
-        
-        # Add internal note about flagging
-        ret.admin_notes = f"{ret.admin_notes}\n[SYSTEM] User flagged for review on {timezone.now().date()}"
-        ret.save()
+        ret.save(update_fields=['status', 'admin_notes'])
+        messages.success(request, f'Return #{pk} completed.')
 
     else:
         messages.error(request, 'Invalid action.')

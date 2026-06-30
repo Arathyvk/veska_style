@@ -1,4 +1,3 @@
-import uuid
 from decimal import Decimal
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -6,7 +5,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.utils import timezone
@@ -14,17 +12,22 @@ from django.core.mail import send_mail
 from django.conf import settings as django_settings
 from django.db.models import Q, Sum, Case, When, Value, IntegerField, OuterRef, Subquery
 from django.db.models.functions import Coalesce
+from django.db import transaction
+from django.db import transaction as db_tx
+from django.contrib.auth.decorators import user_passes_test
 
-
-
+from wallet_user.utils import refund_on_return_approval, refund_on_cancellation
 from product_admin.models import Product, ProductVariant
 from category_admin.models import Category
-from order_user.models import Order
+from order_user.models import Order, OrderItem
+from wallet_user.utils import refund_on_admin_item_cancel
 
 
 NON_RETURNABLE_CATEGORIES = [
     'hygiene', 'personalised', 'final_sale',
 ]
+
+ADMIN_CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing']
 
 
 ORDERS_PER_PAGE      = 20
@@ -72,17 +75,18 @@ def admin_order_list(request):
     date_to       = request.GET.get('date_to', '').strip()
     sort          = request.GET.get('sort', '-created_at').strip()
 
-    qs = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at')
+    qs = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at').distinct()
 
     if query:
         qs = qs.filter(
+            Q(uuid__icontains=query) |  
             Q(full_name__icontains=query) |
             Q(user__email__icontains=query) |
             Q(user__first_name__icontains=query) |
             Q(user__last_name__icontains=query) |
             Q(phone__icontains=query) |
             Q(city__icontains=query)
-        )
+        ).distinct()
 
     if status_filter:
         qs = qs.filter(status=status_filter)
@@ -226,6 +230,7 @@ def admin_order_detail(request, uuid):
         'final_total':       final_total,
         'refund_to_gateway': refund_to_gateway,
         'wallet_to_restore': wallet_to_restore,
+        'cancellable_statuses': ADMIN_CANCELLABLE_STATUSES,
     })
 
 
@@ -251,25 +256,45 @@ def order_update_status(request, uuid):
             return redirect('admin_order_list')
         return redirect('admin_order_detail', uuid=uuid)
 
-    order.status = new_status
+    refund_amount = None
 
-    if new_status == 'delivered' and not order.delivered_at:
-        order.delivered_at = timezone.now()
+    with transaction.atomic():
+        order.status = new_status
 
-    if new_status == 'cancelled' and hasattr(order, 'cancelled_at') and not order.cancelled_at:
-        order.cancelled_at = timezone.now()
+        if new_status == 'delivered' and not order.delivered_at:
+            order.delivered_at = timezone.now()
 
-    order.save()
-    
-    email_sent = False
+        if new_status == 'cancelled' and not order.cancelled_at:
+            order.cancelled_at = timezone.now()
+
+        order.save()
+
+      
+        if new_status == 'cancelled' and old_status != 'cancelled':
+            refund_amount = refund_on_cancellation(order)
+
+        elif new_status == 'returned' and old_status != 'returned':
+            refund_amount = refund_on_return_approval(order)
+
+    refund_msg = f" ₹{refund_amount} refunded to {order.user.email}'s wallet." \
+                 if refund_amount else ''
+
     if order.user and order.user.email:
         email_sent = _send_status_update_email(order, old_status, new_status)
-        if not email_sent:
-            messages.warning(request, f'Order status updated to "{new_status}" but email notification failed.')
+        if email_sent:
+            messages.success(
+                request,
+                f'Order status updated to "{new_status}".{refund_msg} '
+                f'Email sent to {order.user.email}.'
+            )
         else:
-            messages.success(request, f'Order status updated to "{new_status}". An email notification has been sent to {order.user.email}.')
+            messages.warning(
+                request,
+                f'Order status updated to "{new_status}".{refund_msg} '
+                f'(Email notification failed.)'
+            )
     else:
-        messages.success(request, f'Order status updated to "{new_status}". (No email sent - customer email not available)')
+        messages.success(request, f'Order status updated to "{new_status}".{refund_msg}')
 
     if request.POST.get('next') == 'list':
         return redirect('admin_order_list')
@@ -302,12 +327,10 @@ def _send_status_update_email(order, old_status, new_status):
     coupon_code    = getattr(order, 'coupon_code', '') or ''
     offer_details  = getattr(order, 'offer_details', '') or ''
 
-    # ── compute the real final total ──────────────────────────
     email_total = max(
         subtotal - offer_disc - coupon_disc + shipping - wallet_used,
         0.0
     )
-    # ──────────────────────────────────────────────────────────
 
     try:
         payment_display = order.get_payment_method_display()
@@ -570,3 +593,84 @@ def inventory_toggle_status(request, product_id):
     if request.POST.get('next') == 'list':
         return redirect('admin_inventory_list')
     return redirect('admin_inventory_detail', product_id=product_id)
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def admin_cancel_order_item(request, item_id):
+    item  = get_object_or_404(OrderItem, pk=item_id)
+    order = item.order
+
+    if order.status not in ADMIN_CANCELLABLE_STATUSES:
+        messages.error(
+            request,
+            f"Cannot cancel — order status is '{order.get_status_display()}'. "
+            f"Only {', '.join(ADMIN_CANCELLABLE_STATUSES)} orders can have items cancelled."
+        )
+        return redirect('admin_order_detail', uuid=order.uuid)
+
+    if item.cancel_status != 'none':
+        messages.error(request, "This item is already cancelled.")
+        return redirect('admin_order_detail', uuid=order.uuid)
+
+    reason = request.POST.get('reason', '').strip()
+    if not reason:
+        messages.error(request, "Please provide a cancellation reason.")
+        return redirect('admin_order_detail', uuid=order.uuid)
+
+    is_cod     = order.payment_method == 'cod'
+    is_paid    = order.payment_status == 'paid'
+    will_refund = (not is_cod) and is_paid
+
+    with db_tx.atomic():
+        item.cancel_status = 'cancelled'
+        item.is_cancelled  = True
+        item.cancel_reason = reason
+        item.save(update_fields=['cancel_status', 'is_cancelled', 'cancel_reason'])
+
+        if item.variant:
+            item.variant.stock += item.quantity
+            item.variant.save(update_fields=['stock'])
+        elif item.product:
+            item.product.stock += item.quantity
+            item.product.save(update_fields=['stock'])
+
+        refund_amount = Decimal('0.00')
+        if will_refund:
+            refund_amount = refund_on_admin_item_cancel(order, item)
+
+        all_cancelled = not order.items.filter(cancel_status='none').exists()
+        if all_cancelled:
+            order.status        = 'cancelled'
+            order.cancelled_at  = timezone.now()
+            order.cancel_reason = f"All items cancelled by admin. Last reason: {reason}"
+            order.save(update_fields=['status', 'cancelled_at', 'cancel_reason'])
+
+            if order.items.count() == 1 and will_refund:
+                pass  
+            elif all_cancelled and not will_refund and is_cod:
+                pass 
+
+    if refund_amount > 0:
+        messages.success(
+            request,
+            f'"{item.product_name}" cancelled. '
+            f'₹{refund_amount} refunded to {order.user.email}\'s wallet.'
+        )
+    elif is_cod:
+        messages.success(
+            request,
+            f'"{item.product_name}" cancelled. '
+            f'No refund issued (COD — cash not yet collected).'
+        )
+    elif not is_paid:
+        messages.success(
+            request,
+            f'"{item.product_name}" cancelled. '
+            f'No refund issued (payment not completed).'
+        )
+    else:
+        messages.success(request, f'"{item.product_name}" cancelled successfully.')
+
+    return redirect('admin_order_detail', uuid=order.uuid)

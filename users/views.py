@@ -47,7 +47,6 @@ def login_view(request):
         return redirect("home")
 
     if request.method == "POST":
-        print("reached the line")
         email    = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
 
@@ -201,10 +200,11 @@ def verify_signup_otp(request):
         print("Stored OTP:", stored_otp)
         print("OTP time:", otp_time)
         print("Is expired:", is_otp_expired(otp_time))
- 
+
+     
         if not stored_otp:
             messages.error(request, "OTP not found. Please resend.")
- 
+
         elif is_otp_expired(otp_time):
             messages.error(request, "OTP expired. Click Resend OTP.")
  

@@ -211,7 +211,7 @@ def product_shop(request):
 
 def product_detail(request, slug):
     try:
-        product = Product.objects.prefetch_related(
+         product = Product.objects.prefetch_related(
             'images', 'variants', 'reviews'
         ).get(slug=slug)
     except Product.DoesNotExist:

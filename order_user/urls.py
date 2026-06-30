@@ -12,5 +12,6 @@ urlpatterns = [
     path('<str:uuid>/cancel-item/<int:item_id>/', views.cancel_order_item, name='cancel_order_item'),
     path('<str:uuid>/items/<int:item_id>/return/', views.return_request, name='return_request'),
     path('orders/<uuid:uuid>/', views.order_detail, name='order_detail'),
-    path('orders/item/<int:item_id>/cancel/', views.cancel_order_item, name='cancel_order_item'),
+    path('orders/<uuid:uuid>/invoice/', views.download_invoice, name='download_invoice'),
+    path('submit-review/', views.submit_review, name='submit_review'),
 ]

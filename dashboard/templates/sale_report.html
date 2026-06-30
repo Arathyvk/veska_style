@@ -1,0 +1,239 @@
+{% extends "admin_base.html" %}
+{% block page_title %}Sales Report{% endblock %}
+
+{% block content %}
+<style>
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:1.25rem}
+.kpi-card{border-radius:8px;padding:.875rem 1rem}
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.25rem}
+.stat-card{border:1px solid #e8e8e8;border-radius:8px;padding:.75rem 1rem;text-align:center}
+.two-col{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:1.25rem}
+.section-label{font-size:11px;font-weight:600;color:#888;letter-spacing:.5px;text-transform:uppercase;margin:1.25rem 0 8px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+</style>
+
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-secondary">
+        ← Dashboard
+      </a>
+      <div>
+        <h1 class="h4 mb-0 fw-semibold">Sales report</h1>
+        <small class="text-muted">
+          {{ start|date:"d M Y" }} — {{ end|date:"d M Y" }}
+          &nbsp;·&nbsp; Generated {{ generated_at|date:"d M Y, g:i A" }}
+        </small>
+      </div>
+    </div>
+    <a href="{% url 'sales_report_pdf' %}?filter={{ filter_type }}&date_from={{ date_from }}&date_to={{ date_to }}"
+       style = margin-left:95pc;font-size:16px;  class="btn btn-sm btn-success" target="_blank">
+      ⬇ Download PDF
+    </a>
+  </div>
+
+  <!-- Filter -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-sm-6 col-md-3">
+          <label class="form-label small fw-semibold">Filter type</label>
+          <select name="filter" class="form-select form-select-sm"
+                  id="filterType" onchange="toggleDates(this.value)">
+            <option value="daily"   {% if filter_type == 'daily'   %}selected{% endif %}>Today</option>
+            <option value="weekly"  {% if filter_type == 'weekly'  %}selected{% endif %}>Last 7 days</option>
+            <option value="monthly" {% if filter_type == 'monthly' %}selected{% endif %}>This month</option>
+            <option value="yearly"  {% if filter_type == 'yearly'  %}selected{% endif %}>This year</option>
+            <option value="custom"  {% if filter_type == 'custom'  %}selected{% endif %}>Custom range</option>
+          </select>
+        </div>
+        <div class="col-sm-6 col-md-3" id="fromWrap"
+             style="display:{% if filter_type == 'custom' %}block{% else %}none{% endif %}">
+          <label class="form-label small fw-semibold">Date from</label>
+          <input type="date" name="date_from" class="form-control form-control-sm"
+                 value="{{ date_from }}">
+        </div>
+        <div class="col-sm-6 col-md-3" id="toWrap"
+             style="display:{% if filter_type == 'custom' %}block{% else %}none{% endif %}">
+          <label class="form-label small fw-semibold">Date to</label>
+          <input type="date" name="date_to" class="form-control form-control-sm"
+                 value="{{ date_to }}">
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <button type="submit" class="btn btn-sm btn-primary w-100">Apply filter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="small text-muted mb-1">Total orders</div>
+      <div class="fs-3 fw-semibold">{{ total_orders }}</div>
+      <div class="small text-muted">✓ {{ delivered_orders }} delivered</div>
+    </div>
+    <div class="kpi-card">
+      <div class="small text-muted mb-1">Gross revenue</div>
+      <div class="fs-3 fw-semibold text-success">₹{{ gross_revenue|floatformat:2 }}</div>
+      <div class="small text-muted">Before refunds</div>
+    </div>
+    <div class="kpi-card">
+      <div class="small text-muted mb-1">Net revenue</div>
+      <div class="fs-3 fw-semibold text-success">₹{{ net_revenue|floatformat:2 }}</div>
+      <div class="small text-muted">After refunds</div>
+    </div>
+    <div class="kpi-card">
+      <div class="small text-muted mb-1">Items sold</div>
+      <div class="fs-3 fw-semibold">{{ total_items_sold }}</div>
+      <div class="small text-muted">Excl. cancelled/returned</div>
+    </div>
+  </div>
+
+  <!-- Order breakdown -->
+  <div class="section-label">Order breakdown</div>
+  <div class="status-grid">
+    <div class="stat-card">
+      <div class="small text-muted">Delivered</div>
+      <div class="fs-4 fw-semibold text-success">{{ delivered_orders }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="small text-muted">Cancelled</div>
+      <div class="fs-4 fw-semibold text-danger">{{ cancelled_orders }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="small text-muted">Returned</div>
+      <div class="fs-4 fw-semibold text-warning">{{ returned_orders }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="small text-muted">Refund amount</div>
+      <div class="fs-4 fw-semibold text-danger">₹{{ refund_amount|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  <!-- Payment methods + Top products -->
+  <div class="section-label">Payment methods & top products</div>
+  <div class="two-col">
+    <div class="card shadow-sm">
+      <div class="card-header bg-dark text-white fw-semibold small py-2">
+        Payment methods
+      </div>
+      <table class="table table-sm mb-0">
+        <tbody>
+          <tr>
+            <td class="ps-3">💵 Cash on delivery</td>
+            <td class="text-end pe-3 fw-semibold">{{ cod_orders }}</td>
+          </tr>
+          <tr>
+            <td class="ps-3">💳 Stripe</td>
+            <td class="text-end pe-3 fw-semibold">{{ stripe_orders }}</td>
+          </tr>
+          <tr>
+            <td class="ps-3">👛 Wallet</td>
+            <td class="text-end pe-3 fw-semibold">{{ wallet_orders }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-dark text-white fw-semibold small py-2">
+        Top products
+      </div>
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3 text-center" style="width:40px">No</th>
+            <th>Product</th>
+            <th class="text-end">Sold</th>
+            <th class="text-end pe-3">Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in top_products %}
+          <tr>
+            <td class="text-center text-muted">{{ forloop.counter }}</td>
+            <td>{{ product.product_name }}</td>
+            <td class="text-end">{{ product.sold }}</td>
+            <td class="text-end pe-3 fw-semibold">₹{{ product.revenue|floatformat:2 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-3">No products in this period</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Orders table -->
+  <div class="section-label">All orders</div>
+  <div class="card shadow-sm">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
+      <span class="fw-semibold small">Orders</span>
+      <span class="badge bg-secondary">{{ total_orders }}</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Order</th>
+            <th>Customer</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th class="text-end pe-3">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td class="ps-3">
+              <a href="{% url 'admin_order_detail' order.uuid %}"
+                 class="fw-semibold text-decoration-none">
+                #{{ order.uuid|truncatechars:8 }}
+              </a>
+            </td>
+            <td>
+              <div class="fw-semibold small">{{ order.full_name }}</div>
+              <div class="text-muted" style="font-size:11px">{{ order.user.email }}</div>
+            </td>
+            <td class="small text-muted">{{ order.created_at|date:"d M Y" }}</td>
+            <td>
+              <span class="badge rounded-pill
+                {% if order.status == 'delivered' %}bg-success
+                {% elif order.status == 'cancelled' %}bg-danger
+                {% elif order.status == 'returned' %}bg-warning text-dark
+                {% elif order.status == 'shipped' %}bg-info text-dark
+                {% elif order.status == 'return_requested' %}bg-warning text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ order.get_status_display }}
+              </span>
+            </td>
+            <td class="small text-muted">{{ order.payment_method|upper }}</td>
+            <td class="text-end pe-3 fw-semibold">₹{{ order.total|floatformat:2 }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              No orders found for this period.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleDates(v) {
+  const show = v === 'custom';
+  document.getElementById('fromWrap').style.display = show ? 'block' : 'none';
+  document.getElementById('toWrap').style.display   = show ? 'block' : 'none';
+}
+toggleDates(document.getElementById('filterType').value);
+</script>
+{% endblock %}

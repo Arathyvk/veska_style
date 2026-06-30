@@ -149,6 +149,120 @@ a{text-decoration:none;color:inherit}
 .st-cancelled{background:var(--danger-pale);color:var(--danger)}
 .st-return_requested{background:var(--warning-pale);color:var(--warning)}
 .st-returned{background:#f1efe8;color:#5f5e5a}
+
+.section{margin-top:64px}
+.section-head{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.section-title{font-family:var(--head);font-size:28px;font-weight:600;
+  color:var(--ink);display:flex;align-items:baseline;gap:12px}
+.section-title span{font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400}
+.rating-summary{display:flex;gap:32px;flex-wrap:wrap;background:var(--warm-white);
+  border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px 28px;
+  margin-bottom:28px;align-items:center;box-shadow:var(--shadow-xs)}
+.rating-big{text-align:center;min-width:80px}
+.rating-big .avg-num{font-family:var(--head);font-size:52px;font-weight:700;color:var(--ink);line-height:1}
+.rating-big .avg-label{font-size:11px;color:var(--muted);margin-top:6px}
+.rating-bars{flex:1;display:flex;flex-direction:column;gap:8px;min-width:160px}
+.rating-bar-row{display:flex;align-items:center;gap:8px}
+.rb-label{font-size:11.5px;color:var(--muted);width:28px;text-align:right;flex-shrink:0}
+.rb-track{flex:1;height:6px;background:var(--sand);border-radius:3px;overflow:hidden}
+.rb-fill{height:100%;background:var(--terra);border-radius:3px}
+.rb-count{font-size:11px;color:var(--muted);width:20px}
+.review-card{background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:20px 22px;margin-bottom:14px;box-shadow:var(--shadow-xs)}
+.rc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.rc-meta{display:flex;flex-direction:column;gap:4px}
+.rc-name{font-size:14px;font-weight:600;color:var(--ink)}
+.rc-date{font-size:11.5px;color:var(--muted-lt)}
+.rc-stars{display:flex;gap:2px}
+.rc-star{font-size:13px}
+.rc-star.full{color:#e8a838}.rc-star.empty{color:var(--sand)}
+.rc-body{font-size:13.5px;color:var(--charcoal);line-height:1.7}
+.no-reviews{text-align:center;padding:48px 24px;background:var(--warm-white);
+  border:1px solid var(--border);border-radius:var(--radius-xl);color:var(--muted);font-size:14px}
+.star-picker{display:flex;gap:4px;cursor:pointer}
+.sp-star{font-size:28px;color:var(--sand);transition:color .12s;line-height:1;user-select:none}
+.sp-star.lit{color:#e8a838}
+
+.related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px}
+.rel-card{background:var(--warm-white);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),box-shadow .3s;display:block}
+.rel-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+.rel-img{aspect-ratio:4/5;overflow:hidden;background:var(--parchment)}
+.rel-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.rel-card:hover .rel-img img{transform:scale(1.06)}
+.rel-body{padding:14px 14px 16px}
+.rel-cat{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--terra);margin-bottom:4px}
+.rel-name{font-family:var(--head);font-size:14px;font-weight:500;line-height:1.35;
+  color:var(--ink);margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rel-price{font-family:var(--head);font-size:16px;font-weight:700;color:var(--charcoal)}
+
+.review-card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    transition: var(--transition);
+}
+.review-card:hover {
+    border-color: var(--terra-pale);
+    box-shadow: var(--shadow-sm);
+}
+.rc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.rc-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.rc-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+}
+.rc-date {
+    font-size: 11.5px;
+    color: var(--muted-lt);
+}
+.rc-stars {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
+}
+.rc-star {
+    font-size: 16px;
+}
+.rc-star.full {
+    color: #f5a623;
+}
+.rc-star.empty {
+    color: var(--sand);
+}
+.rc-body {
+    font-size: 14px;
+    color: var(--charcoal);
+    line-height: 1.7;
+    margin-top: 4px;
+}
+.no-reviews {
+    text-align: center;
+    padding: 60px 24px;
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    color: var(--muted);
+}
+.no-reviews p {
+    margin: 0;
+}
 </style>
 
 <div class="detail-page">
@@ -340,22 +454,7 @@ a{text-decoration:none;color:inherit}
               {% if item.size %}Size: {{ item.size }} · {% endif %}
               Qty: {{ item.quantity }}
             </div>
-            {% if item.status == 'cancelled' %}
-              <span class="item-cancelled-tag">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-                Cancelled
-                {% if item.cancel_reason %} — {{ item.cancel_reason }}{% endif %}
-              </span>
-            {% elif item.can_cancel %}
-              <a href="{% url 'cancel_order_item' item.id %}" class="item-cancel-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-                Cancel This Item
-              </a>
-            {% endif %}
+           
           </div>
           <div class="item-price">
             <div class="item-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
@@ -502,6 +601,120 @@ a{text-decoration:none;color:inherit}
     </div>
     {% endif %}
 
+      <div class="section-head" style="margin-top: 40px;">
+        <div class="section-title">
+            Customer Reviews
+            {% if review_count %}<span>{{ review_count }} review{{ review_count|pluralize }}</span>{% endif %}
+        </div>
+        {% if can_review %}
+            <button class="btn-add-cart" style="width:auto;padding:10px 20px;font-size:12.5px;border:none;cursor:pointer;background:var(--terra);color:white;border-radius:8px;font-weight:600;"
+                    onclick="toggleReviewForm()">
+                ✍️ Write a Review
+            </button>
+        {% endif %}
+    </div>
+
+    <!-- Display existing reviews -->
+    <div class="reviews-section">
+        {% for review in reviews %}
+            <div class="review-card">
+                <div class="rc-header">
+                    <div class="rc-meta">
+                        <div class="rc-name">{{ review.author_name }}</div>
+                        <div class="rc-date">{{ review.created_at|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="rc-stars">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= review.rating %}
+                                <span class="rc-star full">★</span>
+                            {% else %}
+                                <span class="rc-star empty">★</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="rc-body">{{ review.body }}</div>
+                {% if not review.is_approved %}
+                    <div style="margin-top:8px;">
+                        <span style="color:#ff9800; font-size:12px; background:#fff3e0; padding:2px 12px; border-radius:12px;">
+                            ⏳ Pending Approval
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="no-reviews">
+                <p style="font-size:16px; margin-bottom:8px;">📝 No reviews yet</p>
+                <p style="font-size:13px; color:var(--muted-lt);">Be the first to share your experience!</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+        <div style="background:white; padding:35px; border-radius:16px; max-width:520px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h3 style="margin:0; font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:600; color:var(--ink);">
+                    Write a Review
+                </h3>
+                <button onclick="closeReviewForm()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--muted); transition:0.2s;"
+                        onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">
+                    ×
+                </button>
+            </div>
+            
+            <form id="reviewForm" onsubmit="submitReview(event)">
+                {% csrf_token %}
+                <input type="hidden" name="order_id" value="{{ order.id }}">
+                
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600; font-size:14px; color:var(--charcoal);">
+                        Select Product
+                    </label>
+                    <select name="product_id" id="productSelect" required style="width:100%; padding:12px; border:2px solid var(--border); border-radius:8px; font-size:14px; background:white; transition:0.2s;"
+                            onfocus="this.style.borderColor='var(--terra)'" onblur="this.style.borderColor='var(--border)'">
+                        <option value="">Choose a product...</option>
+                        {% for item in items %}
+                            {% if item.product.id not in reviewed_product_ids %}
+                                <option value="{{ item.product.id }}">{{ item.product.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600; font-size:14px; color:var(--charcoal);">
+                        Rating
+                    </label>
+                    <div id="starRating" style="display:flex; gap:8px; font-size:40px; cursor:pointer; padding:5px 0;">
+                        <span data-value="1" onclick="setRating(1)" style="transition:0.2s;">☆</span>
+                        <span data-value="2" onclick="setRating(2)" style="transition:0.2s;">☆</span>
+                        <span data-value="3" onclick="setRating(3)" style="transition:0.2s;">☆</span>
+                        <span data-value="4" onclick="setRating(4)" style="transition:0.2s;">☆</span>
+                        <span data-value="5" onclick="setRating(5)" style="transition:0.2s;">☆</span>
+                    </div>
+                    <input type="hidden" name="rating" id="ratingValue" required>
+                    <div id="ratingText" style="margin-top:6px; font-size:13px; color:var(--muted); min-height:20px;"></div>
+                </div>
+                
+                <div style="margin-bottom:24px;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600; font-size:14px; color:var(--charcoal);">
+                        Your Review
+                    </label>
+                    <textarea name="comment" rows="4" placeholder="Share your experience with this product..." 
+                              style="width:100%; padding:12px; border:2px solid var(--border); border-radius:8px; font-size:14px; resize:vertical; min-height:100px; font-family:inherit; transition:0.2s;"
+                              onfocus="this.style.borderColor='var(--terra)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+                </div>
+                
+                <button type="submit" style="width:100%; padding:14px; background:var(--charcoal); color:white; border:none; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; transition:0.2s;"
+                        onmouseover="this.style.background='var(--terra)'" onmouseout="this.style.background='var(--charcoal)'">
+                    Submit Review
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Action Strip -->
     <div class="action-strip">
       <a href="{% url 'download_invoice' order.uuid %}" class="btn-primary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -531,4 +744,150 @@ a{text-decoration:none;color:inherit}
 
   </div>
 </div>
+
+<script>
+// Star rating functionality
+let selectedRating = 0;
+const ratingTexts = {
+    1: '⭐ Poor',
+    2: '⭐⭐ Fair',
+    3: '⭐⭐⭐ Good',
+    4: '⭐⭐⭐⭐ Very Good',
+    5: '⭐⭐⭐⭐⭐ Excellent'
+};
+
+function setRating(value) {
+    selectedRating = value;
+    document.getElementById('ratingValue').value = value;
+    
+    const stars = document.querySelectorAll('#starRating span');
+    stars.forEach(star => {
+        const starValue = parseInt(star.dataset.value);
+        if (starValue <= value) {
+            star.textContent = '★';
+            star.style.color = '#f5a623';
+            star.style.transform = 'scale(1.1)';
+        } else {
+            star.textContent = '☆';
+            star.style.color = '#ddd';
+            star.style.transform = 'scale(1)';
+        }
+    });
+    
+    // Update rating text
+    const ratingText = document.getElementById('ratingText');
+    ratingText.textContent = ratingTexts[value] || '';
+    ratingText.style.color = '#b56744';
+}
+
+function toggleReviewForm() {
+    // Check if there are any products available for review
+    const select = document.getElementById('productSelect');
+    const hasOptions = Array.from(select.options).some(opt => opt.value !== '');
+    
+    if (!hasOptions) {
+        alert('You have already reviewed all products in this order!');
+        return;
+    }
+    
+    document.getElementById('reviewModal').style.display = 'flex';
+}
+
+function closeReviewForm() {
+    document.getElementById('reviewModal').style.display = 'none';
+    // Reset form
+    document.getElementById('reviewForm').reset();
+    selectedRating = 0;
+    document.getElementById('ratingValue').value = '';
+    document.getElementById('ratingText').textContent = '';
+    const stars = document.querySelectorAll('#starRating span');
+    stars.forEach(star => {
+        star.textContent = '☆';
+        star.style.color = '#ddd';
+        star.style.transform = 'scale(1)';
+    });
+}
+
+// Submit review via AJAX
+function submitReview(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('reviewForm');
+    const formData = new FormData(form);
+    
+    // Validate
+    const productId = formData.get('product_id');
+    const rating = formData.get('rating');
+    const comment = formData.get('comment', '').trim();
+    
+    if (!productId) {
+        alert('Please select a product');
+        document.getElementById('productSelect').focus();
+        return;
+    }
+    
+    if (!rating) {
+        alert('Please select a rating');
+        return;
+    }
+    
+    if (!comment) {
+        alert('Please write your review');
+        document.querySelector('textarea[name="comment"]').focus();
+        return;
+    }
+    
+    // Disable submit button
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    
+    fetch('/submit-review/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+            closeReviewForm();
+            location.reload(); // Refresh to show the new review
+        } else {
+            alert('❌ Error: ' + data.error);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Review';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Review';
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('reviewModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeReviewForm();
+    }
+});
+
+// Keyboard support - Escape key to close
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeReviewForm();
+    }
+});
+</script>
+
+<style>
+.review-item:last-child {
+    border-bottom: none !important;
+}
+</style>
+
 {% endblock %}

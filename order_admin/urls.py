@@ -11,6 +11,6 @@ urlpatterns = [
      path('inventory/<int:product_id>/',views.inventory_detail,name='admin_inventory_detail'),
      path('inventory/<int:product_id>/stock/',views.inventory_update_stock,name='admin_inventory_update_stock'),
      path('inventory/<int:product_id>/status/',views.inventory_toggle_status,name='admin_inventory_toggle_status'),
-
+     path('orders/item/<int:item_id>/cancel/', views.admin_cancel_order_item, name='admin_cancel_order_item'),
 
 ]
