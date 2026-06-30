@@ -93,7 +93,7 @@ class Order(models.Model):
     ]
 
     PAYMENT_METHOD = [
-        ('stripe',  'Stripe'),
+        ('stripe',  'Stripe'), 
         ('cod',     'Cash on Delivery'),
         ('wallet',  'Wallet'),
     ]
@@ -153,7 +153,11 @@ class Order(models.Model):
             return False
         return_deadline = self.delivered_at + timedelta(days=RETURN_DAYS)
         return timezone.now() <= return_deadline
-
+    
+    @property
+    def can_cancel(self):
+        return self.status in ('pending', 'confirmed', 'processing')
+    
     @property
     def return_deadline(self):
         if self.delivered_at:
@@ -181,27 +185,36 @@ class OrderItem(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    order = models.ForeignKey('order_user.Order', on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey('product_admin.Product', on_delete=models.SET_NULL, null=True)
-    variant = models.ForeignKey('product_admin.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
+    order        = models.ForeignKey('order_user.Order', on_delete=models.CASCADE, related_name='items')
+    product      = models.ForeignKey('product_admin.Product', on_delete=models.SET_NULL, null=True)
+    variant      = models.ForeignKey('product_admin.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
     product_name = models.CharField(max_length=255)
     product_slug = models.SlugField(max_length=255)
-    size = models.CharField(max_length=20, blank=True)
-    image_url = models.URLField(blank=True)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.PositiveIntegerField()
+    size         = models.CharField(max_length=20, blank=True)
+    image_url    = models.URLField(blank=True)
+    unit_price   = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity     = models.PositiveIntegerField()
     
-    line_total = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
-    is_cancelled = models.BooleanField(default=False)
-    cancel_status = models.CharField(
-        max_length=20,
-        choices=CANCEL_STATUS_CHOICES,
-        default='none',
-    )
+    line_total    = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
+    is_cancelled  = models.BooleanField(default=False)
+    cancel_status = models.CharField(max_length=20,choices=CANCEL_STATUS_CHOICES,default='none')
     cancel_reason = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.product_name} × {self.quantity}"
+    
+    @property
+    def can_cancel(self):
+        return(
+            self.cancel_status == 'none'
+            and self.order.status in ('pending', 'confirmed', 'processing')
+        )
+    
+    @property
+    def status(self):
+        if self.cancel_status == 'cancelled':
+            return 'cancelled'
+        return 'active'
 
     def save(self, *args, **kwargs):
         self.line_total = self.unit_price * self.quantity

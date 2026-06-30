@@ -4,7 +4,7 @@ import os
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from category_admin.models import Category
-
+from django.conf import settings
 
 CATEGORY_CHOICES = [
     ('Sneakers', 'Sneakers'),
@@ -129,18 +129,26 @@ class ProductVariant(models.Model):
     
 
 
+
+
 class ProductReview(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
-
+    user        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews',null=True,blank=True)
+    product     = models.ForeignKey('Product',on_delete=models.CASCADE,related_name='reviews')
     author_name = models.CharField(max_length=120, default='Anonymous')
-    rating = models.PositiveSmallIntegerField()
-    body = models.TextField()
-
+    rating      = models.PositiveSmallIntegerField()
+    body        = models.TextField()
     is_approved = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
+        unique_together = ['user', 'product']
 
     def __str__(self):
-        return f"{self.author_name} - {self.product.name}"    
+        return f"{self.author_name} - {self.product.name}"
+
+    def save(self, *args, **kwargs):
+        if not self.author_name or self.author_name == 'Anonymous':
+            if self.user:
+                self.author_name = self.user.get_full_name() or self.user.username
+        super().save(*args, **kwargs)

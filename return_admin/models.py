@@ -30,16 +30,17 @@ RETURN_STATUS = [
 
 
 class ReturnRequest(models.Model):
-    user             = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                         on_delete=models.CASCADE,
-                                         related_name='return_requests')
-    order = models.ForeignKey('order_user.Order', on_delete=models.CASCADE, related_name='return_requests')
-
-    order_item = models.ForeignKey('order_user.OrderItem', on_delete=models.CASCADE, related_name='return_requests')
+    user             = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='return_requests')
+    order            = models.ForeignKey('order_user.Order', on_delete=models.CASCADE, related_name='return_requests')
+    order_item       = models.ForeignKey('order_user.OrderItem', on_delete=models.CASCADE, related_name='return_requests')
     return_reason    = models.CharField(max_length=30, choices=RETURN_REASONS, blank=True, null= True)
-    return_notes = models.TextField(blank=True) 
+    return_notes     = models.TextField(blank=True) 
     status           = models.CharField(max_length=15, choices=RETURN_STATUS, default='pending')
-    rejection_reason = models.TextField(blank=True)
+    admin_notes = models.TextField(blank=True, null=True)
+    approved_at = models.DateTimeField(blank=True, null=True)
+    rejected_at = models.DateTimeField(blank=True, null=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
+    rejection_reason = models.CharField(max_length=255, blank=True, null=True)
     created_at       = models.DateTimeField(auto_now_add=True)
     updated_at       = models.DateTimeField(auto_now=True)
  

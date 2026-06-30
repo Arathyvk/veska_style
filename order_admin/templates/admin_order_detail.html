@@ -136,6 +136,23 @@ button,input,select,textarea{font-family:var(--body)}
     Back to Orders
   </a>
 
+  <a href="{% url 'download_invoice' order.uuid %}"
+   style="display:inline-flex;align-items:center;gap:6px;
+          padding:9px 18px;background:var(--card2);
+          border:1px solid var(--border2);border-radius:8px;
+          font-size:13px;font-weight:600;color:var(--muted2);
+          text-decoration:none;transition:.2s"
+   onmouseover="this.style.borderColor='var(--rose)';this.style.color='var(--rose2)'"
+   onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted2)'">
+  <svg width="13" height="13" fill="none" stroke="currentColor"
+       stroke-width="2.5" viewBox="0 0 24 24">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+  Download Invoice
+</a>
+
   <div class="pg-hd">
     <div>
       <h1>Order {{ order.order_number }}</h1>
@@ -160,7 +177,7 @@ button,input,select,textarea{font-family:var(--body)}
             <thead>
               <tr>
                 <th>Product</th><th>Size</th><th>Qty</th>
-                <th>Unit</th><th>Total</th><th>Status</th>
+                <th>Unit</th><th>Total</th><th>Status</th><th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -194,6 +211,25 @@ button,input,select,textarea{font-family:var(--body)}
                     <span style="background:var(--red-pale);color:var(--red);padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700">Cancelled</span>
                   {% else %}
                     <span style="background:var(--green-pale);color:var(--green);padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700">Active</span>
+                  {% endif %}
+                </td>
+
+                {# ── Admin Cancel Item Action ── #}
+                <td>
+                  {% if not item.is_cancelled and order.status in cancellable_statuses %}
+                    <button type="button"
+                      onclick="openCancelModal('{{ item.pk }}','{{ item.product_name|escapejs }}','{{ item.line_total }}','{{ order.payment_method }}')"
+                      style="background:var(--red-pale);color:var(--red);border:1px solid var(--red);
+                             padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;
+                             cursor:pointer;transition:.15s"
+                      onmouseover="this.style.background='var(--red)';this.style.color='#fff'"
+                      onmouseout="this.style.background='var(--red-pale)';this.style.color='var(--red)'">
+                      Cancel
+                    </button>
+                  {% elif item.is_cancelled %}
+                    <span style="color:var(--muted);font-size:11px">—</span>
+                  {% else %}
+                    <span style="color:var(--muted);font-size:11px">Locked</span>
                   {% endif %}
                 </td>
               </tr>
@@ -542,6 +578,64 @@ button,input,select,textarea{font-family:var(--body)}
 
 </div>
 
+{# ══ Cancel Item Modal ══ #}
+<div id="cancelItemModal" style="display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.6);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-xl);
+              padding:28px;width:100%;max-width:420px;margin:0 20px">
+    <h3 style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Cancel Item</h3>
+    <p id="ciModalName" style="font-size:13px;color:var(--muted2);margin-bottom:4px"></p>
+    <p id="ciModalAmount" style="font-size:13px;color:var(--terra2);font-weight:700;margin-bottom:16px"></p>
+
+    <div id="ciCodNote" style="display:none;background:var(--orange-pale);border:1px solid var(--orange);
+      border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--orange);margin-bottom:14px">
+      ⚠️ <strong>COD order</strong> — no cash collected yet. No refund will be issued.
+    </div>
+    <div id="ciUnpaidNote" style="display:none;background:var(--orange-pale);border:1px solid var(--orange);
+      border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--orange);margin-bottom:14px">
+      ⚠️ <strong>Payment not completed</strong> — no refund will be issued.
+    </div>
+    <div id="ciOnlineNote" style="display:none;background:var(--green-pale);border:1px solid var(--green);
+      border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--green);margin-bottom:14px">
+      ✅ A proportional refund will be credited to the customer's wallet instantly.
+    </div>
+
+    <form id="ciForm" method="post" action="">
+      {% csrf_token %}
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+                      color:var(--muted2);display:block;margin-bottom:6px">Reason *</label>
+        <select name="reason" required
+          style="width:100%;background:var(--card2);border:1.5px solid var(--border2);
+                 color:var(--text);border-radius:var(--radius-lg);padding:10px 12px;
+                 font-size:13px;outline:none">
+          <option value="">— Select reason —</option>
+          <option value="out_of_stock">Out of stock</option>
+          <option value="pricing_error">Pricing error</option>
+          <option value="duplicate_order">Duplicate order</option>
+          <option value="customer_request">Customer request</option>
+          <option value="fraud_suspected">Fraud suspected</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button type="button" onclick="closeCancelModal()"
+          style="flex:1;padding:10px;background:var(--card2);color:var(--muted2);
+                 border:1px solid var(--border2);border-radius:var(--radius-lg);
+                 font-size:13px;font-weight:600;cursor:pointer">
+          Keep Item
+        </button>
+        <button type="submit"
+          style="flex:1;padding:10px;background:var(--red);color:#fff;
+                 border:none;border-radius:var(--radius-lg);
+                 font-size:13px;font-weight:700;cursor:pointer">
+          Confirm Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 function handleSC(sel) {
   document.getElementById('cancelWrap').classList.toggle('show', sel.value === 'cancelled');
@@ -549,5 +643,27 @@ function handleSC(sel) {
 document.addEventListener('DOMContentLoaded', function() {
   handleSC(document.getElementById('statusSel'));
 });
+
+function openCancelModal(itemId, name, amount, paymentMethod, paymentStatus) {
+  document.getElementById('ciModalName').textContent = name;
+  document.getElementById('ciModalAmount').textContent = '₹' + amount;
+
+  var urlTemplate = "{% url 'admin_cancel_order_item' 99999 %}";
+  document.getElementById('ciForm').action = urlTemplate.replace('99999', itemId);
+
+  var isCod     = paymentMethod === 'cod';
+  var isPaid    = paymentStatus === 'paid';
+  var willRefund = !isCod && isPaid;
+
+  document.getElementById('ciCodNote').style.display     = isCod ? 'block' : 'none';
+  document.getElementById('ciUnpaidNote').style.display  = (!isCod && !isPaid) ? 'block' : 'none';
+  document.getElementById('ciOnlineNote').style.display  = willRefund ? 'block' : 'none';
+
+  document.getElementById('cancelItemModal').style.display = 'flex';
+}
+
+function closeCancelModal() {
+  document.getElementById('cancelItemModal').style.display = 'none';
+}
 </script>
 {% endblock %}
