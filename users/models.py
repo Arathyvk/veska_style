@@ -37,6 +37,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     profile_pic = CloudinaryField("profile_pic", null=True, blank=True)    
     phone_number = models.CharField(max_length=15, null=True, blank=True)
     date_joined = models.DateTimeField(default=now)
+    referred_by = models.ForeignKey('offer_admin.ReferralCode', null=True, blank=True, on_delete=models.SET_NULL,related_name='referred_users')
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='custom_users',  

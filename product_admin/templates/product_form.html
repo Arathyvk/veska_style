@@ -271,6 +271,12 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
             </div>
           </div>
 
+           <div class="frow">
+              <label class="flabel">Brand</label>
+              <input class="finput" name="brand" placeholder="e.g. Adidas, Nike" autocomplete="off"
+                     value="{{ form.brand.value|default:'' }}">
+            </div>
+
 <div class="fgrid2">
   <div class="frow">
     <label class="flabel">Category <span class="req">*</span></label>

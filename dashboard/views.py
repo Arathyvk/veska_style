@@ -278,14 +278,22 @@ def admin_dashboard(request):
     )
     out_of_stock = Product.objects.filter(stock=0).count()
 
-    top_products = list(
-        OrderItem.objects
-        .exclude(order__status='returned')
-        .exclude(order__status__in=EXCLUDED_STATUSES)
-        .values("product__name")
-        .annotate(sold=Sum("quantity"))
-        .order_by("-sold")[:5]
-    )
+    def best_selling(group_field, limit=10):
+        return list(
+            OrderItem.objects
+            .exclude(order__status='returned')
+            .exclude(order__status__in=EXCLUDED_STATUSES)
+            .exclude(cancel_status='cancelled')
+            .exclude(**{f"{group_field}__isnull": True})
+            .exclude(**{group_field: ''})
+            .values(group_field)
+            .annotate(sold=Sum("quantity"), revenue=Sum("line_total"))
+            .order_by("-sold")[:limit]
+        )
+
+    top_products   = best_selling("product__name", 10)
+    top_categories = best_selling("product__category__name", 10)
+    top_brands     = best_selling("product__brand", 10)
 
     revenue_pct = _pct_change(revenue_this, revenue_last)
     orders_pct = _pct_change(orders_this, orders_last)
@@ -326,6 +334,8 @@ def admin_dashboard(request):
         "low_stock": low_stock,
         "out_of_stock": out_of_stock,
         "top_products": top_products,
+        "top_categories": top_categories,
+        "top_brands": top_brands,
 
         "current_year": current_year,
         "today_orders": today_orders_count,

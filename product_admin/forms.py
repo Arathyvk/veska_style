@@ -7,7 +7,7 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model  = Product
-        fields = ['name', 'price', 'color', 'category', 'stock', 'description', 'is_active', 'is_featured', 'is_shop_active']  # Added is_shop_active
+        fields = ['name', 'price', 'brand', 'color', 'category', 'stock', 'description', 'is_active', 'is_featured', 'is_shop_active']  # Added is_shop_active
         widgets = {
             'name': forms.TextInput(attrs={
                 'class'      : 'finput',
@@ -22,6 +22,10 @@ class ProductForm(forms.ModelForm):
             'color': forms.TextInput(attrs={
                 'class'      : 'finput',
                 'placeholder': 'e.g. Brown, White',
+            }),
+            'brand' : forms.TextInput(attrs={
+                'class'      : 'finput',
+                'placeholder': 'e.g. Adidas, Nike',
             }),
             'category': forms.Select(attrs={
                 'class': 'fselect',
@@ -49,14 +53,10 @@ class ProductForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Set the queryset for category field
         self.fields['category'].queryset = Category.objects.all()
-        # Add empty label if you want
         self.fields['category'].empty_label = "— Select —"
-        # Override label_from_instance to show category name
         self.fields['category'].label_from_instance = lambda obj: obj.name
         
-        # Make checkbox fields not required (they default to False)
         self.fields['is_active'].required = False
         self.fields['is_featured'].required = False
         self.fields['is_shop_active'].required = False

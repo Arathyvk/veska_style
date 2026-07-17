@@ -120,8 +120,6 @@ def delete_variants(product, json_str):
             continue
 
 
-
-
 @never_cache
 @login_required(login_url='admin_login')
 def product_list(request):
@@ -137,7 +135,8 @@ def product_list(request):
         qs = qs.filter(
             Q(name__icontains=query) |
             Q(category__icontains=query) |
-            Q(color__icontains=query)
+            Q(color__icontains=query)|
+            Q(brand__icontains=query)
         )
 
     qs = qs.order_by('created_at' if sort == 'asc' else '-created_at')

@@ -206,27 +206,74 @@
             <div class="item-total">₹{{ item.line_total|floatformat:2 }}</div>
           </div>
           {% endfor %}
-
-          <div style="margin-top:16px">
-            <div class="pr-row"><span>Subtotal</span><span class="v">₹{{ order.subtotal|floatformat:2 }}</span></div>
-            <div class="pr-row {% if order.shipping_charge == 0 %}free{% endif %}">
-              <span>Shipping</span>
-              <span class="v">{% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
-            </div>
-            {% if order.discount %}
-            <div class="pr-row discount"><span>Discount</span><span class="v">−₹{{ order.discount|floatformat:2 }}</span></div>
-            {% endif %}
-            {% if order.tax %}
-            <div class="pr-row"><span>Tax</span><span class="v">₹{{ order.tax|floatformat:2 }}</span></div>
-            {% endif %}
-            <div class="pr-divider"></div>
-            <div class="pr-total"><span>Total Paid</span><span class="v">₹{{ order.total|floatformat:2 }}</span></div>
-            <div class="pay-row">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--terra)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              {{ order.get_payment_method_display }}
-            </div>
+          
+        <div style="margin-top:16px">
+          <div class="pr-row">
+            <span>Subtotal ({{ order.items.count }} item{{ order.items.count|pluralize }})</span>
+            <span class="v">₹{{ subtotal|floatformat:2 }}</span>
           </div>
 
+          {% if offer_discount > 0 %}
+          <div class="pr-row discount">
+            <span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+              Offer discount
+              {% if offer_details %}
+              <span style="font-size:10px;background:var(--success-pale);color:var(--success);
+                padding:1px 8px;border-radius:10px;font-weight:700">
+                {{ offer_details }}
+              </span>
+              {% endif %}
+            </span>
+            <span class="v">−₹{{ offer_discount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+
+          {% if coupon_discount > 0 %}
+          <div class="pr-row discount">
+            <span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+              Coupon discount
+              {% if coupon_code %}
+              <span style="font-size:10px;background:var(--success-pale);color:var(--success);
+                padding:1px 8px;border-radius:10px;font-weight:700;font-family:monospace">
+                {{ coupon_code }}
+              </span>
+              {% endif %}
+            </span>
+            <span class="v">−₹{{ coupon_discount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+
+          <div class="pr-row {% if shipping == 0 %}free{% endif %}">
+            <span>Shipping</span>
+            <span class="v">{% if shipping == 0 %}FREE{% else %}₹{{ shipping|floatformat:2 }}{% endif %}</span>
+          </div>
+
+          {% if wallet_used > 0 %}
+          <div class="pr-row discount">
+            <span>Wallet used</span>
+            <span class="v">−₹{{ wallet_used|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+
+          {% if offer_discount > 0 or coupon_discount > 0 %}
+          <div style="background:var(--success-pale);border:1px solid rgba(58,125,90,.15);
+            border-radius:var(--radius-md);padding:8px 12px;margin:8px 0;
+            display:flex;align-items:center;justify-content:space-between;font-size:12px">
+            <span style="color:var(--success);font-weight:600">Total savings</span>
+            <span style="color:var(--success);font-weight:700">
+              ₹{{ offer_discount|add:coupon_discount|floatformat:2 }}
+            </span>
+          </div>
+          {% endif %}
+
+          <div class="pr-divider"></div>
+          <div class="pr-total"><span>Total Paid</span><span class="v">₹{{ final_total|floatformat:2 }}</span></div>
+
+          <div class="pay-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--terra)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            {{ order.get_payment_method_display }}
+          </div>
+        </div>
         </div>
 
         <div class="bottom-ctas">

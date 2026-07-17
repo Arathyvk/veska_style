@@ -40,7 +40,7 @@ main {
 
 .section-title h2,
 .section-title h1 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+ 
   font-size: 2.8rem;
   font-weight: 600;
   color: var(--text);
@@ -50,7 +50,7 @@ main {
 
 .section-title p {
   font-size: 0.95rem;
-  color: var(--muted);
+  color: #000;
   max-width: 580px;
   margin: 0 auto;
   line-height: 1.8;
@@ -333,6 +333,45 @@ main {
        alt="Luxury Women's Footwear – Elevate Your Style">
 </div>
 
+{% if request.user.is_authenticated and referral_link %}
+<section>
+  <div class="section-wrap" style="padding: 3rem 4rem;">
+    <div class="section-title">
+      <h2>Refer a Friend</h2>
+      <p>Share your link. You both get rewarded when they make their first purchase.</p>
+    </div>
+
+    <div style="display:flex; gap:12px; max-width:600px; margin:0 auto 1.5rem;">
+      <input
+        type="text"
+        id="referral-link-input"
+        value="{{ referral_link }}"
+        readonly
+        style="flex:1; padding:0.7rem 1rem; border:1px solid var(--border); border-radius:2px; background:var(--input-bg); color:var(--text); font-size:15px;"
+      >
+      <button type="button" onclick="copyReferralLink()" class="add-btn" style="border:none; white-space:nowrap;">
+        Copy Link
+      </button>
+    </div>
+
+    <div style="display:flex; gap:1.5rem; justify-content:center; text-align:center;">
+      <div>
+        <p style="font-size:15px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Your Code</p>
+        <p style=" font-size:15px; font-weight:600; color:var(--text);">{{ referral_code_obj.code }}</p>
+      </div>
+      <div>
+        <p style="font-size:15px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Referrals</p>
+        <p style=" font-size:15px font-weight:600; color:var(--text);">{{ referral_code_obj.total_referrals }}</p>
+      </div>
+      <div>
+        <p style="font-size:15px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Earned</p>
+        <p style="font-size:15px; font-weight:600; color:var(--text);">₹{{ referral_code_obj.total_earnings|floatformat:0 }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <section>
   <div class="section-wrap">
     <div class="section-title">
@@ -475,5 +514,14 @@ main {
     </div>
   </div>
 </section>
+
+<script>
+function copyReferralLink() {
+  const input = document.getElementById('referral-link-input');
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value);
+}
+</script>
 
 {% endblock %}

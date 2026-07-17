@@ -10,40 +10,51 @@ def get_or_create_wallet(user):
 
 @transaction.atomic
 def refund_on_cancellation(order):
-   
+    print("UUID:", order.uuid)
+    print("Payment:", order.payment_method)
+    print("Status:", order.payment_status)
+
     if not order or not order.user:
+        print("FAILED: order/user missing")
         return None
 
-    if order.payment_method == 'cod':
-        return None 
+    if order.payment_method == "cod":
+        print("FAILED: COD")
+        return None
 
-    if order.payment_status != 'paid':
+    is_pre_confirm_cancellation = order.status in {"pending", "confirmed", "processing"}
+    is_payment_ready = order.payment_status in {"paid", "pending"}
+
+    if not is_payment_ready and not is_pre_confirm_cancellation:
+        print("FAILED: payment not paid")
         return None
 
     refund_amount = (
-        Decimal(str(order.total or 0)) +
-        Decimal(str(order.wallet_amount_used or 0))
+        Decimal(str(order.total or 0))
+        + Decimal(str(order.wallet_amount_used or 0))
     )
-    if refund_amount <= 0:
-        return None
+
+    print("Refund Amount:", refund_amount)
 
     wallet = get_or_create_wallet(order.user)
+    print("Wallet Before:", wallet.balance)
+
     wallet.credit(
         amount=refund_amount,
         reason=WalletTransaction.REASON_CANCELLATION,
         order=order,
-        description=(
-            f"Cancellation refund for order #{order.order_number} "
-            f"(₹{order.total} paid + ₹{order.wallet_amount_used or 0} wallet)"
-        ),
+        description=f"Refund for order {order.uuid}",
     )
-    print(f"[REFUND][CANCEL] ₹{refund_amount} → {order.user.email}")
+
+    wallet.refresh_from_db()
+
+    print("Wallet After:", wallet.balance)
+    print("Refund completed")
     return refund_amount
 
 
 @transaction.atomic
 def refund_on_return_approval(order):
-   
     if not order or not order.user:
         return None
 
@@ -58,7 +69,6 @@ def refund_on_return_approval(order):
         )
 
     if refund_amount <= 0:
-        print(f"[REFUND][RETURN] Skipped — amount is {refund_amount}")
         return None
 
     wallet = get_or_create_wallet(order.user)
@@ -72,7 +82,6 @@ def refund_on_return_approval(order):
             f"(₹{order.total} + ₹{order.wallet_amount_used or 0} wallet)"
         ),
     )
-    print(f"[REFUND][RETURN] ₹{refund_amount} → {order.user.email}")
     return refund_amount
 
 
@@ -94,48 +103,49 @@ def debit_wallet_for_order(order, amount):
 
 
 @transaction.atomic
-def refund_on_admin_item_cancel(order, item):
-    """
-    Admin cancels one item.
-    
-    COD   → no refund (cash never collected before delivery)
-    Online paid → proportional refund (item share minus discount share)
-                  + proportional wallet_amount_used share
-    Unpaid online → no refund
-    """
-    refund_amount = Decimal('0.00')
+def refund_single_item_cancellation(order, item):
+    wallet = get_or_create_wallet(order.user)
 
-    is_online_paid = (
-        order.payment_method != 'cod'
-        and order.payment_status == 'paid'
-    )
+    if order.payment_method == 'cod':
+        WalletTransaction.objects.create(
+            wallet=wallet,
+            user=order.user,
+            transaction_type=WalletTransaction.CREDIT,
+            amount=Decimal('0.00'),
+            reason=WalletTransaction.REASON_CANCELLATION,
+            order=order,
+            reference=str(order.uuid)[:12].upper(),
+            description=(
+                f'"{item.product_name}" cancelled from order #{order.order_number} '
+                f'(Cash on Delivery — no charge was made)'
+            ),
+        )
+        return Decimal('0.00')
 
-    if not is_online_paid:
-        print(f"[ADMIN_CANCEL] Skipped — COD or unpaid. method={order.payment_method} status={order.payment_status}")
+    is_pre_confirm_cancellation = order.status in {'pending', 'confirmed', 'processing'}
+    is_payment_ready = order.payment_status in {'paid', 'pending'}
+
+    if not is_payment_ready and not is_pre_confirm_cancellation:
         return Decimal('0.00')
 
     subtotal = Decimal(str(order.subtotal or 0))
     if subtotal <= 0:
-        print(f"[ADMIN_CANCEL] Skipped — subtotal is 0")
         return Decimal('0.00')
 
     item_line = Decimal(str(item.line_total or 0))
 
-    # Proportional discount share for this item
+    if item_line <= 0:
+        item_line = Decimal(str(item.unit_price)) * Decimal(str(item.quantity))
+
     total_discount = (
         Decimal(str(order.offer_discount  or 0)) +
         Decimal(str(order.discount_amount or 0))
     )
-    discount_rate       = total_discount / subtotal
+    discount_rate = total_discount / subtotal if subtotal > 0 else 0
     item_discount_share = (item_line * discount_rate).quantize(Decimal('0.01'))
 
-    # Proportional wallet share for this item
-    wallet_total = Decimal(str(order.wallet_amount_used or 0))
-    wallet_rate  = wallet_total / subtotal
-    item_wallet_share = (item_line * wallet_rate).quantize(Decimal('0.01'))
-
     shipping_total = Decimal(str(order.shipping_charge or 0))
-    shipping_rate  = shipping_total / subtotal
+    shipping_rate = shipping_total / subtotal if subtotal > 0 else 0
     item_shipping_share = (item_line * shipping_rate).quantize(Decimal('0.01'))
 
     refund_amount = max(
@@ -143,23 +153,36 @@ def refund_on_admin_item_cancel(order, item):
         Decimal('0.00'),
     )
 
-    print(f"[ADMIN_CANCEL] item_line={item_line} discount_share={item_discount_share} "
-          f"wallet_share={item_wallet_share} shipping_share={item_shipping_share} "
-          f"refund_amount={refund_amount}")
-
     if refund_amount <= 0:
+        WalletTransaction.objects.create(
+            wallet=wallet,
+            user=order.user,
+            transaction_type=WalletTransaction.CREDIT,
+            amount=Decimal('0.00'),
+            reason=WalletTransaction.REASON_CANCELLATION,
+            order=order,
+            reference=str(order.uuid)[:12].upper(),
+            description=(
+                f'"{item.product_name}" cancelled from order #{order.order_number} '
+                f'(No refund amount)'
+            ),
+        )
         return Decimal('0.00')
 
-    wallet, _ = Wallet.objects.get_or_create(user=order.user)
     wallet.credit(
-        amount      = refund_amount,
-        reason      = WalletTransaction.REASON_CANCELLATION,
-        order       = order,
-        description = (
-            f'Admin refund for cancelled item "{item.product_name}" '
-            f'from order #{order.order_number} '
+        amount=refund_amount,
+        reason=WalletTransaction.REASON_CANCELLATION,
+        order=order,
+        description=(
+            f'Refund for "{item.product_name}" from order #{order.order_number} '
             f'(item ₹{item_line} − discount ₹{item_discount_share} + shipping ₹{item_shipping_share})'
         ),
     )
-    print(f"[ADMIN_CANCEL] Credited ₹{refund_amount} to {order.user.email}")
+    
+    print(f"DEBUG: Refunded ₹{refund_amount} to wallet for order {order.order_number}")
+    
     return refund_amount
+
+@transaction.atomic
+def refund_on_admin_item_cancel(order, item):
+    return refund_single_item_cancellation(order, item)

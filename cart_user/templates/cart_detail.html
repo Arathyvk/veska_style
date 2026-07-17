@@ -593,15 +593,16 @@ function updateCartCounts(data) {
     if (data.cart_count !== undefined) {
         const cartCount = document.getElementById('cartCount');
         if (cartCount) {
-            cartCount.textContent = data.cart_count;
-            cartCount.style.display = data.cart_count > 0 ? 'inline-flex' : 'none';
+            const count = parseInt(data.cart_count);
+            cartCount.textContent = count;
+            cartCount.style.display = count > 0 ? 'inline-flex' : 'none';
         }
     }
     
     // Update cart hero text
     const heroText = document.querySelector('.cart-hero p');
     if (heroText && data.cart_count !== undefined) {
-        const itemCount = data.cart_count;
+        const itemCount = parseInt(data.cart_count);
         heroText.textContent = `${itemCount} item${itemCount !== 1 ? 's' : ''}`;
     }
 }
@@ -621,24 +622,24 @@ function updateCartCardHeading(remainingCount) {
 function updateOrderSummary(data) {
     // Update subtotal
     const subtotalEl = document.querySelector('.summary-body .sum-row:first-child .val');
-    if (subtotalEl) {
-        subtotalEl.textContent = `₹${data.cart_subtotal}`;
+    if (subtotalEl && data.cart_subtotal !== undefined) {
+        subtotalEl.textContent = `₹${parseFloat(data.cart_subtotal).toFixed(2)}`;
     }
     
-    // Calculate and update total
-    const subtotal = parseFloat(data.cart_subtotal);
-    const shipping = subtotal >= 999 ? 0 : 79;
-    const total = subtotal + shipping;
-    
-    const totalEl = document.querySelector('.total-row .val');
-    if (totalEl) {
-        totalEl.textContent = `₹${total.toFixed(2)}`;
+    // Update shipping
+    const shippingRow = document.querySelector('.summary-body .sum-row:nth-child(2) .val');
+    if (shippingRow && data.shipping_fee !== undefined) {
+        if (data.shipping_fee === 0) {
+            shippingRow.textContent = 'FREE';
+        } else {
+            shippingRow.textContent = `₹${parseFloat(data.shipping_fee).toFixed(2)}`;
+        }
     }
     
-    // Update shipping text
-    const shippingRow = document.querySelector('.sum-row:nth-child(2) .val');
-    if (shippingRow) {
-        shippingRow.textContent = shipping === 0 ? 'FREE' : '₹79.00';
+    // Update total
+    const totalEl = document.querySelector('.summary-body .total-row .val');
+    if (totalEl && data.grand_total !== undefined) {
+        totalEl.textContent = `₹${parseFloat(data.grand_total).toFixed(2)}`;
     }
 }
 
@@ -723,7 +724,11 @@ function updateCartItem(itemId, action, quantity = null) {
     const decreaseBtn = document.querySelector(`.qty-btn[data-item-id="${itemId}"][data-action="decrease"]`);
     const increaseBtn = document.querySelector(`.qty-btn[data-item-id="${itemId}"][data-action="increase"]`);
     
-    if (qtySpan) qtySpan.style.opacity = '0.5';
+    // Show loading state
+    if (qtySpan) {
+        qtySpan.style.opacity = '0.5';
+        qtySpan.style.transition = 'opacity 0.2s';
+    }
     if (decreaseBtn) decreaseBtn.disabled = true;
     if (increaseBtn) increaseBtn.disabled = true;
     
@@ -744,53 +749,80 @@ function updateCartItem(itemId, action, quantity = null) {
         return response.json();
     })
     .then(data => {
+        // Re-enable buttons
         if (decreaseBtn) decreaseBtn.disabled = false;
         if (increaseBtn) increaseBtn.disabled = false;
         
         if (data && data.success) {
             if (qtySpan && data.new_quantity !== undefined) {
                 if (data.new_quantity > 0) {
+                    // Update quantity display
                     qtySpan.textContent = data.new_quantity;
                     qtySpan.style.opacity = '1';
                     updateMinusButtonState(itemId, data.new_quantity);
-                } else {
-                    // Item removed via quantity decrease to 0
+                    
+                    // Update item unit display (e.g., "£5000.00 × 2")
                     const itemRow = qtySpan.closest('.item-row');
                     if (itemRow) {
-                        itemRow.remove();
-                        const remainingRows = document.querySelectorAll('.item-row:not(.unavailable)').length;
-                        if (remainingRows === 0 && document.querySelectorAll('.item-row.unavailable').length === 0) {
-                            window.location.reload();
-                        } else {
-                            updateCartCardHeading(remainingRows);
+                        const itemUnitEl = itemRow.querySelector('.item-unit');
+                        if (itemUnitEl && data.unit_price !== undefined && data.new_quantity !== undefined) {
+                            itemUnitEl.textContent = `₹${parseFloat(data.unit_price).toFixed(2)} × ${data.new_quantity}`;
                         }
+                        
+                        // Update item total
+                        const itemTotalEl = itemRow.querySelector('.item-total');
+                        if (itemTotalEl && data.item_total !== undefined) {
+                            itemTotalEl.textContent = `₹${parseFloat(data.item_total).toFixed(2)}`;
+                        }
+                    }
+                    
+                    // Update order summary
+                    if (data.cart_subtotal !== undefined) {
+                        updateOrderSummary(data);
+                    }
+                    
+                    // Update cart count in header
+                    if (data.cart_count !== undefined) {
+                        updateCartCounts(data);
+                    }
+                    
+                    // Update cart card heading
+                    const availableItems = document.querySelectorAll('.item-row:not(.unavailable)').length;
+                    updateCartCardHeading(availableItems);
+                    
+                    if (data.message) showToast(data.message, 'success');
+                    
+                } else {
+                    // Item removed (quantity became 0)
+                    const itemRow = qtySpan.closest('.item-row');
+                    if (itemRow) {
+                        itemRow.style.transition = 'all 0.3s ease';
+                        itemRow.style.opacity = '0';
+                        setTimeout(() => {
+                            itemRow.remove();
+                            const remainingRows = document.querySelectorAll('.item-row:not(.unavailable)').length;
+                            const unavailableRows = document.querySelectorAll('.item-row.unavailable').length;
+                            
+                            // Update cart counts
+                            if (data.cart_count !== undefined) {
+                                updateCartCounts(data);
+                            }
+                            
+                            if (remainingRows === 0 && unavailableRows === 0) {
+                                // Cart is completely empty - reload to show empty state
+                                window.location.reload();
+                            } else {
+                                updateCartCardHeading(remainingRows);
+                                // Update order summary
+                                if (data.cart_subtotal !== undefined) {
+                                    updateOrderSummary(data);
+                                }
+                            }
+                        }, 300);
                     }
                     return;
                 }
             }
-            
-            // Update item total price
-            if (data.item_total !== undefined) {
-                const itemTotalEl = qtySpan.closest('.item-row')?.querySelector('.item-total');
-                if (itemTotalEl) itemTotalEl.textContent = `₹${data.item_total}`;
-            }
-            
-            // Update cart totals
-            if (data.cart_subtotal !== undefined) {
-                updateOrderSummary(data);
-            }
-            
-            // Update cart count
-            if (data.cart_count !== undefined) {
-                const cartCount = document.getElementById('cartCount');
-                if (cartCount) {
-                    cartCount.textContent = data.cart_count;
-                    cartCount.style.display = data.cart_count > 0 ? 'inline-flex' : 'none';
-                }
-            }
-            
-            if (data.message) showToast(data.message, 'success');
-            
         } else if (data && data.error) {
             showToast(data.error, 'error');
             if (qtySpan) qtySpan.style.opacity = '1';

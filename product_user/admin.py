@@ -10,11 +10,11 @@ class ProductImageInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'price', 'stock', 'is_active', 'created_at')
-    list_filter = ('is_active', 'category')
-    search_fields = ('name', 'description')
+    list_display = ('name', 'category', 'brand', 'color', 'price', 'stock', 'is_active', 'created_at')
+    list_filter = ('is_active', 'category', 'brand')
+    search_fields = ('name', 'description', 'brand')
     inlines = [ProductImageInline]
-    list_editable = ('is_active', 'stock')
+    list_editable = ('is_active', 'stock', 'brand')
 
 
 @admin.register(ProductVariant)

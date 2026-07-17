@@ -18,6 +18,8 @@
   --text: #f0ebe4; --muted: #8a7d72; --muted2: #b0a090;
   --green: #4caf7d; --red: #e05252; --orange: #e09a52;
   --radius: 6px;
+  --terra2:#e8b49a;
+  --terra:#c9967a;
   --head: 'Playfair Display', serif;
 }
 
@@ -242,6 +244,9 @@ tr:hover td {
   border: none;
 }
 
+.btn-add{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-lg);font-size:15px;font-weight:700;cursor:pointer;transition:.15s;text-decoration:none}
+.btn-add:hover{background:var(--terra2)}
+
 .create-offer-btn:hover{
   transform: translateY(-1px);
   opacity: 0.9;
@@ -274,9 +279,9 @@ tr:hover td {
         <div style="display:flex; align-items:center; gap:12px;">
             <h2 style="margin:0;">All Offers</h2>
 
-            <a href="{% url 'offer_add' %}" class="create-offer-btn">
-            + Create Offer
-            </a>
+          <a href="{% url 'offer_add' %}" class="btn-add">+ Add Offer</a>
+          <a href="{% url 'referral_offer_add' %}" class="btn-add">+ Add Referral Offer</a>
+          <a href="{% url 'referral_stats' %}" class="btn-secondary">📊 Referral Stats</a>
         </div>
 
         <div class="filter-bar">

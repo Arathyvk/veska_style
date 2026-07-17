@@ -1,4 +1,5 @@
 import re
+import logging
 
 from django.contrib import messages
 from django.shortcuts import render,redirect
@@ -10,15 +11,22 @@ from allauth.socialaccount.models import SocialApp
 from django.contrib.sites.models import Site
 
 
-from .models import User
+from users.models import User
 from product_admin.models import Product
 from cart_user.models import Cart
+from offer_admin.models import ReferralCode
  
 from core.otp import gen_otp, send_otp_email, is_otp_expired, save_otp_to_session, get_otp_from_session, clear_otp_from_session
 
+logger = logging.getLogger(__name__)
 
 def is_valid_email(email):
     return re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email)
+
+
+import uuid as _uuid
+from django.urls import reverse
+from offer_admin.models import ReferralCode
 
 
 def home_view(request):
@@ -33,11 +41,25 @@ def home_view(request):
         .prefetch_related('images')
         .order_by('-created_at')[:8]
     )
- 
+
+    referral_link = None
+    referral_code_obj = None
+    if request.user.is_authenticated:
+        referral_code_obj, _ = ReferralCode.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'code': f"REF{_uuid.uuid4().hex[:8].upper()}",
+                'is_active': True,
+            },
+        )
+        signup_path = reverse('signup')
+        referral_link = request.build_absolute_uri(f'{signup_path}?ref={referral_code_obj.code}')
 
     return render(request, "landing.html", {
         "name":     name,
         "products": featured_products,
+        "referral_link": referral_link,
+        "referral_code_obj": referral_code_obj,
     })
 
 
@@ -124,12 +146,23 @@ def signup_view(request):
     errors = {}
     form_data = {}
 
+    ref_code =request.GET.get('ref', '').strip()
+    if ref_code:
+        request.session['pending_referral_code'] = ref_code
+        request.session.modified = True
+
+
     if request.method == "POST":
         first_name       = request.POST.get("first_name", "").strip()
         last_name        = request.POST.get("last_name",  "").strip()
         email            = request.POST.get("email",      "").strip().lower()
         password         = request.POST.get("password",   "")
         confirm_password = request.POST.get("confirm_password", "")
+
+        posted_ref = request.POST.get("ref_code", "").strip()
+        if posted_ref and not  request.session.get("pending_referral_code"):
+            request.session["pending_referral_code"] = posted_ref
+            request.session.modified = True
 
         form_data = {"first_name": first_name, "last_name": last_name, "email": email}
 
@@ -179,7 +212,12 @@ def signup_view(request):
             send_otp_email(email, otp)
             return redirect("verify_signup_otp")
 
-    return render(request, "signup.html", {"errors": errors, "form_data": form_data})
+    return render(request, "signup.html", {
+        "errors": errors, 
+        "form_data": form_data,
+        "ref_code": request.session.get("pending_referral_code", ""),
+
+        })
 
 
 
@@ -224,6 +262,19 @@ def verify_signup_otp(request):
                 is_superuser=False
                 
             )
+
+            ref_code = request.session.pop("pending_referral_code",None)
+            if ref_code:
+                try:
+                    referral = ReferralCode.objects.get(code=ref_code, is_active=True)
+                    user.referred_by = referral
+                    user.save(update_fields=["referred_by"])
+                except ReferralCode.DoesNotExist:
+                    logger.info(
+                        "Signup for %s used invalid/expired referral code: %s",
+                        user.email, ref_code,
+                    )    
+
             request.session.pop("signup_data", None)
             clear_otp_from_session(request, "signup")
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")

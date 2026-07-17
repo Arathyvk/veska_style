@@ -6,7 +6,7 @@ from decimal import Decimal
 
 
 class Wallet(models.Model):
-    user            = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="wallet")
+    user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="wallet",unique=True)
     balance         = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     created_at      = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True)
@@ -29,6 +29,7 @@ class Wallet(models.Model):
 
         WalletTransaction.objects.create(
             wallet=self,
+            user=self.user,
             transaction_type=WalletTransaction.CREDIT,
             amount=amount,
             reason=reason,
@@ -39,7 +40,6 @@ class Wallet(models.Model):
  
 
     def debit(self, amount, reason='', order=None, reference='', description=''):
-
         amount = Decimal(str(amount))
 
         if amount > self.balance:
@@ -50,6 +50,7 @@ class Wallet(models.Model):
 
         WalletTransaction.objects.create(
             wallet=self,
+            user=self.user,
             transaction_type=WalletTransaction.DEBIT,
             amount=amount,
             reason=reason,
@@ -89,7 +90,7 @@ class WalletTransaction(models.Model):
         (REASON_MANUAL, 'Manual Adjustment'),
         (REASON_ORDER, 'Order'),
     ]
- 
+    user             = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="transaction", null=True, blank=True)
     wallet           = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
     amount           = models.DecimalField(max_digits=12, decimal_places=2)
