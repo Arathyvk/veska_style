@@ -151,8 +151,8 @@
         <div class="form-group">
           <label>Offer Name</label>
           {{ form.name }}
+          {% if form.name.errors %}<div class="errorlist" style="color:#e05252; font-size:12px; margin-top:4px;">{{ form.name.errors }}</div>{% endif %}
         </div>
-        
         <div class="form-row">
           <div class="form-group">
             <label>Discount Type</label>
@@ -194,18 +194,20 @@
         <h3>Validity & Limits</h3>
       </div>
       <div class="form-section-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Start Date</label>
-            {{ form.start_date }}
-          </div>
-          
-          <div class="form-group">
-            <label>End Date</label>
-            {{ form.end_date }}
-          </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start Date</label>
+          {{ form.start_date }}
+          {% if form.start_date.errors %}<div class="errorlist" style="color:#e05252; font-size:12px; margin-top:4px;">{{ form.start_date.errors }}</div>{% endif %}
         </div>
-        
+
+        <div class="form-group">
+          <label>End Date</label>
+          {{ form.end_date }}
+          {% if form.end_date.errors %}<div class="errorlist" style="color:#e05252; font-size:12px; margin-top:4px;">{{ form.end_date.errors }}</div>{% endif %}
+        </div>
+      </div>
+              
         <div class="form-row">
           <div class="form-group">
             <label>Minimum Purchase Amount</label>
@@ -243,8 +245,43 @@
       <button type="submit" class="btn-submit">
         {% if action == 'add' %}✓ Create Referral Offer{% else %}✓ Update Referral Offer{% endif %}
       </button>
-      <a href="{% url 'offer_admin:offer_list' %}" class="btn-cancel">Cancel</a>
+      <a href="{% url 'offer_list' %}" class="btn-cancel">Cancel</a>
     </div>
   </form>
 </div>
+
+{% if action == 'edit' and referral_link %}
+<div class="referral-info" style="border-color: rgba(76,175,125,0.3); background: rgba(76,175,125,0.08);">
+  <p><strong>🔗 Shareable Referral Link</strong></p>
+  <div style="display:flex; gap:10px; margin-top:8px;">
+    <input
+      type="text"
+      id="referral-link-input"
+      value="{{ referral_link }}"
+      readonly
+      style="flex:1; background: var(--card2); border: 1px solid var(--border2); color: var(--text); padding: 10px 12px; border-radius: var(--radius); font-size: 13px;"
+    >
+    <button type="button" onclick="copyReferralLink()" class="btn-submit" style="white-space:nowrap;">
+      Copy Link
+    </button>
+  </div>
+  <div class="help-text" style="margin-top:8px;">Referral code: <strong>{{ offer.referral_code }}</strong></div>
+</div>
+{% endif %}
+
+
+<script>
+function copyReferralLink() {
+  const input = document.getElementById('referral-link-input');
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(function() {
+    const btn = event.target;
+    const original = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+}
+</script>
+
 {% endblock %}

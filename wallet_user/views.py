@@ -41,6 +41,14 @@ def wallet_dashboard(request):
     total_debited = sum(t.amount for t in debit_txns)
     total_txns = wallet.transactions.count()
 
+    transaction_summary = {
+        'total_credits': total_credited,
+        'total_debits': total_debited,
+        'cancellation_refunds': credit_txns.filter(reason=WalletTransaction.REASON_CANCELLATION).count(),
+        'return_refunds': credit_txns.filter(reason=WalletTransaction.REASON_RETURN).count(),
+        'order_payments': debit_txns.filter(reason=WalletTransaction.REASON_ORDER).count(),
+    }
+
     return render(request, 'wallet_dashboard.html', {
         'wallet': wallet,
         'transactions': txn_page,
@@ -48,8 +56,8 @@ def wallet_dashboard(request):
         'total_credited': total_credited,
         'total_debited': total_debited,
         'total_txns': total_txns,
+        'transaction_summary': transaction_summary,
     })
-
 
 @login_required
 def wallet_balance_api(request):

@@ -7,7 +7,7 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.urls import reverse
 
 from offer_admin.models import BaseOffer, UserOfferUsage, ReferralCode, ReferralTransaction
 from .forms import BaseOfferForm, ReferralOfferForm
@@ -110,8 +110,7 @@ def referral_offer_add(request):
                 offer.referral_code = f"REF{_uuid.uuid4().hex[:8].upper()}"
             offer.save()
             messages.success(request, f'Referral offer "{offer.name}" created!')
-            return redirect('offer_list')
-        messages.error(request, 'Please fix the errors below.')
+            return redirect('offer_edit', uuid=offer.uuid)
     else:
         form = ReferralOfferForm(initial={
             'start_date':              timezone.now(),
@@ -132,7 +131,9 @@ def offer_edit(request, uuid):
         return redirect('admin_login')
 
     offer = get_object_or_404(BaseOffer, uuid=uuid)
-    FormClass = ReferralOfferForm if offer.offer_type == 'REFERRAL' else BaseOfferForm
+    is_referral = offer.offer_type == 'REFERRAL'
+    FormClass = ReferralOfferForm if is_referral else BaseOfferForm
+    template = 'referral_offer_form.html' if is_referral else 'offer_form.html'
 
     if request.method == 'POST':
         form = FormClass(request.POST, instance=offer)
@@ -144,13 +145,18 @@ def offer_edit(request, uuid):
     else:
         form = FormClass(instance=offer)
 
-    return render(request, 'offer_form.html', {
-        'form':       form,
-        'offer':      offer,
-        'action':     'edit',
-        'products':   Product.objects.filter(is_active=True),
-        'categories': Category.objects.all(),
-    })
+    context = {'form': form, 'offer': offer, 'action': 'edit'}
+
+    if is_referral:
+        signup_path = reverse('signup')
+        context['referral_link'] = request.build_absolute_uri(f'{signup_path}?ref={offer.referral_code}')
+    else:
+        context.update({
+            'products':   Product.objects.filter(is_active=True),
+            'categories': Category.objects.all(),
+        })
+
+    return render(request, template, context)  
 
 
 @never_cache

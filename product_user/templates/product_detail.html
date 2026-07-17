@@ -539,20 +539,42 @@ button,input,textarea{font-family:var(--body)}
     </div>
 
     {% for review in reviews %}
+    <div class="review-product">
+
+        {% if review.product.primary_image %}
+            <img src="{{ review.product.primary_image.image.url }}"
+                alt="{{ review.product.name }}"
+                width="70">
+        {% endif %}
+
+        <div>
+            <h5>{{ review.product.name }}</h5>
+
+            <p>{{ review.product.brand }}</p>
+
+            <p>₹{{ review.product.price }}</p>
+        </div>
+
+    </div>
+
     <div class="review-card">
-      <div class="rc-header">
-        <div class="rc-meta">
-          <div class="rc-name">{{ review.author_name|default:"Anonymous" }}</div>
-          <div class="rc-date">{{ review.created_at|date:"d M Y" }}</div>
-        </div>
-        <div class="rc-stars">
-          {% for i in "12345" %}
-            {% if forloop.counter <= review.rating %}<span class="rc-star full">★</span>
-            {% else %}<span class="rc-star empty">★</span>{% endif %}
-          {% endfor %}
-        </div>
-      </div>
-      <div class="rc-body">{{ review.body }}</div>
+
+        <strong>{{ review.author_name }}</strong>
+
+        <p>{{ review.created_at|date:"M d, Y" }}</p>
+
+        <p>
+            {% for i in "12345"|make_list %}
+                {% if forloop.counter <= review.rating %}
+                    ★
+                {% else %}
+                    ☆
+                {% endif %}
+            {% endfor %}
+        </p>
+
+        <p>{{ review.body }}</p>
+
     </div>
     {% endfor %}
 

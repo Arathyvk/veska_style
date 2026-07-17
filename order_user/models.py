@@ -176,6 +176,14 @@ class Order(models.Model):
         status_display = dict(self.STATUS_CHOICES)
         return status_display.get(self.status, self.status)
 
+    @property
+    def address_one_line(self):
+        parts = [self.address_line1]
+        if self.address_line2:
+            parts.append(self.address_line2)
+        parts.extend([self.city, self.state, self.pincode, self.country])
+        return ', '.join(filter(None, parts))
+
 
 class OrderItem(models.Model):
 
@@ -190,14 +198,15 @@ class OrderItem(models.Model):
     variant      = models.ForeignKey('product_admin.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
     product_name = models.CharField(max_length=255)
     product_slug = models.SlugField(max_length=255)
+    brand = models.CharField(max_length=100, blank=True, default='')
     size         = models.CharField(max_length=20, blank=True)
     image_url    = models.URLField(blank=True)
     unit_price   = models.DecimalField(max_digits=10, decimal_places=2)
     quantity     = models.PositiveIntegerField()
     
-    line_total    = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
+    line_total    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_cancelled  = models.BooleanField(default=False)
-    cancel_status = models.CharField(max_length=20,choices=CANCEL_STATUS_CHOICES,default='none')
+    cancel_status = models.CharField(max_length=20, choices=CANCEL_STATUS_CHOICES, default='none')
     cancel_reason = models.TextField(blank=True)
 
     def __str__(self):
@@ -205,7 +214,7 @@ class OrderItem(models.Model):
     
     @property
     def can_cancel(self):
-        return(
+        return (
             self.cancel_status == 'none'
             and self.order.status in ('pending', 'confirmed', 'processing')
         )

@@ -1,4 +1,5 @@
 import io
+import json
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -25,8 +26,8 @@ from order_user.order_email import send_order_confirmation
 from order_user.models import Order, OrderItem
 from return_admin.models import ReturnRequest, RETURN_DAYS
 from product_admin.models import ProductVariant, ProductReview
-from wallet_user.utils import refund_on_cancellation
 from wallet_user.models import Wallet, WalletTransaction
+from wallet_user.utils import refund_on_cancellation, refund_single_item_cancellation
 
 
 
@@ -98,8 +99,155 @@ def order_detail(request, uuid):
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
     items = order.items.all()
 
-    active_items    = items.filter(cancel_status='none')
-    subtotal        = sum(item.line_total for item in active_items)
+    active_items = items.filter(cancel_status="none")
+    subtotal = sum(item.order.subtotal for item in active_items)
+    shipping        = Decimal(order.shipping_charge or 0)
+    coupon_discount = Decimal(order.discount_amount or 0)
+    coupon_code     = order.coupon_code or ''
+    offer_discount  = Decimal(order.offer_discount or 0)
+    offer_details   = order.offer_details or ''
+    wallet_used     = Decimal(order.wallet_amount_used or 0)
+
+    original_subtotal = Decimal(str(order.subtotal or 0))
+    total_discount = offer_discount + coupon_discount
+
+    if original_subtotal > 0:
+        discount_rate = total_discount / original_subtotal
+    else:
+        discount_rate = Decimal('0')
+
+    prorated_offer_discount  = (Decimal(str(subtotal)) * (offer_discount / original_subtotal)).quantize(Decimal('0.01')) if original_subtotal > 0 and offer_discount > 0 else Decimal('0.00')
+    prorated_coupon_discount = (Decimal(str(subtotal)) * (coupon_discount / original_subtotal)).quantize(Decimal('0.01')) if original_subtotal > 0 and coupon_discount > 0 else Decimal('0.00')
+    prorated_total_discount  = prorated_offer_discount + prorated_coupon_discount
+
+    final_total = max(
+        Decimal(str(subtotal)) - prorated_total_discount + shipping - wallet_used,
+        Decimal('0'),
+    )
+
+    product_ids = items.values_list('product_id', flat=True)
+
+    reviews_qs = ProductReview.objects.filter(
+        product_id__in=product_ids,
+        user=request.user,
+        is_approved=True
+    ).order_by('-created_at')
+
+    review_count = reviews_qs.count()
+    avg_rating = 0
+    rating_breakdown = [0, 0, 0, 0, 0]
+
+    if review_count:
+        avg_rating = round(reviews_qs.aggregate(avg=Avg('rating'))['avg'] or 0, 1)
+        for r in reviews_qs:
+            if 1 <= r.rating <= 5:
+                rating_breakdown[5 - r.rating] += 1
+
+    reviews = list(reviews_qs[:10])
+
+    can_review = order.status in ['delivered', 'confirmed', 'returned']
+
+    reviewed_product_ids = ProductReview.objects.filter(
+        user=request.user,
+        product_id__in=product_ids
+    ).values_list('product_id', flat=True)
+
+    return render(request, 'order_detail.html', {
+        'order':            order,
+        'items':            items,
+        'steps':            TIMELINE_STEPS,
+        'subtotal':         subtotal,
+        'shipping':         shipping,
+        'coupon_discount':  prorated_coupon_discount,
+        'coupon_code':      coupon_code,
+        'offer_discount':   prorated_offer_discount,
+        'offer_details':    offer_details,
+        'wallet_used':      wallet_used,
+        'final_total':      final_total,
+        'reviews':          reviews,
+        'avg_rating':       avg_rating,
+        'review_count':     review_count,
+        'rating_breakdown': rating_breakdown,
+        'can_review':       can_review,
+        'reviewed_product_ids': reviewed_product_ids,
+    })
+
+
+@login_required(login_url='login')
+@require_POST
+def submit_review(request):
+
+    product_id = request.POST.get("product_id")
+    rating = request.POST.get("rating")
+    comment = request.POST.get("comment", "").strip()
+    order_id = request.POST.get("order_id")
+
+    if not product_id or not rating:
+        return JsonResponse(
+            {"success": False, "error": "Product and rating are required"},
+            status=400
+        )
+
+    try:
+        rating = int(rating)
+    except ValueError:
+        return JsonResponse(
+            {"success": False, "error": "Invalid rating"},
+            status=400
+        )
+
+    order_item = OrderItem.objects.filter(
+        order_id=order_id,
+        product_id=product_id,
+        order__user=request.user,
+        order__status__in=["delivered", "confirmed", "returned"]
+    ).first()
+
+    if not order_item:
+        return JsonResponse(
+            {"success": False, "error": "You cannot review this product"},
+            status=403
+        )
+
+    if ProductReview.objects.filter(
+        user=request.user,
+        product_id=product_id
+    ).exists():
+        return JsonResponse(
+            {"success": False, "error": "You already reviewed this product"},
+            status=400
+        )
+
+    author = f"{request.user.first_name} {request.user.last_name or ''}".strip()
+
+    if not author:
+        author = request.user.email
+
+    review = ProductReview.objects.create(
+        user=request.user,
+        product_id=product_id,
+        author_name=author,
+        rating=rating,
+        body=comment,
+        is_approved=False,
+    )
+
+    return JsonResponse({
+        "success": True,
+        "message": "Review submitted successfully.",
+        "review_id": review.id,
+    })
+
+
+@login_required
+def order_success(request, uuid):
+    order = get_object_or_404(Order, uuid=uuid, user=request.user)
+    items = order.items.all()
+
+    subtotal = Decimal('0')
+    for item in items:
+        subtotal += item.unit_price * item.quantity
+
     shipping        = Decimal(order.shipping_charge or 0)
     coupon_discount = Decimal(order.discount_amount or 0)
     coupon_code     = order.coupon_code or ''
@@ -111,38 +259,15 @@ def order_detail(request, uuid):
         subtotal - offer_discount - coupon_discount + shipping - wallet_used,
         Decimal('0'),
     )
-    
-    product_ids = items.values_list('product_id', flat=True)
-    
-    reviews_qs = ProductReview.objects.filter(
-        product_id__in=product_ids,
-        user=request.user,
-        is_approved=True
-    ).order_by('-created_at')
-    
-    review_count = reviews_qs.count()
-    avg_rating = 0
-    rating_breakdown = [0, 0, 0, 0, 0]
-    
-    if review_count:
-        avg_rating = round(reviews_qs.aggregate(avg=Avg('rating'))['avg'] or 0, 1)
-        for r in reviews_qs:
-            if 1 <= r.rating <= 5:
-                rating_breakdown[5 - r.rating] += 1
-    
-    reviews = list(reviews_qs[:10])
 
-    can_review = order.status in ['delivered', 'confirmed', 'returned']
-    
-    reviewed_product_ids = ProductReview.objects.filter(
-        user=request.user,
-        product_id__in=product_ids
-    ).values_list('product_id', flat=True)
-    
-    return render(request, 'order_detail.html', {
+    session_key = f"order_confirmed_{uuid}"
+    if not request.session.get(session_key):
+        send_order_confirmation(order)
+        request.session[session_key] = True
+
+    return render(request, 'order_success.html', {
         'order':           order,
-        'items':           items,
-        'steps':           TIMELINE_STEPS,
+        'order_items':     items,
         'subtotal':        subtotal,
         'shipping':        shipping,
         'coupon_discount': coupon_discount,
@@ -151,215 +276,141 @@ def order_detail(request, uuid):
         'offer_details':   offer_details,
         'wallet_used':     wallet_used,
         'final_total':     final_total,
-        'reviews':         reviews,
-        'avg_rating':      avg_rating,
-        'review_count':    review_count,
-        'rating_breakdown': rating_breakdown,
-        'can_review':      can_review,
-        'reviewed_product_ids': reviewed_product_ids,
     })
-
-
-@login_required(login_url='login')
-def submit_review(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
-    product_id = request.POST.get('product_id')
-    rating = request.POST.get('rating')
-    comment = request.POST.get('comment', '').strip()
-    order_id = request.POST.get('order_id')
-    
-    if not product_id or not rating:
-        return JsonResponse({'error': 'Product and rating are required'}, status=400)
-    
-    try:
-        rating = int(rating)
-        if rating < 1 or rating > 5:
-            return JsonResponse({'error': 'Rating must be between 1 and 5'}, status=400)
-    except ValueError:
-        return JsonResponse({'error': 'Invalid rating'}, status=400)
-    
-    order_item = OrderItem.objects.filter(
-        order_id=order_id,
-        product_id=product_id,
-        order__user=request.user,
-        order__status__in=['delivered', 'confirmed', 'returned']
-    ).first()
-    
-    if not order_item:
-        return JsonResponse({'error': 'You cannot review this product'}, status=403)
-    
-    existing_review = ProductReview.objects.filter(
-        user=request.user,
-        product_id=product_id
-    ).first()
-    
-    if existing_review:
-        return JsonResponse({'error': 'You have already reviewed this product'}, status=400)
-    
-    try:
-        review = ProductReview.objects.create(
-            user=request.user,
-            product_id=product_id,
-            author_name=request.user.get_full_name() or request.user.username,
-            rating=rating,
-            body=comment,
-            is_approved=False  
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Your review has been submitted and is pending approval',
-            'review_id': review.id
-        })
-        
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-@login_required
-def order_success(request, uuid):
-    order = get_object_or_404(Order, uuid=uuid, user=request.user)
-    session_key = f"order_confirmed_{uuid}"
-    if not request.session.get(session_key):
-        send_order_confirmation(order)
-        request.session[session_key] = True
-    return render(request, 'order_success.html', {'order': order})
 
 
 
 @login_required
 def cancel_order(request, uuid):
+
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
 
+    print("Order:", order.uuid)
+    print("Status:", order.status)
+    print("Payment:", order.payment_method)
+    print("Payment Status:", order.payment_status)
+    print("Method:", request.method)
+
     if not order.can_cancel:
-        messages.error(request, "This order can no longer be cancelled.")
-        return redirect('order_detail', uuid=order.uuid)
+        print("FAILED can_cancel")
+        messages.error(request, "Cannot cancel")
+        return redirect("order_detail", uuid=order.uuid)
 
-    if request.method == 'POST':
-        reason = request.POST.get('cancel_reason', '').strip()
+    if request.method == "POST":
+        print("POST received")
 
-        with db_tx.atomic():
-            for item in order.items.filter(cancel_status='none'):
-                if item.variant:
-                    item.variant.stock += item.quantity
-                    item.variant.save(update_fields=['stock'])
-                elif item.product:
-                    item.product.stock += item.quantity
-                    item.product.save(update_fields=['stock'])
+        refund = refund_on_cancellation(order)
+        print("Refund returned:", refund)
 
-                item.cancel_status = 'cancelled'
-                item.is_cancelled  = True
-                item.cancel_reason = reason
-                item.save(update_fields=['cancel_status', 'is_cancelled', 'cancel_reason'])
+        order.status = "cancelled"
+        order.cancelled_at = timezone.now()
+        order.save(update_fields=["status", "cancelled_at"])
+        print("Order saved")
 
-            order.status      = 'cancelled'
-            order.cancel_reason = reason
-            order.cancelled_at  = timezone.now()
-            order.save()
-
-            refund_on_cancellation(order)
-
-        if order.payment_method == 'cod':
-            msg = f"Order #{order.order_number} cancelled."
-        else:
-            refund_total = (
-                Decimal(str(order.total or 0)) +
-                Decimal(str(order.wallet_amount_used or 0))
-            )
-            msg = (
-                f"Order #{order.order_number} cancelled. "
-                f"₹{refund_total} refunded to your wallet."
-            )
-
-        messages.success(request, msg)
-        return redirect('order_list')
-
-    return render(request, 'cancel_order.html', {
-        'order':   order,
-        'reasons': CANCEL_REASONS,
-    })
-
+        return redirect("order_list")
+    return render(request, "cancel_order.html", {"order": order})
 
 
 @require_POST
 @login_required(login_url='login')
-def cancel_order_item(request, item_id):
-    item = get_object_or_404(OrderItem, pk=item_id, order__user=request.user)
+def cancel_order_item(request, uuid, item_id):
+    order = get_object_or_404(Order, uuid=uuid, user=request.user)
+    item = get_object_or_404(OrderItem, id=item_id, order=order)
 
     if item.cancel_status != 'none':
-        messages.error(request, 'This item has already been cancelled.')
-        return redirect('order_detail', uuid=item.order.uuid)
+        message = "This item has already been cancelled."
+        if request.content_type and 'application/json' in request.content_type:
+            return JsonResponse({"success": False, "error": message}, status=400)
+        messages.error(request, message)
+        return redirect("order_detail", uuid=order.uuid)
 
     if not item.can_cancel:
-        messages.error(request, 'This item can no longer be cancelled.')
-        return redirect('order_detail', uuid=item.order.uuid)
+        message = "This item can no longer be cancelled."
+        if request.content_type and 'application/json' in request.content_type:
+            return JsonResponse({"success": False, "error": message}, status=400)
+        messages.error(request, message)
+        return redirect("order_detail", uuid=order.uuid)
 
-    reason = request.POST.get('reason', '').strip()
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            payload = json.loads(request.body.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            payload = {}
+        reason = str(payload.get("reason") or payload.get("cancel_reason") or "").strip()
+    else:
+        reason = request.POST.get("cancel_reason", request.POST.get("reason", "")).strip()
+
     if not reason:
-        messages.error(request, 'Please provide a cancellation reason.')
-        return redirect('order_detail', uuid=item.order.uuid)
-
-    order         = item.order
-    refund_amount = Decimal('0.00')
+        reason = "No reason provided"
 
     with db_tx.atomic():
-        item.cancel_status = 'cancelled'
-        item.is_cancelled  = True
+        item.cancel_status = "cancelled"
+        item.is_cancelled = True
         item.cancel_reason = reason
-        item.save(update_fields=['cancel_status', 'is_cancelled', 'cancel_reason'])
+        item.save(update_fields=["cancel_status", "is_cancelled", "cancel_reason"])
 
         if item.variant:
             item.variant.stock += item.quantity
-            item.variant.save(update_fields=['stock'])
+            item.variant.save(update_fields=["stock"])
         elif item.product:
             item.product.stock += item.quantity
-            item.product.save(update_fields=['stock'])
+            item.product.save(update_fields=["stock"])
 
-        already_paid = (
-            order.payment_method != 'cod' and order.payment_status == 'paid'
-        )
+    refund_amount = refund_single_item_cancellation(order, item)
 
-        if already_paid and order.subtotal and order.subtotal > 0:
-            total_discount = (
-                Decimal(str(order.offer_discount or 0)) +
-                Decimal(str(order.discount_amount or 0))
-            )
-            discount_rate       = total_discount / Decimal(str(order.subtotal))
-            item_discount_share = (
-                Decimal(str(item.line_total)) * discount_rate
-            ).quantize(Decimal('0.01'))
-            refund_amount = max(
-                Decimal(str(item.line_total)) - item_discount_share,
-                Decimal('0'),
-            )
+    active_items = order.items.filter(cancel_status="none")
+    if not active_items.exists():
+        order.status = "cancelled"
+        order.cancelled_at = timezone.now()
+        order.save(update_fields=["status", "cancelled_at"])
 
-            if refund_amount > 0:
-                wallet, _ = Wallet.objects.get_or_create(user=order.user)
-                wallet.credit(
-                    amount=refund_amount,
-                    reason=WalletTransaction.REASON_CANCELLATION,
-                    order=order,
-                    description=(
-                        f'Refund for cancelled item "{item.product_name}" '
-                        f'from order #{order.order_number} '
-                        f'(₹{item.line_total} − ₹{item_discount_share} discount)'
-                    ),
-                )
+    remaining_items = order.items.filter(cancel_status="none")
+    remaining_subtotal = sum(
+        (Decimal(str(it.line_total or 0)) for it in remaining_items),
+        Decimal("0.00"),
+    )
 
-        if not order.items.filter(cancel_status='none').exists():
-            order.status      = 'cancelled'
-            order.cancelled_at = timezone.now()
-            order.save(update_fields=['status', 'cancelled_at'])
+    original_subtotal = Decimal(str(order.subtotal or 0))
+    total_discount = (
+        Decimal(str(order.offer_discount or 0))
+        + Decimal(str(order.discount_amount or 0))
+    )
+
+    if original_subtotal > 0:
+        prorated_discount = (remaining_subtotal * (total_discount / original_subtotal)).quantize(Decimal("0.01"))
+    else:
+        prorated_discount = Decimal("0.00")
+
+    remaining_shipping = Decimal(str(order.shipping_charge or 0))
+    remaining_wallet = Decimal(str(order.wallet_amount_used or 0))
+
+    recalculated_total = max(
+        remaining_subtotal - prorated_discount + remaining_shipping - remaining_wallet,
+        Decimal("0.00"),
+    )
+
+    if request.content_type and 'application/json' in request.content_type:
+        return JsonResponse({
+            "success": True,
+            "message": (
+                f"Item cancelled successfully. ₹{refund_amount} refunded to your wallet."
+                if refund_amount > 0 else "Item cancelled successfully."
+            ),
+            "new_total": str(recalculated_total.quantize(Decimal("0.01"))),
+            "new_subtotal": str(remaining_subtotal.quantize(Decimal("0.01"))),
+            "new_discount": str(prorated_discount.quantize(Decimal("0.01"))),
+            "order_cancelled": order.status == "cancelled",
+        })
 
     if refund_amount > 0:
-        messages.success(request, f'Item cancelled. ₹{refund_amount} refunded to your wallet.')
+        messages.success(
+            request,
+            f"Item cancelled successfully. ₹{refund_amount} refunded to your wallet."
+        )
     else:
-        messages.success(request, 'Item cancelled successfully.')
+        messages.success(request, "Item cancelled successfully.")
 
-    return redirect('order_detail', uuid=item.order.uuid)
-
+    return redirect("order_detail", uuid=order.uuid)
 
 
 @login_required

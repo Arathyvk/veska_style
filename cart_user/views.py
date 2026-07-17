@@ -179,12 +179,16 @@ def cart_update(request, item_id):
     elif action == 'remove':
         item.delete()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # Get updated cart totals
+            subtotal = cart.subtotal
+            shipping = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
             return JsonResponse({
                 'success': True,
                 'message': 'Item removed from cart',
                 'cart_count': cart.total_items,
-                'cart_subtotal': str(cart.subtotal),
-                'grand_total': str(cart.subtotal + (0 if cart.subtotal >= FREE_SHIPPING else SHIPPING_FEE))
+                'cart_subtotal': f"{subtotal:.2f}",
+                'grand_total': f"{subtotal + shipping:.2f}",
+                'shipping_fee': shipping
             })
         messages.success(request, 'Item removed from cart.')
         return redirect('cart_detail')
@@ -198,6 +202,7 @@ def cart_update(request, item_id):
         item.delete()
         message = 'Item removed from cart.'
         new_quantity = 0
+        item_total = 0
     else:
         available = item.available_stock
         if available <= 0:
@@ -218,21 +223,28 @@ def cart_update(request, item_id):
         item.quantity = capped
         item.save()
         new_quantity = capped
+        item_total = item.line_total
+    
+    subtotal = cart.subtotal
+    shipping = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
+    grand_total = subtotal + shipping
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
             'success': True,
             'new_quantity': new_quantity,
+            'unit_price': f"{item.unit_price:.2f}",  
+            'item_total': f"{item_total:.2f}" if new_quantity > 0 else "0.00",
             'message': message,
             'cart_count': cart.total_items,
-            'cart_subtotal': str(cart.subtotal),
-            'grand_total': str(cart.subtotal + (0 if cart.subtotal >= FREE_SHIPPING else SHIPPING_FEE)),
-            'item_total': str(item.line_total if new_quantity > 0 else 0)
+            'cart_subtotal': f"{subtotal:.2f}",
+            'grand_total': f"{grand_total:.2f}",
+            'shipping_fee': shipping,
+            'shipping_free': shipping == 0
         })
     
     messages.success(request, message)
     return redirect('cart_detail')
-
 
 
 @require_POST

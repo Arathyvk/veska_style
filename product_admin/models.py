@@ -27,6 +27,7 @@ class Product(models.Model):
     color = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     original_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    brand = models.CharField(max_length=100, blank=True)
     stock = models.PositiveIntegerField(default=0)
     is_listed = models.BooleanField(default=True)
     is_blocked = models.BooleanField(default=False)
@@ -115,10 +116,8 @@ class ProductVariant(models.Model):
     ]
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-
     size = models.CharField(max_length=50, choices=SIZE_CHOICES)
     color = models.CharField(max_length=100, blank=True)
-
     stock = models.PositiveIntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
@@ -150,5 +149,11 @@ class ProductReview(models.Model):
     def save(self, *args, **kwargs):
         if not self.author_name or self.author_name == 'Anonymous':
             if self.user:
-                self.author_name = self.user.get_full_name() or self.user.username
+                self.author_name = (
+                    f"{self.user.first_name} {self.user.last_name or ''}"
+                ).strip()
+
+                if not self.author_name:
+                    self.author_name = self.user.email
+                    
         super().save(*args, **kwargs)

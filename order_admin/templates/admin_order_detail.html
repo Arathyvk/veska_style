@@ -136,22 +136,6 @@ button,input,select,textarea{font-family:var(--body)}
     Back to Orders
   </a>
 
-  <a href="{% url 'download_invoice' order.uuid %}"
-   style="display:inline-flex;align-items:center;gap:6px;
-          padding:9px 18px;background:var(--card2);
-          border:1px solid var(--border2);border-radius:8px;
-          font-size:13px;font-weight:600;color:var(--muted2);
-          text-decoration:none;transition:.2s"
-   onmouseover="this.style.borderColor='var(--rose)';this.style.color='var(--rose2)'"
-   onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted2)'">
-  <svg width="13" height="13" fill="none" stroke="currentColor"
-       stroke-width="2.5" viewBox="0 0 24 24">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-    <polyline points="7 10 12 15 17 10"/>
-    <line x1="12" y1="15" x2="12" y2="3"/>
-  </svg>
-  Download Invoice
-</a>
 
   <div class="pg-hd">
     <div>
@@ -214,11 +198,10 @@ button,input,select,textarea{font-family:var(--body)}
                   {% endif %}
                 </td>
 
-                {# ── Admin Cancel Item Action ── #}
                 <td>
                   {% if not item.is_cancelled and order.status in cancellable_statuses %}
                     <button type="button"
-                      onclick="openCancelModal('{{ item.pk }}','{{ item.product_name|escapejs }}','{{ item.line_total }}','{{ order.payment_method }}')"
+                      onclick="openCancelModal('{{ item.pk }}','{{ item.product_name|escapejs }}','{{ item.line_total }}','{{ order.payment_method }}','{{ order.payment_status }}')"
                       style="background:var(--red-pale);color:var(--red);border:1px solid var(--red);
                              padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;
                              cursor:pointer;transition:.15s"
@@ -291,7 +274,7 @@ button,input,select,textarea{font-family:var(--body)}
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span>Offer discount</span>
         {% if offer_details %}
-        <div class="discount-badge offer">
+        <div class="discount-badge offer"> 
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
             <line x1="7" y1="7" x2="7.01" y2="7"/>
@@ -355,9 +338,7 @@ button,input,select,textarea{font-family:var(--body)}
         <span style="font-size:13px;font-weight:700;color:var(--text)">{{ order.get_payment_method_display }}</span>
       </div>
       <span style="font-size:13px;font-weight:700;
-        {% if order.payment_status == 'paid' %}color:var(--green)
-        {% elif order.payment_status == 'pending' %}color:var(--orange)
-        {% else %}color:var(--red){% endif %}">
+        {% if order.payment_status == 'paid' %}color:var(--green);{% elif order.payment_status == 'pending' %}color:var(--orange);{% else %}color:var(--red);{% endif %}">
         {{ order.get_payment_status_display|default:order.payment_status|title }}
       </span>
     </div>

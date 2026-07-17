@@ -207,8 +207,6 @@ def product_shop(request):
     })
 
 
-
-
 def product_detail(request, slug):
     try:
          product = Product.objects.prefetch_related(
@@ -233,7 +231,20 @@ def product_detail(request, slug):
     else:
         stock_status, stock_label = 'in_stock', 'In Stock'
 
-    reviews_qs       = product.reviews.filter(is_approved=True).order_by('-created_at')
+    print("Current Product:", product.id, product.name)
+
+    reviews_qs = ProductReview.objects.filter(product=product)
+
+    print("Review Count:", reviews_qs.count())
+
+    for review in reviews_qs:
+        print(
+            review.id,
+            review.product_id,
+            review.author_name,
+            review.rating,
+            review.is_approved
+        )    
     review_count     = reviews_qs.count()
     avg_rating       = 0
     rating_breakdown = [0, 0, 0, 0, 0]
