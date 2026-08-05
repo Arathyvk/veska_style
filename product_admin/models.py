@@ -1,6 +1,8 @@
 from django.db import models
 import uuid
 import os
+import logging
+from django.db.models import Sum, Min
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from category_admin.models import Category
@@ -17,25 +19,21 @@ CATEGORY_CHOICES = [
     ('Casual', 'Casual'),
 ]
 
+logger = logging.getLogger(__name__)
+
 class Product(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=300, unique=True, blank=True)
     description = models.TextField(blank=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)    
-    color = models.CharField(max_length=100, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    original_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     brand = models.CharField(max_length=100, blank=True)
-    stock = models.PositiveIntegerField(default=0)
     is_listed = models.BooleanField(default=True)
     is_blocked = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_featured = models.BooleanField(default=False)
-    is_shop_active = models.BooleanField(default=True)  
-
+    is_shop_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -54,37 +52,86 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-  
+    @property
+    def all_images(self):
+        return ProductImage.objects.filter(variant__product=self).order_by("order", "id")
+    
     @property
     def primary_image(self):
-        return self.images.first()
+        return (
+            ProductImage.objects
+            .filter(variant__product=self)
+            .order_by("order", "id")
+            .first()
+        )
 
     @property
     def total_stock(self):
-        variant_total = sum(v.stock for v in self.variants.all())
-        return variant_total if variant_total > 0 else self.stock
+        return self.variants.aggregate(
+            total=Sum("stock")
+        )["total"] or 0
 
     @property
-    def discount_percent(self):
-        if self.original_price and self.original_price > self.price:
-            return round(((self.original_price - self.price) / self.original_price) * 100)
-        return 0
-    
+    def min_price(self):
+        return self.variants.aggregate(
+            Min("price")
+        )["price__min"]
+
+    @property
+    def price(self):
+        return self.min_price or 0
+
+    @property
+    def colors(self):
+        return sorted(set(v.color for v in self.variants.all() if v.color))
+
+
+    def get_best_offer(self):
+        from offer_admin.models import BaseOffer  
+        from django.db.models import Q
+        from django.utils import timezone
+
+        now = timezone.now()
+        offers = BaseOffer.objects.filter(
+            is_active=True, start_date__lte=now, end_date__gte=now,
+        ).filter(
+            Q(offer_type='PRODUCT', products=self) | Q(offer_type='CATEGORY', categories=self.category)
+        )
+        best_offer, best_disc = None, 0
+        for o in offers:
+            if o.is_valid:
+                disc = o.calculate_discount(self.price)
+                if disc > best_disc:
+                    best_offer, best_disc = o, disc
+        return best_offer
+
+
+    @property
+    def discounted_price(self):
+        offer = self.get_best_offer()
+        if offer:
+            return self.price - offer.calculate_discount(self.price)
+        return self.price
 
 
 def product_image_upload_path(instance, filename):
     ext = filename.rsplit('.', 1)[-1].lower()
     name = f"{uuid.uuid4().hex[:10]}.{ext}"
-    return os.path.join('products', str(instance.product.uuid), name)
+    return os.path.join(
+        "products",
+        str(instance.variant.product.uuid),
+        str(instance.variant.id),
+        name,
+    )
 
 
 class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to=product_image_upload_path)
-    order = models.PositiveIntegerField(default=0)
+    variant = models.ForeignKey("ProductVariant",on_delete=models.CASCADE,related_name="images")
+    image   = models.ImageField(upload_to=product_image_upload_path)
+    order   = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ['order']
+        ordering = ["order"]
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -94,15 +141,18 @@ class ProductImage(models.Model):
         try:
             path = self.image.path
             with PILImage.open(path) as img:
-                img = img.convert('RGB')
+                img = img.convert("RGB")
                 img = img.resize((600, 600), PILImage.LANCZOS)
-                img.save(path, 'JPEG', quality=85)
-        except Exception:
-            pass
+                img.save(path, "JPEG", quality=85)
+        except Exception as e:
+            logger.error(f"Failed to resize ProductImage id={self.pk} (path={self.image.name}): {e}")
+
 
     def __str__(self):
-        return f"{self.product.name} Image"
-    
+        if self.variant:
+            return f"{self.variant.product.name} - {self.variant.size}"
+        return "Unassigned Image"
+
 
 class ProductVariant(models.Model):
 
@@ -116,32 +166,31 @@ class ProductVariant(models.Model):
     ]
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-    size = models.CharField(max_length=50, choices=SIZE_CHOICES)
-    color = models.CharField(max_length=100, blank=True)
-    stock = models.PositiveIntegerField(default=0)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-
-
+    size    = models.CharField(max_length=50, choices=SIZE_CHOICES)
+    color   = models.CharField(max_length=100, blank=True, null=True)
+    stock   = models.PositiveIntegerField(default=0)
+    price   = models.DecimalField(max_digits=10, decimal_places=2)  
 
     def __str__(self):
-        return f"{self.product.name} - {self.size}"    
-    
-
-
+        return f"{self.product.name} - {self.size}"
 
 
 class ProductReview(models.Model):
-    user        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews',null=True,blank=True)
-    product     = models.ForeignKey('Product',on_delete=models.CASCADE,related_name='reviews')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='reviews')
     author_name = models.CharField(max_length=120, default='Anonymous')
-    rating      = models.PositiveSmallIntegerField()
-    body        = models.TextField()
+    rating = models.PositiveSmallIntegerField()
+    body = models.TextField()
     is_approved = models.BooleanField(default=False)
-    created_at  = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
-        unique_together = ['user', 'product']
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "product"],
+                name="unique_user_product_review",
+            )
+        ]
 
     def __str__(self):
         return f"{self.author_name} - {self.product.name}"
@@ -152,8 +201,6 @@ class ProductReview(models.Model):
                 self.author_name = (
                     f"{self.user.first_name} {self.user.last_name or ''}"
                 ).strip()
-
                 if not self.author_name:
                     self.author_name = self.user.email
-                    
         super().save(*args, **kwargs)

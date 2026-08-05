@@ -3,14 +3,12 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
-import time
 
 OTP_EXPIRY_MINUTES = 2
-
+MAX_OTP_ATTEMPTS = 3
 
 def gen_otp():
     return str(random.randint(1000, 9999))
-
 
 def send_otp_email(email, otp, subject="Veska — Verify your email"):
     send_mail(
@@ -20,7 +18,6 @@ def send_otp_email(email, otp, subject="Veska — Verify your email"):
         recipient_list=[email],
         fail_silently=False,
     )
-
 
 def is_otp_expired(otp_time_str):
     if not otp_time_str:
@@ -33,12 +30,12 @@ def is_otp_expired(otp_time_str):
     except:
         return True
 
-
 def save_otp_to_session(request, purpose, otp):
-    request.session[f"{purpose}_otp"]      = otp
-    request.session[f"{purpose}_otp_time"] = timezone.now().isoformat()    
-    request.session.modified = True   
-    request.session.save()           
+    request.session[f"{purpose}_otp"] = otp
+    request.session[f"{purpose}_otp_time"] = timezone.now().isoformat()
+    request.session[f"{purpose}_otp_attempts"] = 0  # Reset attempts on new OTP
+    request.session.modified = True
+    request.session.save()
 
 def get_otp_from_session(request, purpose):
     return (
@@ -46,7 +43,23 @@ def get_otp_from_session(request, purpose):
         request.session.get(f"{purpose}_otp_time"),
     )
 
-
 def clear_otp_from_session(request, purpose):
     request.session.pop(f"{purpose}_otp", None)
     request.session.pop(f"{purpose}_otp_time", None)
+    request.session.pop(f"{purpose}_otp_attempts", None)
+
+def is_otp_attempts_exceeded(request, purpose):
+    attempts = request.session.get(f"{purpose}_otp_attempts", 0)
+    return attempts >= MAX_OTP_ATTEMPTS
+
+def increment_otp_attempts(request, purpose):
+    attempts = request.session.get(f"{purpose}_otp_attempts", 0) + 1
+    request.session[f"{purpose}_otp_attempts"] = attempts
+    request.session.modified = True
+    request.session.save()
+    return attempts
+
+def reset_otp_attempts(request, purpose):
+    request.session[f"{purpose}_otp_attempts"] = 0
+    request.session.modified = True
+    request.session.save()

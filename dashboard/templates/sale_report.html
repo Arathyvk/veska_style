@@ -9,7 +9,16 @@
 .stat-card{border:1px solid #e8e8e8;border-radius:8px;padding:.75rem 1rem;text-align:center}
 .two-col{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:1.25rem}
 .section-label{font-size:15px;font-weight:600;color:#888;letter-spacing:.5px;text-transform:uppercase;margin:1.25rem 0 8px}
+.pdf{margin-top:15px;background: linear-gradient(135deg,#c9967a,#a06848);font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: opacity .18s;margin-right:106pc;margin-bottom:10px}
+
+#toWrap{margin-bottom:15px}
 @media(max-width:600px){.two-col{grid-template-columns:1fr}}
+
 </style>
 
 <div class="container-fluid py-4">
@@ -28,10 +37,14 @@
         </small>
       </div>
     </div>
-    <a href="{% url 'sales_report_pdf' %}?filter={{ filter_type }}&date_from={{ date_from }}&date_to={{ date_to }}"
-       style = margin-left:95pc;font-size:16px;  class="btn btn-sm btn-success" target="_blank">
+    <div class="pdf">
+   <a href="{% url 'sales_report_pdf' %}?filter={{ filter_type }}&date_from={{ date_from }}&date_to={{ date_to }}"
+   style="font-size:19px;"
+   class="btn btn-sm btn-success"
+   target="_blank">
       ⬇ Download PDF
     </a>
+  </div>
   </div>
 
   <!-- Filter -->
@@ -40,7 +53,7 @@
       <form method="get" class="row g-3 align-items-end">
         <div class="col-sm-6 col-md-3">
           <label class="form-label small fw-semibold">Filter type</label>
-          <select name="filter" class="form-select form-select-sm"
+          <select name="filter" class="form-select form-select-sm" style="font-size: 16px;"
                   id="filterType" onchange="toggleDates(this.value)">
             <option value="daily"   {% if filter_type == 'daily'   %}selected{% endif %}>Today</option>
             <option value="weekly"  {% if filter_type == 'weekly'  %}selected{% endif %}>Last 7 days</option>
@@ -62,7 +75,7 @@
                  value="{{ date_to }}">
         </div>
         <div class="col-sm-6 col-md-3">
-          <button type="submit" class="btn btn-sm btn-primary w-100">Apply filter</button>
+          <button type="submit" class="btn btn-sm btn-primary w-100" style ="margin-top:10px">Apply filter</button>
         </div>
       </form>
     </div>
@@ -155,7 +168,7 @@
           {% for product in top_products %}
           <tr>
             <td class="text-center text-muted">{{ forloop.counter }}</td>
-            <td>{{ product.product_name }}</td>
+            <td>{{product__name }}</td>
             <td class="text-end">{{ product.sold }}</td>
             <td class="text-end pe-3 fw-semibold">₹{{ product.revenue|floatformat:2 }}</td>
           </tr>
@@ -197,7 +210,7 @@
             </td>
             <td>
               <div class="fw-semibold small">{{ order.full_name }}</div>
-              <div class="text-muted" style="font-size:11px">{{ order.user.email }}</div>
+              <div class="text-muted" style="font-size:11px">{{ order.user.email|default:"Guest" }}</div>
             </td>
             <td class="small text-muted">{{ order.created_at|date:"d M Y" }}</td>
             <td>

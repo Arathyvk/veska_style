@@ -12,7 +12,7 @@
       --input-bg:#3a2218;--input-border:#5a3828;
       --copper:#c8956c;--copper-dark:#a8754c;--copper-light:#ddb08a;
       --text:#f0e4d8;--muted:#9b7060;--dim:#6a4030;
-      --danger:#e07070;
+      --danger:#e07070;--success:#8cb895;
     }
     body{
       margin:0;font-family:'DM Sans',sans-serif;
@@ -51,13 +51,22 @@
 
     .error-box{
       background:rgba(224,112,112,.1);border:1px solid rgba(224,112,112,.3);
-      border-radius:8px;color:var(--danger);font-size:12px;
-      padding:9px 14px;margin-bottom:18px;text-align:center
+      border-radius:8px;color:var(--danger);font-size:13px;
+      padding:10px 14px;margin-bottom:18px;text-align:center
+    }
+    .success-box{
+      background:rgba(140,184,149,.1);border:1px solid rgba(140,184,149,.3);
+      border-radius:8px;color:var(--success);font-size:13px;
+      padding:10px 14px;margin-bottom:18px;text-align:center
     }
 
-    .field{margin-bottom:14px;position:relative}
-    input[type=text],input[type=password]{
-      width:100%;padding:13px 18px;
+    .field{
+      margin-bottom:14px;
+      position:relative;
+    }
+    .field input[type="text"],
+    .field input[type="password"]{
+      width:100%;padding:13px 48px 13px 18px;
       background:var(--input-bg);
       border:1px solid var(--input-border);
       border-radius:8px;
@@ -70,6 +79,42 @@
     input:focus{
       border-color:var(--copper);
       box-shadow:0 0 0 3px rgba(200,149,108,.12)
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+      transition: color 0.2s;
+      border-radius: 4px;
+    }
+    .toggle-password:hover {
+      color: var(--copper-light);
+    }
+    .toggle-password:focus-visible {
+      outline: 1px solid var(--copper);
+      outline-offset: 2px;
+    }
+    .toggle-password svg {
+      display: block;
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .btn-login{
@@ -88,6 +133,9 @@
       box-shadow:0 6px 28px rgba(200,149,108,.45)
     }
     .btn-login:active{transform:translateY(0)}
+    .btn-login:disabled{
+      opacity:.6;cursor:not-allowed;transform:none
+    }
 
     .footer{font-size:15px;color:var(--dim);text-align:center}
   </style>
@@ -103,32 +151,114 @@
   <div class="card">
     <h1 class="card-title">Admin Login</h1>
 
-    {% if error %}
-      {% if error.field %}   <div class="error-box">{{ error.field }}</div>{% endif %}
-      {% if error.invalid %} <div class="error-box">{{ error.invalid }}</div>{% endif %}
+    <!-- Django error messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}error-box{% elif message.tags == 'success' %}success-box{% else %}error-box{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Form errors -->
+    {% if form.errors %}
+      <div class="error-box">
+        {% for field, errors in form.errors.items %}
+          {% for error in errors %}
+            {{ error }}<br>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Non-field errors -->
+    {% if form.non_field_errors %}
+      <div class="error-box">
+        {% for error in form.non_field_errors %}
+          {{ error }}
+        {% endfor %}
+      </div>
     {% endif %}
 
     <form method="POST" action="{% url 'admin_login' %}">
       {% csrf_token %}
 
       <div class="field">
-        <input type="text" name="email"
+        <input type="text" name="email" id="emailInput"
             placeholder="Enter your admin email"
-            value="{{ request.POST.email|default:'' }}"
+            value="{{ form.email.value|default:'' }}"
             required autofocus>
       </div>
 
-      <div class="field">
-        <input type="password" name="password"
+      <div class="field" id="password-field">
+        <input type="password" name="password" id="passwordInput"
           placeholder="Password"
           required>
+        <button type="button" class="toggle-password" id="togglePasswordBtn" aria-label="Show password">
+          <svg viewBox="0 0 24 24" id="eyeIcon">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
       </div>
 
-      <button type="submit" class="btn-login">Login</button>
+      <button type="submit" class="btn-login" id="loginBtn">Login</button>
     </form>
   </div>
 
   <p class="footer">© 2026 Veska. All Rights Reserved.</p>
 
+  <script>
+    (function() {
+      const toggleBtn = document.getElementById('togglePasswordBtn');
+      const passwordInput = document.getElementById('passwordInput');
+      const eyeIcon = document.getElementById('eyeIcon');
+      const loginBtn = document.getElementById('loginBtn');
+
+      if (toggleBtn && passwordInput && eyeIcon) {
+        let isPasswordVisible = false;
+
+        function togglePasswordVisibility() {
+          isPasswordVisible = !isPasswordVisible;
+          passwordInput.type = isPasswordVisible ? 'text' : 'password';
+          
+          if (isPasswordVisible) {
+            eyeIcon.innerHTML = `
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line x1="2" y1="2" x2="22" y2="22"/>
+            `;
+            toggleBtn.setAttribute('aria-label', 'Hide password');
+          } else {
+            eyeIcon.innerHTML = `
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            `;
+            toggleBtn.setAttribute('aria-label', 'Show password');
+          }
+        }
+
+        toggleBtn.addEventListener('click', togglePasswordVisibility);
+      }
+
+      // Prevent multiple submissions
+      if (loginBtn) {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+          loginBtn.disabled = true;
+          loginBtn.textContent = 'Logging in...';
+        });
+      }
+
+      // If there are error messages, re-enable the button
+      window.addEventListener('load', function() {
+        if (loginBtn) {
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Login';
+        }
+      });
+
+    })();
+  </script>
 </body>
 </html>

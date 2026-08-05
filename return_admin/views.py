@@ -15,7 +15,7 @@ from django.utils.timezone import now
 
 from return_admin.models import ReturnRequest, RETURN_DAYS
 from wallet_user.models import Wallet, WalletTransaction
-
+from coupon_admin.models import Coupon, CouponUsage
 
 LOW_STOCK = 5
 
@@ -116,6 +116,42 @@ def admin_return_detail(request, pk):
     )
 
     proof_images = ret.proof_images.all()
+    refund_amount = Decimal("0.00")
+
+    if ret.order_item:
+        refund_amount = (
+            ret.order_item.line_total
+            if ret.order_item.line_total
+            else ret.order_item.quantity * ret.order_item.unit_price
+        )
+
+        # Apply proportional discount
+        if ret.order.subtotal and ret.order.subtotal > 0:
+            total_discount = (
+                Decimal(ret.order.offer_discount or 0)
+                + Decimal(ret.order.discount_amount or 0)
+            )
+
+            if total_discount > 0:
+                discount_rate = total_discount / ret.order.subtotal
+                item_discount = (
+                    refund_amount * discount_rate
+                ).quantize(Decimal("0.01"))
+                refund_amount = max(
+                    refund_amount - item_discount,
+                    Decimal("0.00")
+                )
+
+        # Refund shipping only if every other item is cancelled/returned
+        other_active_items = (
+            ret.order.items
+            .exclude(pk=ret.order_item.pk)
+            .filter(cancel_status="none")
+        )
+
+        if not other_active_items.exists():
+            refund_amount += Decimal(ret.order.shipping_charge or 0)
+
     internal_notes = []
 
     if ret.order.delivered_at:
@@ -181,8 +217,8 @@ def admin_return_detail(request, pk):
         'deadline_expired': deadline_expired,
         'user_stats': user_stats,
         'eligibility_checks': eligibility_checks,
+        'refund_amount': refund_amount,
     })
-
 
 
 @never_cache
@@ -207,40 +243,53 @@ def admin_return_action(request, pk):
         ret.admin_notes = note
         ret.save(update_fields=['status', 'admin_notes'])
 
-        order.status = 'returned'
-        order.save(update_fields=['status'])
-
         try:
             refund_amount = Decimal('0.00')
-            
+            other_active_items = None
+
             if ret.order_item:
                 refund_amount = ret.order_item.line_total if ret.order_item.line_total else (
                     ret.order_item.quantity * ret.order_item.unit_price
                 )
-                
                 if order.subtotal and order.subtotal > 0:
                     total_discount = (order.offer_discount or Decimal('0')) + (order.discount_amount or Decimal('0'))
                     if total_discount > 0:
                         discount_rate = total_discount / order.subtotal
                         item_discount_share = (refund_amount * discount_rate).quantize(Decimal('0.01'))
                         refund_amount = max(refund_amount - item_discount_share, Decimal('0'))
+
+                other_active_items = order.items.exclude(pk=ret.order_item.pk).filter(cancel_status='none')
+                if not other_active_items.exists():
+                    shipping_charge = Decimal(order.shipping_charge or 0)
+                    refund_amount += shipping_charge
             else:
                 refund_amount = order.total
-          
+
             if refund_amount <= 0:
                 messages.warning(request, f'Return #{pk} approved but no refund amount available.')
             else:
                 wallet, created = Wallet.objects.get_or_create(user=order.user)
-
                 wallet.credit(
                     amount=refund_amount,
                     reason=WalletTransaction.REASON_RETURN,
                     order=order,
                     description=f'Refund for "{ret.order_item.product_name}" from order #{order.order_number}'
                 )
-
                 wallet.refresh_from_db()
-                print(f"Wallet balance after: {wallet.balance}")
+
+                # only finalize the order + release the coupon once nothing else is still active
+                if other_active_items is None or not other_active_items.exists():
+                    order.status = 'returned'
+                    order.save(update_fields=['status'])
+
+                    if order.coupon_code:
+                        try:
+                            coupon_obj = Coupon.objects.get(code=order.coupon_code)
+                            coupon_obj.times_used = max(0, coupon_obj.times_used - 1)
+                            coupon_obj.save(update_fields=['times_used'])
+                            CouponUsage.objects.filter(user=order.user, coupon=coupon_obj, order=order).delete()
+                        except Coupon.DoesNotExist:
+                            pass
 
                 messages.success(
                     request,
@@ -251,7 +300,7 @@ def admin_return_action(request, pk):
             print(f"ERROR in refund: {str(e)}")
             traceback.print_exc()
             messages.error(request, f'Return approved but refund failed: {str(e)}')
-
+            
     elif action == 'reject':
         if not reason:
             messages.error(request, 'Please provide a rejection reason.')

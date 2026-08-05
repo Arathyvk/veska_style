@@ -21,18 +21,22 @@
 .frow:last-of-type{margin-bottom:0}
 .flabel{display:block;font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
 .flabel .req{color:var(--danger);margin-left:2px}
+.flabel .opt{color:var(--muted-lt);font-weight:400;text-transform:none;letter-spacing:0}
 .fhint{font-size:11.5px;color:var(--muted-lt);margin-top:4px;line-height:1.5}
 .finput,.fselect{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:11px 14px;font-family:var(--body);font-size:13.5px;background:var(--parchment);color:var(--ink);outline:none;transition:var(--transition)}
 .finput:focus,.fselect:focus{border-color:var(--terra);background:#fff;box-shadow:0 0 0 3px rgba(181,103,58,.07)}
-.finput.has-error{border-color:var(--danger);background:var(--danger-pale)}
+.finput.has-error{border-color:var(--danger);background:var(--danger-pale);border-color:var(--danger) !important}
 .finput::placeholder{color:var(--muted-lt)}
 .fselect{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='none' stroke='%23b0a699' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
 .fselect option{background:#fff}
-.ferror{font-size:11.5px;color:var(--danger);margin-top:5px;font-weight:500;display:flex;align-items:center;gap:5px}
+.ferror{font-size:12px;color:var(--danger);margin-top:5px;font-weight:500;display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--danger-pale);border-radius:var(--radius-sm);border-left:3px solid var(--danger)}
+.ferror .error-icon{font-size:14px}
+.ferror-top{font-size:13px;color:var(--danger);padding:12px 16px;background:var(--danger-pale);border:1px solid var(--danger);border-radius:var(--radius-md);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.ferror-top .error-icon{font-size:20px}
+.ferror-top ul{margin:0;padding-left:20px;font-weight:400}
 .fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 @media(max-width:480px){.fgrid2,.fgrid3{grid-template-columns:1fr}}
-/* Default checkbox — toggle style */
 .check-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--parchment);border:1.5px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:var(--transition)}
 .check-toggle:hover{border-color:var(--terra)}
 .check-toggle input{display:none}
@@ -42,7 +46,6 @@
 .ct-track::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .2s}
 .check-toggle input:checked ~ .ct-track{background:var(--terra)}
 .check-toggle input:checked ~ .ct-track::after{transform:translateX(18px)}
-/* Actions */
 .form-actions{display:flex;gap:11px;padding-top:20px;border-top:1px solid var(--border-lt);margin-top:20px}
 .btn-save{flex:1;padding:13px;background:var(--charcoal);color:#fff;border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:13.5px;font-weight:600;cursor:pointer;transition:var(--transition)}
 .btn-save:hover{background:var(--terra)}
@@ -61,75 +64,118 @@
       <span class="current">{% if action == 'edit' %}Edit Address{% else %}Add Address{% endif %}</span>
     </nav>
     <div class="form-card">
-      <form method="POST">
+      <form method="POST" novalidate>
         {% csrf_token %}
 
-        <!-- Full Name -->
-        <div class="frow">
-          <div class="addr-name">{{ order.full_name }}</div>
-          <label class="flabel">Full Name <span class="req">*</span></label>
-          <input class="finput {% if errors.full_name %}has-error{% endif %}" type="text" name="full_name"
-                 value="{% if action == 'edit' %}{{ address.full_name }}{% else %}{{ data.full_name|default:'' }}{% endif %}"
-                 placeholder="e.g. Priya Sharma" autocomplete="name">
-          {% if errors.full_name %}<div class="ferror">⚠ {{ errors.full_name }}</div>{% endif %}
-        </div>
+<!-- Full Name -->
+<div class="frow">
+  <label class="flabel">Full Name <span class="req">*</span></label>
+  <input class="finput {% if errors.full_name %}has-error{% endif %}" 
+         type="text" name="full_name"
+         value="{% if action == 'edit' %}{{ address.full_name }}{% else %}{{ data.full_name|default:'' }}{% endif %}"
+         placeholder="e.g. John Doe" autocomplete="name">
+  {% if errors.full_name %}
+    <div class="ferror">
+      <span class="error-icon">✗</span>
+      {{ errors.full_name }}
+    </div>
+  {% endif %}
+</div>
 
-        <!-- Phone -->
-        <div class="frow">
-          <label class="flabel">Phone Number <span class="req">*</span></label>
-          <input class="finput {% if errors.phone %}has-error{% endif %}" type="tel" name="phone"
-                 value="{% if action == 'edit' %}{{ address.phone }}{% else %}{{ data.phone|default:'' }}{% endif %}"
-                 placeholder="+91 98765 43210" autocomplete="tel">
-          {% if errors.phone %}<div class="ferror">⚠ {{ errors.phone }}</div>{% endif %}
-        </div>
+<!-- Phone -->
+<div class="frow">
+  <label class="flabel">Phone Number <span class="req">*</span></label>
+  <input class="finput {% if errors.phone %}has-error{% endif %}" 
+         type="tel" name="phone" maxlength="10" inputmode="numeric"
+         value="{% if action == 'edit' %}{{ address.phone }}{% else %}{{ data.phone|default:'' }}{% endif %}"
+         placeholder="e.g. 9876543210" autocomplete="tel">
+  {% if errors.phone %}
+    <div class="ferror">
+      <span class="error-icon">✗</span>
+      {{ errors.phone }}
+    </div>
+  {% else %}
+    <div class="fhint">Enter exactly 10 digits (e.g., 9876543210)</div>
+  {% endif %}
+</div>
 
-        <!-- Address Line 1 -->
-        <div class="frow">
-          <label class="flabel">Address Line 1 <span class="req">*</span></label>
-          <input class="finput {% if errors.address_line1 %}has-error{% endif %}" type="text" name="address_line1"
-                 value="{% if action == 'edit' %}{{ address.address_line1 }}{% else %}{{ data.address_line1|default:'' }}{% endif %}"
-                 placeholder="Flat / House no., Building" autocomplete="address-line1">
-          {% if errors.address_line1 %}<div class="ferror">⚠ {{ errors.address_line1 }}</div>{% endif %}
-        </div>
+<!-- Address Line 1 -->
+<div class="frow">
+  <label class="flabel">Address Line 1 <span class="req">*</span></label>
+  <input class="finput {% if errors.address_line1 %}has-error{% endif %}" 
+         type="text" name="address_line1"
+         value="{% if action == 'edit' %}{{ address.address_line1 }}{% else %}{{ data.address_line1|default:'' }}{% endif %}"
+         placeholder="e.g. 123 Main Street, Apartment 4B" autocomplete="address-line1">
+  {% if errors.address_line1 %}
+    <div class="ferror">
+      <span class="error-icon">✗</span>
+      {{ errors.address_line1 }}
+    </div>
+  {% endif %}
+</div>
 
-        <!-- Address Line 2 -->
-        <div class="frow">
-          <label class="flabel">Address Line 2 <span style="color:var(--muted-lt);">(optional)</span></label>
-          <input class="finput" type="text" name="address_line2"
-                 value="{% if action == 'edit' %}{{ address.address_line2 }}{% else %}{{ data.address_line2|default:'' }}{% endif %}"
-                 placeholder="Street, Area, Landmark" autocomplete="address-line2">
-        </div>
+<!-- Address Line 2 -->
+<div class="frow">
+  <label class="flabel">Address Line 2 <span class="opt">(optional)</span></label>
+  <input class="finput" type="text" name="address_line2"
+         value="{% if action == 'edit' %}{{ address.address_line2 }}{% else %}{{ data.address_line2|default:'' }}{% endif %}"
+         placeholder="e.g. Near Central Park" autocomplete="address-line2">
+</div>
 
-        <!-- City / State / Pincode -->
-        <div class="fgrid3 frow">
-          <div>
-            <label class="flabel">City <span class="req">*</span></label>
-            <input class="finput {% if errors.city %}has-error{% endif %}" type="text" name="city"
-                   value="{% if action == 'edit' %}{{ address.city }}{% else %}{{ data.city|default:'' }}{% endif %}"
-                   placeholder="City" autocomplete="address-level2">
-            {% if errors.city %}<div class="ferror">⚠ {{ errors.city }}</div>{% endif %}
-          </div>
-          <div>
-            <label class="flabel">State <span class="req">*</span></label>
-            <input class="finput {% if errors.state %}has-error{% endif %}" type="text" name="state"
-                   value="{% if action == 'edit' %}{{ address.state }}{% else %}{{ data.state|default:'' }}{% endif %}"
-                   placeholder="State" autocomplete="address-level1">
-            {% if errors.state %}<div class="ferror">⚠ {{ errors.state }}</div>{% endif %}
-          </div>
-          <div>
-            <label class="flabel">Pincode <span class="req">*</span></label>
-            <input class="finput {% if errors.pincode %}has-error{% endif %}" type="text" name="pincode"
-                   maxlength="10" inputmode="numeric"
-                   value="{% if action == 'edit' %}{{ address.pincode }}{% else %}{{ data.pincode|default:'' }}{% endif %}"
-                   placeholder="6-digit" autocomplete="postal-code">
-            {% if errors.pincode %}<div class="ferror">⚠ {{ errors.pincode }}</div>{% endif %}
-          </div>
-        </div>
+<!-- City -->
+<div class="fgrid3 frow">
+  <div>
+    <label class="flabel">City <span class="req">*</span></label>
+    <input class="finput {% if errors.city %}has-error{% endif %}" 
+           type="text" name="city"
+           value="{% if action == 'edit' %}{{ address.city }}{% else %}{{ data.city|default:'' }}{% endif %}"
+           placeholder="e.g. Mumbai" autocomplete="address-level2">
+    {% if errors.city %}
+      <div class="ferror">
+        <span class="error-icon">✗</span>
+        {{ errors.city }}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- State -->
+  <div>
+    <label class="flabel">State <span class="req">*</span></label>
+    <input class="finput {% if errors.state %}has-error{% endif %}" 
+           type="text" name="state"
+           value="{% if action == 'edit' %}{{ address.state }}{% else %}{{ data.state|default:'' }}{% endif %}"
+           placeholder="e.g. Maharashtra" autocomplete="address-level1">
+    {% if errors.state %}
+      <div class="ferror">
+        <span class="error-icon">✗</span>
+        {{ errors.state }}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Pincode -->
+  <div>
+    <label class="flabel">Pincode <span class="req">*</span></label>
+    <input class="finput {% if errors.pincode %}has-error{% endif %}" 
+           type="text" name="pincode" maxlength="6" inputmode="numeric"
+           value="{% if action == 'edit' %}{{ address.pincode }}{% else %}{{ data.pincode|default:'' }}{% endif %}"
+           placeholder="e.g. 678909" autocomplete="postal-code">
+    {% if errors.pincode %}
+      <div class="ferror">
+        <span class="error-icon">✗</span>
+        {{ errors.pincode }}
+      </div>
+    {% else %}
+      <div class="fhint">Enter 6-digit pincode</div>
+    {% endif %}
+  </div>
+</div>
 
         <!-- Country -->
         <div class="frow">
           <label class="flabel">Country <span class="req">*</span></label>
-          <select class="fselect" name="country">
+          <select class="fselect {% if errors.country %}has-error{% endif %}" name="country">
+            <option value="">Select your country</option>
             {% for c in countries %}
             <option value="{{ c }}"
               {% if action == 'edit' and address.country == c %}selected
@@ -137,6 +183,12 @@
               {% elif not data.country and c == 'India' %}selected{% endif %}>{{ c }}</option>
             {% endfor %}
           </select>
+          {% if errors.country %}
+            <div class="ferror">
+              <span class="error-icon">✗</span>
+              {{ errors.country }}
+            </div>
+          {% endif %}
         </div>
 
         <!-- Set as Default -->
@@ -161,7 +213,6 @@
             Cancel
           </a>
         </div>
-
       </form>
     </div>
   </div>

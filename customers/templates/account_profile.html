@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <style>
+  /* ===== PROFILE GRID ===== */
   .profile-grid {
     display: grid;
     grid-template-columns: 200px 1fr;
@@ -12,40 +13,129 @@
     align-items: start;
   }
 
-  .avatar-section { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  /* ===== AVATAR SECTION ===== */
+  .avatar-section { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 14px; 
+  }
 
   .avatar-wrap {
     position: relative;
-    width: 140px; height: 140px;
+    width: 140px; 
+    height: 140px;
   }
+
   .avatar-img {
-    width: 140px; height: 140px;
+    width: 140px; 
+    height: 140px;
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid var(--sand);
     display: block;
   }
-  .avatar-edit-btn {
-    position: absolute; bottom: 4px; right: 4px;
-    width: 32px; height: 32px;
-    background: var(--bark); color: #fff;
-    border: 2px solid #fff; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: background 0.2s;
+
+  .avatar-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
   }
-  .avatar-edit-btn:hover { background: var(--espresso); }
-  .avatar-edit-btn svg { width: 14px; height: 14px; }
+
+  .avatar-edit-btn, .avatar-remove-btn {
+    width: 32px; 
+    height: 32px;
+    border: 2px solid #fff; 
+    border-radius: 50%;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    cursor: pointer; 
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .avatar-edit-btn {
+    background: var(--bark); 
+    color: #fff;
+  }
+  .avatar-edit-btn:hover { 
+    background: var(--espresso); 
+  }
+
+  .avatar-remove-btn {
+    background: #dc3545; 
+    color: #fff;
+  }
+  .avatar-remove-btn:hover { 
+    background: #c82333; 
+    transform: scale(1.05);
+  }
+
+  .avatar-edit-btn svg, .avatar-remove-btn svg {
+    width: 14px; 
+    height: 14px;
+  }
 
   .avatar-name {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem; font-weight: 500;
-    color: var(--espresso); text-align: center;
-  }
-  .avatar-email {
-    font-size: 0.72rem; color: var(--stone);
-    text-align: center; word-break: break-all;
+    font-size: 1.1rem; 
+    font-weight: 500;
+    color: var(--espresso); 
+    text-align: center;
   }
 
+  .avatar-email {
+    font-size: 0.72rem; 
+    color: var(--stone);
+    text-align: center; 
+    word-break: break-all;
+  }
+
+  /* ===== MESSAGES ===== */
+  .messages-container {
+    margin-bottom: 20px;
+  }
+
+  .alert {
+    padding: 14px 20px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+  }
+
+  .alert-success .alert-icon {
+    font-size: 1.2rem;
+  }
+
+  .alert-error, .alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+  }
+
+  .alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+  }
+
+  .alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+  }
+
+  /* ===== FORM CARD ===== */
   .form-card {
     background: #fff;
     border: 1px solid var(--sand);
@@ -53,22 +143,37 @@
     padding: 32px 36px;
   }
 
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .form-row.single { grid-template-columns: 1fr; }
+  .form-row { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px; 
+  }
+  .form-row.single { 
+    grid-template-columns: 1fr; 
+  }
 
-  .field { margin-bottom: 20px; }
+  .field { 
+    margin-bottom: 20px; 
+  }
   .field-label {
     display: block;
-    font-size: 0.68rem; font-weight: 500;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--bark); margin-bottom: 7px;
+    font-size: 0.68rem; 
+    font-weight: 500;
+    letter-spacing: 0.14em; 
+    text-transform: uppercase;
+    color: var(--bark); 
+    margin-bottom: 7px;
   }
   .field-input {
-    width: 100%; height: 44px; padding: 0 13px;
+    width: 100%; 
+    height: 44px; 
+    padding: 0 13px;
     font-family: 'Jost', sans-serif;
-    font-size: 0.86rem; color: var(--espresso);
+    font-size: 0.86rem; 
+    color: var(--espresso);
     background: var(--cream);
-    border: 1.5px solid var(--sand); border-radius: 3px;
+    border: 1.5px solid var(--sand); 
+    border-radius: 3px;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   }
@@ -78,82 +183,163 @@
     background: #fff;
   }
   .field-input:disabled {
-    opacity: 0.6; cursor: not-allowed;
+    opacity: 0.6; 
+    cursor: not-allowed;
   }
-  .field-hint { font-size: 0.7rem; color: var(--stone); margin-top: 4px; }
+  .field-hint { 
+    font-size: 0.7rem; 
+    color: var(--stone); 
+    margin-top: 4px; 
+  }
 
+  /* ===== FORM ACTIONS ===== */
   .form-actions {
-    display: flex; gap: 12px;
-    padding-top: 8px; margin-top: 4px;
+    display: flex; 
+    gap: 12px;
+    padding-top: 8px; 
+    margin-top: 4px;
     border-top: 1px solid var(--sand);
   }
-  .btn-primary {
-    height: 42px; padding: 0 28px;
-    background: var(--espresso); color: var(--cream);
-    border: none; border-radius: 3px;
-    font-family: 'Jost', sans-serif;
-    font-size: 0.72rem; font-weight: 500;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    cursor: pointer; transition: background 0.2s;
-  }
-  .btn-primary:hover { background: var(--ink); }
-  .btn-secondary {
-    height: 42px; padding: 0 20px;
-    background: transparent; color: var(--bark);
-    border: 1.5px solid var(--sand); border-radius: 3px;
-    font-family: 'Jost', sans-serif;
-    font-size: 0.72rem; font-weight: 500;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .btn-secondary:hover { border-color: var(--bark); background: var(--cream); }
 
-  .modal-backdrop {
-    display: none; position: fixed; inset: 0; z-index: 500;
-    background: rgba(46,29,19,0.55); backdrop-filter: blur(4px);
-    align-items: center; justify-content: center;
+  .btn-primary {
+    height: 42px; 
+    padding: 0 28px;
+    background: var(--espresso); 
+    color: var(--cream);
+    border: none; 
+    border-radius: 3px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem; 
+    font-weight: 500;
+    letter-spacing: 0.18em; 
+    text-transform: uppercase;
+    cursor: pointer; 
+    transition: background 0.2s;
   }
-  .modal-backdrop.open { display: flex; }
+  .btn-primary:hover { 
+    background: var(--ink); 
+  }
+
+  .btn-secondary {
+    height: 42px; 
+    padding: 0 20px;
+    background: transparent; 
+    color: var(--bark);
+    border: 1.5px solid var(--sand); 
+    border-radius: 3px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem; 
+    font-weight: 500;
+    letter-spacing: 0.18em; 
+    text-transform: uppercase;
+    cursor: pointer; 
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { 
+    border-color: var(--bark); 
+    background: var(--cream); 
+  }
+
+  .btn-danger {
+    height: 42px; 
+    padding: 0 20px;
+    background: #dc3545; 
+    color: #fff;
+    border: none; 
+    border-radius: 3px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem; 
+    font-weight: 500;
+    letter-spacing: 0.18em; 
+    text-transform: uppercase;
+    cursor: pointer; 
+    transition: background 0.2s;
+  }
+  .btn-danger:hover { 
+    background: #c82333; 
+  }
+
+  /* ===== CROP MODAL ===== */
+  .modal-backdrop {
+    display: none; 
+    position: fixed; 
+    inset: 0; 
+    z-index: 500;
+    background: rgba(46,29,19,0.55); 
+    backdrop-filter: blur(4px);
+    align-items: center; 
+    justify-content: center;
+  }
+  .modal-backdrop.open { 
+    display: flex; 
+  }
 
   .crop-modal {
     background: #fff;
     border: 1px solid var(--sand);
     border-radius: 4px;
     padding: 28px 28px 24px;
-    width: 90%; max-width: 480px;
+    width: 90%; 
+    max-width: 480px;
     box-shadow: 0 8px 40px rgba(46,29,19,0.18);
   }
   .crop-modal-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem; font-weight: 500;
-    color: var(--espresso); margin-bottom: 16px;
+    font-size: 1.3rem; 
+    font-weight: 500;
+    color: var(--espresso); 
+    margin-bottom: 16px;
   }
 
   .crop-container {
-    width: 100%; height: 300px;
+    width: 100%; 
+    height: 300px;
     background: var(--cream);
     border: 1px solid var(--sand);
     border-radius: 3px;
-    overflow: hidden; position: relative;
+    overflow: hidden; 
+    position: relative;
   }
   #cropImage {
-    max-width: 100%; display: block;
+    max-width: 100%; 
+    display: block;
   }
 
   .crop-actions {
-    display: flex; gap: 10px; margin-top: 16px;
+    display: flex; 
+    gap: 10px; 
+    margin-top: 16px;
     justify-content: flex-end;
   }
 
+  /* ===== RESPONSIVE ===== */
   @media (max-width: 900px) {
-    .profile-grid { grid-template-columns: 1fr; }
-    .avatar-section { flex-direction: row; align-items: center; gap: 20px; }
-    .avatar-name, .avatar-email { text-align: left; }
+    .profile-grid { 
+      grid-template-columns: 1fr; 
+    }
+    .avatar-section { 
+      flex-direction: row; 
+      align-items: center; 
+      gap: 20px; 
+    }
+    .avatar-name, .avatar-email { 
+      text-align: left; 
+    }
   }
+
   @media (max-width: 600px) {
-    .form-row { grid-template-columns: 1fr; }
-    .form-card { padding: 24px 20px; }
-    .avatar-section { flex-direction: column; }
+    .form-row { 
+      grid-template-columns: 1fr; 
+    }
+    .form-card { 
+      padding: 24px 20px; 
+    }
+    .avatar-section { 
+      flex-direction: column; 
+    }
+    .avatar-actions {
+      justify-content: center;
+    }
   }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -167,36 +353,53 @@
 
 <div class="profile-grid">
 
+  <!-- ===== AVATAR SECTION ===== -->
   <div class="avatar-section">
     <div class="avatar-wrap">
       <img
         src="{% if user.profile_pic %}{{ user.profile_pic.url }}{% else %}{% static 'images/default_avatar.png' %}{% endif %}"
         class="avatar-img"
-        id="avatarPreview"
-      >
+        id="avatarPreview">
+    </div>
+
+    <div class="avatar-actions">
       <button class="avatar-edit-btn" id="avatarEditBtn" type="button" title="Change photo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
           <circle cx="12" cy="13" r="4"/>
         </svg>
       </button>
+
+      <button class="avatar-remove-btn" id="avatarRemoveBtn" type="button" title="Remove photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
+
     <div>
       <div class="avatar-name">{{ user.first_name }} {{ user.last_name }}</div>
       <div class="avatar-email">{{ user.email }}</div>
     </div>
   </div>
 
+  <!-- ===== PROFILE FORM ===== -->
   <div class="form-card">
+  
+
     <form method="POST" action="{% url 'account_profile' %}" id="profileForm" enctype="multipart/form-data">
       {% csrf_token %}
+      
+      <!-- Hidden inputs for photo handling -->
       <input type="hidden" name="cropped_photo" id="croppedPhotoInput">
+      <input type="hidden" name="remove_photo" id="removePhotoInput" value="">
 
       <div class="form-row">
         <div class="field">
           <label class="field-label" for="first_name">First Name</label>
           <input class="field-input" type="text" id="first_name" name="first_name"
-            value="{{ user.first_name }}" placeholder="First name">
+            value="{{ user.first_name }}" placeholder="First name" required>
         </div>
         <div class="field">
           <label class="field-label" for="last_name">Last Name</label>
@@ -227,9 +430,9 @@
       </div>
     </form>
   </div>
-
 </div>
 
+<!-- ===== CROP MODAL ===== -->
 <div class="modal-backdrop" id="cropModal">
   <div class="crop-modal">
     <div class="crop-modal-title">Crop Profile Photo</div>
@@ -243,77 +446,156 @@
   </div>
 </div>
 
+<!-- Hidden file input -->
 <input type="file" id="photoFileInput" accept="image/*" style="display:none">
-{% endblock %}
 
-{% block extra_js %}
+<!-- ===== SCRIPTS ===== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  // ===== DOM REFERENCES =====
+  const avatarEditBtn    = document.getElementById("avatarEditBtn");
+  const avatarRemoveBtn  = document.getElementById("avatarRemoveBtn");
+  const photoFileInput   = document.getElementById("photoFileInput");
+  const cropModal        = document.getElementById("cropModal");
+  const cropImage        = document.getElementById("cropImage");
+  const cropCancel       = document.getElementById("cropCancel");
+  const cropApply        = document.getElementById("cropApply");
+  const avatarPreview    = document.getElementById("avatarPreview");
+  const croppedInput     = document.getElementById("croppedPhotoInput");
+  const removePhotoInput = document.getElementById("removePhotoInput");
+  const profileForm      = document.getElementById("profileForm");
+
   let cropper = null;
+  const defaultAvatar = "{% static 'images/default_avatar.png' %}";
+  const currentAvatar = avatarPreview.src;
 
-  const avatarEditBtn   = document.getElementById('avatarEditBtn');
-  const photoFileInput  = document.getElementById('photoFileInput');
-  const cropModal       = document.getElementById('cropModal');
-  const cropImage       = document.getElementById('cropImage');
-  const cropCancel      = document.getElementById('cropCancel');
-  const cropApply       = document.getElementById('cropApply');
-  const avatarPreview   = document.getElementById('avatarPreview');
-  const croppedInput    = document.getElementById('croppedPhotoInput');
+  // ===== OPEN FILE PICKER =====
+  avatarEditBtn.addEventListener("click", function() {
+    photoFileInput.click();
+  });
 
-  avatarEditBtn.addEventListener('click', () => photoFileInput.click());
-
-  photoFileInput.addEventListener('change', e => {
+  // ===== HANDLE FILE SELECTION =====
+  photoFileInput.addEventListener("change", function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = ev => {
-      cropImage.src = ev.target.result;
-      cropModal.classList.add('open');
+    // Clear any remove flag
+    removePhotoInput.value = "";
 
-      if (cropper) { cropper.destroy(); cropper = null; }
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      cropImage.src = event.target.result;
+      cropModal.classList.add("open");
+
+      if (cropper) {
+        cropper.destroy();
+      }
 
       cropper = new Cropper(cropImage, {
         aspectRatio: 1,
         viewMode: 1,
         movable: true,
         zoomable: true,
-        rotatable: false,
         scalable: false,
-        autoCropArea: 0.85,
-        background: false,
+        rotatable: false,
+        autoCropArea: 0.9,
+        background: false
       });
     };
     reader.readAsDataURL(file);
   });
 
-  cropCancel.addEventListener('click', () => {
-    cropModal.classList.remove('open');
-    if (cropper) { cropper.destroy(); cropper = null; }
-    photoFileInput.value = '';
-  });
-
-  cropApply.addEventListener('click', () => {
+  // ===== APPLY CROP =====
+  cropApply.addEventListener("click", function() {
     if (!cropper) return;
-    const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
-    console.log('=== CROP APPLY ===');
-    console.log('dataUrl length:', dataUrl.length);
+    const canvas = cropper.getCroppedCanvas({
+      width: 400,
+      height: 400
+    });
 
-    avatarPreview.src  = dataUrl;
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+
+    // Update preview
+    avatarPreview.src = dataUrl;
+
+    // Set hidden input
     croppedInput.value = dataUrl;
 
-    console.log('croppedInput value length:', croppedInput.value.length);
-    console.log('==================');
+    // Clear remove flag
+    removePhotoInput.value = "";
 
-    cropModal.classList.remove('open');
-    cropper.destroy(); cropper = null;
-    photoFileInput.value = '';
+    // Clean up
+    cropper.destroy();
+    cropper = null;
+    cropModal.classList.remove("open");
+    photoFileInput.value = "";
   });
 
-  cropModal.addEventListener('click', e => {
-    if (e.target === cropModal) cropCancel.click();
+  // ===== CANCEL CROP =====
+  cropCancel.addEventListener("click", function() {
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+
+    cropModal.classList.remove("open");
+    photoFileInput.value = "";
+    croppedInput.value = "";
+
+    // Restore previous image
+    avatarPreview.src = currentAvatar;
   });
+
+  // ===== REMOVE PHOTO =====
+  avatarRemoveBtn.addEventListener("click", function(e) {
+    e.preventDefault();
+    
+    if (!confirm("Are you sure you want to remove your profile photo?")) {
+      return;
+    }
+
+    // Set remove flag
+    removePhotoInput.value = "true";
+    
+    // Clear cropped input
+    croppedInput.value = "";
+    
+    // Update preview to default avatar
+    avatarPreview.src = defaultAvatar;
+    
+    // Submit the form
+    profileForm.submit();
+  });
+
+  // ===== CLICK OUTSIDE MODAL =====
+  cropModal.addEventListener("click", function(e) {
+    if (e.target === cropModal) {
+      cropCancel.click();
+    }
+  });
+
+  // ===== FORM SUBMIT VALIDATION =====
+  profileForm.addEventListener("submit", function(e) {
+    // If remove_photo is set, ensure cropped_photo is cleared
+    if (removePhotoInput.value === "true") {
+      croppedInput.value = "";
+    }
+  });
+
+  // ===== AUTO-HIDE SUCCESS MESSAGE AFTER 5 SECONDS =====
+  const successAlert = document.querySelector('.alert-success');
+  if (successAlert) {
+    setTimeout(function() {
+      successAlert.style.transition = 'opacity 0.5s ease';
+      successAlert.style.opacity = '0';
+      setTimeout(function() {
+        successAlert.style.display = 'none';
+      }, 500);
+    }, 5000);
+  }
+});
 </script>
 {% endblock %}

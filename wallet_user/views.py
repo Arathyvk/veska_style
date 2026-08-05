@@ -47,6 +47,8 @@ def wallet_dashboard(request):
         'cancellation_refunds': credit_txns.filter(reason=WalletTransaction.REASON_CANCELLATION).count(),
         'return_refunds': credit_txns.filter(reason=WalletTransaction.REASON_RETURN).count(),
         'order_payments': debit_txns.filter(reason=WalletTransaction.REASON_ORDER).count(),
+        'referral_bonuses': credit_txns.filter(reason=WalletTransaction.REASON_REFERRAL).count(),
+        'welcome_bonuses': credit_txns.filter(reason=WalletTransaction.REASON_WELCOME).count(),
     }
 
     return render(request, 'wallet_dashboard.html', {

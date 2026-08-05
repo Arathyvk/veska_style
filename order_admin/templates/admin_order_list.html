@@ -246,7 +246,7 @@ button,input,select{font-family:var(--body)}
             <div class="user-phone">📞 {{ order.phone }}</div>
           </td>
           <td><div class="items-cnt">{{ order.items.count }} item{{ order.items.count|pluralize }}</div><div class="city-txt">{{ order.city }}, {{ order.state }}</div></td>
-          <td><div class="total-val">₹{{ order.subtotal|floatformat:2 }}</div></td>
+          <td><div class="total-val">₹{{ order.total|floatformat:2 }}</div></td>
           <td><span class="sb sb-{{ order.status }}"><span class="dot"></span>{{ order.get_status_display }}</span></td>
           <td>
             {% if order.status not in excluded_statuses %}

@@ -234,33 +234,22 @@ button,input,select{font-family:var(--body)}
       </div>
 
       <div class="order-meta">
-
+        <span>{{ order.items.count }} item{{ order.items.count|pluralize }}</span>
+        <span>📍 {{ order.city }}, {{ order.state }}</span>
+        <span>💳 {{ order.get_payment_method_display }}</span>
         <span>
-          {{ order.items.count }} item{{ order.items.count|pluralize }}
+          🚚 {% if order.shipping_charge == 0 %}Free shipping{% else %}Shipping ₹{{ order.shipping_charge|floatformat:2 }}{% endif %}
         </span>
-
-        <span>
-          📍 {{ order.city }}, {{ order.state }}
-        </span>
-
-        <span>
-          💳 {{ order.get_payment_method_display }}
-        </span>
-
         {% if order.coupon_code %}
-        <span>
-          🏷️ {{ order.coupon_code }}
-        </span>
+        <span>🏷️ {{ order.coupon_code }}</span>
         {% endif %}
-
       </div>
-
     </div>
 
     <div class="order-card-foot">
 
       <div class="order-total">
-        ₹{{ order.total|floatformat:2 }}
+        ₹{{ order.total|floatformat:2  }}
       </div>
 
       <div class="order-actions">

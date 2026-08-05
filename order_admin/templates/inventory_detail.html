@@ -190,17 +190,15 @@ input:checked + .toggle-slider:before{background:#fff;transform:translateX(18px)
 
   <div class="prod-header">
     <div class="prod-header-img">
-      {% with img=product.images.first %}
-        {% if img %}
-          <img src="{{ img.image.url }}" alt="{{ product.name }}">
-        {% else %}
-          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted2)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="28" height="28">
-              <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
-            </svg>
-          </div>
-        {% endif %}
-      {% endwith %}
+        {% with variant=product.variants.first %}
+            {% if variant %}
+                {% with img=variant.images.first %}
+                    {% if img %}
+                        <img src="{{ img.image.url }}" alt="{{ product.name }}">
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+        {% endwith %}
     </div>
 
     <div class="prod-header-info">
@@ -349,7 +347,7 @@ input:checked + .toggle-slider:before{background:#fff;transform:translateX(18px)
         <div>
           <div class="stock-field-label">Current Stock</div>
           <input type="number" name="stock" class="big-stock-input"
-                 value="{{ product.stock }}" min="0">
+                 value="{{ product.total_stock }}" min="0">
         </div>
         <div>
           <button type="submit" class="btn-save-stock"
@@ -358,12 +356,12 @@ input:checked + .toggle-slider:before{background:#fff;transform:translateX(18px)
           </button>
         </div>
         <div class="stock-note" style="padding-bottom:4px">
-          {% if product.stock == 0 %}
+          {% if product.total_stock == 0 %}
             <span class="out">⚠ Out of stock</span>
-          {% elif product.stock <= low_stock_threshold %}
-            <span class="low">⚠ Low stock ({{ product.stock }} left)</span>
+          {% elif product.total_stock <= low_stock_threshold %}
+            <span class="low">⚠ Low stock ({{ product.total_stock }} left)</span>
           {% else %}
-            <span class="in">✓ In stock ({{ product.stock }} units)</span>
+            <span class="in">✓ In stock ({{ product.total_stock }} units)</span>
           {% endif %}
         </div>
       </form>

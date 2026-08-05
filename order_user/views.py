@@ -28,7 +28,7 @@ from return_admin.models import ReturnRequest, RETURN_DAYS
 from product_admin.models import ProductVariant, ProductReview
 from wallet_user.models import Wallet, WalletTransaction
 from wallet_user.utils import refund_on_cancellation, refund_single_item_cancellation
-
+from coupon_admin.models import Coupon, CouponUsage
 
 
 NON_RETURNABLE_CATEGORIES = [
@@ -99,8 +99,8 @@ def order_detail(request, uuid):
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
     items = order.items.all()
 
-    active_items = items.filter(cancel_status="none")
-    subtotal = sum(item.order.subtotal for item in active_items)
+    active_items    = items.filter(cancel_status="none")
+    subtotal        = sum(item.line_total for item in active_items)
     shipping        = Decimal(order.shipping_charge or 0)
     coupon_discount = Decimal(order.discount_amount or 0)
     coupon_code     = order.coupon_code or ''
@@ -297,15 +297,20 @@ def cancel_order(request, uuid):
         return redirect("order_detail", uuid=order.uuid)
 
     if request.method == "POST":
-        print("POST received")
-
         refund = refund_on_cancellation(order)
-        print("Refund returned:", refund)
+
+        if order.coupon_code:
+            try:
+                coupon_obj = Coupon.objects.get(code=order.coupon_code)
+                coupon_obj.times_used = max(0, coupon_obj.times_used - 1)
+                coupon_obj.save(update_fields=['times_used'])
+                CouponUsage.objects.filter(user=order.user, coupon=coupon_obj, order=order).delete()
+            except Coupon.DoesNotExist:
+                pass
 
         order.status = "cancelled"
         order.cancelled_at = timezone.now()
         order.save(update_fields=["status", "cancelled_at"])
-        print("Order saved")
 
         return redirect("order_list")
     return render(request, "cancel_order.html", {"order": order})
@@ -352,9 +357,6 @@ def cancel_order_item(request, uuid, item_id):
         if item.variant:
             item.variant.stock += item.quantity
             item.variant.save(update_fields=["stock"])
-        elif item.product:
-            item.product.stock += item.quantity
-            item.product.save(update_fields=["stock"])
 
     refund_amount = refund_single_item_cancellation(order, item)
 
@@ -363,6 +365,15 @@ def cancel_order_item(request, uuid, item_id):
         order.status = "cancelled"
         order.cancelled_at = timezone.now()
         order.save(update_fields=["status", "cancelled_at"])
+
+        if order.coupon_code:
+            try:
+                coupon_obj = Coupon.objects.get(code=order.coupon_code)
+                coupon_obj.times_used = max(0, coupon_obj.times_used - 1)
+                coupon_obj.save(update_fields=['times_used'])
+                CouponUsage.objects.filter(user=order.user, coupon=coupon_obj, order=order).delete()
+            except Coupon.DoesNotExist:
+                pass
 
     remaining_items = order.items.filter(cancel_status="none")
     remaining_subtotal = sum(
@@ -717,7 +728,7 @@ def download_invoice(request, uuid):
             else:
                 paid_amount = Decimal('0')
                 show_refund = True
-                refund_amount = total_paid_by_customer - _wallet_used  # Amount refunded to wallet
+                refund_amount = total_paid_by_customer
         else:
             paid_amount = total_paid_by_customer
             show_refund = False
@@ -771,7 +782,7 @@ def download_invoice(request, uuid):
                 if show_refund:
                     tot_rows.append(tot_row(
                         'REFUNDED',
-                        f'-Rs.{original_payment:.2f}',
+                        f'-Rs.{total_paid_by_customer:.2f}',
                         color=colors.HexColor('#3a7d5a'),
                     ))
                     
@@ -845,18 +856,7 @@ def _html_invoice_fallback(request, order, items):
 
 
 def _restore_stock(item: OrderItem):
-    try:
-        if item.product is None:
-            return
-        if item.size:
-            variant = ProductVariant.objects.filter(
-                product=item.product, size=item.size
-            ).first()
-            if variant:
-                variant.stock += item.quantity
-                variant.save(update_fields=['stock'])
-                return
-        item.product.stock += item.quantity
-        item.product.save(update_fields=['stock'])
-    except Exception:
-        pass
+    
+    if item.variant:
+        item.variant.stock += item.quantity
+        item.variant.save(update_fields=["stock"])

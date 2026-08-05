@@ -212,6 +212,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .toast.ok{border-left:3px solid var(--green)}.toast.err{border-left:3px solid var(--red)}.toast.warn{border-left:3px solid var(--orange)}
 </style>
 
+
 {% if messages %}
 <div class="toast-wrap" id="msg-wrap">
   {% for msg in messages %}
@@ -221,7 +222,15 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
   </div>
   {% endfor %}
 </div>
-<script>setTimeout(()=>{ const w=document.getElementById('msg-wrap'); if(w){w.style.opacity='0';setTimeout(()=>w.remove(),400);} }, 3500)</script>
+<script>
+setTimeout(()=>{ 
+    const w=document.getElementById('msg-wrap'); 
+    if(w){
+        w.style.opacity='0';
+        setTimeout(()=>w.remove(),400);
+    }
+}, 3500)
+</script>
 {% endif %}
 
 <div style="margin-bottom:18px">
@@ -237,8 +246,6 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
   {% csrf_token %}
   <input type="hidden" name="removed_image_ids"    id="removed_image_ids"    value="[]">
   <input type="hidden" name="save_as_draft"        id="save_as_draft"        value="0">
-  <input type="hidden" name="new_variants_json"    id="new_variants_json"    value="[]">
-  <input type="hidden" name="deleted_variant_ids"  id="deleted_variant_ids"  value="[]">
   <input type="hidden" name="cropped_images_json"  id="cropped_images_json"  value="[]">
 
   <div class="form-shell">
@@ -252,102 +259,100 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 
           <div class="frow">
             <label class="flabel">Product Name <span class="req">*</span></label>
-            <input class="finput" name="name" placeholder="e.g. Womens Vintage Flock Loafers"
-                   value="{{ form.name.value|default:'' }}" required>
-            {% if form.name.errors %}<div class="ferror">{{ form.name.errors.0 }}</div>{% endif %}
+            <input class="finput"
+              name="name"
+              placeholder="e.g. Womens Vintage Flock Loafers"
+              value="{{ form.name.value|default:'' }}"
+              required
+              pattern="[A-Za-z ]+"
+              oninput="this.value=this.value.replace(/[^A-Za-z0-9\s.,()\-\/&%!?;:'"'"']/g,"")">
+            {% if form.name.errors %}
+            <div class="ferror">{{ form.name.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="frow">
+            <label class="flabel">Brand</label>
+            <input class="finput"
+              name="brand"
+              placeholder="e.g. Adidas, Nike"
+              autocomplete="off"
+              value="{{ form.brand.value|default:'' }}"
+              pattern="[A-Za-z ]+"
+              oninput="this.value=this.value.replace(/[^A-Za-z0-9\s.,()\-\/&%!?;:'"'"']/g,"")">
           </div>
 
           <div class="fgrid2">
             <div class="frow">
-              <label class="flabel">Price (₹) <span class="req">*</span></label>
-              <input class="finput" name="price" type="number" step="0.01" min="0"
-                     placeholder="0.00" value="{{ form.price.value|default:'' }}" required>
-              {% if form.price.errors %}<div class="ferror">{{ form.price.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="frow">
-              <label class="flabel">Color</label>
-              <input class="finput" name="color" placeholder="e.g. Brown, White"
-                     value="{{ form.color.value|default:'' }}">
+              <label class="flabel">Category <span class="req">*</span></label>
+              <select name="category" class="fselect" required>
+                <option value="">Choose Category</option>
+                {% for category in categories %}
+                  <option value="{{ category.id }}" {% if form.category.value == category.id %}selected{% endif %}>
+                    {{ category.name }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if form.category.errors %}
+                <div class="ferror">{{ form.category.errors.0 }}</div>
+              {% endif %}
             </div>
           </div>
 
-           <div class="frow">
-              <label class="flabel">Brand</label>
-              <input class="finput" name="brand" placeholder="e.g. Adidas, Nike" autocomplete="off"
-                     value="{{ form.brand.value|default:'' }}">
-            </div>
-
-<div class="fgrid2">
-  <div class="frow">
-    <label class="flabel">Category <span class="req">*</span></label>
-
-<select name="category" class="fselect" required>
-    <option value="">Choose Category</option>
-
-    {% for category in categories %}
-        <option value="{{ category.id }}">
-            {{ category.name }}
-        </option>
-    {% endfor %}
-</select>
-
-    {% if form.category.errors %}
-      <div class="ferror">{{ form.category.errors.0 }}</div>
-    {% endif %}
-  </div>
-
-  <div class="frow">
-    <label class="flabel">Stock <span class="req">*</span></label>
-    {{ form.stock }}
-
-    {% if form.stock.errors %}
-      <div class="ferror">{{ form.stock.errors.0 }}</div>
-    {% endif %}
-  </div>
-</div>
-
-          <div class="frow">
+        <div class="frow">
             <label class="flabel">Description</label>
-            <textarea class="ftextarea" name="description"
-                      placeholder="Describe the product — material, use, style…"
-                      rows="4">{{ form.description.value|default:'' }}</textarea>
-          </div>
+            <textarea class="ftextarea"
+                name="description"
+                rows="4"
+                oninput='this.value=this.value.replace(/[^A-Za-z0-9\s.,()\-\/&%!?;:'"'"']/g,"")'>{{ form.description.value|default:'' }}</textarea>
+        </div>
 
         </div>
       </div>
 
       <!-- VARIANTS -->
       <div class="fsec">
-        <div class="fsec-head">
-          <h3>Variants</h3>
-          <span style="font-size:14px;color:var(--muted)">Size · Color · Stock per variant</span>
-        </div>
+        <div class="fsec-head"><h3>Variants <span class="req">*</span></h3></div>
         <div class="fsec-body">
-          {% if product and product.variants.all %}
-          <div id="existing-variant-list">
-            {% for v in product.variants.all %}
-            <div class="variant-row" id="ev-{{ v.pk }}">
-              <input class="finput" name="ev_name_{{ v.pk }}"  value="{{ v.variant_name }}" placeholder="Name">
-              <input class="finput" name="ev_size_{{ v.pk }}"  value="{{ v.size }}"         placeholder="Size">
-              <input class="finput" name="ev_color_{{ v.pk }}" value="{{ v.color }}"        placeholder="Color">
-              <input class="finput" name="ev_stock_{{ v.pk }}" type="number" min="0"
-                     value="{{ v.stock }}" placeholder="Stock">
-              <button type="button" class="vdel-btn"
-                      onclick="deleteExistingVariant('{{ v.pk }}', this)" title="Remove">✕</button>
+          {{ variant_formset.management_form }}
+          {% if variant_formset.non_form_errors %}
+            <div class="ferror">{{ variant_formset.non_form_errors.0 }}</div>
+          {% endif %}
+
+          <div id="variant-formset-rows">
+            {% for vform in variant_formset %}
+            <div class="variant-row" id="variant-row-{{ forloop.counter0 }}">
+              {% for hidden in vform.hidden_fields %}{{ hidden }}{% endfor %}
+              <div class="vfield"><label class="vfield-label">Size</label>{{ vform.size }}</div>
+              <div class="vfield">
+                <label class="vfield-label">Color</label>
+                {{ vform.color }}
+                {% if vform.color.errors %}
+                  <div class="ferror">{{ vform.color.errors.0 }}</div>
+                {% endif %}
+              </div>        
+              <div class="vfield"><label class="vfield-label">Stock</label>{{ vform.stock }}</div>
+              <div class="vfield"><label class="vfield-label">Price (₹)</label>{{ vform.price }}</div>
+              {% if vform.instance.pk %}
+                <label style="font-size:11px">{{ vform.DELETE }} Remove</label>
+              {% else %}
+                <button type="button" class="vdel-btn" onclick="removeVariant(this)">✕</button>        
+              {% endif %}
             </div>
             {% endfor %}
           </div>
-          <div class="divider"></div>
-          {% endif %}
 
-          <div class="variant-list" id="new-variant-list"></div>
-          <button type="button" class="btn-add-variant" onclick="addVariantRow()">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add Variant
-          </button>
-          <p class="fhint" style="margin-top:8px">Variants let you offer multiple sizes / colours with separate stock counts.</p>
+          <button type="button" class="btn-add-variant" onclick="addFormsetRow()">+ Add Variant</button>
+
+          <template id="empty-form-template">
+            <div class="variant-row">
+              {% for hidden in variant_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+              <div class="vfield"><label class="vfield-label">Size</label>{{ variant_formset.empty_form.size }}</div>
+              <div class="vfield"><label class="vfield-label">Color</label>{{ variant_formset.empty_form.color }}</div>
+              <div class="vfield"><label class="vfield-label">Stock</label>{{ variant_formset.empty_form.stock }}</div>
+              <div class="vfield"><label class="vfield-label">Price (₹)</label>{{ variant_formset.empty_form.price }}</div>
+              <button type="button" class="vdel-btn" onclick="this.closest('.variant-row').remove()">✕</button>
+            </div>
+          </template>
         </div>
       </div>
 
@@ -356,14 +361,11 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
     <!-- ── RIGHT COLUMN ── -->
     <div>
 
-      <!-- ════════════════════════════════════════
-           PUBLISH SETTINGS — three toggles
-           ════════════════════════════════════════ -->
+      <!-- PUBLISH SETTINGS -->
       <div class="fsec">
         <div class="fsec-head"><h3>Publish Settings</h3></div>
         <div class="fsec-body" style="padding:14px 18px">
 
-          <!-- Toggle 1: Active / Published (master switch) -->
           <div class="toggle-row">
             <div class="toggle-info">
               <div class="toggle-label">
@@ -383,7 +385,6 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
             </label>
           </div>
 
-          <!-- Toggle 2: Show on Landing Page (Homepage) -->
           <div class="toggle-row">
             <div class="toggle-info">
               <div class="toggle-label">
@@ -403,7 +404,6 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
             </label>
           </div>
 
-          <!-- Toggle 3: Show on Shop Page -->
           <div class="toggle-row">
             <div class="toggle-info">
               <div class="toggle-label">
@@ -426,7 +426,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
         </div>
       </div>
 
-      <!-- PRODUCT IMAGES -->
+      <!-- PRODUCT IMAGES SECTION -->
       <div class="fsec">
         <div class="fsec-head">
           <h3>Product Images</h3>
@@ -434,26 +434,50 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
         </div>
         <div class="fsec-body">
 
-          {% if product and product.images.all %}
-          <p style="font-size:10.5px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">
-            Saved Images
-          </p>
-          <div class="existing-grid" id="existing-img-grid">
-            {% for img in product.images.all %}
-            <div class="ex-thumb {% if forloop.first %}is-primary{% endif %}" id="eximg-{{ img.pk }}">
-              <img src="{{ img.image.url }}" alt="Image {{ forloop.counter }}">
-              {% if forloop.first %}<div class="ex-primary-lbl">PRIMARY</div>{% endif %}
-              <button type="button" class="ex-del-btn"
-                      onclick="removeExistingImg('{{ img.pk }}', this)" title="Remove">✕</button>
-            </div>
+          {% if product %}
+            {% for variant in product.variants.all %}
+              {% if variant.images.all %}
+                <div class="variant-images-section" data-variant-id="{{ variant.id }}">
+                  <p style="font-size:10.5px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">
+                    Images for {{ variant.size }} - {{ variant.color }}
+                    <span style="font-size:10px;color:var(--muted);font-weight:400">
+                      ({{ variant.images.count }} images)
+                    </span>
+                  </p>
+                  <div class="existing-grid" id="variant-grid-{{ variant.id }}">
+                    {% for img in variant.images.all %}
+                      <div class="ex-thumb {% if forloop.first %}is-primary{% endif %}" 
+                           id="eximg-{{ img.pk }}" 
+                           data-image-id="{{ img.pk }}"
+                           data-variant-id="{{ variant.id }}">
+                        <img src="{{ img.image.url }}">
+                        <button type="button" 
+                                class="ex-del-btn" 
+                                onclick="removeExistingImg('{{ img.pk }}', {{ variant.id }}, this)">
+                          ✕
+                        </button>
+                        {% if forloop.first %}
+                          <span class="ex-primary-lbl">PRIMARY</span>
+                        {% endif %}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
             {% endfor %}
-          </div>
-          <div id="existing-count-msg"
-               style="font-size:11px;color:var(--muted);margin-bottom:10px">
-            {{ product.images.count }} saved image{{ product.images.count|pluralize }}
-          </div>
-          <div class="divider"></div>
-          <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Upload additional images below:</p>
+            
+            <div id="existing-count-msg" style="font-size:11px;color:var(--muted);margin-bottom:10px">
+              {% with total=0 %}
+                {% for variant in product.variants.all %}
+                  {% with count=variant.images.count %}
+                    {% if count %}{{ total|add:count }}{% endif %}
+                  {% endwith %}
+                {% endfor %}
+              {% endwith %}
+              Saved Images
+            </div>
+            <div class="divider"></div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Upload additional images below:</p>
           {% endif %}
 
           <div class="upload-zone" id="upload-zone"
@@ -488,7 +512,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
   </div>
 </form>
 
-<!-- CROP MODAL (unchanged from original) -->
+<!-- CROP MODAL -->
 <div class="crop-overlay" id="crop-overlay">
   <div class="crop-modal">
     <div class="crop-modal-head">
@@ -535,233 +559,367 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 <div class="toast-wrap" id="live-toasts"></div>
 
 <script>
-/* ── pill sync ── */
-function syncPill(checkbox, pillId) {
-  const pill = document.getElementById(pillId);
-  if (!pill) return;
-  pill.textContent = checkbox.checked ? 'ON' : 'OFF';
-  pill.className   = 'toggle-pill ' + (checkbox.checked ? 'on' : 'off');
-}
+// Global variables
+let removedExIds = [];
+let pendingImgs = [];
+let dragIdx = null;
+let cropIndex = null;
+let cropSrc = '';
+let cropZoom = 1;
+let cropDrag = { on: false };
 
-/* ── image upload / crop (unchanged) ── */
-const pendingImgs = [];
-let cropIndex = null, cropSrc = null, removedExIds = [], deletedVarIds = [], variantRows = [], dragIdx = null, cropDrag = {on:false}, cropZoom = 1;
-
-document.getElementById('upload-zone').addEventListener('drop', e => {
-  e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag');
+// Initialize removed IDs from hidden input if editing
+document.addEventListener('DOMContentLoaded', function() {
+    const removedIdsInput = document.getElementById('removed_image_ids');
+    if (removedIdsInput && removedIdsInput.value) {
+        try {
+            removedExIds = JSON.parse(removedIdsInput.value);
+            // Apply visual removal to already removed images
+            removedExIds.forEach(id => {
+                const el = document.getElementById('eximg-' + id);
+                if (el) {
+                    el.style.cssText = 'display:none !important;';
+                }
+            });
+            updateImageCount();
+        } catch(e) {
+            console.error('Error parsing removed IDs:', e);
+        }
+    }
 });
-function handleDrop(e) {
-  e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag');
-  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-  handleFiles(files);
+
+function syncPill(checkbox, pillId) {
+    const pill = document.getElementById(pillId);
+    if (!pill) return;
+    pill.textContent = checkbox.checked ? 'ON' : 'OFF';
+    pill.className = 'toggle-pill ' + (checkbox.checked ? 'on' : 'off');
 }
-function handleFiles(files) {
-  Array.from(files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = ev => { pendingImgs.push({ dataURL: ev.target.result, original: ev.target.result }); openCrop(pendingImgs.length - 1); };
-    reader.readAsDataURL(file);
-  });
+
+function removeExistingImg(pk, variantId, btn) {
+    // Add to removed list if not already there
+    if (!removedExIds.includes(pk)) {
+        removedExIds.push(pk);
+    }
+    
+    // Update hidden input
+    document.getElementById('removed_image_ids').value = JSON.stringify(removedExIds);
+    
+    // Get the image element and hide it
+    const el = document.getElementById('eximg-' + pk);
+    if (el) {
+        el.style.cssText = 'display:none !important;';
+    }
+    
+    // Update the count
+    updateImageCount();
+    
+    showToast('Image marked for removal — save to confirm', 'warn');
 }
+
+function updateImageCount() {
+    // Count visible existing images (not removed)
+    const visibleImages = document.querySelectorAll('.ex-thumb:not([style*="display: none"])');
+    const visibleCount = visibleImages.length;
+    const newCount = pendingImgs.length;
+    const total = visibleCount + newCount;
+    
+    const countMsg = document.getElementById('existing-count-msg');
+    if (countMsg) {
+        if (removedExIds.length > 0) {
+            countMsg.textContent = visibleCount + ' saved images (' + removedExIds.length + ' marked for removal)';
+            countMsg.style.color = 'var(--orange)';
+        } else {
+            countMsg.textContent = visibleCount + ' saved images';
+            countMsg.style.color = 'var(--muted)';
+        }
+    }
+    
+    // Update the main count bar
+    const countBar = document.getElementById('img-count-bar');
+    const countText = document.getElementById('img-count-text');
+    if (countBar && countText) {
+        const totalAll = visibleCount + newCount;
+        if (totalAll >= 3) {
+            countText.textContent = totalAll + ' image' + (totalAll > 1 ? 's' : '') + ' ✓';
+            countText.className = 'img-count-text ok';
+        } else {
+            countText.textContent = totalAll + ' — need ' + (3 - totalAll) + ' more';
+            countText.className = 'img-count-text warn';
+        }
+    }
+}
+
 function renderImgGrid() {
-  const grid = document.getElementById('img-grid');
-  const bar  = document.getElementById('img-count-bar');
-  const txt  = document.getElementById('img-count-text');
-  const n    = pendingImgs.length;
-  grid.innerHTML = pendingImgs.map((img, i) => `
-    <div class="img-item ${i===0?'primary-img':''}" data-idx="${i}" draggable="true"
-         ondragstart="dragIdx=${i}" ondragover="event.preventDefault()"
-         ondrop="dropImg(event,${i})" ondragend="dragIdx=null">
-      <img src="${img.dataURL}" alt="">
-      <span class="img-num">${i+1}</span>
-      ${i===0?'<span class="img-primary-lbl">PRIMARY</span>':''}
-      <div class="img-overlay">
-        <button type="button" class="ovr-btn crop" onclick="reCrop(${i})">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6.13 1L6 16a2 2 0 002 2h15"/><path d="M1 6.13L16 6a2 2 0 012 2v15"/></svg>
-        </button>
-        <button type="button" class="ovr-btn del" onclick="removeImg(${i})">✕</button>
-      </div>
-    </div>`).join('');
-  if (n > 0) {
+    const grid = document.getElementById('img-grid');
+    const bar = document.getElementById('img-count-bar');
+    const n = pendingImgs.length;
+    
+    if (n === 0) {
+        grid.innerHTML = '';
+        bar.style.display = 'none';
+        return;
+    }
+    
+    grid.innerHTML = pendingImgs.map((img, i) => `
+        <div class="img-item ${i===0?'primary-img':''}" data-idx="${i}" draggable="true"
+             ondragstart="dragIdx=${i}" ondragover="event.preventDefault()"
+             ondrop="dropImg(event,${i})" ondragend="dragIdx=null">
+            <img src="${img.dataURL}" alt="">
+            <span class="img-num">${i+1}</span>
+            ${i===0?'<span class="img-primary-lbl">PRIMARY</span>':''}
+            <div class="img-overlay">
+                <button type="button" class="ovr-btn crop" onclick="reCrop(${i})">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6.13 1L6 16a2 2 0 002 2h15"/><path d="M1 6.13L16 6a2 2 0 012 2v15"/></svg>
+                </button>
+                <button type="button" class="ovr-btn del" onclick="removeImg(${i})">✕</button>
+            </div>
+        </div>
+    `).join('');
+    
     bar.style.display = 'flex';
-    if (n >= 3) { txt.textContent = `${n} image${n>1?'s':''} ✓`; txt.className = 'img-count-text ok'; }
-    else        { txt.textContent = `${n} — need ${3-n} more`;    txt.className = 'img-count-text warn'; }
-  } else { bar.style.display = 'none'; }
-  syncJSON();
+    updateImageCount();
+    syncJSON();
 }
-function removeImg(i) { pendingImgs.splice(i, 1); renderImgGrid(); }
-function reCrop(i)    { cropIndex = i; openCrop(i, true); }
-function dropImg(e, i) {
-  e.preventDefault();
-  if (dragIdx === null || dragIdx === i) return;
-  const moved = pendingImgs.splice(dragIdx, 1)[0];
-  pendingImgs.splice(i, 0, moved);
-  renderImgGrid();
-}
-function removeExistingImg(pk, btn) {
-  removedExIds.push(pk);
-  document.getElementById('removed_image_ids').value = JSON.stringify(removedExIds);
-  const el = document.getElementById('eximg-' + pk);
-  if (el) el.style.cssText = 'opacity:.3;pointer-events:none;filter:grayscale(1)';
-  const remaining = document.querySelectorAll('.ex-thumb:not([style*="opacity"])').length;
-  document.getElementById('existing-count-msg').textContent = `${remaining} saved image${remaining!==1?'s':''}`;
-  showToast('Image marked for removal — save to confirm', 'warn');
-}
-function syncJSON() {
-  document.getElementById('cropped_images_json').value = JSON.stringify(pendingImgs.map(img => img.dataURL));
-}
-function openCrop(idx, reCropMode = false) {
-  cropIndex = idx; cropSrc = pendingImgs[idx].original || pendingImgs[idx].dataURL;
-  const img = document.getElementById('crop-img');
-  img.src = cropSrc; img.style.transform = 'scale(1)';
-  document.getElementById('zoom-range').value = 100;
-  document.getElementById('zoom-lbl').textContent = '1.0×';
-  cropZoom = 1;
-  document.getElementById('crop-overlay').classList.add('open');
-  img.onload = () => { resetCropBox(); setupCropDrag(); };
-  if (img.complete) { resetCropBox(); setupCropDrag(); }
-}
-function closeCrop() {
-  document.getElementById('crop-overlay').classList.remove('open');
-  if (cropIndex !== null && pendingImgs[cropIndex] && !pendingImgs[cropIndex]._cropped) pendingImgs.splice(cropIndex, 1);
-  renderImgGrid();
-}
-function resetCropBox() {
-  const area = document.getElementById('crop-area');
-  const sel  = document.getElementById('crop-sel');
-  const aspect = parseFloat(document.getElementById('aspect-sel').value) || 1;
-  const aW = area.clientWidth, aH = area.clientHeight;
-  let sw = Math.min(aW * 0.7, aH * 0.7);
-  let sh = aspect === 0 ? sw : sw / aspect;
-  if (sh > aH * 0.85) { sh = aH * 0.85; sw = aspect === 0 ? sh : sh * aspect; }
-  sel.style.cssText = `width:${sw}px;height:${sh}px;left:${(aW-sw)/2}px;top:${(aH-sh)/2}px`;
-}
-function applyZoom(v) {
-  cropZoom = v / 100;
-  document.getElementById('zoom-lbl').textContent = cropZoom.toFixed(1) + '×';
-  document.getElementById('crop-img').style.transform = `scale(${cropZoom})`;
-}
-function setupCropDrag() {
-  const sel = document.getElementById('crop-sel');
-  const area = document.getElementById('crop-area');
-  const handles = sel.querySelectorAll('.crop-handle');
-  const onMove = e => {
-    if (!cropDrag.on) return;
-    const pt = e.touches ? e.touches[0] : e;
-    const aR = area.getBoundingClientRect();
-    if (cropDrag.type === 'move') {
-      let nl = pt.clientX - aR.left - cropDrag.ox;
-      let nt = pt.clientY - aR.top  - cropDrag.oy;
-      nl = Math.max(0, Math.min(nl, aR.width  - cropDrag.w));
-      nt = Math.max(0, Math.min(nt, aR.height - cropDrag.h));
-      sel.style.left = nl + 'px'; sel.style.top = nt + 'px';
-    } else {
-      const dx = pt.clientX - aR.left - cropDrag.sx;
-      const dy = pt.clientY - aR.top  - cropDrag.sy;
-      const d = cropDrag.type;
-      let l = cropDrag.l, t = cropDrag.t, w = cropDrag.w, h = cropDrag.h;
-      if (d.includes('e')) w = Math.max(50, cropDrag.w + dx);
-      if (d.includes('s')) h = Math.max(50, cropDrag.h + dy);
-      if (d.includes('w')) { l = cropDrag.l + dx; w = Math.max(50, cropDrag.w - dx); }
-      if (d.includes('n')) { t = cropDrag.t + dy; h = Math.max(50, cropDrag.h - dy); }
-      l = Math.max(0, Math.min(l, aR.width  - 30));
-      t = Math.max(0, Math.min(t, aR.height - 30));
-      sel.style.cssText = `left:${l}px;top:${t}px;width:${Math.min(w,aR.width-l)}px;height:${Math.min(h,aR.height-t)}px`;
-    }
-  };
-  sel.onmousedown = e => {
-    if (e.target.classList.contains('crop-handle')) return;
-    const sR = sel.getBoundingClientRect(); const aR = area.getBoundingClientRect();
-    cropDrag = { on:true, type:'move', ox:e.clientX-sR.left, oy:e.clientY-sR.top, w:sR.width, h:sR.height };
-    e.preventDefault();
-  };
-  handles.forEach(h => h.onmousedown = e => {
-    const sR = sel.getBoundingClientRect(); const aR = area.getBoundingClientRect();
-    cropDrag = { on:true, type:h.dataset.dir, sx:e.clientX-aR.left, sy:e.clientY-aR.top, l:sR.left-aR.left, t:sR.top-aR.top, w:sR.width, h:sR.height };
-    e.preventDefault(); e.stopPropagation();
-  });
-  document.onmousemove = onMove;
-  document.onmouseup   = () => { cropDrag.on = false; };
-}
-function applyCrop() {
-  const img  = document.getElementById('crop-img');
-  const sel  = document.getElementById('crop-sel');
-  const iR   = img.getBoundingClientRect();
-  const sR   = sel.getBoundingClientRect();
-  const scX  = img.naturalWidth  / iR.width;
-  const scY  = img.naturalHeight / iR.height;
-  const cx   = (sR.left - iR.left) * scX; const cy = (sR.top  - iR.top ) * scY;
-  const cw   = sR.width  * scX;           const ch = sR.height * scY;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 600;
-  const ctx = canvas.getContext('2d');
-  const tmp = new Image();
-  tmp.onload = () => {
-    ctx.drawImage(tmp, Math.max(0,cx), Math.max(0,cy), Math.max(1,cw), Math.max(1,ch), 0, 0, 600, 600);
-    const cropped = canvas.toDataURL('image/jpeg', 0.85);
-    pendingImgs[cropIndex].dataURL  = cropped;
-    pendingImgs[cropIndex]._cropped = true;
-    if (!pendingImgs[cropIndex].original) pendingImgs[cropIndex].original = cropSrc;
-    document.getElementById('crop-overlay').classList.remove('open');
+
+function removeImg(i) {
+    pendingImgs.splice(i, 1);
     renderImgGrid();
-    showToast('Image cropped to 600×600 ✓', 'ok');
-  };
-  tmp.src = cropSrc;
+    updateImageCount();
 }
 
-/* ── variants ── */
-function addVariantRow() { variantRows.push({ name:'', size:'', color:'', stock:0 }); renderVariantRows(); }
-function renderVariantRows() {
-  document.getElementById('new-variant-list').innerHTML = variantRows.map((v,i) => `
-    <div class="variant-row">
-      <input class="finput" placeholder="Variant name" value="${v.name || ''}"
-             oninput="variantRows[${i}].name=this.value;syncVariantsJSON()">
-      <select class="fselect finput" style="padding:6px 9px"
-              onchange="variantRows[${i}].size=this.value;syncVariantsJSON()">
-        ${['','US 6','US 7','US 8','US 9','US 10','US 11']
-          .map(s => `<option value="${s}" ${v.size===s?'selected':''}>${s||'— Size —'}</option>`).join('')}
-      </select>
-      <input class="finput" placeholder="Color" value="${v.color || ''}"
-             oninput="variantRows[${i}].color=this.value;syncVariantsJSON()">
-      <input class="finput" type="number" min="0" placeholder="Stock" value="${v.stock || 0}"
-             oninput="variantRows[${i}].stock=+this.value;syncVariantsJSON()">
-      <button type="button" class="vdel-btn" onclick="removeVariantRow(${i})">✕</button>
-    </div>`).join('');
-  syncVariantsJSON();
-}
-function removeVariantRow(i) { variantRows.splice(i,1); renderVariantRows(); }
-function syncVariantsJSON()  { document.getElementById('new_variants_json').value = JSON.stringify(variantRows); }
-function deleteExistingVariant(pk, btn) {
-  deletedVarIds.push(pk);
-  document.getElementById('deleted_variant_ids').value = JSON.stringify(deletedVarIds);
-  const row = document.getElementById('ev-' + pk);
-  if (row) row.style.cssText = 'opacity:.3;pointer-events:none;filter:grayscale(1)';
+function reCrop(i) {
+    cropIndex = i;
+    openCrop(i, true);
 }
 
-/* ── form submit ── */
-const isEdit = "{{ action }}" === "edit";
+function dropImg(e, i) {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === i) return;
+    const moved = pendingImgs.splice(dragIdx, 1)[0];
+    pendingImgs.splice(i, 0, moved);
+    renderImgGrid();
+}
+
+function syncJSON() {
+    document.getElementById('cropped_images_json').value = JSON.stringify(pendingImgs.map(img => img.dataURL));
+}
+
+// Handle file uploads
+function handleFiles(files) {
+    Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                pendingImgs.push({ 
+                    dataURL: ev.target.result, 
+                    original: ev.target.result,
+                    _cropped: false 
+                });
+                renderImgGrid();
+                updateImageCount();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('drag');
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    handleFiles(files);
+}
+
+// Form submission
 document.getElementById('product-form').addEventListener('submit', function(e) {
-  const isDraft = document.getElementById('save_as_draft').value === '1';
-  if (!isDraft) {
-    if (!isEdit) {
-      if (pendingImgs.length < 3) { e.preventDefault(); showToast('Please upload at least 3 product images', 'err'); return; }
-    } else {
-      const exCount  = document.querySelectorAll('.ex-thumb:not([style*="opacity"])').length;
-      const newCount = pendingImgs.length;
-      if (exCount + newCount < 3) { e.preventDefault(); showToast('Product must have at least 3 images total', 'err'); return; }
+    const isDraft = document.getElementById('save_as_draft').value === '1';
+    if (!isDraft) {
+        // Count visible existing images (not removed)
+        const visibleImages = document.querySelectorAll('.ex-thumb:not([style*="display: none"])');
+        const exCount = visibleImages.length;
+        const newCount = pendingImgs.length;
+        const total = exCount + newCount;
+        
+        console.log('Existing images:', exCount);
+        console.log('New images:', newCount);
+        console.log('Total:', total);
+        console.log('Removed IDs:', removedExIds);
+        
+        if (total < 3) {
+            e.preventDefault();
+            showToast('Product must have at least 3 images total (existing: ' + exCount + ', new: ' + newCount + ')', 'err');
+            return;
+        }
     }
-  }
-  syncJSON();
-  const btn = document.getElementById('save-btn');
-  btn.textContent = 'Saving…'; btn.disabled = true;
+    syncJSON();
+    const btn = document.getElementById('save-btn');
+    btn.textContent = 'Saving…';
+    btn.disabled = true;
 });
 
 function showToast(msg, type='ok') {
-  const wrap = document.getElementById('live-toasts');
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<span style="font-size:15px">${type==='ok'?'✓':type==='err'?'✕':'⚠'}</span>${msg}`;
-  wrap.appendChild(t);
-  setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 3000);
+    const wrap = document.getElementById('live-toasts');
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.innerHTML = '<span style="font-size:15px">' + (type==='ok'?'✓':type==='err'?'✕':'⚠') + '</span>' + msg;
+    wrap.appendChild(t);
+    setTimeout(() => { 
+        t.style.opacity='0'; 
+        setTimeout(()=>t.remove(),400); 
+    }, 3000);
+}
+
+function addFormsetRow() {
+    const totalForms = document.getElementById("id_variants-TOTAL_FORMS");
+    const formIndex = parseInt(totalForms.value);
+
+    const template = document.getElementById("empty-form-template").innerHTML;
+    const html = template.replace(/__prefix__/g, formIndex);
+
+    const container = document.getElementById("variant-formset-rows");
+
+    const div = document.createElement("div");
+    div.innerHTML = html.trim();
+
+    container.appendChild(div.firstElementChild);
+
+    totalForms.value = formIndex + 1;
+}
+
+function removeVariant(btn) {
+    const row = btn.closest(".variant-row");
+    const deleteField = row.querySelector("input[type='checkbox'][name$='-DELETE']");
+
+    if (deleteField) {
+        deleteField.checked = true;
+        row.style.display = "none";
+    } else {
+        row.remove();
+        const totalForms = document.getElementById("id_variants-TOTAL_FORMS");
+        totalForms.value = document.querySelectorAll("#variant-formset-rows .variant-row").length;
+    }
+}
+
+// Crop functionality
+function openCrop(idx, reCropMode = false) {
+    cropIndex = idx;
+    cropSrc = pendingImgs[idx].original || pendingImgs[idx].dataURL;
+    const img = document.getElementById('crop-img');
+    img.src = cropSrc;
+    img.style.transform = 'scale(1)';
+    document.getElementById('zoom-range').value = 100;
+    document.getElementById('zoom-lbl').textContent = '1.0×';
+    cropZoom = 1;
+    document.getElementById('crop-overlay').classList.add('open');
+    img.onload = () => { resetCropBox(); setupCropDrag(); };
+    if (img.complete) { resetCropBox(); setupCropDrag(); }
+}
+
+function closeCrop() {
+    document.getElementById('crop-overlay').classList.remove('open');
+    if (cropIndex !== null && pendingImgs[cropIndex] && !pendingImgs[cropIndex]._cropped) {
+        pendingImgs.splice(cropIndex, 1);
+        renderImgGrid();
+        updateImageCount();
+    }
+}
+
+function resetCropBox() {
+    const area = document.getElementById('crop-area');
+    const sel = document.getElementById('crop-sel');
+    const aspect = parseFloat(document.getElementById('aspect-sel').value) || 1;
+    const aW = area.clientWidth, aH = area.clientHeight;
+    let sw = Math.min(aW * 0.7, aH * 0.7);
+    let sh = aspect === 0 ? sw : sw / aspect;
+    if (sh > aH * 0.85) { sh = aH * 0.85; sw = aspect === 0 ? sh : sh * aspect; }
+    sel.style.cssText = 'width:' + sw + 'px;height:' + sh + 'px;left:' + ((aW-sw)/2) + 'px;top:' + ((aH-sh)/2) + 'px';
+}
+
+function applyZoom(v) {
+    cropZoom = v / 100;
+    document.getElementById('zoom-lbl').textContent = cropZoom.toFixed(1) + '×';
+    document.getElementById('crop-img').style.transform = 'scale(' + cropZoom + ')';
+}
+
+function setupCropDrag() {
+    const sel = document.getElementById('crop-sel');
+    const area = document.getElementById('crop-area');
+    const handles = sel.querySelectorAll('.crop-handle');
+    const onMove = function(e) {
+        if (!cropDrag.on) return;
+        const pt = e.touches ? e.touches[0] : e;
+        const aR = area.getBoundingClientRect();
+        if (cropDrag.type === 'move') {
+            let nl = pt.clientX - aR.left - cropDrag.ox;
+            let nt = pt.clientY - aR.top - cropDrag.oy;
+            nl = Math.max(0, Math.min(nl, aR.width - cropDrag.w));
+            nt = Math.max(0, Math.min(nt, aR.height - cropDrag.h));
+            sel.style.left = nl + 'px';
+            sel.style.top = nt + 'px';
+        } else {
+            const dx = pt.clientX - aR.left - cropDrag.sx;
+            const dy = pt.clientY - aR.top - cropDrag.sy;
+            const d = cropDrag.type;
+            let l = cropDrag.l, t = cropDrag.t, w = cropDrag.w, h = cropDrag.h;
+            if (d.includes('e')) w = Math.max(50, cropDrag.w + dx);
+            if (d.includes('s')) h = Math.max(50, cropDrag.h + dy);
+            if (d.includes('w')) { l = cropDrag.l + dx; w = Math.max(50, cropDrag.w - dx); }
+            if (d.includes('n')) { t = cropDrag.t + dy; h = Math.max(50, cropDrag.h - dy); }
+            l = Math.max(0, Math.min(l, aR.width - 30));
+            t = Math.max(0, Math.min(t, aR.height - 30));
+            sel.style.cssText = 'left:' + l + 'px;top:' + t + 'px;width:' + Math.min(w,aR.width-l) + 'px;height:' + Math.min(h,aR.height-t) + 'px';
+        }
+    };
+    
+    sel.onmousedown = function(e) {
+        if (e.target.classList.contains('crop-handle')) return;
+        const sR = sel.getBoundingClientRect();
+        const aR = area.getBoundingClientRect();
+        cropDrag = { on:true, type:'move', ox:e.clientX-sR.left, oy:e.clientY-sR.top, w:sR.width, h:sR.height };
+        e.preventDefault();
+    };
+    
+    handles.forEach(function(h) {
+        h.onmousedown = function(e) {
+            const sR = sel.getBoundingClientRect();
+            const aR = area.getBoundingClientRect();
+            cropDrag = { on:true, type:h.dataset.dir, sx:e.clientX-aR.left, sy:e.clientY-aR.top, l:sR.left-aR.left, t:sR.top-aR.top, w:sR.width, h:sR.height };
+            e.preventDefault();
+            e.stopPropagation();
+        };
+    });
+    
+    document.onmousemove = onMove;
+    document.onmouseup = function() { cropDrag.on = false; };
+}
+
+function applyCrop() {
+    const img = document.getElementById('crop-img');
+    const sel = document.getElementById('crop-sel');
+    const iR = img.getBoundingClientRect();
+    const sR = sel.getBoundingClientRect();
+    const scX = img.naturalWidth / iR.width;
+    const scY = img.naturalHeight / iR.height;
+    const cx = (sR.left - iR.left) * scX;
+    const cy = (sR.top - iR.top) * scY;
+    const cw = sR.width * scX;
+    const ch = sR.height * scY;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+    const tmp = new Image();
+    tmp.onload = function() {
+        ctx.drawImage(tmp, Math.max(0,cx), Math.max(0,cy), Math.max(1,cw), Math.max(1,ch), 0, 0, 600, 600);
+        const cropped = canvas.toDataURL('image/jpeg', 0.85);
+        pendingImgs[cropIndex].dataURL = cropped;
+        pendingImgs[cropIndex]._cropped = true;
+        if (!pendingImgs[cropIndex].original) pendingImgs[cropIndex].original = cropSrc;
+        document.getElementById('crop-overlay').classList.remove('open');
+        renderImgGrid();
+        updateImageCount();
+        showToast('Image cropped to 600×600 ✓', 'ok');
+    };
+    tmp.src = cropSrc;
 }
 </script>
 {% endblock %}

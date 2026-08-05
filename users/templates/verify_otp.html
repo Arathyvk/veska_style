@@ -16,6 +16,12 @@
       --bark:     #7a5c4a;
       --espresso: #2e1d13;
       --ink:      #1a1008;
+      --error:    #b91c1c;
+      --error-bg: #fdf0ee;
+      --warning:  #c47f17;
+      --warning-bg: #fef8ec;
+      --success:  #166534;
+      --success-bg: #f0fdf4;
     }
 
     html, body { height: 100%; background-color: var(--cream); font-family: 'Jost', sans-serif; }
@@ -100,15 +106,38 @@
     .card-subtitle { font-size: 0.78rem; color: var(--stone); margin-top: 4px; letter-spacing: 0.03em; }
     .email-sent { font-size: 0.78rem; color: var(--bark); font-weight: 500; margin-top: 2px; }
 
+    /* Messages */
     .msg { margin-top: 14px; padding: 10px 14px; border-radius: 3px; font-size: 0.78rem; }
-    .msg-error { background: #fdf0ee; border: 1px solid #e07b6a; color: #8b2e1e; }
-    .msg-success { background: #f0fdf4; border: 1px solid #4ade80; color: #166534; }
+    .msg-error { background: var(--error-bg); border: 1px solid #e07b6a; color: var(--error); }
+    .msg-success { background: var(--success-bg); border: 1px solid #4ade80; color: var(--success); }
+    .msg-warning { background: var(--warning-bg); border: 1px solid #fbbf24; color: var(--warning); }
+
+    /* Attempts Info - FIXED: Added styles */
+    .attempts-info {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--stone);
+      margin: 16px 0 12px 0;
+      padding: 10px;
+      background: var(--cream);
+      border-radius: 3px;
+      border: 1px solid var(--sand);
+    }
+    .attempts-info .remaining {
+      font-weight: 700;
+      color: var(--bark);
+      font-size: 0.85rem;
+    }
+    .attempts-info .danger {
+      color: var(--error);
+      font-weight: 600;
+    }
 
     .otp-label {
       display: block;
       font-size: 0.7rem; font-weight: 500;
       letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--bark); margin: 28px 0 14px;
+      color: var(--bark); margin: 20px 0 14px;
     }
 
     .otp-inputs { display: flex; justify-content: center; gap: 14px; margin-bottom: 20px; }
@@ -116,7 +145,6 @@
     .otp-input {
       width: 60px; height: 64px;
       font-size: 1.8rem; font-weight: 600;
-      font-family: 'Cormorant Garamond', serif;
       text-align: center;
       background: #faf7f2; color: #2e1d13;
       border: 1.5px solid #ede8df; border-radius: 4px;
@@ -126,13 +154,14 @@
     }
     .otp-input:focus { border-color: #7a5c4a; box-shadow: 0 0 0 3px rgba(122,92,74,0.12); background: #fff; }
     .otp-input.filled { border-color: #7a5c4a; background: #fff; }
+    .otp-input.error { border-color: var(--error); }
 
     .timer-row {
       display: flex; justify-content: space-between; align-items: center;
       font-size: 0.75rem; color: var(--stone); margin-bottom: 20px;
     }
     .timer { font-weight: 600; color: var(--bark); font-variant-numeric: tabular-nums; }
-    .timer.expired { color: #b91c1c; }
+    .timer.expired { color: var(--error); }
 
     .resend-btn {
       background: none; border: none;
@@ -196,11 +225,21 @@
     <div class="card-title">Verify Your Email</div>
     <div class="card-subtitle">We've sent a 4-digit code to</div>
     <div class="email-sent">{{ email }}</div>
+    
+    <!-- Display Django messages -->
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="msg 
+          {% if 'error' in msg.tags %}msg-error
+          {% elif 'warning' in msg.tags %}msg-warning
+          {% else %}msg-success{% endif %}">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
 
-    {% for msg in messages %}
-      <div class="msg {% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>
-    {% endfor %}
-
+    <!-- FIXED: Correct class name and ID -->
+ 
     <form id="otpForm" method="POST" action="{% url 'verify_signup_otp' %}">
       {% csrf_token %}
       <input type="hidden" name="otp" id="otpHidden">
@@ -215,11 +254,14 @@
       </div>
 
       <div class="timer-row">
-      <span><span class="timer" id="timer">10:00</span></span>
-      <button type="button" class="resend-btn" id="resendBtn">Resend OTP</button>
-    </div>
+        <span><span class="timer" id="timer">02:00</span></span>
+        <button type="button" class="resend-btn" id="resendBtn">Resend OTP</button>
+      </div>
 
-      <button class="btn-submit" type="submit" id="submitBtn">Verify</button>
+      <button class="btn-submit" type="submit" id="submitBtn"
+        {% if max_attempts_exceeded %}disabled{% endif %}>
+        Verify
+      </button>
     </form>
 
     <div class="bottom-link">
@@ -229,6 +271,12 @@
 </div>
 
 <script>
+  // Configuration - matches backend OTP_EXPIRY_MINUTES = 2
+  const OTP_DURATION_MINUTES = 2;
+  const OTP_DURATION_MS = OTP_DURATION_MINUTES * 60 * 1000;
+  const KEY = 'veska_otp_expiry';
+  const MAX_ATTEMPTS = 3;
+
   const boxes      = document.querySelectorAll('.otp-input');
   const hidden     = document.getElementById('otpHidden');
   const form       = document.getElementById('otpForm');
@@ -236,20 +284,34 @@
   const resendBtn  = document.getElementById('resendBtn');
   const submitBtn  = document.getElementById('submitBtn');
   const overlay    = document.getElementById('processingOverlay');
+  
+  // FIXED: Match the HTML ID exactly - 'attemptsInfo' with capital I
+  const attemptsInfo = document.getElementById('attemptsInfo');
+  const attemptCount = document.getElementById('attemptCount');
 
-  function getCookie(name) {
-    let value = null;
-    document.cookie.split(';').forEach(c => {
-      c = c.trim();
-      if (c.startsWith(name + '=')) value = decodeURIComponent(c.slice(name.length + 1));
-    });
-    return value;
+  // Get CSRF token from cookie
+  function getCSRFToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
   }
 
+  // OTP input handling
   boxes.forEach((box, i) => {
     box.addEventListener('input', () => {
       box.value = box.value.replace(/[^0-9]/g, '');
       box.classList.toggle('filled', !!box.value);
+      box.classList.remove('error');
       if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
       updateHidden();
     });
@@ -278,105 +340,182 @@
     hidden.value = [...boxes].map(b => b.value).join('');
   }
 
-  form.addEventListener('submit', e => {
-    if (getRemaining() <= 0) {
+  // Timer functions
+  function getRemaining() {
+    const expiry = parseInt(sessionStorage.getItem(KEY));
+    if (!expiry) return 0;
+    return Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+  }
+
+  function formatTime(s) {
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  function expireTimer() {
+    timerEl.textContent = 'Expired';
+    timerEl.classList.add('expired');
+    submitBtn.disabled = true;
+    resendBtn.classList.add('active');
+    sessionStorage.removeItem(KEY);
+  }
+
+  let ticker;
+  function startTimer() {
+    clearInterval(ticker);
+    ticker = setInterval(() => {
+      const remaining = getRemaining();
+      if (remaining <= 0) {
+        clearInterval(ticker);
+        expireTimer();
+      } else {
+        timerEl.textContent = formatTime(remaining);
+        timerEl.classList.remove('expired');
+      }
+    }, 500);
+  }
+
+  // Initialize timer
+  function initTimer() {
+    const remaining = getRemaining();
+    if (remaining <= 0) {
+      sessionStorage.setItem(KEY, Date.now() + OTP_DURATION_MS);
+      timerEl.textContent = formatTime(OTP_DURATION_MINUTES * 60);
+      startTimer();
+    } else {
+      timerEl.textContent = formatTime(remaining);
+      startTimer();
+    }
+  }
+
+  // Form submission
+  form.addEventListener('submit', (e) => {
+    const remaining = getRemaining();
+    if (remaining <= 0) {
       e.preventDefault();
       alert('OTP has expired. Please click Resend OTP.');
       return;
     }
-    if (hidden.value.length < 4) {
+    
+    const otp = hidden.value;
+    if (otp.length < 4) {
       e.preventDefault();
+      boxes.forEach(b => {
+        if (!b.value) b.classList.add('error');
+      });
       alert('Please enter the complete 4-digit OTP.');
       return;
     }
+    
     overlay.classList.add('active');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Verifying…';
   });
 
-  const KEY      = 'veska_otp_expiry';
-  const DURATION = 50 * 1000; 
-
-
-if (!sessionStorage.getItem(KEY)) {
-  sessionStorage.setItem(KEY, Date.now() + DURATION);
-}
-function getRemaining() {
-  return Math.max(0, Math.floor((parseInt(sessionStorage.getItem(KEY)) - Date.now()) / 1000));
-}
-
-function formatTime(s) {
-  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-}
-
-function expireTimer() {
-  timerEl.textContent = 'Expired';
-  timerEl.classList.add('expired');
-  submitBtn.disabled = true;
-  resendBtn.classList.add('active');
-  sessionStorage.removeItem(KEY);
-}
-
-let ticker;
-function startTimer() {
-  clearInterval(ticker);
-  ticker = setInterval(() => {
-    const remaining = getRemaining();
-    timerEl.textContent = formatTime(remaining);
-    if (remaining <= 0) { clearInterval(ticker); expireTimer(); }
-  }, 500);
-}
-
-timerEl.textContent = formatTime(10 * 60);
-submitBtn.disabled = false;
-startTimer();
-
-
-(function initTimer() {
-    const remaining = getRemaining();
-    if (remaining <= 0) { expireTimer(); }
-    else { timerEl.textContent = formatTime(remaining); startTimer(); }
-  })();
-
+  // Resend OTP
   resendBtn.addEventListener('click', () => {
     if (!resendBtn.classList.contains('active')) return;
 
     resendBtn.textContent = 'Sending…';
-    resendBtn.classList.remove('active');
+    resendBtn.disabled = true;
+
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+      alert('Security token not found. Please refresh the page.');
+      resendBtn.textContent = 'Resend OTP';
+      resendBtn.disabled = false;
+      return;
+    }
 
     fetch("{% url 'resend_otp' %}", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': getCookie('csrftoken')
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: 'purpose=signup'
     })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    })
     .then(data => {
       if (data.success) {
-        sessionStorage.setItem(KEY, Date.now() + DURATION);
+        sessionStorage.setItem(KEY, Date.now() + OTP_DURATION_MS);
         timerEl.classList.remove('expired');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Verify';
-        boxes.forEach(b => { b.value = ''; b.classList.remove('filled'); });
+        
+        boxes.forEach(b => { 
+          b.value = ''; 
+          b.classList.remove('filled', 'error'); 
+        });
         boxes[0].focus();
         updateHidden();
+        
+        location.reload();
         startTimer();
+        showToast('New OTP sent successfully!', 'success');
       } else {
         alert(data.message || 'Failed to resend OTP. Please try again.');
         resendBtn.classList.add('active');
       }
-      resendBtn.textContent = 'Resend OTP';
     })
     .catch(() => {
       alert('Network error. Please try again.');
-      resendBtn.textContent = 'Resend OTP';
       resendBtn.classList.add('active');
+    })
+    .finally(() => {
+      resendBtn.textContent = 'Resend OTP';
+      resendBtn.disabled = false;
     });
   });
 
-  boxes[0].focus();
+  // Toast notification
+  function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: ${type === 'success' ? '#166534' : '#b91c1c'};
+      color: white;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 14px;
+      z-index: 1000;
+      font-family: 'Jost', sans-serif;
+      animation: fadeIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    initTimer();
+    boxes[0].focus();
+    
+    // Get attempts from Django context
+    const attempts = {{ attempts|default:0 }};
+    const maxExceeded = {{ max_attempts_exceeded|default:'false' }};
+    
+    // Update UI based on attempts
+    if (maxExceeded || attempts >= MAX_ATTEMPTS) {
+      submitBtn.disabled = true;
+      resendBtn.classList.add('active');
+      if (attemptsInfo) {
+        attemptsInfo.innerHTML = '<span class="danger">⚠ Too many failed attempts. Please resend the OTP.</span>';
+      }
+    }
+  });
 </script>
 </body>
 </html>

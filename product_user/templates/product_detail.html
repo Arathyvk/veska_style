@@ -148,7 +148,12 @@ button,input,textarea{font-family:var(--body)}
   gap:6px;margin-bottom:24px}
 .soldout-notice .so-title{font-size:15px;font-weight:700;color:var(--danger);display:flex;align-items:center;gap:8px}
 .soldout-notice .so-body{font-size:13px;color:var(--muted);line-height:1.6}
-.divider{height:1px;background:var(--border-lt);margin:20px 0}
+.divider{
+    height:1px !important;
+    background:#e8e8e8 !important;
+    margin:20px 0 !important;
+     display:none;
+}
 .highlights-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
 .highlights-list li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--charcoal);line-height:1.5}
 .highlight-check{width:18px;height:18px;background:var(--terra-pale);border-radius:50%;
@@ -214,13 +219,36 @@ button,input,textarea{font-family:var(--body)}
 @keyframes reveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .gallery{animation:reveal .4s ease both}
 .product-info{animation:reveal .4s ease .1s both}
+.gallery-main{
+    background:transparent !important;
+    border:none !important;
+    box-shadow:none !important;
+}
 
-.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(16px);
-  background:var(--charcoal);color:#fff;border-radius:var(--radius-md);
-  padding:13px 24px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);z-index:99999;
-  opacity:0;transition:opacity .28s ease,transform .28s ease;pointer-events:none;
-  white-space:nowrap;display:flex;align-items:center;gap:9px;min-width:200px;justify-content:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.gallery-main img{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+}
+.toast{
+    display:none;
+}
+
+.toast.show{
+    display:flex;
+    position:fixed;
+    bottom:32px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--charcoal);
+    color:#fff;
+    border-radius:10px;
+    padding:13px 24px;
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+}
 .toast.toast-success{background:var(--success)}
 .toast.toast-error{background:var(--danger)}
 </style>
@@ -315,8 +343,8 @@ button,input,textarea{font-family:var(--body)}
       </div>
 
       <div class="price-block">
-        <span class="price-now">₹{{ product.price|floatformat:2 }}</span>
-        {% if original_price and original_price > product.price %}
+        <span class="price-now">₹{{ product_price|floatformat:2 }}</span>
+        {% if original_price and original_price > product_price %}
           <span class="price-original">₹{{ original_price|floatformat:2 }}</span>
           <span class="discount-badge">{{ discount_percent }}% OFF</span>
         {% endif %}
@@ -363,10 +391,17 @@ button,input,textarea{font-family:var(--body)}
                 class="size-btn {% if variant.stock == 0 %}oos-size{% endif %}"
                 data-size="{{ variant.size }}"
                 data-stock="{{ variant.stock }}"
+                data-variant-id="{{ variant.id }}"
                 onclick="selectSize(this)">
             {{ variant.size }}
         </button>
         {% endfor %}
+
+       {% if variants %}
+        <div style="margin-top:10px;">
+            <strong>Color:</strong> <span id="selectedColorLabel">{{ variants.0.color }}</span>
+        </div>
+        {% endif %}
     </div>
     <div id="sizeError" style="display:none;color:red;margin-bottom:15px;">
         Please select a size
@@ -539,23 +574,6 @@ button,input,textarea{font-family:var(--body)}
     </div>
 
     {% for review in reviews %}
-    <div class="review-product">
-
-        {% if review.product.primary_image %}
-            <img src="{{ review.product.primary_image.image.url }}"
-                alt="{{ review.product.name }}"
-                width="70">
-        {% endif %}
-
-        <div>
-            <h5>{{ review.product.name }}</h5>
-
-            <p>{{ review.product.brand }}</p>
-
-            <p>₹{{ review.product.price }}</p>
-        </div>
-
-    </div>
 
     <div class="review-card">
 
@@ -603,7 +621,7 @@ button,input,textarea{font-family:var(--body)}
         <div class="rel-body">
           <div class="rel-cat">{{ rel.category }}</div>
           <div class="rel-name">{{ rel.name }}</div>
-          <div class="rel-price">₹{{ rel.price|floatformat:2 }}</div>
+          <div class="rel-price">₹{{ rel.min_price|floatformat:2 }}</div>
         </div>
       </a>
       {% endfor %}
@@ -614,7 +632,6 @@ button,input,textarea{font-family:var(--body)}
 </div>
 </div>
 
-<div class="toast" id="toast"></div>
 
 <script>
 const imageUrls = [{% for img in images %}"{{ img.image.url }}"{% if not forloop.last %},{% endif %}{% endfor %}];
@@ -652,18 +669,37 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 const hasVariants = {{ variants|length }} > 0;
-let selectedSize = '';
+let selectedSize      = '';
+let selectedColor     = '';
+let selectedVariantId = null;
 
+
+const variantGallery = {{ variant_gallery_json|safe }};
 
 function selectSize(btn) {
   if (btn.classList.contains('oos-size')) return;
   document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedSize = btn.dataset.size;
-  const sizeInput = document.getElementById('sizeInput');
-  if (sizeInput) sizeInput.value = selectedSize;
-  const label = document.getElementById('selectedSizeLabel');
-  if (label) label.textContent = selectedSize;
+  selectedVariantId = btn.dataset.variantId;
+  document.getElementById('sizeInput').value = selectedSize;
+
+  const vdata = variantGallery[btn.dataset.variantId];
+  if (vdata) {
+    selectedColor = vdata.color;  
+    if (vdata.images.length) {
+      imageUrls.length = 0;
+      vdata.images.forEach(u => imageUrls.push(u));
+      currentSlide = 0;
+      document.getElementById('mainImg').src = imageUrls[0];
+    }
+    const priceEl = document.querySelector('.price-now');
+    if (priceEl) priceEl.textContent = '₹' + parseFloat(vdata.price).toFixed(2);
+
+    const colorLabel = document.getElementById('selectedColorLabel');
+    if (colorLabel) colorLabel.textContent = vdata.color;
+  }
+
   const stock  = parseInt(btn.dataset.stock) || 1;
   const maxQty = Math.min(stock, {{ max_qty }});
   const qtyEl  = document.getElementById('qtyInput');
@@ -709,17 +745,6 @@ function renderStars(val) {
   document.querySelectorAll('.sp-star').forEach(s => s.classList.toggle('lit', parseInt(s.dataset.val)<=val));
 }
 
-let toastTimer;
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (type ? ' toast-'+type : '');
-  void t.offsetWidth;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
-}
-
 document.addEventListener('keydown', e => {
   if (e.key==='ArrowLeft')  changeSlide(-1);
   if (e.key==='ArrowRight') changeSlide(1);
@@ -733,10 +758,8 @@ document.addEventListener('keydown', e => {
 });
 
 function toggleWishlist(button, slug) {
-    // Get CSRF token from the page
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    // Send AJAX request to toggle wishlist
+
     fetch(`/wishlist/toggle/${slug}/`, {
         method: 'POST',
         headers: {
@@ -744,12 +767,14 @@ function toggleWishlist(button, slug) {
             'X-CSRFToken': csrfToken,
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({
+            size:  selectedSize  || null,   
+            color: selectedColor || null    
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Toggle the wishlisted class on the button
             if (data.is_wishlisted) {
                 button.classList.add('wishlisted');
                 button.querySelector('svg').setAttribute('fill', 'var(--terra)');
@@ -759,18 +784,8 @@ function toggleWishlist(button, slug) {
                 button.querySelector('svg').setAttribute('fill', 'none');
                 showToast('Removed from wishlist', 'info');
             }
-            
-            // Update wishlist count in header if exists
-            if (data.wishlist_count !== undefined) {
-                const wishlistCount = document.getElementById('wishlistCount');
-                if (wishlistCount) {
-                    if (data.wishlist_count > 0) {
-                        wishlistCount.textContent = data.wishlist_count;
-                        wishlistCount.style.display = 'inline-flex';
-                    } else {
-                        wishlistCount.style.display = 'none';
-                    }
-                }
+            if (typeof window.triggerWishlistUpdate === 'function') {
+                window.triggerWishlistUpdate();
             }
         }
     })

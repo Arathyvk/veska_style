@@ -3,13 +3,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
-from offer_admin.models import BaseOffer, UserOfferUsage, ReferralCode, ReferralTransaction
+from offer_admin.models import BaseOffer, UserOfferUsage
+from users.models import ReferralCode, ReferralTransaction
 from .forms import BaseOfferForm, ReferralOfferForm
 from product_admin.models import Product
 from category_admin.models import Category
@@ -65,7 +66,6 @@ def offer_list(request):
         'offer_type': offer_type,
         'status':     status,
     })
-
 
 
 @never_cache
@@ -195,10 +195,10 @@ def referral_stats(request):
         return redirect('admin_login')
 
     total_referrals    = ReferralTransaction.objects.count()
-    total_earnings     = (
+    total_earnings = (
         ReferralTransaction.objects
         .filter(is_credited=True)
-        .aggregate(Sum('amount_earned'))['amount_earned__sum'] or 0
+        .aggregate(total=Sum(F('amount_earned') + F('referred_user_bonus')))['total'] or 0
     )
     active_codes       = ReferralCode.objects.filter(is_active=True).count()
     recent_transactions = (
@@ -235,7 +235,6 @@ def get_applicable_offers(product, user=None):
         valid = []
         for offer in offers:
             usage, _ = UserOfferUsage.objects.get_or_create(user=user, offer=offer)
-            # FIX: use offer.usage_limit / offer.used_count (check your model field names)
             within_global_limit = (offer.usage_limit == 0 or offer.used_count < offer.usage_limit)
             if usage.can_use() and within_global_limit:
                 valid.append(offer)

@@ -22,7 +22,7 @@ from django.http import HttpResponse
 
 
 from order_user.models import Order, OrderItem
-from product_admin.models import Product
+from product_admin.models import Product,ProductVariant
 from django.contrib.auth import get_user_model
 from return_admin.models import ReturnRequest
 
@@ -270,13 +270,13 @@ def admin_dashboard(request):
         .order_by("-created_at")[:8]
     )
 
-    low_stock = list(
-        Product.objects
+    low_stock = (
+        ProductVariant.objects
+        .select_related("product")
         .filter(stock__gt=0, stock__lte=LOW_STOCK_THRESHOLD)
         .order_by("stock")[:8]
-        .values('id', 'name', 'stock')
     )
-    out_of_stock = Product.objects.filter(stock=0).count()
+    out_of_stock = ProductVariant.objects.filter(stock=0).count()
 
     def best_selling(group_field, limit=10):
         return list(

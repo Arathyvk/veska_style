@@ -754,14 +754,20 @@ a {
       </div>
       <div class="sum-row">
         <span>Shipping</span>
-        <span class="val">₹{{ order.shipping_fee|floatformat:2 }}</span>
+        <span class="val">₹{{ order.shipping_charge|floatformat:2 }}</span>
       </div>
-      {% if order.discount_amount %}
-      <div class="sum-row">
-        <span>Discount</span>
-        <span class="val" style="color:var(--success)">−₹{{ order.discount_amount|floatformat:2 }}</span>
-      </div>
-      {% endif %}
+        {% if order.offer_discount %}
+        <div class="sum-row">
+          <span>Offer discount</span>
+          <span class="val" style="color:var(--success)">−₹{{ order.offer_discount|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        {% if order.discount_amount %}
+        <div class="sum-row">
+          <span>Coupon discount {% if order.coupon_code %}({{ order.coupon_code }}){% endif %}</span>
+          <span class="val" style="color:var(--success)">−₹{{ order.discount_amount|floatformat:2 }}</span>
+        </div>
+        {% endif %}
       <div class="sum-divider"></div>
       <div class="sum-total">
         <span>Total</span>

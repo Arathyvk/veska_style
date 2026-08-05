@@ -185,11 +185,11 @@ a{text-decoration:none;color:inherit}
 .oi-img img{width:100%;height:100%;object-fit:cover}
 .oi-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt)}
 .oi-body{flex:1;min-width:0}
-.oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted-lt);margin-bottom:3px}
-.oi-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
-.oi-meta{font-size:11.5px;color:var(--muted-lt)}
+.oi-cat{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#000;margin-bottom:3px}
+.oi-name{font-size:15px;font-weight:500;color:var(--ink);line-height:1.25;margin-bottom:4px}
+.oi-meta{font-size:11.5px;color:v#000}
 .oi-price-col{text-align:right;flex-shrink:0;min-width:72px}
-.oi-unit-price{font-size:11px;color:var(--muted-lt);margin-bottom:2px}
+.oi-unit-price{font-size:11px;color:#000;margin-bottom:2px}
 .oi-line-total{font-size:16px;font-weight:600;color:var(--charcoal)}
 
 /* Notes */
@@ -357,12 +357,6 @@ a{text-decoration:none;color:inherit}
       <div class="step"><div class="step-num">3</div><span>Confirmed</span></div>
     </div>
 
-    {% for message in messages %}
-    <div class="msg-bar {{ message.tags }}">
-      {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}🚫{% else %}⚠️{% endif %}
-      {{ message }}
-    </div>
-    {% endfor %}
 
     <!-- ══ COUPONS & OFFERS STRIP ══ -->
 <div class="coupon-strip">
@@ -550,22 +544,25 @@ a{text-decoration:none;color:inherit}
             {% for item in cart_items %}
             <div class="oi-row">
               <div class="oi-img">
-                {% if item.product.images.first and item.product.images.first.image %}
-                  <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" loading="lazy">
-                {% else %}
-                  <div class="oi-img-empty">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
-                      <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                  </div>
-                {% endif %}
+                {% with img=item.variant.images.first|default:item.product.variants.first.images.first %}
+                  {% if img and img.image %}
+                    <img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                  {% else %}
+                    <div class="oi-img-empty">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+                        <rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                    </div>
+                  {% endif %}
+                {% endwith %}
               </div>
               <div class="oi-body">
                 <div class="oi-cat">{{ item.product.category }}</div>
                 <div class="oi-name">{{ item.product.name }}</div>
                 <div class="oi-meta">
-                  {% if item.variant and item.variant.size %}Size: {{ item.variant.size }} · {% endif %}
-                  Qty: {{ item.quantity }}
+                  {% if item.variant and item.variant.size %}Size: {{ item.variant.size }}{% endif %}
+                  {% if item.variant and item.variant.color %} · Color: {{ item.variant.color }}{% endif %}
+                  {% if item.variant.size or item.variant.color %} · {% endif %}Qty: {{ item.quantity }}
                 </div>
               </div>
               <div class="oi-price-col">
@@ -645,24 +642,6 @@ a{text-decoration:none;color:inherit}
             {% endif %}
           </div>
         </div>
-
-        <!-- Order Notes -->
-        <div class="co-card">
-          <div class="co-card-head">
-            <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-              Order Notes
-              <span style="font-family:var(--body);font-size:11.5px;color:var(--muted-lt);font-weight:300;font-style:italic">optional</span>
-            </h3>
-          </div>
-          <div class="co-card-body">
-            <textarea id="orderNotes" class="notes-field" placeholder="Delivery instructions, landmark, special requests…"></textarea>
-          </div>
-        </div>
-
       </div>
 
       <!-- Summary sidebar -->

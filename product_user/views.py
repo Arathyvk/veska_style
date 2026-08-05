@@ -1,15 +1,19 @@
+import logging
 import re
+import json
 from django.http import Http404, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q, Min, Max, Avg
+from decimal import Decimal, InvalidOperation
 
-from product_admin.models import Product, ProductReview, ProductVariant
-from cart_user.models import Cart, CartItem
+from product_admin.models import Product, ProductReview, ProductVariant,ProductImage
+from cart_user.models import CartItem
 from cart_user.cart_helpers import get_cart, cart_count_payload, wants_json
-from wishlist_user.models import Wishlist
+from wishlist_user.models import Wishlist, WishlistProduct
+from category_admin.models import Category
 
 ITEMS_PER_PAGE   = 12
 MAX_QTY_PER_ITEM = 10
@@ -25,8 +29,8 @@ SORT_OPTIONS = [
 ]
 SORT_MAP = {
     'newest':     '-created_at',
-    'price_asc':  'price',
-    'price_desc': '-price',
+    'price_asc':  'sort_price',
+    'price_desc': '-sort_price',
     'name_asc':   'name',
     'name_desc':  '-name',
 }
@@ -40,6 +44,7 @@ CATEGORY_CHOICES = [
     ('Loafers', 'Loafers'),
     ('Sports Shoes', 'Sports Shoes'),
     ('Casual', 'Casual'),
+    ('Formal', 'Formal')
 ]
 SIZE_CHOICES = ['US 6', 'US 7', 'US 8', 'US 9', 'US 10', 'US 11']
 
@@ -50,36 +55,53 @@ STOCK_CHOICES = [
 ]
 
 
-def _sanitize_search(raw: str) -> str:
-    cleaned = re.sub(r"[^a-zA-Z\u0900-\u097F\s']", '', raw)
-    return ' '.join(cleaned.split())
-
+logger = logging.getLogger(__name__)
 
 def _get_cart(request):
     return get_cart(request)
 
 
+def is_valid_email(email):
+    return re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email)
+
+
+def _sanitize_search(raw):
+    if not raw:
+        return ''
+    cleaned = re.sub(r'[^\w\s\-\.\']', ' ', raw)
+    return ' '.join(cleaned.split())
+
+
 def _get_wishlist(request):
-    if not request.user.is_authenticated:
-        return None
-    wl, _ = Wishlist.objects.get_or_create(user=request.user)
-    return wl
+    if request.user.is_authenticated:
+        wl, _ = Wishlist.objects.get_or_create(user=request.user)
+        return wl
+    return None
 
 
 def _wishlist_ids(request):
-    wl = _get_wishlist(request)
-    if wl is None:
-        return set()
-    return set(wl.products.values_list('id', flat=True))
-
+    if not request.user.is_authenticated:
+        return []
+    
+    try:
+        wl = _get_wishlist(request)
+        if not wl:
+            return []
+        
+        wishlist_items = wl.items.all()  
+        wishlist_ids = [str(item.product.uuid) for item in wishlist_items]
+        
+        return wishlist_ids
+    except Exception as e:
+        print(f"❌ Error in _wishlist_ids: {e}")
+        return []
 
 
 def product_shop(request):
-
     qs = (
         Product.objects
         .filter(is_active=True, is_shop_active=True)
-        .prefetch_related('images', 'variants')
+        .prefetch_related('variants', 'variants__images')
     )
 
     raw_query = request.GET.get('q', '').strip()
@@ -102,12 +124,12 @@ def product_shop(request):
             Q(name__icontains=search_query) |
             Q(description__icontains=search_query) |
             Q(category__name__icontains=search_query) |
-            Q(color__icontains=search_query)
-        )
+            Q(variants__color__icontains=search_query)
+        ).distinct()
 
     if selected_categories:
         qs = qs.filter(
-            category__name__in=selected_categories
+            category__slug__in=selected_categories
         )
 
     if selected_sizes:
@@ -117,16 +139,16 @@ def product_shop(request):
         ).distinct()
 
     try:
-        price_min = float(price_min_raw) if price_min_raw else None
+        price_min = Decimal(price_min_raw) if price_min_raw else None
         if price_min is not None:
-            qs = qs.filter(price__gte=price_min)
-    except ValueError:
+            qs = qs.filter(variants__price__gte=price_min)
+    except InvalidOperation:
         price_min_raw = ''
 
     try:
-        price_max = float(price_max_raw) if price_max_raw else None
+        price_max = Decimal(price_max_raw) if price_max_raw else None
         if price_max is not None:
-            qs = qs.filter(price__lte=price_max)
+            qs = qs.filter(variants__price__lte=price_max)
     except ValueError:
         price_max_raw = ''
 
@@ -140,17 +162,17 @@ def product_shop(request):
         qs = qs.filter(variants__stock=0)
 
     qs = qs.distinct()
+    qs = qs.annotate(sort_price=Min("variants__price"))
 
-    sort_field = SORT_MAP.get(sort_key, '-created_at')         
+    sort_field = SORT_MAP.get(sort_key, '-created_at')
     qs = qs.order_by(sort_field)
 
     paginator = Paginator(qs, ITEMS_PER_PAGE)
-    page_obj  = paginator.get_page(request.GET.get('page', 1))
+    page_obj = paginator.get_page(request.GET.get('page', 1))
 
-  
-    current   = page_obj.number
+    current = page_obj.number
     num_pages = paginator.num_pages
-    visible   = set()
+    visible = set()
     visible.add(1)
     visible.add(num_pages)
     for i in range(max(1, current - 2), min(num_pages, current + 2) + 1):
@@ -160,11 +182,14 @@ def product_shop(request):
     prev_p = None
     for p in sorted(visible):
         if prev_p is not None and p - prev_p > 1:
-            page_range.append(None)   
+            page_range.append(None)
         page_range.append(p)
         prev_p = p
 
-    agg = Product.objects.filter(is_active=True, is_shop_active=True).aggregate(
+    agg = ProductVariant.objects.filter(
+        product__is_active=True,
+        product__is_shop_active=True
+    ).aggregate(
         mn=Min('price'), mx=Max('price')
     )
     global_price_min = int(agg['mn'] or 0)
@@ -179,38 +204,32 @@ def product_shop(request):
     ])
 
     return render(request, 'product_shop.html', {
-        'page_obj':            page_obj,
-        'total':               paginator.count,
-        'params_str':          params.urlencode(),
-        'page_range':          page_range,         
-
-        'query':               search_query,
-
-        'cat_slug_list':       selected_categories,
-        'size_list':           selected_sizes,
-        'price_min':           price_min_raw,
-        'price_max':           price_max_raw,
-        'stock_filter':        stock_filter,
-        'has_filters':         has_filters,
-
-        'sort_by':             sort_key,
-        'sort_options':        SORT_OPTIONS,
-
-        'all_categories':      CATEGORY_CHOICES,   
-        'all_sizes':           SIZE_CHOICES,        
-        'stock_choices':       STOCK_CHOICES,       
-
-        'global_price_min':    global_price_min,
-        'global_price_max':    global_price_max,
-
-        'wishlist_ids':        _wishlist_ids(request),
+        'page_obj': page_obj,
+        'total': paginator.count,
+        'params_str': params.urlencode(),
+        'page_range': page_range,
+        'query': search_query,
+        'cat_slug_list': selected_categories,
+        'size_list': selected_sizes,
+        'price_min': price_min_raw,
+        'price_max': price_max_raw,
+        'stock_filter': stock_filter,
+        'has_filters': has_filters,
+        'sort_by': sort_key,
+        'sort_options': SORT_OPTIONS,
+        'all_categories': Category.objects.filter(is_active=True),
+        'all_sizes': ProductVariant.SIZE_CHOICES,
+        'stock_choices': STOCK_CHOICES,
+        'global_price_min': global_price_min,
+        'global_price_max': global_price_max,
+        'wishlist_ids': _wishlist_ids(request),  
     })
 
 
 def product_detail(request, slug):
     try:
          product = Product.objects.prefetch_related(
-            'images', 'variants', 'reviews'
+            'variants', 'variants__images', 'reviews'
         ).get(slug=slug)
     except Product.DoesNotExist:
         raise Http404("Product not found.")
@@ -219,9 +238,24 @@ def product_detail(request, slug):
         messages.warning(request, f'"{product.name}" is currently unavailable.')
         return redirect('product_shop')
 
-    images         = list(product.images.order_by('order'))
-    variants       = list(product.variants.all().order_by('size'))
-    total_stock    = product.total_stock
+    images = ProductImage.objects.filter(variant__product=product).order_by("order")
+    variants = list(product.variants.all().order_by('size'))
+
+    variant_gallery = {
+        v.id:{
+            'size':v.size,
+            'color':v.color,
+            'price':str(v.price),
+            'stock':v.stock,
+            'images':[img.image.url for img in v.images.all().order_by('order')],
+        }
+        for v in variants
+    }
+
+    first_variant = product.variants.order_by("price").first()
+    product_price = first_variant.price if first_variant else 0
+
+    total_stock = product.total_stock
     size_stock_map = {v.size: v.stock for v in variants}
 
     if total_stock == 0:
@@ -236,6 +270,7 @@ def product_detail(request, slug):
     reviews_qs = ProductReview.objects.filter(product=product)
 
     print("Review Count:", reviews_qs.count())
+    print("Product Price:", product_price)
 
     for review in reviews_qs:
         print(
@@ -258,7 +293,7 @@ def product_detail(request, slug):
     original_price   = getattr(product, 'original_price', None)
     discount_percent = getattr(product, 'discount_percent', 0)
     savings = (
-        (original_price - product.price)
+        (original_price - product_price)
         if (original_price and original_price > product.price)
         else None
     )
@@ -272,10 +307,13 @@ def product_detail(request, slug):
         Product.objects
         .filter(is_active=True, category=product.category)
         .exclude(pk=product.pk)
-        .prefetch_related('images')[:6]
+        .prefetch_related('variants', 'variants__images')[:6]
     )
     wl          = _get_wishlist(request)
-    in_wishlist = wl.products.filter(pk=product.pk).exists() if wl else False
+    in_wishlist = (
+        wl.items.filter(product_id=product.id).exists()
+        if wl else False
+    )    
     category_display = product.category.name
 
     return render(request, 'product_detail.html', {
@@ -298,6 +336,8 @@ def product_detail(request, slug):
         'highlights':       highlights,
         'in_wishlist':      in_wishlist,
         'category_display': category_display,
+        "product_price": product_price,
+        'variant_gallery_json': json.dumps(variant_gallery),
     })
 
 
@@ -367,8 +407,12 @@ def submit_review(request, slug):
         messages.error(request, 'Please provide a rating (1–5) and review text.')
         return redirect('product_detail', slug=slug)
     ProductReview.objects.create(
-        product=product, author_name=author,
-        rating=rating, body=body, is_approved=True,
+        user=request.user if request.user.is_authenticated else None,
+        product=product,
+        author_name=author,
+        rating=rating,
+        body=body,
+        is_approved=True,
     )
     messages.success(request, 'Thank you! Your review has been submitted.')
     return redirect('product_detail', slug=slug)

@@ -452,11 +452,11 @@ a{text-decoration:none;color:inherit}
                 {{ item.product_name }}
               {% endif %}
             </div>
-            <div class="item-meta">
-              {% if item.size %}Size: {{ item.size }} · {% endif %}
-              Qty: {{ item.quantity }}
-            </div>
-           
+              <div class="item-meta">
+                {% if item.size %}Size: {{ item.size }}{% endif %}
+                {% if item.color %} · Color: {{ item.color }}{% endif %}
+                {% if item.size or item.color %} · {% endif %}Qty: {{ item.quantity }}
+              </div>
           </div>
           <div class="item-price">
             <div class="item-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
