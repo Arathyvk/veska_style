@@ -234,12 +234,18 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
 
   <form method="GET" action="{% url 'admin_inventory_list' %}">
     <div class="filter-bar">
-      <div class="fg sr" style="flex:2;min-width:170px">
-        <label>Search</label>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" name="q" class="finput" value="{{ q }}" placeholder="Product name or category…" autocomplete="off">
-      </div>
-      <div class="fg"><label>Category</label>
+       <div class="fg sr" style="flex:2;min-width:170px">
+    <label>Search</label>
+    <input type="text"
+       id="searchInput"
+       name="q"
+       class="finput"
+       value="{{ q }}"
+       placeholder="Product name or category…">
+
+<span id="searchError" style="color:#fff;font-size:13px;"></span>
+</div>
+            <div class="fg"><label>Category</label>
         <select name="category" class="fselect">
           <option value="">All Categories</option>
           {% for cat in all_categories %}<option value="{{ cat.slug }}" {% if cat_filter == cat.slug %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
@@ -302,9 +308,14 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
           <td>
             <div class="pc">
               <div class="pimg">
-                {% with img=product.images.first %}
-                  {% if img %}<img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
-                  {% else %}<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="21 15 16 10 5 21"/></svg></div>{% endif %}
+                {% with variant=product.variants.first %}
+                    {% if variant %}
+                        {% with img=variant.images.first %}
+                            {% if img %}
+                                <img src="{{ img.image.url }}" alt="{{ product.name }}">
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
                 {% endwith %}
               </div>
               <div><div class="pname">{{ product.name }}</div><div class="pcat">{{ product.category.name|default:"—" }}</div></div>
@@ -315,7 +326,7 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
             {% if product.variants.exists %}<div style="font-size:11px;color:var(--muted);font-family:var(--body);font-weight:400">{{ product.variants.count }} size{{ product.variants.count|pluralize }}</div>{% endif %}
           </td>
           <td>
-            {% with stock=product.effective_stock %}
+            {% with stock=product.variant_stock_sum %}
             {% if stock == 0 %}<span class="sv out">0<span class="sp sp-out">OOS</span></span>
             {% elif stock <= LOW_STOCK %}<span class="sv low">{{ stock }}<span class="sp sp-low">Low</span></span>
             {% else %}<span class="sv in">{{ stock }}</span>{% endif %}
@@ -325,7 +336,7 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
             {% if not product.variants.exists %}
             <form method="POST" action="{% url 'admin_inventory_update_stock' product.pk %}" class="qf">
               {% csrf_token %}
-              <input type="number" name="stock" class="si" value="{{ product.stock }}" min="0">
+              <input type="number" name="stock" class="si" value="{{ product.total_stock }}" min="0">
               <button type="submit" class="btn-sv" onclick="return confirm('Update stock?')">Save</button>
             </form>
             {% else %}<a href="{% url 'admin_inventory_detail' product.pk %}" style="font-size:12px;color:var(--terra2)">Edit variants →</a>{% endif %}
@@ -401,4 +412,20 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
   </div>
 </div>
 </div>
+
+<script>
+document.querySelector("form").addEventListener("submit", function(e) {
+    const input = document.getElementById("searchInput");
+    const error = document.getElementById("searchError");
+
+    const value = input.value.trim();
+
+    if (value && !/^[A-Za-z\s]+$/.test(value)) {
+        e.preventDefault();
+        error.textContent = "Only letters are allowed for search.";
+    } else {
+        error.textContent = "";
+    }
+});
+</script>
 {% endblock %}

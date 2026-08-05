@@ -7,10 +7,10 @@ MAX_QTY_PER_ITEM = 10
 User = get_user_model()
 
 class Cart(models.Model):
-    user       = models.ForeignKey(User,on_delete=models.CASCADE,null=True, blank=True)
-    session_key= models.CharField(max_length=40, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    user        = models.ForeignKey(User,on_delete=models.CASCADE,null=True, blank=True)
+    session_key = models.CharField(max_length=40, null=True, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Cart'
@@ -36,13 +36,6 @@ class Cart(models.Model):
         )
     
 
-    @property
-    def available_stock(self):
-        if self.variant:
-            return self.variant.stock
-        return self.product.total_stock  
-
-
 class CartItem(models.Model):
     cart     = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product  = models.ForeignKey('product_admin.Product',        on_delete=models.CASCADE)
@@ -60,7 +53,7 @@ class CartItem(models.Model):
     def available_stock(self):
         if self.variant:
             return self.variant.stock
-        return self.product.stock
+        return self.product.total_stock
 
     @property
     def is_in_stock(self):
@@ -77,8 +70,39 @@ class CartItem(models.Model):
         return self.product.price
 
     @property
+    def display_image(self):
+        if self.variant:
+            img = self.variant.images.first()
+            if img:
+                return img
+        for v in self.product.variants.all():
+            img = v.images.first()
+            if img:
+                return img
+        return None
+
+    @property
     def line_total(self):
         return self.unit_price * min(self.quantity, self.available_stock)
+
+    @property
+    def active_offer(self):
+        return self.product.get_best_offer()   
+
+    @property
+    def discounted_unit_price(self):
+        offer = self.active_offer
+        if offer:
+            return self.unit_price - (offer.calculate_discount(self.unit_price * self.quantity) / self.quantity)
+        return self.unit_price
+
+    @property
+    def discounted_line_total(self):
+        offer = self.active_offer
+        line = self.unit_price * min(self.quantity, self.available_stock)
+        if offer:
+            return line - offer.calculate_discount(line)
+        return line
 
     @property
     def max_allowed(self):

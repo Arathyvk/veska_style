@@ -6,7 +6,7 @@ from decimal import Decimal
 
 
 class Wallet(models.Model):
-    user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="wallet",unique=True)
+    user            = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="wallet",unique=True)
     balance         = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     created_at      = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True)
@@ -16,8 +16,11 @@ class Wallet(models.Model):
         verbose_name          = "wallet"
         verbose_name_plural   = 'wallets'
 
-    def __Str__(self):
-        return f"{self.user.username}'s Wallet ₹{self.balance}"    
+    def __str__(self):
+        name = f"{self.user.first_name} {self.user.last_name}".strip()
+        if not name:
+            name = self.user.email
+        return f"{name}'s Wallet ₹{self.balance}"    
     
     
     def credit(self, amount, reason='', order=None, reference='', description=''):
@@ -81,7 +84,7 @@ class WalletTransaction(models.Model):
     REASON_REFERRAL = 'referral'
     REASON_MANUAL = 'manual'
     REASON_ORDER = 'order'
-    
+    REASON_WELCOME = 'welcome'
     REASON_CHOICES = [
         (REASON_PURCHASE, 'Purchase'),
         (REASON_CANCELLATION, 'Cancellation'),
@@ -89,6 +92,7 @@ class WalletTransaction(models.Model):
         (REASON_REFERRAL, 'Referral'),
         (REASON_MANUAL, 'Manual Adjustment'),
         (REASON_ORDER, 'Order'),
+        (REASON_WELCOME, 'Welcome Bonus'),
     ]
     user             = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="transaction", null=True, blank=True)
     wallet           = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')

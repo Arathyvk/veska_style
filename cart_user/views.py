@@ -3,16 +3,11 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseRedirect
 from django.views.decorators.http import require_POST
 
-from cart_user.models import Cart, CartItem, MAX_QTY_PER_ITEM
+from cart_user.models import CartItem, MAX_QTY_PER_ITEM
 from cart_user.cart_helpers import get_cart, cart_count_payload, wants_json
 from product_admin.models import Product, ProductVariant
-from wishlist_user.models import Wishlist
-
-FREE_SHIPPING = 99
-SHIPPING_FEE  = 79
-
-
-
+from wishlist_user.models import Wishlist, WishlistProduct
+from checkout_page.views import FREE_SHIPPING_THRESHOLD as FREE_SHIPPING, SHIPPING_CHARGE as SHIPPING_FEE
 
 def _get_cart(request):
     return get_cart(request)
@@ -29,12 +24,14 @@ def _wishlist_ids(request):
     wl = _get_wishlist(request)
     if not wl:
         return set()
-    return set(wl.products.values_list('id', flat=True))
+    return set(
+        WishlistProduct.objects.filter(wishlist=wl).values_list('product_id', flat=True)
+    )
 
 
 def _safe_next(request, slug):
     raw = request.POST.get('next', '').strip()
-    if raw and raw.startswith('/') and '[object' not in raw:
+    if raw and raw.startswith('/') and '[object]' not in raw:
         return raw
     return f'/product_user/{slug}/'
 
@@ -52,12 +49,11 @@ def _json_or_redirect(request, cart, redirect_to, message=None, level='success',
     return HttpResponseRedirect(redirect_to) if redirect_to.startswith('/') else redirect(redirect_to)
 
 
-
-
 def get_cart_count(request):
     cart = _get_cart(request)
-    return JsonResponse(cart_count_payload(request, cart))
-
+    payload = cart_count_payload(request, cart)
+    print("AJAX /cart/count/ — User:", request.user, "Authenticated:", request.user.is_authenticated, "wishlist_count:", payload['wishlist_count'])
+    return JsonResponse(payload)
 
 
 @require_POST
@@ -73,19 +69,26 @@ def cart_add(request, slug):
         )
 
     size    = request.POST.get('size', '').strip()
+    color   = request.POST.get('color', '').strip()
+
     variant = None
     if size:
-        variant = ProductVariant.objects.filter(product=product, size=size).first()
+        variant_qs = ProductVariant.objects.filter(product=product, size=size)
+        if color:
+            variant_qs = variant_qs.filter(color=color)   
+        variant = variant_qs.first()
+
         if variant is None:
             return _json_or_redirect(
                 request, _get_cart(request), next_url,
-                f'Size "{size}" is not available.', 'error',
+                f'Size "{size}"{" / " + color if color else ""} is not available.', 'error',
             )
         if variant.stock == 0:
             return _json_or_redirect(
                 request, _get_cart(request), next_url,
                 f'Size {size} is out of stock.', 'error',
             )
+
 
     try:
         qty = max(1, int(request.POST.get('quantity', 1)))
@@ -106,8 +109,10 @@ def cart_add(request, slug):
 
     wl = _get_wishlist(request)
     if wl:
-        wl.products.remove(product)
-
+        qs = WishlistProduct.objects.filter(wishlist=wl, product=product)
+        if size:
+            qs = qs.filter(selected_size=size)
+        qs.delete()
 
     if capped < new_qty:
         warn_msg = (
@@ -147,21 +152,27 @@ def cart_detail(request):
     can_checkout  = bool(ok_items) and not blocked_items
 
     subtotal       = cart.subtotal
-    shipping       = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
-    order_total    = subtotal + shipping
-    remaining_free = max(0, FREE_SHIPPING - subtotal)
+    offer_discount = sum(
+        (item.discounted_line_total and (item.unit_price * item.quantity - item.discounted_line_total)) or 0
+        for item in ok_items
+    )
+    discounted_subtotal = subtotal - offer_discount
+    shipping       = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
+    order_total    = discounted_subtotal + shipping
+    remaining_free = max(0, FREE_SHIPPING - discounted_subtotal)
 
     return render(request, 'cart_detail.html', {
-        'cart':              cart,
-        'items':             items,
-        'unavailable_items': blocked_items,
-        'available_items':   ok_items,
-        'can_checkout':      can_checkout,
-        'subtotal':          subtotal,
-        'shipping':          shipping,
-        'order_total':       order_total,
-        'remaining_free':    remaining_free,
-        'max_qty':           MAX_QTY_PER_ITEM,
+        'cart': cart, 
+        'items': items,
+        'unavailable_items': blocked_items, 
+        'available_items': ok_items,
+        'can_checkout': can_checkout,
+        'subtotal': subtotal,
+        'offer_discount': offer_discount,       
+        'shipping': shipping, 
+        'order_total': order_total,
+        'remaining_free': remaining_free, 
+        'max_qty': MAX_QTY_PER_ITEM,
     })
 
 
@@ -179,7 +190,6 @@ def cart_update(request, item_id):
     elif action == 'remove':
         item.delete()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            # Get updated cart totals
             subtotal = cart.subtotal
             shipping = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
             return JsonResponse({

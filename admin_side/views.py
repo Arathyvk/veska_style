@@ -37,7 +37,7 @@ def admin_login(request):
 
             if user and user.is_staff and user.is_active:
                 login(request, user)
-                return redirect('user_list')
+                return redirect('admin_dashboard')
             else:
                 error['invalid'] = "Invalid credentials or not an admin."
 

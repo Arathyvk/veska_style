@@ -1,6 +1,6 @@
 import json
 import datetime
-import uuid
+import re
 import stripe
 import traceback
 
@@ -18,6 +18,7 @@ from django.utils import timezone as tz
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST, require_http_methods
+from offer_admin.views import get_applicable_offers
 
 from cart_user.models import Cart
 from order_user.models import Order, OrderItem
@@ -25,7 +26,7 @@ from customers.models import Address
 from coupon_admin.models import Coupon, CouponUsage
 from wallet_user.models import Wallet, WalletTransaction
 from checkout_page.models import StripePayment
-from offer_admin.models import BaseOffer
+from offer_admin.models import BaseOffer, UserOfferUsage
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -38,7 +39,6 @@ COUNTRIES = [
     'India', 'United States', 'United Kingdom',
     'UAE', 'Singapore', 'Canada', 'Australia', 'Other',
 ]
-
 
 
 def _get_cart(request):
@@ -54,10 +54,14 @@ def _get_cart(request):
 
 
 def _calc_totals(subtotal, offer_discount=Decimal('0'), coupon_discount=Decimal('0'), wallet_used=Decimal('0')):
-    after_discounts = subtotal - offer_discount - coupon_discount  
+    after_discounts = subtotal - offer_discount - coupon_discount
     shipping = SHIPPING_CHARGE if after_discounts < FREE_SHIPPING_THRESHOLD else Decimal('0')
-    grand = max(after_discounts + shipping - wallet_used, Decimal('0'))
-    
+
+    amount_due = after_discounts + shipping
+    wallet_used = min(wallet_used, amount_due)
+
+    grand = max(amount_due - wallet_used, Decimal('0'))
+
     return {
         'subtotal': subtotal,
         'offer_discount': offer_discount,
@@ -67,12 +71,12 @@ def _calc_totals(subtotal, offer_discount=Decimal('0'), coupon_discount=Decimal(
         'grand_total': grand,
     }
 
+
 def _item_price(item):
     return item.variant.price if (item.variant and item.variant.price) else item.product.price
- 
- 
-def _send_order_confirmation_email(order, user):
 
+
+def _send_order_confirmation_email(order, user):
     try:
         subject = f'Order Confirmed #{str(order.uuid)[:8].upper()} — Veska'
         body = render_to_string('emails/order_confirmation.txt', {
@@ -85,14 +89,14 @@ def _send_order_confirmation_email(order, user):
 
 
 def _enrich_coupons(coupons_qs, subtotal, user):
-   
+
     now = tz.now()
     used_ids = set(
         CouponUsage.objects.filter(user=user).values_list('coupon_id', flat=True)
     )
     result = []
     for coupon in coupons_qs:
-        is_valid     = True
+        is_valid      = True
         valid_message = ''
         saved_amount  = Decimal('0')
 
@@ -109,7 +113,8 @@ def _enrich_coupons(coupons_qs, subtotal, user):
             is_valid      = False
             valid_message = f'Min order ₹{coupon.min_order_value} required'
         else:
-            if coupon.discount_type == 'percentage':
+            
+            if coupon.discount_type == 'percent':
                 disc = (subtotal * coupon.value / 100).quantize(Decimal('0.01'))
                 if coupon.max_discount:
                     disc = min(disc, coupon.max_discount)
@@ -126,14 +131,71 @@ def _enrich_coupons(coupons_qs, subtotal, user):
     return result
 
 
+def validate_address_data(data):
+    errors = {}
+
+    name_pattern = re.compile(r'^[A-Za-z\s]+$')
+    if not data.get('full_name', '').strip():
+        errors['full_name'] = 'Please enter your full name.'
+    elif not name_pattern.match(data['full_name'].strip()):
+        errors['full_name'] = 'Please enter only letters (A-Z, a-z) and spaces.'
+
+    phone_pattern = re.compile(r'^[0-9]{10}$')
+    phone = data.get('phone', '').strip()
+    if not phone:
+        errors['phone'] = 'Please enter your phone number.'
+    elif not phone_pattern.match(phone):
+        errors['phone'] = 'Please enter a valid 10-digit number.'
+    elif phone.startswith('0'):
+        errors['phone'] = 'Phone number cannot start with 0.'
+    elif all(c == '0' for c in phone):
+        errors['phone'] = 'Please enter a valid phone number (cannot be all zeros).'
+    elif len(phone) < 10:
+        errors['phone'] = 'Please enter a valid 10-digit phone number.'
+
+    address_pattern = re.compile(r'^[A-Za-z0-9\s,.\-]+$')
+    if not data.get('address_line1', '').strip():
+        errors['address_line1'] = 'Please enter your address.'
+    elif not address_pattern.match(data['address_line1'].strip()):
+        errors['address_line1'] = 'Please enter a valid address (letters, numbers, spaces, ., - allowed).'
+
+    city_pattern = re.compile(r'^[A-Za-z\s]+$')
+    if not data.get('city', '').strip():
+        errors['city'] = 'Please enter your city.'
+    elif not city_pattern.match(data['city'].strip()):
+        errors['city'] = 'Please enter only letters (A-Z, a-z) and spaces.'
+
+    state_pattern = re.compile(r'^[A-Za-z\s]+$')
+    if not data.get('state', '').strip():
+        errors['state'] = 'Please enter your state.'
+    elif not state_pattern.match(data['state'].strip()):
+        errors['state'] = 'Please enter only letters (A-Z, a-z) and spaces.'
+
+    pincode_pattern = re.compile(r'^[0-9]{6}$')
+    pincode = data.get('pincode', '').strip()
+    if not pincode:
+        errors['pincode'] = 'Please enter your pincode.'
+    elif not pincode_pattern.match(pincode):
+        errors['pincode'] = 'Please enter a valid 6-digit pincode (e.g., 678905).'
+    elif pincode.startswith('0'):
+        errors['pincode'] = 'Pincode cannot start with 0.'
+    elif all(c == '0' for c in pincode):
+        errors['pincode'] = 'Please enter a valid pincode (cannot be all zeros).'
+
+    if not data.get('country', '').strip():
+        errors['country'] = 'Please select your country.'
+
+    return errors
+
+
 @login_required(login_url='login')
 def address_add(request):
     errors, data = {}, {}
     if request.method == 'POST':
         data = request.POST
-        for f in ['full_name', 'phone', 'address_line1','address_line2', 'city', 'state', 'pincode', 'country']:
-            if not data.get(f, '').strip():
-                errors[f] = 'This field is required.'
+
+        errors = validate_address_data(data)
+
         if not errors:
             Address.objects.create(
                 user=request.user,
@@ -149,6 +211,9 @@ def address_add(request):
             )
             messages.success(request, 'Address saved.')
             return redirect('checkout')
+        else:
+            messages.error(request, 'Please correct the error below.')
+
     return render(request, 'address_form.html', {
         'action': 'add', 'data': data, 'errors': errors,
         'countries': COUNTRIES, 'address': None,
@@ -159,11 +224,12 @@ def address_add(request):
 def address_edit(request, pk):
     address = get_object_or_404(Address, pk=pk, user=request.user)
     errors, data = {}, {}
+
     if request.method == 'POST':
         data = request.POST
-        for f in ['full_name', 'phone', 'address_line1', 'city', 'state', 'pincode', 'country']:
-            if not data.get(f, '').strip():
-                errors[f] = 'This field is required.'
+
+        errors = validate_address_data(data)
+
         if not errors:
             for attr in ['full_name', 'phone', 'address_line1', 'city', 'state', 'pincode', 'country']:
                 setattr(address, attr, data[attr].strip())
@@ -172,9 +238,24 @@ def address_edit(request, pk):
             address.save()
             messages.success(request, 'Address updated.')
             return redirect('checkout')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+
     return render(request, 'address_form.html', {
-        'action': 'edit', 'data': data or {}, 'errors': errors,
-        'address': address, 'countries': COUNTRIES,
+        'action': 'edit', 'data': data or {
+            'full_name': address.full_name,
+            'phone': address.phone,
+            'address_line1': address.address_line1,
+            'address_line2': address.address_line2,
+            'city': address.city,
+            'state': address.state,
+            'pincode': address.pincode,
+            'country': address.country,
+            'is_default': address.is_default,
+        },
+        'errors': errors,
+        'address': address,
+        'countries': COUNTRIES,
     })
 
 
@@ -255,7 +336,7 @@ def apply_coupon(request):
         messages.error(request, msg)
         return redirect('checkout')
 
-    if coupon.discount_type == 'percentage':
+    if coupon.discount_type == 'percent':
         discount = (subtotal * coupon.value / 100).quantize(Decimal('0.01'))
         if coupon.max_discount:
             discount = min(discount, coupon.max_discount)
@@ -310,38 +391,31 @@ def checkout(request):
     now = tz.now()
     offer_discount = Decimal('0')
     offer_details_list = []
-    
+    applied_offer_ids = set()  
     for item in cart_items:
         product = item.product
-        product_offers = BaseOffer.objects.filter(
-            offer_type='PRODUCT', products=product,
-            is_active=True, start_date__lte=now, end_date__gte=now,
-        )
-        category_offers = BaseOffer.objects.filter(
-            offer_type='CATEGORY', categories=product.category,
-            is_active=True, start_date__lte=now, end_date__gte=now,
-        )
-        all_offers = list(product_offers) + list(category_offers)
+        all_offers = get_applicable_offers(product, request.user)   
         best_discount = Decimal('0')
         best_offer_name = ''
-        
+        best_offer_id = None
+
         for offer in all_offers:
             item_price = _item_price(item)
-            if offer.discount_type == 'PERCENTAGE':
-                disc = (item_price * offer.discount_value / 100).quantize(Decimal('0.01'))
-            else:
-                disc = min(offer.discount_value, item_price)
-            disc_total = disc * item.quantity
+            line_total = item_price * item.quantity
+            disc_total = offer.calculate_discount(line_total) 
             if disc_total > best_discount:
                 best_discount = disc_total
-                best_offer_name = offer.name if hasattr(offer, 'name') else 'Offer'
-        
-        offer_discount += best_discount
+                best_offer_name = offer.name
+                best_offer_id = offer.id
+
+        offer_discount += best_discount  
         if best_discount > 0 and best_offer_name:
             offer_details_list.append(f"{best_offer_name}")
+            applied_offer_ids.add(best_offer_id)
 
     request.session['offer_discount'] = str(offer_discount)
     request.session['offer_details'] = ', '.join(set(offer_details_list)) if offer_details_list else ''
+    request.session['offer_ids'] = list(applied_offer_ids)
 
     totals = _calc_totals(
         subtotal=subtotal,
@@ -400,8 +474,6 @@ def checkout(request):
     })
 
 
-
-
 @login_required(login_url='login')
 @require_http_methods(['POST'])
 def stripe_create_checkout_session(request):
@@ -425,8 +497,10 @@ def stripe_create_checkout_session(request):
 
         coupon_code = request.session.get('coupon_code', '')
         coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
-        
+
         offer_discount = Decimal(str(request.session.get('offer_discount', '0')))
+        offer_ids = request.session.get('offer_ids', [])   
+        offer_ids_str = ','.join(str(i) for i in offer_ids)
 
         shipping_amount = SHIPPING_CHARGE if (subtotal - coupon_discount - offer_discount) < FREE_SHIPPING_THRESHOLD else Decimal('0')
         amount_to_pay = max(subtotal - coupon_discount - offer_discount + shipping_amount - wallet_amount, Decimal('0'))
@@ -434,20 +508,40 @@ def stripe_create_checkout_session(request):
         if amount_to_pay == 0:
             return JsonResponse({'success': True, 'wallet_only': True, 'amount': 0})
 
-        checkout_session = stripe.checkout.Session.create(
-            customer_email=request.user.email,
-            payment_method_types=['card'],
-            line_items=[{
+        discounted_subtotal = subtotal - coupon_discount - offer_discount
+        item_amount = max(discounted_subtotal - wallet_amount, Decimal('0'))
+        remaining_wallet_after_items = max(wallet_amount - discounted_subtotal, Decimal('0'))
+        shipping_line_amount = max(shipping_amount - remaining_wallet_after_items, Decimal('0'))
+
+        line_items = [{
+            'price_data': {
+                'currency': 'inr',
+                'unit_amount': int(item_amount * 100),
+                'product_data': {
+                    'name': 'Veska Order',
+                    'description': f'{cart_items.count()} item(s)',
+                },
+            },
+            'quantity': 1,
+        }]
+
+        if shipping_line_amount > 0:
+            line_items.append({
                 'price_data': {
                     'currency': 'inr',
-                    'unit_amount': int(amount_to_pay * 100),
+                    'unit_amount': int(shipping_line_amount * 100),
                     'product_data': {
-                        'name': 'Veska Order',
-                        'description': f'{cart_items.count()} item(s) – Total ₹{amount_to_pay}',
+                        'name': 'Shipping',
+                        'description': 'Delivery charge',
                     },
                 },
                 'quantity': 1,
-            }],
+            })
+
+        checkout_session = stripe.checkout.Session.create(
+            customer_email=request.user.email,
+            payment_method_types=['card'],
+            line_items=line_items,
             mode='payment',
             success_url=request.build_absolute_uri(reverse('payment_success')) + '?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=request.build_absolute_uri(reverse('payment_cancel')) + '?session_id={CHECKOUT_SESSION_ID}',
@@ -462,6 +556,7 @@ def stripe_create_checkout_session(request):
                 'shipping_amount': str(shipping_amount),
                 'offer_discount': str(offer_discount),
                 'subtotal': str(subtotal),
+                'offer_ids': offer_ids_str,   
             },
         )
 
@@ -479,6 +574,8 @@ def stripe_create_checkout_session(request):
                 'coupon_discount': str(coupon_discount),
                 'offer_discount': str(offer_discount),
                 'subtotal': str(subtotal),
+                'shipping_amount': str(shipping_amount),
+                'offer_ids': offer_ids_str,   
             },
         )
 
@@ -545,6 +642,9 @@ def payment_success(request):
         cart_id = int(raw_meta.get('cart_id') or 0)
         offer_discount = Decimal(str(raw_meta.get('offer_discount') or '0'))
         offer_details = request.session.get('offer_details', '')
+
+        offer_ids_raw = raw_meta.get('offer_ids') or ''
+        offer_ids = [int(i) for i in offer_ids_raw.split(',') if i.strip().isdigit()]
     except (ValueError, TypeError) as e:
         print(f'[payment_success] Metadata parse error: {e}')
         messages.error(request, 'Order data is corrupted.')
@@ -594,6 +694,8 @@ def payment_success(request):
                 pincode=address.pincode,
                 country=address.country,
                 subtotal=subtotal,
+                coupon_code=coupon_code,
+                discount_amount=coupon_discount,
                 offer_discount=offer_discount,
                 offer_details=offer_details,
                 shipping_charge=shipping_amount,
@@ -607,7 +709,13 @@ def payment_success(request):
 
             for item in cart_items:
                 price = _item_price(item)
-                img = item.product.images.first()
+
+                img = None
+                if item.variant:
+                    img = item.variant.images.first()
+                if not img and item.product.variants.exists():
+                    img = item.product.variants.first().images.first()
+
                 order_item = OrderItem(
                     order=order,
                     product=item.product,
@@ -615,18 +723,16 @@ def payment_success(request):
                     product_name=item.product.name,
                     product_slug=item.product.slug,
                     size=item.variant.size if item.variant else '',
+                    color=item.variant.color if item.variant else '',
                     image_url=img.image.url if (img and img.image) else '',
                     unit_price=price,
                     quantity=item.quantity,
                 )
                 order_item.save()
-                
+
                 if item.variant:
                     item.variant.stock = max(0, item.variant.stock - item.quantity)
                     item.variant.save(update_fields=['stock'])
-                else:
-                    item.product.stock = max(0, item.product.stock - item.quantity)
-                    item.product.save(update_fields=['stock'])
 
             if coupon_code:
                 try:
@@ -634,12 +740,18 @@ def payment_success(request):
                     coupon_obj.times_used += 1
                     coupon_obj.save(update_fields=['times_used'])
                     CouponUsage.objects.get_or_create(
-                        user=request.user, 
+                        user=request.user,
                         coupon=coupon_obj,
                         defaults={'order': order},
                     )
                 except Coupon.DoesNotExist:
                     pass
+
+            if offer_ids:
+                applied_offers = BaseOffer.objects.filter(id__in=offer_ids)
+                for offer in applied_offers:
+                    usage, _ = UserOfferUsage.objects.get_or_create(user=request.user, offer=offer)
+                    usage.increment_usage()
 
             if wallet_amount > 0:
                 try:
@@ -659,8 +771,8 @@ def payment_success(request):
 
             if cart:
                 cart.items.all().delete()
-            
-            for key in ('coupon_code', 'coupon_discount', 'offer_discount', 'offer_details'):
+
+            for key in ('coupon_code', 'coupon_discount', 'offer_discount', 'offer_details', 'offer_ids'):
                 request.session.pop(key, None)
 
             payment.order = order
@@ -739,6 +851,7 @@ def stripe_webhook(request):
 
     return HttpResponse(status=200)
 
+
 def _wh_checkout_completed(session):
     try:
         payment = StripePayment.objects.get(session_id=session['id'])
@@ -756,7 +869,6 @@ def _wh_payment_failed(session):
         payment.save()
     except StripePayment.DoesNotExist:
         pass
-
 
 
 @require_POST
@@ -787,7 +899,8 @@ def place_order(request):
         coupon_code = request.session.get('coupon_code', '')
         coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
         offer_discount = Decimal(str(request.session.get('offer_discount', '0')))
-        
+        offer_ids = request.session.get('offer_ids', [])   
+
         coupon_obj = None
         if coupon_code:
             try:
@@ -848,7 +961,12 @@ def place_order(request):
 
             for item in items:
                 price = _item_price(item)
-                img = item.product.images.first()
+
+                img = None
+                if item.variant:
+                    img = item.variant.images.first()
+                if not img and item.product.variants.exists():
+                    img = item.product.variants.first().images.first()
                 order_item = OrderItem(
                     order=order,
                     product=item.product,
@@ -861,22 +979,25 @@ def place_order(request):
                     quantity=item.quantity,
                 )
                 order_item.save()
-                
+
                 if item.variant:
                     item.variant.stock = max(0, item.variant.stock - item.quantity)
                     item.variant.save(update_fields=['stock'])
-                else:
-                    item.product.stock = max(0, item.product.stock - item.quantity)
-                    item.product.save(update_fields=['stock'])
 
             if coupon_obj:
                 coupon_obj.times_used += 1
                 coupon_obj.save(update_fields=['times_used'])
                 CouponUsage.objects.get_or_create(
-                    user=request.user, 
+                    user=request.user,
                     coupon=coupon_obj,
                     defaults={'order': order},
                 )
+
+            if offer_ids:
+                applied_offers = BaseOffer.objects.filter(id__in=offer_ids)
+                for offer in applied_offers:
+                    usage, _ = UserOfferUsage.objects.get_or_create(user=request.user, offer=offer)
+                    usage.increment_usage()
 
             if wallet_used > 0:
                 wallet = Wallet.objects.get(user=request.user)
@@ -892,7 +1013,7 @@ def place_order(request):
                 )
 
             cart.items.all().delete()
-            for key in ('coupon_code', 'coupon_discount', 'offer_discount'):
+            for key in ('coupon_code', 'coupon_discount', 'offer_discount', 'offer_ids'):
                 request.session.pop(key, None)
 
             _send_order_confirmation_email(order, request.user)
@@ -909,8 +1030,6 @@ def place_order(request):
         return JsonResponse({'success': False, 'error': str(exc)}, status=500)
 
 
-
-
 @login_required(login_url='login')
 def order_success(request, uuid):
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
@@ -919,21 +1038,17 @@ def order_success(request, uuid):
     subtotal = Decimal('0')
     for item in items:
         subtotal += item.unit_price * item.quantity
-    
+
     shipping = Decimal(order.shipping_charge or 0)
     coupon_discount = Decimal(order.discount_amount or 0)
     coupon_code = order.coupon_code or ''
     offer_discount = Decimal(order.offer_discount or 0)
     offer_details = order.offer_details or ''
     wallet_used = Decimal(order.wallet_amount_used or 0)
-
-    final_total = max(
-        subtotal - offer_discount - coupon_discount + shipping - wallet_used,
-        Decimal('0'),
-    )
+    final_total = order.total
 
     estimated = order.created_at + datetime.timedelta(days=5)
-    
+
     return render(request, 'order_success.html', {
         'order': order,
         'order_items': items,

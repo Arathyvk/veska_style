@@ -189,7 +189,14 @@ nav a:hover{color:var(--btn)}
   transform: translateY(0);
 }
 
-main{flex:1;display:flex;align-items:center;justify-content:center;padding:50px 20px}
+main{
+    flex:1;
+    width:100%;
+    display:block;
+    padding:0;
+    margin:0;
+    background:var(--bg);
+}
 .login-wrapper{width:100%;max-width:616px}
 .brand{text-align:center;margin-bottom:28px}
 .brand-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--text);letter-spacing:3px;text-transform:uppercase}
@@ -298,19 +305,6 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
       <span class="cart-count" id="cartCount"{% if not cart_nav_count %} style="display:none"{% endif %}>{{ cart_nav_count|default:0 }}</span>
     </a>
   </div>
-
-      <div class="toast-container position-fixed top-0 end-0 p-3">
-        {% for message in messages %}
-        <div class="toast align-items-center text-bg-{{ message.tags }} border-0"
-            role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="d-flex">
-            <div class="toast-body">{{ message }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                    data-bs-dismiss="toast"></button>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
 </header>
 
 <main>

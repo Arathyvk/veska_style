@@ -423,7 +423,7 @@ def inventory_list(request):
     qs = (
         Product.objects
         .select_related('category')
-        .prefetch_related('variants', 'images')
+        .prefetch_related('variants', 'variants__images')
     )
 
     q = request.GET.get('q', '').strip()
@@ -440,7 +440,7 @@ def inventory_list(request):
     if status_filter == 'listed':
         qs = qs.filter(is_listed=True, is_blocked=False)
     elif status_filter == 'unlisted':
-        qs = qs.filter(is_listed=False)
+        qs = qs.filter(is_listed=False) 
     elif status_filter == 'blocked':
         qs = qs.filter(is_blocked=True)
 
@@ -452,26 +452,20 @@ def inventory_list(request):
             Value(0),
             output_field=IntegerField()
         )
-    ).annotate(
-        effective_stock=Case(
-            When(variant_stock_sum__gt=0, then='variant_stock_sum'),
-            default='stock',
-            output_field=IntegerField()
-        )
     )
 
     if stock_filter == 'out':
-        qs = qs.filter(effective_stock=0)
+        qs = qs.filter(variant_stock_sum=0)
     elif stock_filter == 'low':
-        qs = qs.filter(effective_stock__gt=0, effective_stock__lte=LOW_STOCK_THRESHOLD)
+        qs = qs.filter(variant_stock_sum__gt=0, variant_stock_sum__lte=LOW_STOCK_THRESHOLD)
     elif stock_filter == 'in':
-        qs = qs.filter(effective_stock__gt=LOW_STOCK_THRESHOLD)
+        qs = qs.filter(variant_stock_sum__gt=LOW_STOCK_THRESHOLD)
 
     sort_mapping = {
         'name':   'name',
         '-name':  '-name',
-        'stock':  'effective_stock',
-        '-stock': '-effective_stock',
+        'stock':  'variant_stock_sum',
+        '-stock': '-variant_stock_sum',
     }
     qs = qs.order_by(sort_mapping.get(sort_param, 'name'))
 
@@ -481,12 +475,6 @@ def inventory_list(request):
             Value(0),
             output_field=IntegerField()
         )
-    ).annotate(
-        effective_stock=Case(
-            When(variant_stock_sum__gt=0, then='variant_stock_sum'),
-            default='stock',
-            output_field=IntegerField()
-        )
     )
 
     inv_stats = {
@@ -494,10 +482,10 @@ def inventory_list(request):
         'listed':       all_products.filter(is_listed=True,  is_blocked=False).count(),
         'unlisted':     all_products.filter(is_listed=False).count(),
         'blocked':      all_products.filter(is_blocked=True).count(),
-        'out_of_stock': all_products.filter(effective_stock=0).count(),
+        'out_of_stock': all_products.filter(variant_stock_sum=0).count(),
         'low_stock':    all_products.filter(
-                            effective_stock__gt=0,
-                            effective_stock__lte=LOW_STOCK_THRESHOLD
+                            variant_stock_sum__gt=0,
+                            variant_stock_sum__lte=LOW_STOCK_THRESHOLD
                         ).count(),
     }
 
@@ -533,13 +521,14 @@ def inventory_list(request):
 
 @staff_member_required(login_url='admin:login')
 def inventory_detail(request, product_id):
-    product  = get_object_or_404(Product, pk=product_id)
+    product  = get_object_or_404(
+        Product.objects.prefetch_related('variants__images'),
+        pk=product_id
+        )
     variants = product.variants.all().order_by('size')
-    images   = product.images.all().order_by('order')
     return render(request, 'inventory_detail.html', {
         'product':   product,
         'variants':  variants,
-        'images':    images,
         'LOW_STOCK': LOW_STOCK_THRESHOLD,
     })
 
@@ -559,17 +548,12 @@ def inventory_update_stock(request, product_id):
         messages.error(request, 'Stock must be a non-negative number.')
         return redirect('admin_inventory_detail', product_id=product_id)
 
-    if variant_id:
-        variant = get_object_or_404(ProductVariant, pk=variant_id, product=product)
-        old = variant.stock
-        variant.stock = new_stock
-        variant.save(update_fields=['stock'])
-        messages.success(request, f'Stock for {product.name} (Size {variant.size}) updated: {old} → {new_stock}.')
-    else:
-        old = product.stock
-        product.stock = new_stock
-        product.save(update_fields=['stock'])
-        messages.success(request, f'Stock for {product.name} updated: {old} → {new_stock}.')
+    variant = get_object_or_404(ProductVariant, pk=variant_id, product=product)
+    old = variant.stock
+    variant.stock = new_stock
+    variant.save(update_fields=['stock'])
+    messages.success(request, f'Stock for {product.name} (Size {variant.size}) updated: {old} → {new_stock}.')
+   
 
     return redirect('admin_inventory_detail', product_id=product_id)
 
@@ -632,9 +616,6 @@ def admin_cancel_order_item(request, item_id):
         if item.variant:
             item.variant.stock += item.quantity
             item.variant.save(update_fields=['stock'])
-        elif item.product:
-            item.product.stock += item.quantity
-            item.product.save(update_fields=['stock'])
 
         refund_amount = Decimal('0.00')
         if will_refund:

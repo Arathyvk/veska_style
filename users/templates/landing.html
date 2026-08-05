@@ -381,13 +381,15 @@ main {
   {% for product in products %}
   <div class="product-card">
     <div class="product-image">
-      {% with img=product.images.first %}
-        {% if img %}
-          <img src="{{ img.image.url }}" alt="{{ product.name }}">
-        {% else %}
-          <div style="width:100%;height:260px;display:flex;align-items:center;
-                      justify-content:center;color:#b0a699">No image</div>
-        {% endif %}
+      {% with variant=product.variants.first %}
+        {% with img=variant.images.first %}
+          {% if img %}
+            <img src="{{ img.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <div style="width:100%;height:260px;display:flex;align-items:center;
+                        justify-content:center;color:#b0a699">No image</div>
+          {% endif %}
+        {% endwith %}
       {% endwith %}
     </div>
     <h3>{{ product.name }}</h3>

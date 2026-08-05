@@ -35,8 +35,11 @@ def cart_total_items(cart):
 def wishlist_count_for(request):
     if not request.user.is_authenticated:
         return 0
+    from wishlist_user.models import Wishlist
     wl = Wishlist.objects.filter(user=request.user).first()
-    return wl.products.count() if wl else 0
+    if not wl:
+        return 0
+    return wl.items.count()  
 
 
 def cart_count_payload(request, cart=None):

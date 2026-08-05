@@ -784,25 +784,44 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
             </tr>
           </thead>
           <tbody>
-            {% for order in recent_orders %}
-            <tr>
-              <td><a href="{% url 'admin_order_detail' order.uuid %}">#{{ order.uuid|truncatechars:8 }}</a></td>
+          {% for order in recent_orders %}
+          <tr>
               <td>
-                <strong>{{ order.full_name }}</strong><br>
-                <span style="font-size:15px;color:var(--muted)">{{ order.user.email }}</span>
+                  <a href="{% url 'admin_order_detail' order.uuid %}">
+                      #{{ order.uuid|truncatechars:8 }}
+                  </a>
               </td>
-              <td><strong>₹{{ order.total|floatformat:0 }}</strong></td>
-              <td><span class="pill pill-{{ order.status }}">{{ order.status|title }}</span></td>
-              <td><span class="pill pill-{{ order.payment_method }}">{{ order.payment_method|upper }}</span></td>
-              </tr>
-              <tr>
-                <td colspan="6" style="text-align:center;padding:32px;">No orders yet.</td>
-              </tr>
-            {% empty %}
-            <tr>
-              <td colspan="5" style="text-align:center;padding:32px;">No orders yet.</td>
-            </tr>
-            {% endfor %}
+
+              <td>
+                  <strong>{{ order.full_name }}</strong><br>
+                  <span style="font-size:15px;color:var(--muted)">
+                      {{ order.user.email }}
+                  </span>
+              </td>
+
+              <td>
+                  <strong>₹{{ order.total|floatformat:0 }}</strong>
+              </td>
+
+              <td>
+                  <span class="pill pill-{{ order.status }}">
+                      {{ order.status|title }}
+                  </span>
+              </td>
+
+              <td>
+                  <span class="pill pill-{{ order.payment_method }}">
+                      {{ order.payment_method|upper }}
+                  </span>
+              </td>
+          </tr>
+          {% empty %}
+          <tr>
+              <td colspan="5" style="text-align:center;padding:32px;">
+                  No orders yet.
+              </td>
+          </tr>
+          {% endfor %}
           </tbody>
         </table>
       </div>
@@ -874,17 +893,25 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
           <a href="{% url 'admin_inventory_list' %}">Manage →</a>
         </div>
         <div class="stock-list">
-          {% for product in low_stock %}
-          <div class="stock-item">
-            <span class="stock-name">{{ product.name }}</span>
+          {% for variant in low_stock %}
+         <div class="stock-item">
+            <span class="stock-name">
+                {{ variant.product__name }}
+                ({{ variant.size }} / {{ variant.color }})
+            </span>
+
             <div class="stock-right">
-              <span class="stock-qty {% if product.stock <= 2 %}critical{% else %}low{% endif %}">
-                {{ product.stock }} left
-              </span>
-              <a href="{% url 'admin_inventory_detail' product.id %}" class="stock-edit">Edit</a>
+                <span class="stock-qty {% if variant.stock <= 2 %}critical{% else %}low{% endif %}">
+                    {{ variant.stock }} left
+                </span>
+
+                <a href="{% url 'admin_inventory_detail' variant.product_id %}"
+                  class="stock-edit">
+                    Edit
+                </a>
             </div>
-          </div>
-          {% empty %}
+        </div>
+                  {% empty %}
           <div style="padding:20px 18px;color:var(--muted);font-size:15px;text-align:center;">
             ✓ All products sufficiently stocked
           </div>

@@ -20,19 +20,20 @@
   --text:#f0ebe4;--muted:#8a7d72;--muted2:#b0a090;
   --green:#4caf7d;--red:#e05252;--orange:#e09a52;
   --radius:6px;
-  --head:'Playfair Display',serif;--body:'Jost',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:13px}
+html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:15px}
 
+/* ── Layout ── */
 .section-header{
   background:var(--card);border:1px solid var(--border);
   border-radius:var(--radius) var(--radius) 0 0;
   padding:11px 16px;display:flex;align-items:center;
   justify-content:space-between;flex-wrap:wrap;gap:10px;
 }
-.section-header h2{font-family:var(--head);font-size:2pc;font-weight:600}
+.section-header h2{font-family:var(--head);font-size:3pc;font-weight:600}
 
+/* ── Search & Filters ── */
 .search-box{
   display:flex;align-items:center;
   background:var(--card2);border:1px solid var(--border2);
@@ -57,6 +58,7 @@ html,body{font-family:var(--body);background:var(--bg);color:var(--text);font-si
 .sort-btn:hover{border-color:var(--rose);color:var(--rose2)}
 .sort-btn.active{background:var(--rose);border-color:var(--rose);color:#fff}
 
+/* ── Table ── */
 .table-wrap{
   background:var(--card);border:1px solid var(--border);
   border-top:none;border-bottom:none;overflow-x:auto;
@@ -75,6 +77,7 @@ td{
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(201,150,122,.04)}
 
+/* ── Table Elements ── */
 .cat-pill{
   display:inline-block;background:rgba(201,150,122,.1);
   border:1px solid rgba(201,150,122,.25);color:var(--rose2);
@@ -82,28 +85,89 @@ tr:hover td{background:rgba(201,150,122,.04)}
 }
 .stock-badge{
   display:inline-block;background:var(--card2);border:1px solid var(--border2);
-  color:var(--muted2);font-size:px;font-weight:600;
+  color:var(--muted2);font-weight:600;
   padding:3px 10px;border-radius:4px;min-width:36px;text-align:center;
 }
 .stock-badge.low{background:rgba(224,82,82,.1);border-color:rgba(224,82,82,.3);color:var(--red)}
-
 .status-active  {color:var(--green);font-weight:600;font-size:18px}
 .status-inactive{color:var(--red);font-weight:600;font-size:20px}
+.product-thumb{
+  width:80px;height:80px;object-fit:cover;margin:3px;
+  border-radius:6px;border:1px solid #444;
+}
+.variant-item {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(58,52,44,.2);
+}
+.variant-item:last-child {
+  border-bottom: none;
+}
+.variant-detail {
+  font-size: 16px;
+  color: var(--text);
+}
+.variant-price {
+  color: var(--rose2);
+  font-weight: 600;
+}
+.variant-stock {
+  color: var(--muted2);
+}
 
-.actions-cell{display:flex;gap:6px;align-items:center}
+/* ── Image Grid ── */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 250px;
+}
+.image-grid .thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+}
+.image-grid .thumb.primary {
+  border-color: var(--rose);
+}
+.image-grid .no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  background: var(--card2);
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  font-size: 15px;
+  text-align: center;
+  padding: 4px;
+}
+.image-grid .variant-label {
+  grid-column: 1 / -1;
+  font-size: 15px;
+  color: var(--muted2);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* ── Action Buttons ── */
+.actions-cell{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .btn-edit{
-  background:#2a6e45;color:#5df0a0;font-size:14px;font-weight:600;
+  background:#2a6e45;color:#5df0a0;font-size:16px;font-weight:600;
   padding:5px 13px;border-radius:4px;border:none;cursor:pointer;
   text-decoration:none;display:inline-block;transition:background .15s;
 }
 .btn-edit:hover{background:#347a50}
 .btn-remove{
-  background:#6e2a2a;color:#f07070;font-size:14px;font-weight:600;
+  background:#6e2a2a;color:#f07070;font-size:16px;font-weight:600;
   padding:5px 11px;border-radius:4px;border:none;cursor:pointer;
   transition:background .15s;font-family:var(--body);
 }
 .btn-remove:hover{background:#7a3434}
 
+/* ── Pagination ── */
 .table-footer{
   background:var(--card);border:1px solid var(--border);border-top:none;
   border-radius:0 0 var(--radius) var(--radius);
@@ -113,23 +177,23 @@ tr:hover td{background:rgba(201,150,122,.04)}
 .pagination{display:flex;align-items:center;gap:5px}
 .pg-btn{
   background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
-  font-size:12px;font-weight:600;padding:4px 12px;border-radius:4px;
+  font-size:15px;font-weight:600;padding:4px 12px;border-radius:4px;
   cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block;
 }
 .pg-btn:hover{background:var(--rose);border-color:var(--rose);color:#fff}
 .pg-btn.disabled{opacity:.35;pointer-events:none}
 .pg-num{
-  width:28px;height:28px;border-radius:4px;font-size:12px;font-weight:500;
+  width:28px;height:28px;border-radius:4px;font-size:15px;font-weight:500;
   display:inline-flex;align-items:center;justify-content:center;
   background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
   cursor:pointer;transition:all .15s;text-decoration:none;
 }
 .pg-num.active,.pg-num:hover{background:var(--rose);border-color:var(--rose);color:#fff}
-.page-info{font-size:14px;color:var(--muted)}
-
+.page-info{font-size:16px;color:var(--muted)}
 .empty-row td{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-row a{color:var(--rose2);text-decoration:none}
 
+/* ── Modal ── */
 .modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
   z-index:1000;align-items:center;justify-content:center;
@@ -141,37 +205,34 @@ tr:hover td{background:rgba(201,150,122,.04)}
   box-shadow:0 20px 60px rgba(0,0,0,.6);
 }
 .modal-box h3{font-family:var(--head);font-size:17px;margin-bottom:10px;color:var(--text)}
-.modal-box p{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:22px}
+.modal-box p{font-size:15px;color:var(--muted2);line-height:1.6;margin-bottom:22px}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end}
 .modal-cancel{
   background:var(--card2);border:1px solid var(--border2);color:var(--muted2);
-  font-size:12px;font-weight:600;padding:8px 18px;border-radius:5px;
+  font-size:15px;font-weight:600;padding:8px 18px;border-radius:5px;
   cursor:pointer;font-family:var(--body);transition:all .15s;
 }
 .modal-cancel:hover{border-color:var(--rose2);color:var(--rose2)}
 .modal-confirm{
   background:#6e2a2a;color:#f07070;
-  font-size:12px;font-weight:600;padding:8px 18px;border-radius:5px;
+  font-size:15px;font-weight:600;padding:8px 18px;border-radius:5px;
   cursor:pointer;font-family:var(--body);border:none;transition:background .15s;
 }
 .modal-confirm:hover{background:#7a3434}
 
+/* ── Toast Messages ── */
 .messages-wrap{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
 .msg-toast{
   background:var(--card);border:1px solid var(--border);border-radius:8px;
-  padding:11px 15px;font-size:12.5px;display:flex;align-items:center;gap:9px;
+  padding:11px 15px;font-size:15px;display:flex;align-items:center;gap:9px;
   min-width:220px;box-shadow:0 6px 28px rgba(0,0,0,.45);
 }
-
-.site-footer{
-    text-align:center;padding:14px;font-size:16px;
-    color:var(--muted);border-top:1px solid var(--border);margin-top:5pc;max-width:170pc;
-  } 
 .msg-toast.success{border-left:3px solid var(--green)}
 .msg-toast.error  {border-left:3px solid var(--red)}
 .msg-toast.warning{border-left:3px solid var(--orange)}
 </style>
 
+<!-- ─── TOAST MESSAGES ─── -->
 {% if messages %}
 <div class="messages-wrap" id="msg-wrap">
   {% for msg in messages %}
@@ -183,9 +244,15 @@ tr:hover td{background:rgba(201,150,122,.04)}
   </div>
   {% endfor %}
 </div>
-<script>setTimeout(()=>{ const w=document.getElementById('msg-wrap'); if(w) w.remove(); }, 3500)</script>
+<script>
+setTimeout(()=>{ 
+  const w=document.getElementById('msg-wrap'); 
+  if(w) w.remove(); 
+}, 3500)
+</script>
 {% endif %}
 
+<!-- ─── REMOVE MODAL ─── -->
 <div class="modal-overlay" id="removeModal">
   <div class="modal-box">
     <h3>Remove Product</h3>
@@ -197,7 +264,9 @@ tr:hover td{background:rgba(201,150,122,.04)}
   </div>
 </div>
 
+<!-- ─── MAIN CONTENT ─── -->
 <div>
+  <!-- Header -->
   <div class="section-header">
     <h2>All Products</h2>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -243,15 +312,16 @@ tr:hover td{background:rgba(201,150,122,.04)}
     </div>
   </div>
 
+  <!-- Table -->
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>sl no</th>
-          <th>Image</th>
+          <th>SL No</th>
+          <th>Images</th>
           <th>Product Name</th>
           <th>Category</th>
-          <th>Color</th>
+          <th>Variants</th>
           <th>Price</th>
           <th>Stock</th>
           <th>Status</th>
@@ -260,72 +330,125 @@ tr:hover td{background:rgba(201,150,122,.04)}
       </thead>
       <tbody>
         {% for product in products %}
-        <tr>
-          <td style="color:var(--muted)">{{ forloop.counter }}</td>
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            
+            <!-- Images Column -->
+            <td>
+              <div class="image-grid">
+                {% with product.variants.all as variants %}
+                  {% if variants %}
+                    {% for variant in variants %}
+                      {% if variant.images.all %}
+                        <div class="variant-label">{{ variant.size }} ({{ variant.color }})</div>
+                        {% for img in variant.images.all|slice:":3" %}
+                          <img src="{{ img.image.url }}" 
+                               class="thumb {% if forloop.parentloop.first and forloop.first %}primary{% endif %}"
+                               title="{{ variant.size }} - {{ variant.color }}">
+                        {% endfor %}
+                        {% if variant.images.count < 3 %}
+                          {% for i in ""|ljust:"3"|slice:variant.images.count|make_list %}
+                            <div class="no-image">No Image</div>
+                          {% endfor %}
+                        {% endif %}
+                      {% else %}
+                        <div class="variant-label">{{ variant.size }} ({{ variant.color }})</div>
+                        <div class="no-image" style="grid-column: span 3;">No Images</div>
+                      {% endif %}
+                    {% endfor %}
+                  {% else %}
+                    <div class="no-image" style="grid-column: span 3;">No Variants</div>
+                  {% endif %}
+                {% endwith %}
+              </div>
+            </td>
 
-          <td>
-            {% if product.images.first %}
-              <img src="{{ product.images.first.image.url }}"
-                   style="width:6pc;height:7pc;object-fit:cover;border-radius:6px;">
-            {% else %}
-              <span style="color:var(--muted)">—</span>
-            {% endif %}
-          </td>
+            <!-- Product Name -->
+            <td style="font-weight:600;max-width:200px">
+              {{ product.name }}
+            </td>
 
-          <td style="font-weight:600;max-width:220px">{{ product.name }}</td>
+            <!-- Category -->
+            <td>
+              <span class="cat-pill">{{ product.category.name }}</span>
+            </td>
 
-          <td><span class="cat-pill">{{ product.category }}</span></td>
+            <!-- Variants -->
+            <td>
+              {% for variant in product.variants.all %}
+                <div class="variant-item">
+                  <span class="variant-detail">{{ variant.size }}</span>
+                  <span style="color:var(--muted);font-size:15px">({{ variant.color }})</span>
+                </div>
+              {% empty %}
+                <span style="color:var(--muted);font-size:16px">No variants</span>
+              {% endfor %}
+            </td>
 
-          <td style="color:var(--muted2)">{{ product.color|default:"—" }}</td>
+            <!-- Price -->
+            <td>
+              {% for variant in product.variants.all %}
+                <div class="variant-item">
+                  <span class="variant-price">₹{{ variant.price }}</span>
+                </div>
+              {% empty %}
+                <span style="color:var(--muted);font-size:16px">-</span>
+              {% endfor %}
+            </td>
 
-          <td style="font-family:var(--head);font-weight:700">
-            ₹{{ product.price|floatformat:0 }}
-          </td>
+            <!-- Stock -->
+            <td>
+              {% for variant in product.variants.all %}
+                <div class="variant-item">
+                  <span class="stock-badge {% if variant.stock < 5 %}low{% endif %}">
+                    {{ variant.stock }}
+                  </span>
+                </div>
+              {% empty %}
+                <span style="color:var(--muted);font-size:16px">-</span>
+              {% endfor %}
+            </td>
 
-          <td>
-            <span class="stock-badge {% if product.total_stock == 0 %}low{% endif %}">
-              {{ product.total_stock }}
-            </span>
-          </td>
+            <!-- Status -->
+            <td>
+              {% if product.is_active %}
+                <span class="status-active">● Active</span>
+              {% else %}
+                <span class="status-inactive">● Inactive</span>
+              {% endif %}
+            </td>
 
-          <td>
-            {% if product.is_active %}
-              <span class="status-active">● Active</span>
-            {% else %}
-              <span class="status-inactive">● Inactive</span>
-            {% endif %}
-          </td>
-
-          <td>
-            <div class="actions-cell">
-              <a href="{% url 'product_edit' product.uuid %}" class="btn-edit">Edit</a>
-
-              <form method="POST"
-                    action="{% url 'product_remove' product.uuid %}"
-                    id="removeForm-{{ product.pk }}"
-                    style="display:inline">
-                {% csrf_token %}
-                <button type="button"
-                        class="btn-remove"
-                        onclick="openModal('{{ product.name|escapejs }}', 'removeForm-{{ product.pk }}')">
-                  Remove
-                </button>
-              </form>
-            </div>
-          </td>
-        </tr>
+            <!-- Actions -->
+            <td>
+              <div class="actions-cell">
+                <a href="{% url 'product_edit' product.uuid %}" class="btn-edit">Edit</a>
+                <form method="POST"
+                      action="{% url 'product_remove' product.uuid %}"
+                      id="removeForm-{{ product.pk }}"
+                      style="display:inline">
+                  {% csrf_token %}
+                  <button type="button"
+                          class="btn-remove"
+                          onclick="openModal('{{ product.name|escapejs }}', 'removeForm-{{ product.pk }}')">
+                    Remove
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
         {% empty %}
-        <tr class="empty-row">
-          <td colspan="9">
-            No products found.
-            <a href="{% url 'product_add' %}">Add one now →</a>
-          </td>
-        </tr>
+          <tr class="empty-row">
+            <td colspan="9">
+              No products found.
+              <a href="{% url 'product_add' %}">Add one now →</a>
+            </td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 
+  <!-- Footer & Pagination -->
   <div class="table-footer">
     <span class="page-info">
       Page {{ products.number }} of {{ products.paginator.num_pages }}
@@ -359,6 +482,7 @@ tr:hover td{background:rgba(201,150,122,.04)}
   </div>
 </div>
 
+<!-- ─── JAVASCRIPT ─── -->
 <script>
 let pendingFormId = null;
 
@@ -374,16 +498,19 @@ function closeModal() {
   document.getElementById('removeModal').classList.remove('open');
 }
 
+// Confirm removal
 document.getElementById('modalConfirmBtn').addEventListener('click', function() {
   if (pendingFormId) {
     document.getElementById(pendingFormId).submit();
   }
 });
 
+// Close modal on overlay click
 document.getElementById('removeModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
+// Close modal on Escape key
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
 });
