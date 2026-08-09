@@ -11,7 +11,7 @@ from allauth.socialaccount.models import SocialApp
 from django.contrib.sites.models import Site
 import uuid as _uuid
 from django.urls import reverse
-from users.utils import credit_referral_bonus
+from users.utils import apply_referral_for_new_user
 from users.models import User, ReferralCode
 from product_admin.models import Product
 from cart_user.models import Cart
@@ -157,7 +157,7 @@ def signup_view(request):
     errors = {}
     form_data = {}
 
-    ref_code =request.GET.get('ref', '').strip()
+    ref_code = request.GET.get('ref', '').strip().upper()
     if ref_code:
         request.session['pending_referral_code'] = ref_code
         request.session.modified = True
@@ -170,8 +170,8 @@ def signup_view(request):
         password         = request.POST.get("password",   "")
         confirm_password = request.POST.get("confirm_password", "")
 
-        posted_ref = request.POST.get("ref_code", "").strip()
-        if posted_ref and not  request.session.get("pending_referral_code"):
+        posted_ref = request.POST.get("ref_code", "").strip().upper()
+        if posted_ref:
             request.session["pending_referral_code"] = posted_ref
             request.session.modified = True
 
@@ -193,9 +193,9 @@ def signup_view(request):
         if not password:
             errors["password"] = "Password is required."
         else:
-            if len(password) < 8:          pwd_errors.append("at least 8 characters")
+            if len(password) < 8: pwd_errors.append("at least 8 characters")
             if not re.search(r"[A-Za-z]", password): pwd_errors.append("at least one letter")
-            if not re.search(r"\d", password):       pwd_errors.append("at least one number")
+            if not re.search(r"\d", password): pwd_errors.append("at least one number")
             if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-\+=/\\]", password):
                 pwd_errors.append("at least one symbol")
             if pwd_errors:
@@ -207,11 +207,13 @@ def signup_view(request):
             errors["confirm_password"] = "Passwords do not match."
 
         if not errors:
+            ref_code = request.session.get("pending_referral_code", "")
             request.session["signup_data"] = {
                 "first_name": first_name.capitalize(),
                 "last_name":  last_name.capitalize(),
                 "email":      email,
                 "password":   password,
+                "ref_code":   ref_code,
             }
 
             request.session.modified = True  
@@ -228,7 +230,6 @@ def signup_view(request):
         "ref_code": request.session.get("pending_referral_code", ""),
 
         })
-
 
 
 @never_cache
@@ -252,11 +253,6 @@ def verify_signup_otp(request):
     if request.method == "POST":
         entered_otp = request.POST.get("otp", "").strip()
         stored_otp, otp_time = get_otp_from_session(request, "signup")
-
-        print("Entered OTP:", entered_otp)
-        print("Stored OTP:", stored_otp)
-        print("OTP time:", otp_time)
-        print("Is expired:", is_otp_expired(otp_time))
 
         if not stored_otp:
             messages.error(request, "OTP not found. Please resend.")
@@ -341,18 +337,9 @@ def verify_signup_otp(request):
                 is_superuser=False,
             )
 
-            ref_code = request.session.pop("pending_referral_code", None)
-            if ref_code:
-                try:
-                    referral = ReferralCode.objects.get(code=ref_code, is_active=True)
-                    user.referred_by = referral
-                    user.save(update_fields=["referred_by"])
-                    credit_referral_bonus(referrer=referral.user, referred_user=user)
-                except ReferralCode.DoesNotExist:
-                    logger.info(
-                        "Signup for %s used invalid/expired referral code: %s",
-                        user.email, ref_code,
-                    )    
+            ref_code = signup_data.get("ref_code") or request.session.pop("pending_referral_code", None)
+            request.session.pop("pending_referral_code", None)
+            apply_referral_for_new_user(user, ref_code)
 
             request.session.pop("signup_data", None)
             clear_otp_from_session(request, "signup")
@@ -373,12 +360,9 @@ def verify_signup_otp(request):
 @require_POST
 def resend_otp(request):
     purpose = request.POST.get("purpose", "signup")
-    print("Resend called for purpose:", purpose)
-    print("Session before resend:", dict(request.session))
     
     if purpose == "signup":
         signup_data = request.session.get("signup_data")
-        print("signup_data:", signup_data)
         if not signup_data:
             return JsonResponse(
                 {"success": False, "message": "Session expired. Please sign up again."}
@@ -386,9 +370,7 @@ def resend_otp(request):
         email = signup_data.get("email")
 
     otp = gen_otp()
-    print("New OTP generated:", otp)
     save_otp_to_session(request, purpose, otp)  
-    print("Session after save:", dict(request.session))
     send_otp_email(email, otp)
     
     return JsonResponse({
@@ -442,13 +424,9 @@ def verify_forgot_otp(request):
         })
     
     if request.method == "POST":
+
         entered_otp = request.POST.get("otp", "").strip()
         stored_otp, otp_time = get_otp_from_session(request, "forgot")
-        
-        print("Entered OTP:", entered_otp)
-        print("Stored OTP:", stored_otp)
-        print("OTP time:", otp_time)
-        print("Is expired:", is_otp_expired(otp_time))
         
         if not stored_otp:
             messages.error(request, "OTP not found. Please request a new one.")

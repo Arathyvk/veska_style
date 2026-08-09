@@ -2,6 +2,8 @@ from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.contrib.auth import get_user_model
 
+from users.utils import apply_referral_for_new_user
+
 User = get_user_model()
 
 
@@ -47,7 +49,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         return user
 
     def save_user(self, request, sociallogin, form=None):
-        
+        is_new_user = not sociallogin.is_existing
         user = super().save_user(request, sociallogin, form)
         extra = sociallogin.account.extra_data
 
@@ -57,4 +59,10 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             user.last_name = extra.get('family_name', '')
 
         user.save()
+
+        if is_new_user and not user.referred_by_id:
+            ref_code = request.session.pop('pending_referral_code', None)
+            if ref_code:
+                apply_referral_for_new_user(user, ref_code)
+
         return user

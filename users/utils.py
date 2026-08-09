@@ -2,6 +2,7 @@ import logging
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import F
+from django.utils import timezone
 
 from offer_admin.models import BaseOffer
 from users.models import ReferralCode, ReferralTransaction
@@ -12,7 +13,54 @@ logger = logging.getLogger(__name__)
 
 
 def get_active_referral_settings():
-    return BaseOffer.objects.filter(offer_type='REFERRAL', is_active=True).first()
+    now = timezone.now()
+    return (
+        BaseOffer.objects.filter(
+            offer_type='REFERRAL',
+            is_active=True,
+            start_date__lte=now,
+            end_date__gte=now,
+        )
+        .order_by('-created_at')
+        .first()
+    )
+
+
+def resolve_referral_code(ref_code):
+    """Return (ReferralCode, referrer User) for a signup ref string, or (None, None)."""
+    if not ref_code:
+        return None, None
+
+    code = ref_code.strip().upper()
+    if not code:
+        return None, None
+
+    referral = ReferralCode.objects.filter(code__iexact=code, is_active=True).select_related('user').first()
+    if referral:
+        return referral, referral.user
+
+    return None, None
+
+
+def apply_referral_for_new_user(user, ref_code):
+    """
+    Link a new user to a referrer and credit both wallets.
+    Returns True when referral bonus was credited.
+    """
+    referral, referrer = resolve_referral_code(ref_code)
+    if not referral or not referrer:
+        if ref_code:
+            logger.info("Signup for %s used invalid referral code: %s", user.email, ref_code)
+        return False
+
+    if referrer.uuid == user.uuid:
+        logger.info("Signup for %s attempted self-referral with code %s", user.email, ref_code)
+        return False
+
+    user.referred_by = referral
+    user.save(update_fields=['referred_by'])
+    credit_referral_bonus(referrer=referrer, referred_user=user)
+    return True
 
 
 @transaction.atomic
