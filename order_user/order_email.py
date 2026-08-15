@@ -48,7 +48,6 @@ def send_order_confirmation(order: "Order") -> bool:
 
 
 def _build_context(order: "Order") -> dict:
-    """Assemble every value the email template needs."""
     items = order.items.select_related("product").all()
 
     return {

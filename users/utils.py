@@ -27,7 +27,6 @@ def get_active_referral_settings():
 
 
 def resolve_referral_code(ref_code):
-    """Return (ReferralCode, referrer User) for a signup ref string, or (None, None)."""
     if not ref_code:
         return None, None
 
@@ -43,10 +42,6 @@ def resolve_referral_code(ref_code):
 
 
 def apply_referral_for_new_user(user, ref_code):
-    """
-    Link a new user to a referrer and credit both wallets.
-    Returns True when referral bonus was credited.
-    """
     referral, referrer = resolve_referral_code(ref_code)
     if not referral or not referrer:
         if ref_code:
@@ -65,6 +60,14 @@ def apply_referral_for_new_user(user, ref_code):
 
 @transaction.atomic
 def credit_referral_bonus(referrer, referred_user):
+    if not referrer or not referred_user:
+        logger.error(
+            "credit_referral_bonus called with invalid users: referrer=%r referred_user=%r",
+            referrer,
+            referred_user,
+        )
+        return
+
     if referrer.uuid == referred_user.uuid:
         return
 

@@ -6,7 +6,7 @@ from category_admin.models import Category
 
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Product
+from product_admin.models import Product
 import re
 
 
@@ -93,9 +93,6 @@ class ProductForm(forms.ModelForm):
         self.fields['is_featured'].required = False
         self.fields['is_shop_active'].required = False
 
-
-import re
-from django.core.exceptions import ValidationError
 
 class ProductVariantForm(forms.ModelForm):
     class Meta:

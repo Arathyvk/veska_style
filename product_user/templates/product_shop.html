@@ -187,7 +187,7 @@ a{text-decoration:none;color:inherit}
   cursor:pointer;transition:all .2s;font-size:9px;font-weight:500;color:var(--muted)
 }
 .color-btn:hover{border-color:var(--terra);background:var(--terra-pale)}
-.color-btn.active{border-color:var(--terra);background:var(--terra-pale);color:var(--terra-deep);font-weight:600}
+.color-btn.active{border-color:var(--terra);background:var(--terra-pale);color:var(--terra-deep);font-weight:600;margin-bottom: 12px}
 .color-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,0.08);flex-shrink:0}
 .color-name{font-size:8px;text-transform:uppercase}
 
@@ -497,7 +497,7 @@ a{text-decoration:none;color:inherit}
             </a>
 
             <!-- Wishlist Button -->
-                <button class="card-wishlist" onclick="toggleWishlistShop(this, '{{ product.slug }}', '{{ product.uuid }}')">
+                <button class="card-wishlist" data-slug="{{ product.slug }}" onclick="toggleWishlistShop(this, '{{ product.slug }}', '{{ product.uuid }}')">
                 <svg width="14" height="14" 
                      fill="{% if product.uuid|stringformat:'s' in wishlist_ids %}var(--terra){% else %}none{% endif %}"
                      stroke="var(--terra)" 
@@ -512,11 +512,9 @@ a{text-decoration:none;color:inherit}
               <div class="card-name">
                 <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
               </div>
-              
-              <!-- 🎨 COLOR SELECTION -->
-              {% if product.variants.all %}
-              <div class="card-colors">
-                <label class="color-label">Color:</label>
+              {% if product.best_offer %}
+                <div class="card-offer">{{ product.best_offer.discount_display }} · ₹{{ product.offer_price|floatformat:2 }}</div>
+              {% endif %}
                 <div class="color-options">
                   {% for variant in product.variants.all %}
                     {% ifchanged variant.color %}
@@ -531,8 +529,6 @@ a{text-decoration:none;color:inherit}
                     {% endifchanged %}
                   {% endfor %}
                 </div>
-              </div>
-              {% endif %}
 
               <!-- 📏 SIZE BADGES (Dynamic) -->
               <div class="card-sizes" id="sizes-{{ product.uuid }}">
@@ -561,7 +557,7 @@ a{text-decoration:none;color:inherit}
               <div class="stock-label" id="stock-{{ product.uuid }}">
                 {% with first_variant=product.variants.first %}
                   {% if first_variant.stock > 5 %}
-                    <span class="stock-dot dot-in"></span> In Stock
+                    <span class="stock-dot dot-in" style="margin-bottom: 31px;"></span> In Stock
                   {% elif first_variant.stock > 0 %}
                     <span class="stock-dot dot-low"></span> Low Stock
                   {% else %}
@@ -834,11 +830,17 @@ function clearSearch() {
 // WISHLIST FUNCTIONS
 // ============================================
 function toggleWishlistShop(button, slug, productUuid) {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-    if (!csrfToken) {
-        window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
-        return;
-    }
+  function _getCsrf() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (el) return el.value;
+    const m = document.cookie.match('(^|;)\\s*csrftoken=([^;]+)');
+    return m ? decodeURIComponent(m[2]) : null;
+  }
+  const csrfToken = _getCsrf();
+  if (!csrfToken) {
+    window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
 
     button.disabled = true;
     button.style.opacity = '0.6';
@@ -851,13 +853,13 @@ function toggleWishlistShop(button, slug, productUuid) {
     const selectedSizeEl  = productCard ? productCard.querySelector('.size-badge.selected-size') : null;
     const selectedColorEl = productCard ? productCard.querySelector('.color-btn.active') : null;
     const selectedSize  = selectedSizeEl  ? selectedSizeEl.dataset.size   : null;
-    const selectedColor = selectedColorEl ? selectedColorEl.dataset.color : null;
+    const selectedColor = selectedColorEl ? (selectedColorEl.dataset.color||'').trim() : null;
 
-    fetch(url, {
+  fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken.value,
+      'X-CSRFToken': csrfToken,
             'X-Requested-With': 'XMLHttpRequest'
         },
         credentials: 'same-origin',
@@ -875,22 +877,24 @@ function toggleWishlistShop(button, slug, productUuid) {
     })
     .then(data => {
         if (data.success) {
-            if (data.is_wishlisted) {
-                button.classList.add('wishlisted');
-                svg.setAttribute('fill', 'var(--terra)');
-                button.dataset.wishlisted = 'true';
-                showToastMessage('Added to wishlist!', 'success');
-            } else {
-                button.classList.remove('wishlisted');
-                svg.setAttribute('fill', 'none');
-                button.dataset.wishlisted = 'false';
-                showToastMessage('Removed from wishlist', 'info');
-            }
-
-            const wishlistCount = document.getElementById('wishlistCount');
-            if (typeof window.triggerWishlistUpdate === 'function') {
-                window.triggerWishlistUpdate();
-            }
+          // sync all wishlist buttons for this product
+          document.querySelectorAll(`[data-slug="${slug}"]`).forEach(b => {
+            try {
+              const s = b.querySelector('svg');
+              if (data.is_wishlisted) {
+                b.classList.add('wishlisted');
+                if (s) s.setAttribute('fill','var(--terra)');
+                b.dataset.wishlisted = 'true';
+              } else {
+                b.classList.remove('wishlisted');
+                if (s) s.setAttribute('fill','none');
+                b.dataset.wishlisted = 'false';
+              }
+            } catch(e){}
+          });
+          if (data.is_wishlisted) showToastMessage('Added to wishlist!', 'success');
+          else showToastMessage('Removed from wishlist', 'info');
+          if (typeof window.triggerWishlistUpdate === 'function') window.triggerWishlistUpdate();
         }
     })
     .catch(error => {

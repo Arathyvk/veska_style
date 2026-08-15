@@ -76,7 +76,6 @@ a{text-decoration:none;color:inherit}
   box-shadow:var(--shadow-md);position:relative;overflow:hidden;
   margin-bottom:24px;animation:fadeUp .4s ease both;
 }
-/* decorative circles */
 .balance-card::before{content:'';position:absolute;right:-50px;top:-50px;
   width:220px;height:220px;border-radius:50%;
   background:rgba(255,255,255,.03);pointer-events:none}
@@ -197,7 +196,12 @@ a{text-decoration:none;color:inherit}
 }
 
 /* order link */
-.order-link{font-size:.75rem;color:var(--terra);font-family:monospace}
+.order-link{
+  font-size:.75rem;color:var(--terra);font-family:monospace;
+  display:inline-block;max-width:110px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+  vertical-align:bottom;
+}
 .order-link:hover{text-decoration:underline}
 
 /* date cell */
@@ -214,6 +218,28 @@ a{text-decoration:none;color:inherit}
 }
 .txn-empty p{font-size:.85rem;color:var(--muted);line-height:1.6}
 
+/* ══════════════════════════════════════════════
+   PAGINATION
+══════════════════════════════════════════════ */
+.txn-pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px;border-top:1px solid var(--border-lt);
+  flex-wrap:wrap;gap:12px;
+}
+.txn-pagination .pg-info{font-size:.75rem;color:var(--muted-lt)}
+.pg-links{display:flex;gap:6px;flex-wrap:wrap}
+.pg-link{
+  padding:6px 12px;border:1px solid var(--border);border-radius:6px;
+  font-size:.75rem;color:var(--charcoal);background:var(--warm-white);
+  transition:var(--transition);
+}
+.pg-link:hover{border-color:var(--terra);color:var(--terra)}
+.pg-link.pg-current{
+  background:var(--terra);border-color:var(--terra);color:#fff;font-weight:600;cursor:default;
+}
+.pg-link.pg-current:hover{color:#fff}
+.pg-ellipsis{padding:6px 4px;font-size:.75rem;color:var(--muted-lt)}
+
 /* ── animations ── */
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(14px)}
@@ -228,6 +254,8 @@ a{text-decoration:none;color:inherit}
   .txn-table td{display:block;padding:6px 16px;border:none}
   .txn-table tr{display:block;padding:12px 0;border-bottom:1px solid var(--border-lt)}
   .txn-table tr:last-child{border:none}
+  .txn-pagination{flex-direction:column;align-items:stretch}
+  .pg-links{justify-content:center}
 }
 </style>
 
@@ -308,98 +336,132 @@ a{text-decoration:none;color:inherit}
     </div>
 
     <!-- ══ STATS ══ -->
-    {% with txns=transactions %}
     <div class="stats-row">
-  <div class="stat-card">
-    <div class="stat-icon green">...</div>
-    <div>
-      <div class="stat-val">₹{{ total_credited|floatformat:2 }}</div>  <!-- ✅ -->
-      <div class="stat-lbl">Total Credits</div>
+      <div class="stat-card">
+        <div class="stat-icon green">✅</div>
+        <div>
+          <div class="stat-val">₹{{ total_credited|floatformat:2 }}</div>
+          <div class="stat-lbl">Total Credits</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red">❌</div>
+        <div>
+          <div class="stat-val">₹{{ total_debited|floatformat:2 }}</div>
+          <div class="stat-lbl">Total Debits</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber">💰</div>
+        <div>
+          <div class="stat-val">₹{{ wallet.balance|floatformat:0 }}</div>
+          <div class="stat-lbl">Spendable Now</div>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon red">...</div>
-    <div>
-      <div class="stat-val">₹{{ total_debited|floatformat:2 }}</div>   <!-- ✅ -->
-      <div class="stat-lbl">Total Debits</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon amber">...</div>
-    <div>
-      <div class="stat-val">₹{{ wallet.balance|floatformat:0 }}</div>  <!-- ✅ already correct -->
-      <div class="stat-lbl">Spendable Now</div>
-    </div>
-  </div>
-</div>
-    {% endwith %}
 
     <!-- ══ TRANSACTION TABLE ══ -->
     <div class="txn-card">
       <div class="txn-card-head">
         <span class="txn-card-title">Transaction History</span>
-        <span class="txn-count">{{ transactions.paginator.count }} entr{{ transactions|length|pluralize:"y,ies" }}</span>
+        <span class="txn-count">{{ transactions.paginator.count }} entr{{ transactions.paginator.count|pluralize:"y,ies" }}</span>
       </div>
 
       {% if transactions %}
-      <table class="txn-table">
-        <thead>
-          <tr>
-            <th>sl no</th>
-            <th>Date & Time</th>
-            <th>Description</th>
-            <th>Reason</th>
-            <th>Order</th>
-            <th>Type</th>
-            <th style="text-align:right">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for txn in transactions %}
-          <tr>
-            <td style="color:var(--muted-lt);font-size:.75rem">{{ forloop.counter }}</td>
-            <td>
-              <div class="date-main">{{ txn.created_at|date:"d M Y" }}</div>
-              <div class="date-time">{{ txn.created_at|time:"H:i" }}</div>
-            </td>
-            <td style="max-width:200px;color:var(--muted)">
-              {{ txn.description|default:"—" }}
-            </td>
-            <td>
-              <span class="reason-pill">{{ txn.get_reason_display }}</span>
-            </td>
-            <td>
-              {% if txn.order %}
-                <a class="order-link"
-                   href="{% url 'order_detail' txn.order.uuid %}">
-                  #{{ txn.order.uuid }}
-                </a>
-              {% else %}—{% endif %}
-            </td>
-            <td>
-              {% if txn.is_credit %}
-                <span class="badge badge-credit">↑ Credit</span>
+      <div style="overflow-x:auto;">
+        <table class="txn-table">
+          <thead>
+            <tr>
+              <th>sl no</th>
+              <th>Date &amp; Time</th>
+              <th>Description</th>
+              <th>Reason</th>
+              <th>Order</th>
+              <th>Type</th>
+              <th style="text-align:right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for txn in transactions %}
+            <tr>
+              <td style="color:var(--muted-lt);font-size:.75rem">
+                {{ transactions.start_index|add:forloop.counter0 }}
+              </td>
+              <td>
+                <div class="date-main">{{ txn.created_at|date:"d M Y" }}</div>
+                <div class="date-time">{{ txn.created_at|time:"H:i" }}</div>
+              </td>
+              <td style="max-width:200px;color:var(--muted)">
+                {{ txn.description|default:"—" }}
+              </td>
+              <td>
+                <span class="reason-pill">{{ txn.get_reason_display }}</span>
+              </td>
+              <td>
+                {% if txn.order %}
+                  <a class="order-link" href="{% url 'order_detail' txn.order.uuid %}" title="{{ txn.order.uuid }}">
+                    #{{ txn.order.uuid }}
+                  </a>
+                {% else %}—{% endif %}
+              </td>
+              <td>
+                {% if txn.is_credit %}
+                  <span class="badge badge-credit">↑ Credit</span>
+                {% else %}
+                  <span class="badge badge-debit">↓ Debit</span>
+                {% endif %}
+              </td>
+              <td style="text-align:right">
+                {% if txn.is_credit and txn.amount == 0 %}
+                  <span style="color:var(--muted-lt);font-size:.8rem">₹0.00</span>
+                  <span style="background:var(--parchment);color:var(--muted);font-size:.65rem;
+                               padding:2px 7px;border-radius:4px;display:block;margin-top:3px">
+                    COD – No Charge
+                  </span>
+                {% elif txn.is_credit %}
+                  <span class="amt-credit">+₹{{ txn.amount|floatformat:2 }}</span>
+                {% else %}
+                  <span class="amt-debit">−₹{{ txn.amount|floatformat:2 }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if transactions.paginator.num_pages > 1 %}
+      <div class="txn-pagination">
+        <span class="pg-info">
+          Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}
+        </span>
+        <div class="pg-links">
+          {% if transactions.has_previous %}
+            <a class="pg-link" href="?page={{ transactions.previous_page_number }}{% if txn_filter and txn_filter != 'all' %}&filter={{ txn_filter }}{% endif %}">
+              ← Prev
+            </a>
+          {% endif %}
+
+          {% for num in transactions.paginator.page_range %}
+            {% if num == 1 or num == transactions.paginator.num_pages or num > transactions.number|add:"-3" and num < transactions.number|add:"3" %}
+              {% if num == transactions.number %}
+                <span class="pg-link pg-current">{{ num }}</span>
               {% else %}
-                <span class="badge badge-debit">↓ Debit</span>
+                <a class="pg-link" href="?page={{ num }}{% if txn_filter and txn_filter != 'all' %}&filter={{ txn_filter }}{% endif %}">{{ num }}</a>
               {% endif %}
-            </td>
-            <td style="text-align:right">
-              {% if txn.is_credit and txn.amount == 0 %}
-                <span style="color:var(--muted-lt);font-size:.8rem">₹0.00</span>
-                <span style="background:var(--parchment);color:var(--muted);font-size:.65rem;
-                             padding:2px 7px;border-radius:4px;display:block;margin-top:3px">
-                  COD – No Charge
-                </span>
-              {% elif txn.is_credit %}
-                <span class="amt-credit">+₹{{ txn.amount|floatformat:2 }}</span>
-              {% else %}
-                <span class="amt-debit">−₹{{ txn.amount|floatformat:2 }}</span>
-              {% endif %}
-            </td>
-          </tr>
+            {% elif num == transactions.number|add:"-3" or num == transactions.number|add:"3" %}
+              <span class="pg-ellipsis">…</span>
+            {% endif %}
           {% endfor %}
-        </tbody>
-      </table>
+
+          {% if transactions.has_next %}
+            <a class="pg-link" href="?page={{ transactions.next_page_number }}{% if txn_filter and txn_filter != 'all' %}&filter={{ txn_filter }}{% endif %}">
+              Next →
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
 
       {% else %}
       <div class="txn-empty">

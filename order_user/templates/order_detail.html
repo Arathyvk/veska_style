@@ -464,7 +464,7 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
         <div class="item-actions" style="flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-          {% if item.cancel_status == 'none' and order.status not in 'cancelled delivered return_requested returned' %}
+          {% if item.cancel_status == 'none' and order.status != 'cancelled' and order.status != 'delivered' and order.status != 'return_requested' and order.status != 'returned' %}
             <button class="item-cancel-btn" 
                     data-item-id="{{ item.id }}"
                     data-url="{% url 'cancel_order_item' order.uuid item.id %}"

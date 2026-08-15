@@ -16,7 +16,7 @@
     border-radius: 50%; animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .loader-text { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--espresso); letter-spacing: 0.12em; }
+  .loader-text {font-size: 1rem; color: var(--espresso); letter-spacing: 0.12em; }
   .submit-overlay {
     display: none; position: fixed; inset: 0; z-index: 8000;
     background: rgba(250,247,242,0.92); backdrop-filter: blur(6px);
@@ -24,7 +24,7 @@
   }
   .submit-overlay.active { display: flex; }
   .submit-overlay .loader-spinner { border-top-color: var(--espresso); }
-  .submit-overlay-text { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--espresso); letter-spacing: 0.1em; }
+  .submit-overlay-text {font-size: 1rem; color: var(--espresso); letter-spacing: 0.1em; }
   @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
   .page-card {
@@ -33,7 +33,7 @@
     animation: fadeUp 0.4s ease both;
   }
   .page-card-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 500;
+   font-size: 1.3rem; font-weight: 500;
     color: var(--espresso); text-align: center; padding-bottom: 14px;
     border-bottom: 1px solid var(--sand); margin-bottom: 24px;
   }
@@ -60,7 +60,7 @@
   .otp-row { display: flex; justify-content: center; gap: 12px; margin: 18px 0 6px; }
   .otp-box {
     width: 54px; height: 60px; font-size: 1.7rem; font-weight: 600;
-    font-family: 'Cormorant Garamond', serif; text-align: center;
+   text-align: center;
     background: var(--cream); color: var(--espresso);
     border: 1.5px solid var(--sand); border-radius: 3px; outline: none;
     caret-color: transparent; -webkit-appearance: none; appearance: none;
@@ -156,7 +156,7 @@
     </div>
 
     <div class="timer-row">
-      <span>Expires in <span class="timer" id="timerEl">00:50</span></span>
+      <span>Expires in <span class="timer" id="timerEl">02:00</span></span>
       <button type="button" class="resend-btn" id="resendBtn" disabled>Resend code</button>
     </div>
 
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function () {
     verifyBtn.disabled = true;
   });
 
-  const DURATION  = 50;
+  const DURATION  = 120;
   const startTime = Date.now();
 
   function getRemaining() {

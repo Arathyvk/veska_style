@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.contrib.auth import get_user_model
@@ -87,7 +88,23 @@ class CartItem(models.Model):
 
     @property
     def active_offer(self):
-        return self.product.get_best_offer()   
+        from offer_admin.views import get_applicable_offers
+
+        user = None
+        if self.cart and self.cart.user and self.cart.user.is_authenticated:
+            user = self.cart.user
+
+        best_offer = None
+        best_discount = Decimal('0')
+        line_total = self.unit_price * self.quantity
+
+        for offer in get_applicable_offers(self.product, user):
+            discount = offer.calculate_discount(line_total)
+            if discount > best_discount:
+                best_offer = offer
+                best_discount = discount
+
+        return best_offer
 
     @property
     def discounted_unit_price(self):

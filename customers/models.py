@@ -35,3 +35,8 @@ class Address(models.Model):
                 user=self.user, is_default=True
             ).exclude(pk=self.pk).update(is_default=False)
         super().save(*args, **kwargs)
+
+
+class Profile(models.Model):
+    user          = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='profile')
+    profile_image = models.ImageField(upload_to="profile_images/",blank=True,null=True)

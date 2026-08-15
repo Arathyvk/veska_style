@@ -122,7 +122,19 @@ button,input,textarea{font-family:var(--body)}
   border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);
   background:none;color:var(--ink);outline:none}
 .qty-label{font-size:12px;color:var(--muted)}
-
+/* ── COLOR SELECTION ── */
+.card-colors{margin-bottom:8px}
+.color-label{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px}
+.color-options{display:flex;flex-wrap:wrap;gap:4px}
+.color-btn{
+  display:flex;align-items:center;gap:3px;padding:2px 8px 2px 4px;
+  border:1.5px solid var(--border);border-radius:20px;background:var(--warm-white);
+  cursor:pointer;transition:all .2s;font-size:9px;font-weight:500;color:var(--muted)
+}
+.color-btn:hover{border-color:var(--terra);background:var(--terra-pale)}
+.color-btn.active{border-color:var(--terra);background:var(--terra-pale);color:var(--terra-deep);font-weight:600}
+.color-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,0.08);flex-shrink:0}
+.color-name{font-size:8px;text-transform:uppercase}
 .cta-row{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}
 .btn-add-cart{flex:1;min-width:160px;background:var(--charcoal);color:#fff;
   border:none;border-radius:var(--radius-md);font-family:var(--body);font-size:13.5px;
@@ -349,6 +361,9 @@ button,input,textarea{font-family:var(--body)}
           <span class="discount-badge">{{ discount_percent }}% OFF</span>
         {% endif %}
       </div>
+      {% if best_offer %}
+        <div class="offer-line">Offer: {{ best_offer.name }} · {{ best_offer.discount_display }}{% if offer_discount > 0 %} · Save ₹{{ offer_discount|floatformat:2 }}{% endif %}</div>
+      {% endif %}
       {% if savings %}
         <div class="savings-line">You save ₹{{ savings|floatformat:2 }}</div>
       {% endif %}
@@ -374,37 +389,51 @@ button,input,textarea{font-family:var(--body)}
 
 {% if stock_status != 'out_of_stock' %}
 <!-- Main Form for Add to Cart and Buy Now -->
-<form method="POST" action="{% url 'cart_add' product.slug %}" class="add-cart-form" data-full-page="1" id="mainCartForm">
+<form method="POST" action="{% url 'cart_add' product.slug %}" class="add-cart-form" data-full-page="1" id="mainCartForm" onsubmit="return validateSelection()">
     {% csrf_token %}
     
     <!-- Redirect after add to cart (stay on same page) -->
     <input type="hidden" name="next" value="{{ request.path }}">
-    
-    <!-- Hidden input for size -->
     <input type="hidden" name="size" id="sizeInput" value="">
-    
+    <input type="hidden" name="color" id="colorInput" value="">
+
+      {% if product.variants.all %}
+      <div class="card-colors">
+        <label class="color-label">Color:</label>
+        <div class="color-options">
+          {% for variant in product.variants.all|dictsort:"color" %}
+            {% ifchanged variant.color %}
+            <button type="button" class="color-btn {% if forloop.first %}active{% endif %}"
+              data-color="{{ variant.color }}"
+              data-image="{% color_image product variant.color %}"
+              data-product-uuid="{{ product.uuid }}"
+              onclick="selectColor(this)">
+              <span class="color-dot" style="background-color: {{ variant.color_hex|default:'#CCCCCC' }};"></span>
+              <span class="color-name">{{ variant.color }}</span>
+            </button>
+            {% endifchanged %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
     <!-- Size selector -->
     <div class="selector-label">SELECT SIZE</div>
-    <div class="size-grid">
-        {% for variant in variants %}
+    <div class="size-grid" id="sizeGrid">
+        {% for option in size_options %}
         <button type="button" 
-                class="size-btn {% if variant.stock == 0 %}oos-size{% endif %}"
-                data-size="{{ variant.size }}"
-                data-stock="{{ variant.stock }}"
-                data-variant-id="{{ variant.id }}"
+                class="size-btn{% if option.stock == 0 %} oos-size{% endif %}"
+                data-size="{{ option.size }}"
+                data-colors="{{ option.colors|join:',' }}"
+                data-stock="{{ option.stock }}"
+                {% if option.stock == 0 %}disabled{% endif %}
                 onclick="selectSize(this)">
-            {{ variant.size }}
+            {{ option.size }}
         </button>
         {% endfor %}
-
-       {% if variants %}
-        <div style="margin-top:10px;">
-            <strong>Color:</strong> <span id="selectedColorLabel">{{ variants.0.color }}</span>
-        </div>
-        {% endif %}
     </div>
     <div id="sizeError" style="display:none;color:red;margin-bottom:15px;">
-        Please select a size
+        Please select a valid color and size combination.
     </div>
 
     <!-- Quantity selector -->
@@ -612,11 +641,15 @@ button,input,textarea{font-family:var(--body)}
       {% for rel in related %}
       <a href="{% url 'product_detail' rel.slug %}" class="rel-card">
         <div class="rel-img">
-          {% with rimg=rel.images.first %}
-            {% if rimg %}<img src="{{ rimg.image.url }}" alt="{{ rel.name }}" loading="lazy">
-            {% else %}<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt);font-size:11px">No image</div>
+        {% with rvariant=rel.variants.first %}
+          {% with rimg=rvariant.images.first %}
+            {% if rimg %}
+              <img src="{{ rimg.image.url }}" alt="{{ rel.name }}" loading="lazy">
+            {% else %}
+              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt);font-size:11px">No image</div>
             {% endif %}
           {% endwith %}
+        {% endwith %}
         </div>
         <div class="rel-body">
           <div class="rel-cat">{{ rel.category }}</div>
@@ -669,24 +702,96 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 const hasVariants = {{ variants|length }} > 0;
+const hasColorVariants = {{ available_colors|length }} > 0;
 let selectedSize      = '';
 let selectedColor     = '';
 let selectedVariantId = null;
 
+function getCsrfToken() {
+  const el = document.querySelector('[name=csrfmiddlewaretoken]');
+  if (el) return el.value;
+  const match = document.cookie.match('(^|;)\\s*csrftoken=([^;]+)');
+  return match ? decodeURIComponent(match[2]) : null;
+}
 
 const variantGallery = {{ variant_gallery_json|safe }};
+const sizeColorMap = JSON.parse('{{ size_color_map_json|escapejs }}');
+
+function selectColor(btn) {
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedColor = (btn.dataset.color || '').trim();
+  document.getElementById('colorInput').value = selectedColor;
+  filterSizesByColor(selectedColor);
+  updateSelectedCombination();
+
+  if (selectedSize) {
+    const variantId = findVariantId(selectedSize, selectedColor);
+    const vdata = variantId ? variantGallery[variantId] : null;
+    if (vdata) {
+      selectedVariantId = variantId;
+      if (vdata.images.length) {
+        imageUrls.length = 0;
+        vdata.images.forEach(u => imageUrls.push(u));
+        currentSlide = 0;
+        document.getElementById('mainImg').src = imageUrls[0];
+      }
+      const priceEl = document.querySelector('.price-now');
+      if (priceEl) priceEl.textContent = '₹' + parseFloat(vdata.price).toFixed(2);
+      const qtyEl = document.getElementById('qtyInput');
+      if (qtyEl) {
+        qtyEl.max = Math.min(parseInt(vdata.stock) || 1, {{ max_qty }});
+        if (parseInt(qtyEl.value) > qtyEl.max) qtyEl.value = qtyEl.max;
+      }
+    }
+  }
+}
+
+function filterSizesByColor(color) {
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    const btnColors = btn.dataset.colors ? btn.dataset.colors.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    const available = !color || btnColors.includes((color||'').trim());
+    btn.classList.toggle('oos-size', !available);
+    btn.disabled = !available;
+  });
+}
+
+function filterColorsBySize(size) {
+  const allowedColors = sizeColorMap[size] || [];
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    const color = btn.dataset.color || '';
+    const available = !allowedColors.length || allowedColors.includes(color);
+    btn.disabled = !available;
+    btn.classList.toggle('oos-size', !available);
+  });
+}
 
 function selectSize(btn) {
   if (btn.classList.contains('oos-size')) return;
   document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedSize = btn.dataset.size;
-  selectedVariantId = btn.dataset.variantId;
   document.getElementById('sizeInput').value = selectedSize;
 
-  const vdata = variantGallery[btn.dataset.variantId];
+  if (hasColorVariants) {
+    filterColorsBySize(selectedSize);
+    const availableColors = sizeColorMap[selectedSize] || [];
+    if (!selectedColor && availableColors.length === 1 && availableColors[0]) {
+      const colorBtn = document.querySelector(`.color-btn[data-color="${availableColors[0]}"]`);
+      if (colorBtn) {
+        selectColor(colorBtn);
+      }
+    } else if (selectedColor && !availableColors.includes(selectedColor)) {
+      selectedColor = '';
+      document.getElementById('colorInput').value = '';
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+    }
+  }
+
+  const variantId = findVariantId(selectedSize, selectedColor);
+  const vdata = variantId ? variantGallery[variantId] : null;
   if (vdata) {
-    selectedColor = vdata.color;  
+    selectedVariantId = variantId;
     if (vdata.images.length) {
       imageUrls.length = 0;
       vdata.images.forEach(u => imageUrls.push(u));
@@ -695,9 +800,6 @@ function selectSize(btn) {
     }
     const priceEl = document.querySelector('.price-now');
     if (priceEl) priceEl.textContent = '₹' + parseFloat(vdata.price).toFixed(2);
-
-    const colorLabel = document.getElementById('selectedColorLabel');
-    if (colorLabel) colorLabel.textContent = vdata.color;
   }
 
   const stock  = parseInt(btn.dataset.stock) || 1;
@@ -705,6 +807,39 @@ function selectSize(btn) {
   const qtyEl  = document.getElementById('qtyInput');
   if (qtyEl) { qtyEl.max = maxQty; if (parseInt(qtyEl.value) > maxQty) qtyEl.value = maxQty; }
   document.getElementById('sizeError').style.display = 'none';
+}
+
+function updateSelectedCombination() {
+  const colorLabel = document.getElementById('selectedColorLabel');
+  if (colorLabel) colorLabel.textContent = selectedColor || 'Select a color';
+}
+
+function findVariantId(size, color) {
+  return Object.keys(variantGallery).find(key => {
+    const v = variantGallery[key];
+    if (v.size !== size) return false;
+    if (!hasColorVariants) return true;
+    if (!color) return false;
+    return v.color === color;
+  }) || null;
+}
+
+function validateSelection() {
+  if (!hasVariants) {
+    return true;
+  }
+
+  if (!selectedSize) {
+    document.getElementById('sizeError').style.display = 'block';
+    return false;
+  }
+
+  if (hasColorVariants && !selectedColor) {
+    document.getElementById('sizeError').style.display = 'block';
+    return false;
+  }
+
+  return true;
 }
 
 function adjustQty(dir) {
@@ -715,16 +850,8 @@ function adjustQty(dir) {
   inp.value = v;
 }
 
-function validateSize() {
-  if (hasVariants && !selectedSize) {
-    document.getElementById('sizeError').style.display = 'block';
-    return false;
-  }
-  return true;
-}
-
 function validateSizeBuyNow() {
-  return validateSize();
+  return validateSelection();
 }
 
 function toggleAccordion(head) {
@@ -758,41 +885,119 @@ document.addEventListener('keydown', e => {
 });
 
 function toggleWishlist(button, slug) {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const csrfToken = getCsrfToken();
+  if (!csrfToken) { window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname); return; }
 
-    fetch(`/wishlist/toggle/${slug}/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            size:  selectedSize  || null,   
-            color: selectedColor || null    
-        })
+  fetch(`/wishlist/toggle/${slug}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({
+      size:  selectedSize  || null,   
+      color: selectedColor || null    
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (data.is_wishlisted) {
-                button.classList.add('wishlisted');
-                button.querySelector('svg').setAttribute('fill', 'var(--terra)');
-                showToast('Added to wishlist!', 'success');
-            } else {
-                button.classList.remove('wishlisted');
-                button.querySelector('svg').setAttribute('fill', 'none');
-                showToast('Removed from wishlist', 'info');
-            }
-            if (typeof window.triggerWishlistUpdate === 'function') {
-                window.triggerWishlistUpdate();
-            }
+  })
+    .then(response => response.json().then(data => ({ response, data })))
+    .then(({ response, data }) => {
+        if (!response.ok || !data.success) {
+          showToast(data.error || 'Unable to update wishlist', 'error');
+          return;
         }
+        // sync all buttons for this product (cards, detail page, etc.)
+        document.querySelectorAll(`[data-slug="${slug}"]`).forEach(b => {
+          try {
+            const svg = b.querySelector('svg');
+            if (data.is_wishlisted) {
+              b.classList.add('wishlisted');
+              if (svg) svg.setAttribute('fill', 'var(--terra)');
+            } else {
+              b.classList.remove('wishlisted');
+              if (svg) svg.setAttribute('fill', 'none');
+            }
+          } catch (e) {}
+        });
+
+        if (data.is_wishlisted) showToast(data.message || 'Added to wishlist!', 'success');
+        else showToast(data.message || 'Removed from wishlist', 'info');
+        if (typeof window.triggerWishlistUpdate === 'function') window.triggerWishlistUpdate();
     })
     .catch(error => {
         console.error('Error:', error);
         showToast('Please login to add to wishlist', 'error');
     });
 }
+function selectColorCard(button, productUuid, color) {
+    // Update active state
+    const parent = button.closest('.color-options');
+    parent.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    button.classList.add('active');
+
+    // Get all elements for this product
+    const productCard  = button.closest('.product-card');
+    const sizeBadges   = productCard.querySelectorAll('.size-badge');
+    const priceElement = productCard.querySelector('.card-price .now');
+    const stockElement = productCard.querySelector('.stock-label');
+    const addToCartBtn = productCard.querySelector('.card-add');
+
+    let firstVariant = null;
+    let hasStock = false;
+    let variantsForColor = [];
+
+    // Show/hide sizes based on selected color
+    sizeBadges.forEach(el => {
+        const variantColor = el.dataset.color || '';
+        if (variantColor === color) {
+            el.style.display = 'inline-block';
+            variantsForColor.push(el);
+            if (!firstVariant) {
+                firstVariant = el;
+            }
+            if (parseInt(el.dataset.stock) > 0) {
+                hasStock = true;
+            }
+        } else {
+            el.style.display = 'none';
+        }
+    });
+
+    // Update price and stock based on first available size
+    if (firstVariant) {
+        const price = parseFloat(firstVariant.dataset.price);
+        if (priceElement) {
+            priceElement.textContent = '₹' + price.toFixed(2);
+        }
+
+        const stock = parseInt(firstVariant.dataset.stock);
+        if (stock > 5) {
+            stockElement.innerHTML = '<span class="stock-dot dot-in"></span> In Stock';
+        } else if (stock > 0) {
+            stockElement.innerHTML = '<span class="stock-dot dot-low"></span> Low Stock';
+        } else {
+            stockElement.innerHTML = '<span class="stock-dot dot-out"></span> Out of Stock';
+        }
+
+        // Auto-select the first available size
+        if (hasStock) {
+            const firstAvailable = Array.from(sizeBadges).find(el =>
+                el.dataset.color === color && parseInt(el.dataset.stock) > 0
+            );
+            if (firstAvailable) {
+                selectSize(firstAvailable, productUuid, firstAvailable.dataset.size, firstAvailable.dataset.price);
+            }
+        } else {
+            // No stock for this color - disable add to cart
+            if (addToCartBtn) {
+                addToCartBtn.disabled = true;
+                addToCartBtn.textContent = 'Out of Stock';
+            }
+        }
+    }
+}
+
 </script>
 {% endblock %}

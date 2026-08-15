@@ -12,19 +12,16 @@ from django.utils import timezone
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.units import mm
-from reportlab.platypus import (
-        SimpleDocTemplate, Table, TableStyle,
-        Paragraph, Spacer, HRFlowable
-    )
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle,Paragraph, Spacer, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_RIGHT, TA_CENTER, TA_LEFT
 from django.http import HttpResponse
 
 
 from order_user.models import Order, OrderItem
-from product_admin.models import Product,ProductVariant
+from product_admin.models import ProductVariant
 from django.contrib.auth import get_user_model
-from return_admin.models import ReturnRequest
+from order_admin.models import ReturnRequest
 
 User = get_user_model()
 
@@ -124,29 +121,7 @@ def admin_dashboard(request):
     this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     last_month_end = this_month_start - datetime.timedelta(seconds=1)
     last_month_start = last_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-
-    
-    print("\n" + "="*60)
-    print("TODAY'S REVENUE DEBUG")
-    print("="*60)
-    print(f"Current time (now): {now}")
-    print(f"Today's date: {today_date}")
-    print(f"Total orders today: {today_orders_qs.count()}")
-    
-    if today_orders_qs.exists():
-        print("\n--- All Orders Today ---")
-        for order in today_orders_qs:
-            print(f"Order: {order.order_number}")
-            print(f"  Total: ₹{order.total}")
-            print(f"  Status: {order.status}")
-            print(f"  Payment Status: {order.payment_status}")
-            print(f"  Payment Method: {order.payment_method}")
-            print(f"  Created: {order.created_at}")
-            print("---")
-    
-    
-
-
+ 
     return_stats = get_return_value_stats()
     total_return_value = return_stats['total_value']
     total_return_items = return_stats['total_items']
@@ -588,28 +563,33 @@ def sales_report_pdf(request):
     story.append(hdr)
     story.append(HRFlowable(width=usable_w, thickness=2, color=TERRA, spaceAfter=10))
 
+
     def kpi(label, value, color=DARK):
-        return Table([
-            [Paragraph(label.upper(), ps(f'kl_{label}', fontSize=7, fontName='Helvetica-Bold',
-                                        textColor=MUTED, letterSpacing=0.5, alignment=TA_CENTER))],
-            [Paragraph(str(value), ps(f'kv_{label}', fontSize=14, fontName='Helvetica-Bold',
-                                    textColor=color, alignment=TA_CENTER))]
-        ], colWidths=[usable_w/6 - 4]) 
+        t = Table([
+            [Paragraph(label.upper(), ps(f'kl{label}', fontSize=7,
+                fontName='Helvetica-Bold', textColor=MUTED, letterSpacing=0.5, alignment=TA_CENTER))],
+            [Paragraph(str(value), ps(f'kv{label}', fontSize=15,
+                fontName='Helvetica-Bold', textColor=color, alignment=TA_CENTER))]
+        ], colWidths=[usable_w/6 - 4])
+        t.setStyle(TableStyle([
+            ('ALIGN',        (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN',       (0,0), (-1,-1), 'MIDDLE'),
+            ('TOPPADDING',   (0,0), (-1,-1), 2),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 2),
+            ('LEFTPADDING',  (0,0), (-1,-1), 0),
+            ('RIGHTPADDING', (0,0), (-1,-1), 0),
+        ]))
+        return t
 
-    kpi_cards = []
-    kpi_data = [
-        ('Total Orders', total_orders, DARK),
-        ('Delivered', delivered_orders, GREEN),
-        ('Cancelled', cancelled_orders, RED),
-        ('Returned', returned_orders, RED),
-        ('Gross Revenue', f'₹{float(gross_revenue):,.2f}', DARK),
-        ('Net Revenue', f'₹{net_revenue:,.2f}', GREEN),
-    ]
+    kpi_table = Table([[
+        kpi('Total Orders', total_orders),
+        kpi('Delivered', delivered_orders, GREEN),
+        kpi('Cancelled', cancelled_orders, RED),
+        kpi('Returned', returned_orders, RED),
+        kpi('Gross Revenue', f'\u20b9{float(gross_revenue):,.2f}'),
+        kpi('Net Revenue', f'\u20b9{net_revenue:,.2f}', GREEN),
+    ]], colWidths=[usable_w/6] * 6)
 
-    for label, value, color in kpi_data:
-        kpi_cards.append(kpi(label, value, color))
-
-    kpi_table = Table([kpi_cards], colWidths=[usable_w/6] * 6)
     kpi_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), GRAY),
         ('BOX',        (0,0), (-1,-1), 0.5, BORDER),
@@ -617,12 +597,12 @@ def sales_report_pdf(request):
         ('VALIGN',     (0,0), (-1,-1), 'MIDDLE'),
         ('TOPPADDING', (0,0), (-1,-1), 6),
         ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ('LEFTPADDING',   (0,0), (-1,-1), 2),
-        ('RIGHTPADDING',  (0,0), (-1,-1), 2),
+        ('LEFTPADDING',   (0,0), (-1,-1), 4),
+        ('RIGHTPADDING',  (0,0), (-1,-1), 4),
     ]))
     story.append(kpi_table)
     story.append(Spacer(1, 10))
-
+        
     cod_c    = orders.filter(payment_method='cod').count()
     stripe_c = orders.filter(payment_method='stripe').count()
     wallet_c = orders.filter(payment_method='wallet').count()
@@ -732,7 +712,7 @@ def sales_report_pdf(request):
         ('ROWBACKGROUNDS',(0,1), (-1,-1), [WHITE, GRAY]),
         ('GRID',          (0,0), (-1,-1), 0.3, BORDER),
         ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
-        ('TOPPADDING',    (0,0), (-1,-1), 4),
+        ('TOPPADDING',    (0,0), (-1,-1), 12),
         ('BOTTOMPADDING', (0,0), (-1,-1), 4),
         ('LEFTPADDING',   (0,0), (-1,-1), 5),
         ('RIGHTPADDING',  (0,0), (-1,-1), 5),
@@ -882,8 +862,8 @@ def dashboard_report_download(request):
     hdr.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), DARK),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('TOPPADDING', (0,0), (-1,-1), 10),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
     ]))
     story.append(hdr)
     story.append(HRFlowable(width=usable_w, thickness=2, color=TERRA, spaceAfter=10))
@@ -898,12 +878,12 @@ def dashboard_report_download(request):
     
     kpi_table = Table([
         [
-            Table([kpi('Total Orders', total_orders)], colWidths=[usable_w/6]),
-            Table([kpi('Delivered', delivered_orders, GREEN)], colWidths=[usable_w/6]),
-            Table([kpi('Cancelled', cancelled_orders, RED)], colWidths=[usable_w/6]),
-            Table([kpi('Returned', returned_orders, RED)], colWidths=[usable_w/6]),
-            Table([kpi('Gross Revenue', f'₹{float(gross_revenue):,.2f}')], colWidths=[usable_w/6]),
-            Table([kpi('Net Revenue', f'₹{net_revenue:,.2f}', GREEN)], colWidths=[usable_w/6]),
+            Table([kpi('Total Orders', total_orders)], colWidths=[usable_w/10]),
+            Table([kpi('Delivered', delivered_orders, GREEN)], colWidths=[usable_w/10]),
+            Table([kpi('Cancelled', cancelled_orders, RED)], colWidths=[usable_w/10]),
+            Table([kpi('Returned', returned_orders, RED)], colWidths=[usable_w/10]),
+            Table([kpi('Gross Revenue', f'₹{float(gross_revenue):,.2f}')], colWidths=[usable_w/9]),
+            Table([kpi('Net Revenue', f'₹{net_revenue:,.2f}', GREEN)], colWidths=[usable_w/9]),
         ]
     ], colWidths=[usable_w/6]*6)
     kpi_table.setStyle(TableStyle([
@@ -911,8 +891,8 @@ def dashboard_report_download(request):
         ('BOX', (0,0), (-1,-1), 0.5, BORDER),
         ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('TOPPADDING', (0,0), (-1,-1), 8),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
         ('LEFTPADDING', (0,0), (-1,-1), 10),
     ]))
     story.append(kpi_table)
@@ -932,12 +912,14 @@ def dashboard_report_download(request):
     month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     
+    s_center = ps('rc', fontSize=8, fontName='Helvetica', textColor=DARK, alignment=TA_CENTER)
+
     for i, data in enumerate(monthly_data):
         rev = data['revenue']
         total_revenue += rev
         month_data.append([
             Paragraph(month_names[i], s_b),
-            Paragraph(f'₹{rev:,.2f}', s_r),
+            Paragraph(f'\u20b9{rev:,.2f}', s_center),  
         ])
     
     month_data.append([
@@ -952,9 +934,9 @@ def dashboard_report_download(request):
         ('ROWBACKGROUNDS', (0,1), (-1,-2), [WHITE, GRAY]),
         ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#e8e0d8')),
         ('GRID', (0,0), (-1,-1), 0.3, BORDER),
-        ('TOPPADDING', (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-        ('LEFTPADDING', (0,0), (-1,-1), 7),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('LEFTPADDING', (0,0), (-1,-1), 10),
         ('RIGHTPADDING', (0,0), (-1,-1), 7),
     ]))
     story.append(month_tbl)
@@ -1001,9 +983,9 @@ def dashboard_report_download(request):
             ('BACKGROUND', (0,0), (-1,0), DARK),
             ('ROWBACKGROUNDS', (0,1), (-1,-1), [WHITE, GRAY]),
             ('GRID', (0,0), (-1,-1), 0.3, BORDER),
-            ('TOPPADDING', (0,0), (-1,-1), 5),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-            ('LEFTPADDING', (0,0), (-1,-1), 7),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('LEFTPADDING', (0,0), (-1,-1), 10),
             ('RIGHTPADDING', (0,0), (-1,-1), 7),
         ]))
     
@@ -1060,8 +1042,8 @@ def dashboard_report_download(request):
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [WHITE, GRAY]),
         ('GRID', (0,0), (-1,-1), 0.3, BORDER),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('TOPPADDING', (0,0), (-1,-1), 4),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
         ('LEFTPADDING', (0,0), (-1,-1), 5),
         ('RIGHTPADDING', (0,0), (-1,-1), 5),
     ]))

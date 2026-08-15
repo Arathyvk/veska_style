@@ -17,7 +17,6 @@ from category_admin.models import Category
 
 ITEMS_PER_PAGE   = 12
 MAX_QTY_PER_ITEM = 10
-FREE_SHIPPING    = 999
 SHIPPING_FEE     = 79
 
 SORT_OPTIONS = [
@@ -93,7 +92,6 @@ def _wishlist_ids(request):
         
         return wishlist_ids
     except Exception as e:
-        print(f"❌ Error in _wishlist_ids: {e}")
         return []
 
 
@@ -170,6 +168,17 @@ def product_shop(request):
     paginator = Paginator(qs, ITEMS_PER_PAGE)
     page_obj = paginator.get_page(request.GET.get('page', 1))
 
+    for product in page_obj.object_list:
+        best_offer = product.get_best_offer(amount=product.min_price)
+        if best_offer:
+            setattr(product, 'best_offer', best_offer)
+            setattr(product, 'offer_discount', best_offer.calculate_discount(product.min_price))
+            setattr(product, 'offer_price', product.min_price - product.offer_discount)
+        else:
+            setattr(product, 'best_offer', None)
+            setattr(product, 'offer_discount', Decimal('0'))
+            setattr(product, 'offer_price', product.min_price)
+
     current = page_obj.number
     num_pages = paginator.num_pages
     visible = set()
@@ -241,6 +250,40 @@ def product_detail(request, slug):
     images = ProductImage.objects.filter(variant__product=product).order_by("order")
     variants = list(product.variants.all().order_by('size'))
 
+    available_colors = list(
+        product.variants
+               .exclude(color__isnull=True)
+               .exclude(color__exact='')
+               .values_list('color', flat=True)
+               .distinct()
+    )
+    available_sizes = list(
+        product.variants
+               .values_list('size', flat=True)
+               .distinct()
+               .order_by('size')
+    )
+    has_color_variants = bool(available_colors)
+
+    size_color_map = {}
+    size_stock_map = {}
+    for variant in variants:
+        color_key = (variant.color or '').strip()
+        size_color_map.setdefault(variant.size, []).append(color_key)
+        size_stock_map.setdefault(variant.size, 0)
+        size_stock_map[variant.size] += variant.stock
+    for size, colors in size_color_map.items():
+        size_color_map[size] = list(dict.fromkeys(colors))
+
+    size_options = [
+        {
+            'size': size,
+            'colors': size_color_map.get(size, []),
+            'stock': size_stock_map.get(size, 0),
+        }
+        for size in available_sizes
+    ]
+
     variant_gallery = {
         v.id:{
             'size':v.size,
@@ -256,7 +299,10 @@ def product_detail(request, slug):
     product_price = first_variant.price if first_variant else 0
 
     total_stock = product.total_stock
-    size_stock_map = {v.size: v.stock for v in variants}
+    size_stock_map = {}
+    for v in variants:
+        size_stock_map.setdefault(v.size, 0)
+        size_stock_map[v.size] += v.stock
 
     if total_stock == 0:
         stock_status, stock_label = 'out_of_stock', 'Out of Stock'
@@ -265,12 +311,7 @@ def product_detail(request, slug):
     else:
         stock_status, stock_label = 'in_stock', 'In Stock'
 
-    print("Current Product:", product.id, product.name)
-
     reviews_qs = ProductReview.objects.filter(product=product)
-
-    print("Review Count:", reviews_qs.count())
-    print("Product Price:", product_price)
 
     for review in reviews_qs:
         print(
@@ -297,6 +338,9 @@ def product_detail(request, slug):
         if (original_price and original_price > product.price)
         else None
     )
+    best_offer = product.get_best_offer(amount=product_price)
+    offer_discount = best_offer.calculate_discount(product_price) if best_offer else Decimal('0')
+    discounted_price = product_price - offer_discount if best_offer else product_price
     highlights = getattr(product, 'highlight_list', None) or [
         'Premium quality materials',
         'Handcrafted with care',
@@ -320,7 +364,10 @@ def product_detail(request, slug):
         'product':          product,
         'images':           images,
         'variants':         variants,
-        'size_stock_map':   size_stock_map,
+        'available_colors': available_colors,
+        'available_sizes':  available_sizes,
+        'has_color_variants': has_color_variants,
+        'size_options':     size_options,
         'total_stock':      total_stock,
         'stock_status':     stock_status,
         'stock_label':      stock_label,
@@ -336,8 +383,13 @@ def product_detail(request, slug):
         'highlights':       highlights,
         'in_wishlist':      in_wishlist,
         'category_display': category_display,
-        "product_price": product_price,
+        'product_price':   product_price,
+        'best_offer':      best_offer,
+        'offer_discount':  offer_discount,
+        'discounted_price': discounted_price,
         'variant_gallery_json': json.dumps(variant_gallery),
+        'size_color_map_json': json.dumps(size_color_map),
+        'size_color_map': size_color_map,
     })
 
 

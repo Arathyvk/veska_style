@@ -200,7 +200,7 @@ def referral_stats(request):
         .filter(is_credited=True)
         .aggregate(total=Sum(F('amount_earned') + F('referred_user_bonus')))['total'] or 0
     )
-    active_codes       = ReferralCode.objects.filter(is_active=True).count()
+    active_codes        = ReferralCode.objects.filter(is_active=True).count()
     recent_transactions = (
         ReferralTransaction.objects
         .select_related('referrer', 'referred_user')
@@ -215,7 +215,6 @@ def referral_stats(request):
         'recent_transactions': recent_transactions,
         'top_referrers':      top_referrers,
     })
-
 
 
 def get_applicable_offers(product, user=None):

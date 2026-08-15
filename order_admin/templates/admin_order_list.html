@@ -103,7 +103,8 @@ button,input,select{font-family:var(--body)}
 .sb-cancelled{background:var(--red-pale);color:var(--red)}.sb-cancelled .dot{background:var(--red)}
 .sb-return_requested{background:var(--orange-pale);color:var(--orange)}.sb-return_requested .dot{background:var(--orange)}
 .sb-returned{background:rgba(138,125,114,.12);color:var(--muted2)}.sb-returned .dot{background:var(--muted2)}
-
+.btn-new{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--terra);color:#1a1714;border:none;border-radius:var(--radius-lg);font-size:15px;font-weight:700;cursor:pointer;transition:.15s;text-decoration:none}
+.btn-new:hover{background:var(--terra2)}
 .status-form{display:flex;align-items:center;gap:6px}
 .status-sel{background:var(--card2);border:1px solid var(--border2);color:var(--text);
   border-radius:var(--radius);padding:4px 22px 4px 8px;font-size:15px;appearance:none;cursor:pointer;outline:none;
@@ -153,6 +154,11 @@ button,input,select{font-family:var(--body)}
       <h1>Order Management</h1>
       <p>All orders · newest first</p>
     </div>
+
+      <a href="{% url 'admin_return_list' %}" class="btn-new">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      RETURN DETAILS
+    </a>
   </div>
 
   <div class="stat-row">

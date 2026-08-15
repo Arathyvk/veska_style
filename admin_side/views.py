@@ -8,12 +8,7 @@ from django.contrib import messages
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 
-
-
-
 User = get_user_model()  
-
-
 
 def is_admin_user(user):
     return user.is_authenticated and user.is_staff

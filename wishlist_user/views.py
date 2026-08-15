@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -67,6 +68,22 @@ def wishlist_toggle(request, slug):
     selected_size = payload.get('size') or None
     selected_color = payload.get('color') or None
 
+    color_variants_exist = product.variants.filter(color__isnull=False).exclude(color='').exists()
+    if product.variants.exists():
+        if not selected_size or (color_variants_exist and not selected_color):
+            return JsonResponse({
+                'success': False,
+                'error': 'Please select a valid size and color combination before saving.',
+            }, status=400)
+
+        if not ProductVariant.objects.filter(
+            product=product, size=selected_size, color=selected_color
+        ).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'The selected color and size combination is not available.',
+            }, status=400)
+
     existing = WishlistProduct.objects.filter(
         wishlist=wl, 
         product=product, 
@@ -119,6 +136,14 @@ def wishlist_detail(request):
             size=item.selected_size,
             color=item.color
         ).first()
+        variant_price = item.matched_variant.price if item.matched_variant else item.product.price
+        item.best_offer = item.product.get_best_offer(amount=variant_price)
+        if item.best_offer:
+            item.offer_discount = item.best_offer.calculate_discount(variant_price)
+            item.discounted_price = variant_price - item.offer_discount
+        else:
+            item.offer_discount = Decimal('0')
+            item.discounted_price = variant_price
 
     cart = _get_cart(request)
     cart_product_uuids = set(

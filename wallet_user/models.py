@@ -1,127 +1,108 @@
-import uuid
-
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
-from decimal import Decimal
 
 
 class Wallet(models.Model):
-    user            = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="wallet",unique=True)
-    balance         = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    created_at      = models.DateTimeField(auto_now_add=True)
-    updated_at      = models.DateTimeField(auto_now=True)
-
+    user      = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='wallet'
+    )
+    balance    = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name          = "wallet"
-        verbose_name_plural   = 'wallets'
+        verbose_name        = 'Wallet'
+        verbose_name_plural = 'Wallets'
 
     def __str__(self):
-        name = f"{self.user.first_name} {self.user.last_name}".strip()
-        if not name:
-            name = self.user.email
-        return f"{name}'s Wallet ₹{self.balance}"    
-    
-    
-    def credit(self, amount, reason='', order=None, reference='', description=''):
+        return f"{self.user.email}'s Wallet — ₹{self.balance}"
 
+    @classmethod
+    def get_or_create_for(cls, user):
+        wallet, _ = cls.objects.get_or_create(user=user)
+        return wallet
+
+    def credit(self, amount, reason, order=None, description=''):
         amount = Decimal(str(amount))
-
+        if amount <= 0:
+            return None
         self.balance += amount
         self.save(update_fields=['balance', 'updated_at'])
-
-        WalletTransaction.objects.create(
-            wallet=self,
-            user=self.user,
-            transaction_type=WalletTransaction.CREDIT,
-            amount=amount,
-            reason=reason,
-            order=order,
-            reference=reference or str(uuid.uuid4())[:12].upper(),
-            description=description,
+        return WalletTransaction.objects.create(
+            wallet           = self,
+            transaction_type = 'CREDIT',
+            amount           = amount,
+            reason           = reason,
+            order            = order,
+            description      = description,
         )
- 
 
-    def debit(self, amount, reason='', order=None, reference='', description=''):
+    def debit(self, amount, reason, order=None, description=''):
         amount = Decimal(str(amount))
-
-        if amount > self.balance:
-            raise ValueError("Insufficient wallet balance.")
-
+        if amount <= 0 or amount > self.balance:
+            return None
         self.balance -= amount
         self.save(update_fields=['balance', 'updated_at'])
-
-        WalletTransaction.objects.create(
-            wallet=self,
-            user=self.user,
-            transaction_type=WalletTransaction.DEBIT,
-            amount=amount,
-            reason=reason,
-            order=order,
-            reference=reference or str(uuid.uuid4())[:12].upper(),
-            description=description,
+        return WalletTransaction.objects.create(
+            wallet           = self,
+            transaction_type = 'DEBIT',
+            amount           = amount,
+            reason           = reason,
+            order            = order,
+            description      = description,
         )
 
 
-
-    def can_pay(self, amount):
-        return self.balance >= Decimal(str(amount))
-
-
-    
 class WalletTransaction(models.Model):
-    CREDIT = 'credit'
-    DEBIT  = 'debit'        
- 
+    CREDIT = 'CREDIT'
+    DEBIT = 'DEBIT'
+
     TRANSACTION_TYPES = [
         (CREDIT, 'Credit'),
-        (DEBIT,  'Debit'),
+        (DEBIT, 'Debit'),
     ]
- 
-    REASON_PURCHASE = 'purchase'
-    REASON_CANCELLATION = 'cancellation'
-    REASON_RETURN = 'return'     
-    REASON_REFERRAL = 'referral'
-    REASON_MANUAL = 'manual'
-    REASON_ORDER = 'order'
-    REASON_WELCOME = 'welcome'
+
     REASON_CHOICES = [
-        (REASON_PURCHASE, 'Purchase'),
-        (REASON_CANCELLATION, 'Cancellation'),
-        (REASON_RETURN, 'Return'),      
-        (REASON_REFERRAL, 'Referral'),
-        (REASON_MANUAL, 'Manual Adjustment'),
-        (REASON_ORDER, 'Order'),
-        (REASON_WELCOME, 'Welcome Bonus'),
+        ('ORDER_CANCEL',  'Order Cancelled'),
+        ('ORDER_RETURN',  'Order Returned'),
+        ('ORDER_PAYMENT', 'Wallet Payment'),
+        ('ADMIN_CREDIT',  'Admin Credit'),
+        ('ADMIN_DEBIT',   'Admin Debit'),
+        ('REFERRAL',      'Referral Bonus'),      
+        ('WELCOME',       'Welcome Bonus'),      
+        ('MANUAL',        'Manual'),
     ]
-    user             = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name ="transaction", null=True, blank=True)
+
+    REASON_REFERRAL     = 'REFERRAL'
+    REASON_WELCOME      = 'WELCOME'
+    REASON_CANCELLATION = 'ORDER_CANCEL'
+    REASON_RETURN       = 'ORDER_RETURN'
+    REASON_ORDER_CANCEL = 'ORDER_CANCEL'
+    REASON_ORDER_RETURN = 'ORDER_RETURN'
+    REASON_ORDER        = 'ORDER_PAYMENT'
+    REASON_PAYMENT      = 'ORDER_PAYMENT'
+    REASON_ADMIN_CREDIT = 'ADMIN_CREDIT'
+    REASON_ADMIN_DEBIT  = 'ADMIN_DEBIT'
+
     wallet           = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
     amount           = models.DecimalField(max_digits=12, decimal_places=2)
     description      = models.CharField(max_length=300, blank=True)
-    reason           = models.CharField(max_length=20, choices=REASON_CHOICES, default=REASON_MANUAL)
+    reason           = models.CharField(max_length=20, choices=REASON_CHOICES, default='MANUAL')
     order            = models.ForeignKey('order_user.Order', on_delete=models.SET_NULL,null=True, blank=True, related_name='wallet_transactions')
-    reference        = models.CharField(max_length=50, blank=True)
-    created_at       = models.DateTimeField(auto_now_add=True)
- 
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering            = ['-created_at']
         verbose_name        = 'Wallet Transaction'
         verbose_name_plural = 'Wallet Transactions'
- 
 
     def __str__(self):
-        return f"{self.get_transaction_type_display()} - {self.amount} - {self.get_reason_display()}"
- 
+        return f"{self.get_transaction_type_display()} ₹{self.amount} ({self.wallet.user.email})"
 
     @property
     def is_credit(self):
-        return self.transaction_type == self.CREDIT
-    
-
-    @property
-    def is_debit(self):
-        return self.transaction_type == self.DEBIT
-    
- 
+        return self.transaction_type == 'CREDIT'

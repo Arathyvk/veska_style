@@ -185,7 +185,7 @@ veska_fashion/
 │   ├── utils.py
 │   ├── validators.py
 │   └── views.py
-│
+        
 ├── wallet_admin/                     # Wallet administration
 │   ├── templates/
 │   ├── models.py

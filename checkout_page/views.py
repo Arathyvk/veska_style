@@ -5,6 +5,7 @@ import stripe
 import traceback
 
 from decimal import Decimal
+from types import SimpleNamespace
 from django.db import models
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
@@ -326,24 +327,18 @@ def apply_coupon(request):
         messages.error(request, msg)
         return redirect('checkout')
 
-    cart     = _get_cart(request)
-    subtotal = sum(_item_price(i) * i.quantity for i in cart.items.all())
+    cart = _get_cart(request)
+    cart_items = list(cart.items.select_related('variant', 'product').all())
+    subtotal = sum(_item_price(i) * i.quantity for i in cart_items)
 
-    if coupon.min_order_value and subtotal < coupon.min_order_value:
-        msg = f'Minimum order of ₹{coupon.min_order_value} required for this coupon.'
+    valid, discount, valid_message = coupon.validate_all(subtotal, cart_items, request.user)
+    if not valid:
         if is_ajax:
-            return JsonResponse({'success': False, 'error': msg})
-        messages.error(request, msg)
+            return JsonResponse({'success': False, 'error': valid_message})
+        messages.error(request, valid_message)
         return redirect('checkout')
 
-    if coupon.discount_type == 'percent':
-        discount = (subtotal * coupon.value / 100).quantize(Decimal('0.01'))
-        if coupon.max_discount:
-            discount = min(discount, coupon.max_discount)
-    else:
-        discount = coupon.value
-
-    request.session['coupon_code']     = coupon.code
+    request.session['coupon_code'] = coupon.code
     request.session['coupon_discount'] = str(discount)
 
     if is_ajax:
@@ -381,7 +376,15 @@ def checkout(request):
 
     if coupon_code:
         try:
-            Coupon.objects.get(code=coupon_code, is_active=True)
+            coupon = Coupon.objects.get(code=coupon_code, is_active=True)
+            valid, discount, _ = coupon.validate_all(subtotal, list(cart_items), request.user)
+            if valid:
+                coupon_discount = discount
+            else:
+                coupon_code = ''
+                coupon_discount = Decimal('0')
+                request.session.pop('coupon_code', None)
+                request.session.pop('coupon_discount', None)
         except Coupon.DoesNotExist:
             coupon_code = ''
             coupon_discount = Decimal('0')
@@ -438,6 +441,10 @@ def checkout(request):
             'quantity': item.quantity,
             'unit_price': _item_price(item),
             'line_total': _item_price(item) * item.quantity,
+            'active_offer': item.active_offer,
+            'discounted_unit_price': item.discounted_unit_price,
+            'discounted_line_total': item.discounted_line_total,
+            'item_offer_discount': (_item_price(item) * item.quantity) - item.discounted_line_total,
         })
 
     raw_coupons = Coupon.objects.filter(
@@ -602,16 +609,13 @@ def payment_success(request):
     try:
         session = stripe.checkout.Session.retrieve(session_id)
     except stripe.error.InvalidRequestError as e:
-        print(f'[payment_success] Stripe InvalidRequestError: {e}')
         messages.error(request, 'Payment session not found. Please contact support.')
         return redirect('payment_cancel')
     except stripe.error.StripeError as e:
-        print(f'[payment_success] StripeError: {e}')
         messages.error(request, 'Could not verify payment with Stripe. Please try again.')
         return redirect('payment_cancel')
 
     payment_status = session.payment_status
-    print(f'[payment_success] session_id={session_id} payment_status={payment_status}')
 
     if payment_status not in ('paid', 'no_payment_required'):
         messages.error(request, 'Payment is not confirmed yet.')
@@ -646,7 +650,6 @@ def payment_success(request):
         offer_ids_raw = raw_meta.get('offer_ids') or ''
         offer_ids = [int(i) for i in offer_ids_raw.split(',') if i.strip().isdigit()]
     except (ValueError, TypeError) as e:
-        print(f'[payment_success] Metadata parse error: {e}')
         messages.error(request, 'Order data is corrupted.')
         return redirect('payment_cancel')
 
@@ -670,7 +673,7 @@ def payment_success(request):
             cart = Cart.objects.get(id=cart_id, user=request.user)
             cart_items = list(cart.items.select_related('variant', 'product').all())
         except Cart.DoesNotExist:
-            print(f'[payment_success] Cart {cart_id} not found')
+            pass
 
     if not cart_items:
         payment.status = 'completed'
@@ -759,7 +762,6 @@ def payment_success(request):
                     wallet_obj.balance = max(Decimal('0'), wallet_obj.balance - wallet_amount)
                     wallet_obj.save(update_fields=['balance'])
                     WalletTransaction.objects.create(
-                        user=request.user,
                         wallet=wallet_obj,
                         amount=-wallet_amount,
                         transaction_type='DEBIT',
@@ -767,7 +769,7 @@ def payment_success(request):
                         description=f'Payment for order {order.uuid} (Stripe + Wallet)',
                     )
                 except Wallet.DoesNotExist:
-                    print(f'[payment_success] Wallet not found')
+                    pass
 
             if cart:
                 cart.items.all().delete()
@@ -1005,7 +1007,6 @@ def place_order(request):
                 wallet.save(update_fields=['balance'])
                 WalletTransaction.objects.create(
                     wallet=wallet,
-                    user=request.user,
                     amount=-wallet_used,
                     transaction_type='DEBIT',
                     order=order,

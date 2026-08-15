@@ -13,8 +13,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 
-from product_admin.models import Product, ProductImage, ProductVariant
-from .forms import ProductForm, ProductVariantFormSet
+from product_admin.models import Product, ProductImage
+from product_admin.forms import ProductForm, ProductVariantFormSet
 from category_admin.models import Category
 
 
@@ -55,7 +55,6 @@ def save_cropped_images(variant, json_str):
             _, b64data = data_url.split(',', 1)
             img_bytes = base64.b64decode(b64data)
         except Exception as e:
-            print(f"Failed to decode image: {e}")
             continue
             
         filename = f"product_{variant.product.uuid}_{uuid_lib.uuid4().hex[:8]}.jpg"
@@ -67,7 +66,6 @@ def save_cropped_images(variant, json_str):
             )
             count += 1
         except Exception as e:
-            print(f"Failed to save image: {e}")
             continue
             
     return count
@@ -92,13 +90,10 @@ def handle_removed_images(product, json_str):
             deleted_count += 1
             
         except ProductImage.DoesNotExist:
-            print(f"Image {pk} not found")
             continue
         except ValueError as e:
-            print(f"Invalid image ID {pk}: {e}")
             continue
         except Exception as e:
-            print(f"Error deleting image {pk}: {e}")
             continue
     
     for variant in product.variants.all():
@@ -107,7 +102,6 @@ def handle_removed_images(product, json_str):
                 img.order = i
                 img.save(update_fields=['order'])
     
-    print(f"Deleted {deleted_count} images")
     return deleted_count
 
 
@@ -130,8 +124,7 @@ def delete_unused_variant_images(product):
             img.delete()
             deleted_count += 1
         except Exception as e:
-            print(f"Error deleting unused image {img.id}: {e}")
-    
+            continue
     return deleted_count
 
 
@@ -218,8 +211,6 @@ def product_add(request):
                 return redirect("product_list")
         else:
             messages.error(request, 'Please fix the errors below.')
-            print("FORM ERRORS:", form.errors)
-            print("FORMSET ERRORS:", variant_formset.errors)
     else:
         form = ProductForm()
         variant_formset = ProductVariantFormSet(prefix='variants')
@@ -262,13 +253,9 @@ def product_edit(request, uuid):
                 product.is_active = False
             
             product.save()
-            
             variants = variant_formset.save()
-            
             delete_unused_variant_images(product)
-            
             handle_removed_images(product, removed_image_ids)
-            
             variant = variants[0] if variants else product.variants.first()
             
             if variant:
@@ -287,8 +274,6 @@ def product_edit(request, uuid):
                 return redirect("product_list")
         else:
             messages.error(request, 'Please fix the errors below.')
-            print("FORM ERRORS:", form.errors)
-            print("FORMSET ERRORS:", variant_formset.errors)
     else:
         form = ProductForm(instance=product)
         variant_formset = ProductVariantFormSet(instance=product, prefix='variants')

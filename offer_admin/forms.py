@@ -1,5 +1,4 @@
 from django import forms
-from django.utils import timezone
 from .models import BaseOffer
 
 class BaseOfferForm(forms.ModelForm):

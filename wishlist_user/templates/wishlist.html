@@ -207,7 +207,13 @@
 
           <div class="item-footer">
             <span class="item-price">
-              ₹{{ item.matched_variant.price|default:"—"|floatformat:2 }}
+              {% if item.best_offer and item.offer_discount > 0 %}
+                <span style="font-size:14px;font-weight:600;color:var(--ink);">₹{{ item.discounted_price|floatformat:2 }}</span>
+                <span style="font-size:12px;color:var(--muted);text-decoration:line-through;margin-left:6px;">₹{{ item.matched_variant.price|default:item.product.price|floatformat:2 }}</span>
+                <span style="display:block;font-size:11px;color:var(--terra);margin-top:3px;">{{ item.best_offer.discount_display }}</span>
+              {% else %}
+                ₹{{ item.matched_variant.price|default:item.product.price|floatformat:2 }}
+              {% endif %}
             </span>
 
             <div class="footer-actions">

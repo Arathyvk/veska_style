@@ -1,7 +1,6 @@
 import re
 import base64
 import cloudinary.uploader
-import cloudinary.api
 import random
 import string
 from datetime import datetime, timedelta
@@ -18,6 +17,10 @@ from django.http import JsonResponse
 from django.core.mail import send_mail
 
 from customers.models import Address
+from django.urls import reverse
+from users.models import ReferralCode
+from users.utils import get_active_referral_settings
+from core.otp import OTP_EXPIRY_MINUTES
 
 User = get_user_model()
 
@@ -39,13 +42,21 @@ def _send_email_otp(new_email, otp):
     send_mail(
         subject='Your Email Verification Code',
         message=(
-            f'Your verification code is: {otp}\n\n'
-            'This code expires in 10 minutes.\n'
-            'If you did not request this, please ignore this email.'
-        ),
+                    "Hello,\n\n"
+                    "Welcome to Veska!\n\n"
+                    "Thank you for choosing Veska. To complete your email verification, "
+                    "please use the One-Time Password (OTP) below:\n\n"
+                    f"Verification Code: {otp}\n\n"
+                    f"This code is valid for {OTP_EXPIRY_MINUTES} minutes.\n\n"
+                    "If you did not request this verification, you can safely ignore this email.\n"
+                    "Please do not share this OTP with anyone for security reasons.\n\n"
+                    "If you need any assistance, feel free to contact our support team.\n\n"
+                    "Warm regards,\n"
+                    "support@veska.in"
+                ),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[new_email],
-        fail_silently=False,
+        fail_silently=False
     )
 
 def _delete_cloudinary_image(public_id):
@@ -105,12 +116,8 @@ def account_profile(request):
             elif len(set(phone)) == 1:
                 errors.append("Mobile number cannot contain all identical digits.")
         
-        has_existing_photo = bool(user.profile_pic)
-        is_uploading_new = bool(cropped_photo and cropped_photo.startswith("data:image"))
-        is_removing = (remove_photo == "true")
-        
-        if not has_existing_photo and not is_uploading_new and not is_removing:
-            errors.append("Please upload a profile photo before saving your profile.")
+        if not phone:
+            errors.append("Please update the mobile number before saving your profile.")
         
         if errors:
             for err in errors:
@@ -125,10 +132,14 @@ def account_profile(request):
         
         if remove_photo == "true":
             if user.profile_pic:
-                _delete_cloudinary_image(user.profile_pic)
+                try:
+                    cloudinary.uploader.destroy(user.profile_pic.public_id)
+                except Exception as e:
+                    print("Cloudinary delete error:", e)
+
                 user.profile_pic = None
                 photo_updated = True
-                messages.error(request, "Profile photo removed successfully.")
+                messages.success(request, "Profile photo removed successfully.")
             else:
                 messages.warning(request, "No profile photo to remove.")
         
@@ -160,7 +171,7 @@ def account_profile(request):
             
             if not photo_updated and not remove_photo == "true":
                 messages.success(request, "Profile updated successfully.")
-            elif photo_updated:
+            elif not photo_updated:
                 messages.success(request, "Profile updated with new photo.")    
                 
         except Exception as e:
@@ -169,7 +180,40 @@ def account_profile(request):
         
         return redirect("account_profile")
     
-    return render(request, "account_profile.html")
+    # prepare referral info for profile display
+    referral_code_obj = None
+    referral_link = None
+    referral_reward_amount = 0
+    referred_user_reward = 0
+    try:
+        referral_code_obj = (
+            ReferralCode.objects
+            .filter(user=user, is_active=True)
+            .order_by("-created_at")
+            .first()
+        )
+        if referral_code_obj is None:
+            referral_code_obj = ReferralCode.objects.create(
+                user=user,
+                code=f"REF{_generate_otp(8)}"
+            )
+        signup_path = reverse('signup')
+        referral_link = request.build_absolute_uri(f'{signup_path}?ref={referral_code_obj.code}')
+
+        settings_obj = get_active_referral_settings()
+        if settings_obj:
+            referral_reward_amount = settings_obj.referral_reward_amount or 0
+            referred_user_reward = settings_obj.referred_user_reward or 0
+    except Exception:
+        referral_code_obj = None
+        referral_link = None
+
+    return render(request, "account_profile.html", {
+        'referral_code_obj': referral_code_obj,
+        'referral_link': referral_link,
+        'referral_reward_amount': referral_reward_amount,
+        'referred_user_reward': referred_user_reward,
+    })
 
 @login_required
 @never_cache
@@ -330,6 +374,7 @@ def account_address_set_default(request, pk):
     messages.success(request, "Default address updated.")
     return redirect("account_address")
 
+
 @login_required
 def account_change_email(request):
     is_google = _is_google_user(request.user)
@@ -373,6 +418,7 @@ def account_change_email(request):
         return redirect('account_verify_email_otp')
 
     return render(request, 'account_change_email.html', {'is_google_user': is_google})
+
 
 @login_required
 def account_verify_email_otp(request):
@@ -420,6 +466,7 @@ def account_verify_email_otp(request):
 
     return render(request, 'verify_email_otp.html', {'new_email': new_email})
 
+
 @login_required
 @require_POST
 def account_change_email_resend(request):
@@ -445,6 +492,7 @@ def account_change_email_resend(request):
             'success': False,
             'message': 'Failed to send code. Please try again.'
         })
+    
 
 @login_required
 def account_change_password(request):

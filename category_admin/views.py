@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.views.decorators.cache import never_cache
 
 from category_admin.models import Category
-from .forms  import CategoryForm
+from category_admin.forms  import CategoryForm
 
 
 def is_admin(user):
@@ -56,7 +56,6 @@ def category_add(request):
             try:
                 category = form.save()
             except Exception as e:
-                print("ERROR:", e)
                 messages.error(request, str(e))
 
             messages.success(request, f'"{category.name}" added successfully!')

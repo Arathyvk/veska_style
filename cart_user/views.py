@@ -52,7 +52,6 @@ def _json_or_redirect(request, cart, redirect_to, message=None, level='success',
 def get_cart_count(request):
     cart = _get_cart(request)
     payload = cart_count_payload(request, cart)
-    print("AJAX /cart/count/ — User:", request.user, "Authenticated:", request.user.is_authenticated, "wishlist_count:", payload['wishlist_count'])
     return JsonResponse(payload)
 
 
@@ -73,21 +72,36 @@ def cart_add(request, slug):
 
     variant = None
     if size:
+        if product.variants.filter(color__isnull=False).exclude(color='').exists() and not color:
+            return _json_or_redirect(
+                request, _get_cart(request), next_url,
+                'Please select a color for this product.', 'error',
+            )
+
         variant_qs = ProductVariant.objects.filter(product=product, size=size)
         if color:
-            variant_qs = variant_qs.filter(color=color)   
+            variant_qs = variant_qs.filter(color=color)
         variant = variant_qs.first()
 
         if variant is None:
+            error_text = f'Size "{size}"'
+            if color:
+                error_text += f' / {color}'
+            error_text += ' is not available for this product.'
             return _json_or_redirect(
                 request, _get_cart(request), next_url,
-                f'Size "{size}"{" / " + color if color else ""} is not available.', 'error',
+                error_text, 'error',
             )
         if variant.stock == 0:
             return _json_or_redirect(
                 request, _get_cart(request), next_url,
                 f'Size {size} is out of stock.', 'error',
             )
+    elif product.total_stock > 0 and product.variants.exists():
+        return _json_or_redirect(
+            request, _get_cart(request), next_url,
+            'Please select a size before adding to cart.', 'error',
+        )
 
 
     try:
@@ -151,14 +165,14 @@ def cart_detail(request):
     ok_items      = [i for i in items if i.is_available]
     can_checkout  = bool(ok_items) and not blocked_items
 
-    subtotal       = cart.subtotal
+    subtotal = cart.subtotal
+    # Calculate offer discounts based on each available item's line totals
     offer_discount = sum(
-        (item.discounted_line_total and (item.unit_price * item.quantity - item.discounted_line_total)) or 0
-        for item in ok_items
+        (item.line_total - item.discounted_line_total) for item in ok_items if item.discounted_line_total is not None
     )
     discounted_subtotal = subtotal - offer_discount
-    shipping       = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
-    order_total    = discounted_subtotal + shipping
+    shipping = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
+    order_total = discounted_subtotal + shipping
     remaining_free = max(0, FREE_SHIPPING - discounted_subtotal)
 
     return render(request, 'cart_detail.html', {
@@ -168,8 +182,8 @@ def cart_detail(request):
         'available_items': ok_items,
         'can_checkout': can_checkout,
         'subtotal': subtotal,
-        'offer_discount': offer_discount,       
-        'shipping': shipping, 
+        'offer_discount': offer_discount,
+        'shipping': shipping,
         'order_total': order_total,
         'remaining_free': remaining_free, 
         'max_qty': MAX_QTY_PER_ITEM,
@@ -191,13 +205,18 @@ def cart_update(request, item_id):
         item.delete()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             subtotal = cart.subtotal
-            shipping = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
+            ok_items = [i for i in cart.items.select_related('product', 'variant').all() if i.is_available]
+            offer_discount = sum((i.line_total - i.discounted_line_total) for i in ok_items if i.discounted_line_total is not None)
+            discounted_subtotal = subtotal - offer_discount
+            shipping = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
+            grand_total = discounted_subtotal + shipping
             return JsonResponse({
                 'success': True,
                 'message': 'Item removed from cart',
                 'cart_count': cart.total_items,
                 'cart_subtotal': f"{subtotal:.2f}",
-                'grand_total': f"{subtotal + shipping:.2f}",
+                'offer_discount': f"{offer_discount:.2f}",
+                'grand_total': f"{grand_total:.2f}",
                 'shipping_fee': shipping
             })
         messages.success(request, 'Item removed from cart.')
@@ -236,8 +255,12 @@ def cart_update(request, item_id):
         item_total = item.line_total
     
     subtotal = cart.subtotal
-    shipping = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
-    grand_total = subtotal + shipping
+    # Recalculate offer discounts and totals after the update
+    ok_items = [i for i in cart.items.select_related('product', 'variant').all() if i.is_available]
+    offer_discount = sum((i.line_total - i.discounted_line_total) for i in ok_items if i.discounted_line_total is not None)
+    discounted_subtotal = subtotal - offer_discount
+    shipping = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
+    grand_total = discounted_subtotal + shipping
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
@@ -248,6 +271,7 @@ def cart_update(request, item_id):
             'message': message,
             'cart_count': cart.total_items,
             'cart_subtotal': f"{subtotal:.2f}",
+            'offer_discount': f"{offer_discount:.2f}",
             'grand_total': f"{grand_total:.2f}",
             'shipping_fee': shipping,
             'shipping_free': shipping == 0

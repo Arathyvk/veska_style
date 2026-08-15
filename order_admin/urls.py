@@ -13,4 +13,9 @@ urlpatterns = [
      path('inventory/<int:product_id>/status/',views.inventory_toggle_status,name='admin_inventory_toggle_status'),
      path('orders/item/<int:item_id>/cancel/', views.admin_cancel_order_item, name='admin_cancel_order_item'),
 
+    path('order_return/',views.admin_return_list,   name='admin_return_list'),
+    path('order_return_detail/<int:pk>/',views.admin_return_detail, name='admin_return_detail'),
+    path('order_return_action/<int:pk>/action/',views.admin_return_action, name='admin_return_action'),
+    path('order_return_note<int:pk>/add-note/',views.admin_return_add_note, name='admin_return_add_note'),
 ]
+ 

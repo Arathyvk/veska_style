@@ -14,19 +14,15 @@ from django.db import transaction as db_tx
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm
-from reportlab.platypus import (
-    SimpleDocTemplate, Table, TableStyle,
-    Paragraph, Spacer, HRFlowable,
-)
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle,Paragraph, Spacer, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_RIGHT, TA_CENTER
 from django.http import JsonResponse
 
 from order_user.order_email import send_order_confirmation
 from order_user.models import Order, OrderItem
-from return_admin.models import ReturnRequest, RETURN_DAYS
-from product_admin.models import ProductVariant, ProductReview
-from wallet_user.models import Wallet, WalletTransaction
+from order_admin.models import ReturnRequest, RETURN_DAYS
+from product_admin.models import  ProductReview
 from wallet_user.utils import refund_on_cancellation, refund_single_item_cancellation
 from coupon_admin.models import Coupon, CouponUsage
 
@@ -65,6 +61,44 @@ RETURN_REASONS = [
 ]
 
 
+def _recalculate_order_summary(order, active_items=None):
+    if active_items is None:
+        active_items = order.items.filter(cancel_status='none')
+
+    subtotal = sum((item.line_total or Decimal('0.00')) for item in active_items)
+    shipping = Decimal(order.shipping_charge or 0)
+    coupon_discount = Decimal(order.discount_amount or 0)
+    offer_discount = Decimal(order.offer_discount or 0)
+    wallet_used = Decimal(order.wallet_amount_used or 0)
+    original_subtotal = Decimal(str(order.subtotal or 0))
+
+    prorated_coupon_discount = Decimal('0.00')
+    prorated_offer_discount = Decimal('0.00')
+
+    if original_subtotal > 0 and subtotal > 0:
+        if coupon_discount > 0:
+            prorated_coupon_discount = (
+                subtotal * coupon_discount / original_subtotal
+            ).quantize(Decimal('0.01'))
+        if offer_discount > 0:
+            prorated_offer_discount = (
+                subtotal * offer_discount / original_subtotal
+            ).quantize(Decimal('0.01'))
+
+    final_total = max(
+        subtotal - prorated_offer_discount - prorated_coupon_discount + shipping - wallet_used,
+        Decimal('0.00'),
+    )
+
+    return (
+        subtotal,
+        prorated_offer_discount,
+        prorated_coupon_discount,
+        shipping,
+        wallet_used,
+        final_total,
+    )
+
 
 @login_required
 def order_list(request):
@@ -97,35 +131,14 @@ def order_list(request):
 @login_required(login_url='login')
 def order_detail(request, uuid):
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
-    items = order.items.all()
+    all_items = order.items.all()
+    active_items = order.items.filter(cancel_status='none')
 
-    active_items    = items.filter(cancel_status="none")
-    subtotal        = sum(item.line_total for item in active_items)
-    shipping        = Decimal(order.shipping_charge or 0)
-    coupon_discount = Decimal(order.discount_amount or 0)
-    coupon_code     = order.coupon_code or ''
-    offer_discount  = Decimal(order.offer_discount or 0)
-    offer_details   = order.offer_details or ''
-    wallet_used     = Decimal(order.wallet_amount_used or 0)
+    subtotal, offer_discount, coupon_discount, shipping, wallet_used, final_total = _recalculate_order_summary(order, active_items)
+    offer_details = order.offer_details or ''
+    coupon_code = order.coupon_code or ''
 
-    original_subtotal = Decimal(str(order.subtotal or 0))
-    total_discount = offer_discount + coupon_discount
-
-    if original_subtotal > 0:
-        discount_rate = total_discount / original_subtotal
-    else:
-        discount_rate = Decimal('0')
-
-    prorated_offer_discount  = (Decimal(str(subtotal)) * (offer_discount / original_subtotal)).quantize(Decimal('0.01')) if original_subtotal > 0 and offer_discount > 0 else Decimal('0.00')
-    prorated_coupon_discount = (Decimal(str(subtotal)) * (coupon_discount / original_subtotal)).quantize(Decimal('0.01')) if original_subtotal > 0 and coupon_discount > 0 else Decimal('0.00')
-    prorated_total_discount  = prorated_offer_discount + prorated_coupon_discount
-
-    final_total = max(
-        Decimal(str(subtotal)) - prorated_total_discount + shipping - wallet_used,
-        Decimal('0'),
-    )
-
-    product_ids = items.values_list('product_id', flat=True)
+    product_ids = all_items.values_list('product_id', flat=True)
 
     reviews_qs = ProductReview.objects.filter(
         product_id__in=product_ids,
@@ -154,13 +167,14 @@ def order_detail(request, uuid):
 
     return render(request, 'order_detail.html', {
         'order':            order,
-        'items':            items,
+        'items':            all_items,
+        'active_items':     active_items,
         'steps':            TIMELINE_STEPS,
         'subtotal':         subtotal,
         'shipping':         shipping,
-        'coupon_discount':  prorated_coupon_discount,
+        'coupon_discount':  coupon_discount,
         'coupon_code':      coupon_code,
-        'offer_discount':   prorated_offer_discount,
+        'offer_discount':   offer_discount,
         'offer_details':    offer_details,
         'wallet_used':      wallet_used,
         'final_total':      final_total,
@@ -285,14 +299,7 @@ def cancel_order(request, uuid):
 
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
 
-    print("Order:", order.uuid)
-    print("Status:", order.status)
-    print("Payment:", order.payment_method)
-    print("Payment Status:", order.payment_status)
-    print("Method:", request.method)
-
     if not order.can_cancel:
-        print("FAILED can_cancel")
         messages.error(request, "Cannot cancel")
         return redirect("order_detail", uuid=order.uuid)
 
@@ -361,10 +368,13 @@ def cancel_order_item(request, uuid, item_id):
     refund_amount = refund_single_item_cancellation(order, item)
 
     active_items = order.items.filter(cancel_status="none")
+    subtotal, prorated_offer_discount, prorated_coupon_discount, shipping, wallet_used, final_total = _recalculate_order_summary(order, active_items)
+
     if not active_items.exists():
         order.status = "cancelled"
         order.cancelled_at = timezone.now()
-        order.save(update_fields=["status", "cancelled_at"])
+        order.total = Decimal('0.00')
+        order.save(update_fields=["status", "cancelled_at", "total"])
 
         if order.coupon_code:
             try:
@@ -374,31 +384,9 @@ def cancel_order_item(request, uuid, item_id):
                 CouponUsage.objects.filter(user=order.user, coupon=coupon_obj, order=order).delete()
             except Coupon.DoesNotExist:
                 pass
-
-    remaining_items = order.items.filter(cancel_status="none")
-    remaining_subtotal = sum(
-        (Decimal(str(it.line_total or 0)) for it in remaining_items),
-        Decimal("0.00"),
-    )
-
-    original_subtotal = Decimal(str(order.subtotal or 0))
-    total_discount = (
-        Decimal(str(order.offer_discount or 0))
-        + Decimal(str(order.discount_amount or 0))
-    )
-
-    if original_subtotal > 0:
-        prorated_discount = (remaining_subtotal * (total_discount / original_subtotal)).quantize(Decimal("0.01"))
     else:
-        prorated_discount = Decimal("0.00")
-
-    remaining_shipping = Decimal(str(order.shipping_charge or 0))
-    remaining_wallet = Decimal(str(order.wallet_amount_used or 0))
-
-    recalculated_total = max(
-        remaining_subtotal - prorated_discount + remaining_shipping - remaining_wallet,
-        Decimal("0.00"),
-    )
+        order.total = final_total
+        order.save(update_fields=["total"])
 
     if request.content_type and 'application/json' in request.content_type:
         return JsonResponse({
@@ -407,9 +395,9 @@ def cancel_order_item(request, uuid, item_id):
                 f"Item cancelled successfully. ₹{refund_amount} refunded to your wallet."
                 if refund_amount > 0 else "Item cancelled successfully."
             ),
-            "new_total": str(recalculated_total.quantize(Decimal("0.01"))),
-            "new_subtotal": str(remaining_subtotal.quantize(Decimal("0.01"))),
-            "new_discount": str(prorated_discount.quantize(Decimal("0.01"))),
+            "new_total": str(final_total.quantize(Decimal("0.01"))),
+            "new_subtotal": str(subtotal.quantize(Decimal("0.01"))),
+            "new_discount": str((prorated_offer_discount + prorated_coupon_discount).quantize(Decimal("0.01"))),
             "order_cancelled": order.status == "cancelled",
         })
 
@@ -565,10 +553,11 @@ def return_order_redirect(request, short_id):
 @login_required
 def download_invoice(request, uuid):
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
-    items = order.items.all()
+    all_items = order.items.all()
+    active_items = order.items.filter(cancel_status='none')
 
-    active_items    = items.filter(cancel_status='none')
-    active_subtotal = sum(item.line_total for item in active_items)
+    subtotal, offer_discount, coupon_discount, shipping, wallet_used, final_total = _recalculate_order_summary(order, active_items)
+    items = all_items
 
     try:
 
@@ -707,11 +696,11 @@ def download_invoice(request, uuid):
                 )),
             ]
 
-        _subtotal     = Decimal(str(order.subtotal or 0))
-        _offer_disc   = Decimal(str(order.offer_discount or 0))
-        _coupon_disc  = Decimal(str(order.discount_amount or 0))
-        _shipping     = Decimal(str(order.shipping_charge or 0))
-        _wallet_used  = Decimal(str(order.wallet_amount_used or 0))
+        _subtotal     = subtotal
+        _offer_disc   = offer_discount
+        _coupon_disc  = coupon_discount
+        _shipping     = shipping
+        _wallet_used  = wallet_used
         
         total_paid_by_customer = _subtotal - _offer_disc - _coupon_disc + _shipping
         if total_paid_by_customer < 0:
@@ -846,7 +835,6 @@ def download_invoice(request, uuid):
         return response
 
     except ImportError as e:
-        print(f"ReportLab import error: {e}")
         return _html_invoice_fallback(request, order, items)
 
 

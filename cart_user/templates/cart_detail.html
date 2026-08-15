@@ -349,13 +349,20 @@ button,input{font-family:var(--body)}
             <span class="val">₹{{ subtotal|floatformat:2 }}</span>
           </div>
 
+          {% if offer_discount > 0 %}
+          <div class="sum-row saving">
+            <span>Offer savings</span>
+            <span class="val">−₹{{ offer_discount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+
           <div class="sum-row">
             <span>Shipping</span>
             <span class="val">
-              {% if subtotal >= 999 %}
+              {% if shipping == 0 %}
                 FREE
               {% else %}
-                ₹79.00
+                ₹{{ shipping|floatformat:2 }}
               {% endif %}
             </span>
           </div>
@@ -363,11 +370,7 @@ button,input{font-family:var(--body)}
           <div class="sum-row total-row">
             <span>Total</span>
             <span class="val">
-              {% if subtotal >= 999 %}
-                ₹{{ subtotal|floatformat:2 }}
-              {% else %}
-                ₹{{ subtotal|add:79|floatformat:2 }}
-              {% endif %}
+                ₹{{ order_total|floatformat:2 }}
             </span>
           </div>
 
@@ -659,6 +662,19 @@ function updateOrderSummary(data) {
         } else {
             shippingRow.textContent = `₹${parseFloat(data.shipping_fee).toFixed(2)}`;
         }
+    }
+    
+    // Update offer savings row (if present)
+    const offerRowVal = document.querySelector('.summary-body .sum-row.saving .val');
+    if (offerRowVal) {
+      const offerRow = document.querySelector('.summary-body .sum-row.saving');
+      if (data.offer_discount !== undefined && parseFloat(data.offer_discount) > 0) {
+        if (offerRow) offerRow.style.display = '';
+        offerRowVal.textContent = `−₹${parseFloat(data.offer_discount).toFixed(2)}`;
+      } else {
+        // hide the saving row if no discount
+        if (offerRow) offerRow.style.display = 'none';
+      }
     }
     
     // Update total

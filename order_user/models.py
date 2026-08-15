@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 
-from return_admin.models import RETURN_DAYS
+from order_admin.models import RETURN_DAYS
 
 
 RETURN_REASONS = [
