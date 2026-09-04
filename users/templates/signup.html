@@ -260,7 +260,16 @@
 
     <form method="POST" action="{% url 'signup' %}" novalidate>
       {% csrf_token %}
-      <input type="hidden" name="ref_code" value="{{ ref_code }}">
+      <div class="form-group">
+        <label>Referral Code <span style="color:var(--stone);font-size:0.65rem;letter-spacing:0.05em;">(optional)</span></label>
+        <input
+          type="text"
+          name="ref_code"
+          value="{{ form_data.ref_code|default:ref_code }}"
+          placeholder="Enter referral code"
+          maxlength="50"
+        />
+      </div>
       
       <div class="form-group">
         <label>First Name</label>

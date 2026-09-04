@@ -67,6 +67,18 @@ def wishlist_toggle(request, slug):
     selected_size = payload.get('size') or None
     selected_color = payload.get('color') or None
 
+    if product.variants.exists() and (not selected_size or not selected_color):
+        return JsonResponse({
+            'success': False,
+            'error': 'Please select an available color and size first.',
+        }, status=400)
+
+    if product.variants.filter(size=selected_size, color=selected_color, stock__gt=0).exists() is False:
+        return JsonResponse({
+            'success': False,
+            'error': 'That color and size combination is unavailable.',
+        }, status=400)
+
     existing = WishlistProduct.objects.filter(
         wishlist=wl, 
         product=product, 
@@ -119,6 +131,13 @@ def wishlist_detail(request):
             size=item.selected_size,
             color=item.color
         ).first()
+        item.offer = item.product.get_best_offer(
+            item.matched_variant.price if item.matched_variant else item.product.price
+        )
+        item.original_price = item.matched_variant.price if item.matched_variant else item.product.price
+        item.offer_price = item.original_price
+        if item.offer:
+            item.offer_price -= item.offer.calculate_discount(item.original_price)
 
     cart = _get_cart(request)
     cart_product_uuids = set(

@@ -14,12 +14,9 @@ from wallet_user.utils import (
 
 @login_required
 def wallet_dashboard(request):
-    print(f"DEBUG: logged in as {request.user.email}")  
     wallet = get_or_create_wallet(request.user)
-    print(f"DEBUG: wallet balance = {wallet.balance}")
     
     all_txns = wallet.transactions.all()
-    print(f"DEBUG: Total transactions = {all_txns.count()}")
     for txn in all_txns[:5]:
         print(f"  - {txn.transaction_type}: ₹{txn.amount} ({txn.reason}) - {txn.description}")
     

@@ -49,6 +49,15 @@ def _json_or_redirect(request, cart, redirect_to, message=None, level='success',
     return HttpResponseRedirect(redirect_to) if redirect_to.startswith('/') else redirect(redirect_to)
 
 
+def _cart_totals(cart):
+    items = list(cart.items.select_related('product', 'variant').all())
+    subtotal = sum((item.line_total for item in items), 0)
+    offer_discount = sum((item.line_total - item.discounted_line_total for item in items), 0)
+    discounted_subtotal = subtotal - offer_discount
+    shipping = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
+    return subtotal, offer_discount, discounted_subtotal, shipping, discounted_subtotal + shipping
+
+
 def get_cart_count(request):
     cart = _get_cart(request)
     payload = cart_count_payload(request, cart)
@@ -72,10 +81,15 @@ def cart_add(request, slug):
     color   = request.POST.get('color', '').strip()
 
     variant = None
+    if product.variants.exists() and (not size or not color):
+        return _json_or_redirect(
+            request, _get_cart(request), next_url,
+            'Please select both a color and size.', 'error',
+        )
+
     if size:
         variant_qs = ProductVariant.objects.filter(product=product, size=size)
-        if color:
-            variant_qs = variant_qs.filter(color=color)   
+        variant_qs = variant_qs.filter(color=color)
         variant = variant_qs.first()
 
         if variant is None:
@@ -151,14 +165,7 @@ def cart_detail(request):
     ok_items      = [i for i in items if i.is_available]
     can_checkout  = bool(ok_items) and not blocked_items
 
-    subtotal       = cart.subtotal
-    offer_discount = sum(
-        (item.discounted_line_total and (item.unit_price * item.quantity - item.discounted_line_total)) or 0
-        for item in ok_items
-    )
-    discounted_subtotal = subtotal - offer_discount
-    shipping       = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
-    order_total    = discounted_subtotal + shipping
+    subtotal, offer_discount, discounted_subtotal, shipping, order_total = _cart_totals(cart)
     remaining_free = max(0, FREE_SHIPPING - discounted_subtotal)
 
     return render(request, 'cart_detail.html', {
@@ -190,14 +197,13 @@ def cart_update(request, item_id):
     elif action == 'remove':
         item.delete()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            subtotal = cart.subtotal
-            shipping = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
+            subtotal, offer_discount, discounted_subtotal, shipping, grand_total = _cart_totals(cart)
             return JsonResponse({
                 'success': True,
                 'message': 'Item removed from cart',
                 'cart_count': cart.total_items,
-                'cart_subtotal': f"{subtotal:.2f}",
-                'grand_total': f"{subtotal + shipping:.2f}",
+                'cart_subtotal': f"{discounted_subtotal:.2f}",
+                'grand_total': f"{grand_total:.2f}",
                 'shipping_fee': shipping
             })
         messages.success(request, 'Item removed from cart.')
@@ -233,11 +239,9 @@ def cart_update(request, item_id):
         item.quantity = capped
         item.save()
         new_quantity = capped
-        item_total = item.line_total
+        item_total = item.discounted_line_total
     
-    subtotal = cart.subtotal
-    shipping = 0 if subtotal >= FREE_SHIPPING else SHIPPING_FEE
-    grand_total = subtotal + shipping
+    subtotal, offer_discount, discounted_subtotal, shipping, grand_total = _cart_totals(cart)
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
@@ -247,7 +251,7 @@ def cart_update(request, item_id):
             'item_total': f"{item_total:.2f}" if new_quantity > 0 else "0.00",
             'message': message,
             'cart_count': cart.total_items,
-            'cart_subtotal': f"{subtotal:.2f}",
+            'cart_subtotal': f"{discounted_subtotal:.2f}",
             'grand_total': f"{grand_total:.2f}",
             'shipping_fee': shipping,
             'shipping_free': shipping == 0

@@ -14,7 +14,7 @@
   border-radius: var(--radius);
   border: none;
   cursor: pointer;
-  transition: opacity .18s;margin-right:106pc;margin-bottom:10px}
+  transition: opacity .18s;margin-right:100pc;margin-bottom:10px}
 
 #toWrap{margin-bottom:15px}
 @media(max-width:600px){.two-col{grid-template-columns:1fr}}
@@ -48,11 +48,11 @@
   </div>
 
   <!-- Filter -->
-  <div class="card shadow-sm mb-4">
+  <div class="card shadow-sm mb-4" style="margin-right: 97pc;">
     <div class="card-body">
-      <form method="get" class="row g-3 align-items-end">
+      <form method="get" class="row g-3 align-items-end" style="margin-left: 2pc;">
         <div class="col-sm-6 col-md-3">
-          <label class="form-label small fw-semibold">Filter type</label>
+          <label class="form-label small fw-semibold" style=" margin-top: 1pc;">Filter type</label>
           <select name="filter" class="form-select form-select-sm" style="font-size: 16px;"
                   id="filterType" onchange="toggleDates(this.value)">
             <option value="daily"   {% if filter_type == 'daily'   %}selected{% endif %}>Today</option>
@@ -75,7 +75,7 @@
                  value="{{ date_to }}">
         </div>
         <div class="col-sm-6 col-md-3">
-          <button type="submit" class="btn btn-sm btn-primary w-100" style ="margin-top:10px">Apply filter</button>
+          <button type="submit" class="btn btn-sm btn-primary w-100" style ="margin-top:10px; margin-bottom: 1pc;">Apply filter</button>
         </div>
       </form>
     </div>

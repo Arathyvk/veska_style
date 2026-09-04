@@ -76,6 +76,22 @@ def _item_price(item):
     return item.variant.price if (item.variant and item.variant.price) else item.product.price
 
 
+def _calculate_offer_totals(cart_items):
+    offer_discount = Decimal('0')
+    offer_details = []
+    offer_ids = set()
+    for item in cart_items:
+        line_total = _item_price(item) * item.quantity
+        offer = item.product.get_best_offer(line_total)
+        if offer:
+            discount = offer.calculate_discount(line_total)
+            offer_discount += discount
+            if discount > 0:
+                offer_details.append(offer.name)
+                offer_ids.add(offer.id)
+    return offer_discount, offer_details, offer_ids
+
+
 def _send_order_confirmation_email(order, user):
     try:
         subject = f'Order Confirmed #{str(order.uuid)[:8].upper()} — Veska'
@@ -85,10 +101,10 @@ def _send_order_confirmation_email(order, user):
         send_mail(subject, body, settings.DEFAULT_FROM_EMAIL,
                   [user.email], fail_silently=True)
     except Exception as e:
-        print(f'[EMAIL ERROR] {e}')
+        pass
 
 
-def _enrich_coupons(coupons_qs, subtotal, user):
+def _enrich_coupons(coupons_qs, subtotal, user, cart_items):
 
     now = tz.now()
     used_ids = set(
@@ -106,21 +122,16 @@ def _enrich_coupons(coupons_qs, subtotal, user):
         elif coupon.usage_limit and coupon.times_used >= coupon.usage_limit:
             is_valid      = False
             valid_message = 'Usage limit reached'
+        elif coupon.valid_from > now:
+            is_valid      = False
+            valid_message = 'Not active yet'
         elif coupon.valid_until and coupon.valid_until < now:
             is_valid      = False
             valid_message = 'Expired'
-        elif coupon.min_order_value and subtotal < coupon.min_order_value:
-            is_valid      = False
-            valid_message = f'Min order ₹{coupon.min_order_value} required'
         else:
-            
-            if coupon.discount_type == 'percent':
-                disc = (subtotal * coupon.value / 100).quantize(Decimal('0.01'))
-                if coupon.max_discount:
-                    disc = min(disc, coupon.max_discount)
-            else:
-                disc = coupon.value
-            saved_amount = disc
+            is_valid, saved_amount, valid_message = coupon.validate_all(
+                subtotal, cart_items, user
+            )
 
         result.append({
             'coupon':        coupon,
@@ -305,6 +316,12 @@ def apply_coupon(request):
         return redirect('checkout')
 
     now = tz.now()
+    if coupon.valid_from > now:
+        msg = 'This coupon is not active yet.'
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': msg})
+        messages.error(request, msg)
+        return redirect('checkout')
     if coupon.valid_until and coupon.valid_until < now:
         msg = 'This coupon has expired.'
         if is_ajax:
@@ -329,19 +346,13 @@ def apply_coupon(request):
     cart     = _get_cart(request)
     subtotal = sum(_item_price(i) * i.quantity for i in cart.items.all())
 
-    if coupon.min_order_value and subtotal < coupon.min_order_value:
-        msg = f'Minimum order of ₹{coupon.min_order_value} required for this coupon.'
+    cart_items = list(cart.items.select_related('product', 'variant').all())
+    valid, discount, msg = coupon.validate_all(subtotal, cart_items, request.user)
+    if not valid:
         if is_ajax:
             return JsonResponse({'success': False, 'error': msg})
         messages.error(request, msg)
         return redirect('checkout')
-
-    if coupon.discount_type == 'percent':
-        discount = (subtotal * coupon.value / 100).quantize(Decimal('0.01'))
-        if coupon.max_discount:
-            discount = min(discount, coupon.max_discount)
-    else:
-        discount = coupon.value
 
     request.session['coupon_code']     = coupon.code
     request.session['coupon_discount'] = str(discount)
@@ -375,13 +386,19 @@ def checkout(request):
         messages.warning(request, 'Your cart is empty.')
         return redirect('cart_detail')
 
-    subtotal = sum(_item_price(i) * i.quantity for i in cart_items)
+    subtotal = sum((_item_price(i) * i.quantity for i in cart_items), Decimal('0'))
     coupon_code = request.session.get('coupon_code', '')
     coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
 
     if coupon_code:
         try:
-            Coupon.objects.get(code=coupon_code, is_active=True)
+            coupon = Coupon.objects.get(code=coupon_code, is_active=True)
+            valid, coupon_discount, _ = coupon.validate_all(subtotal, list(cart_items), request.user)
+            if not valid:
+                coupon_code = ''
+                coupon_discount = Decimal('0')
+                request.session.pop('coupon_code', None)
+                request.session.pop('coupon_discount', None)
         except Coupon.DoesNotExist:
             coupon_code = ''
             coupon_discount = Decimal('0')
@@ -389,29 +406,7 @@ def checkout(request):
             request.session.pop('coupon_discount', None)
 
     now = tz.now()
-    offer_discount = Decimal('0')
-    offer_details_list = []
-    applied_offer_ids = set()  
-    for item in cart_items:
-        product = item.product
-        all_offers = get_applicable_offers(product, request.user)   
-        best_discount = Decimal('0')
-        best_offer_name = ''
-        best_offer_id = None
-
-        for offer in all_offers:
-            item_price = _item_price(item)
-            line_total = item_price * item.quantity
-            disc_total = offer.calculate_discount(line_total) 
-            if disc_total > best_discount:
-                best_discount = disc_total
-                best_offer_name = offer.name
-                best_offer_id = offer.id
-
-        offer_discount += best_discount  
-        if best_discount > 0 and best_offer_name:
-            offer_details_list.append(f"{best_offer_name}")
-            applied_offer_ids.add(best_offer_id)
+    offer_discount, offer_details_list, applied_offer_ids = _calculate_offer_totals(cart_items)
 
     request.session['offer_discount'] = str(offer_discount)
     request.session['offer_details'] = ', '.join(set(offer_details_list)) if offer_details_list else ''
@@ -432,12 +427,16 @@ def checkout(request):
 
     enriched_items = []
     for item in cart_items:
+        line_total = _item_price(item) * item.quantity
+        offer = item.product.get_best_offer(line_total)
+        offer_discount = offer.calculate_discount(line_total) if offer else Decimal('0')
         enriched_items.append({
             'product': item.product,
             'variant': item.variant,
             'quantity': item.quantity,
             'unit_price': _item_price(item),
-            'line_total': _item_price(item) * item.quantity,
+            'line_total': line_total - offer_discount,
+            'original_line_total': line_total,
         })
 
     raw_coupons = Coupon.objects.filter(
@@ -446,7 +445,7 @@ def checkout(request):
     ).filter(
         models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=now)
     )
-    available_coupons = _enrich_coupons(raw_coupons, subtotal, request.user)
+    available_coupons = _enrich_coupons(raw_coupons, subtotal, request.user, list(cart_items))
 
     available_offers = BaseOffer.objects.filter(
         is_active=True,
@@ -498,8 +497,9 @@ def stripe_create_checkout_session(request):
         coupon_code = request.session.get('coupon_code', '')
         coupon_discount = Decimal(request.session.get('coupon_discount', '0'))
 
-        offer_discount = Decimal(str(request.session.get('offer_discount', '0')))
-        offer_ids = request.session.get('offer_ids', [])   
+        offer_discount, offer_details, offer_ids = _calculate_offer_totals(cart_items)
+        request.session['offer_discount'] = str(offer_discount)
+        request.session['offer_ids'] = list(offer_ids)
         offer_ids_str = ','.join(str(i) for i in offer_ids)
 
         shipping_amount = SHIPPING_CHARGE if (subtotal - coupon_discount - offer_discount) < FREE_SHIPPING_THRESHOLD else Decimal('0')
@@ -602,16 +602,13 @@ def payment_success(request):
     try:
         session = stripe.checkout.Session.retrieve(session_id)
     except stripe.error.InvalidRequestError as e:
-        print(f'[payment_success] Stripe InvalidRequestError: {e}')
         messages.error(request, 'Payment session not found. Please contact support.')
         return redirect('payment_cancel')
     except stripe.error.StripeError as e:
-        print(f'[payment_success] StripeError: {e}')
         messages.error(request, 'Could not verify payment with Stripe. Please try again.')
         return redirect('payment_cancel')
 
     payment_status = session.payment_status
-    print(f'[payment_success] session_id={session_id} payment_status={payment_status}')
 
     if payment_status not in ('paid', 'no_payment_required'):
         messages.error(request, 'Payment is not confirmed yet.')
@@ -646,7 +643,6 @@ def payment_success(request):
         offer_ids_raw = raw_meta.get('offer_ids') or ''
         offer_ids = [int(i) for i in offer_ids_raw.split(',') if i.strip().isdigit()]
     except (ValueError, TypeError) as e:
-        print(f'[payment_success] Metadata parse error: {e}')
         messages.error(request, 'Order data is corrupted.')
         return redirect('payment_cancel')
 
@@ -670,7 +666,7 @@ def payment_success(request):
             cart = Cart.objects.get(id=cart_id, user=request.user)
             cart_items = list(cart.items.select_related('variant', 'product').all())
         except Cart.DoesNotExist:
-            print(f'[payment_success] Cart {cart_id} not found')
+            pass
 
     if not cart_items:
         payment.status = 'completed'
@@ -767,7 +763,7 @@ def payment_success(request):
                         description=f'Payment for order {order.uuid} (Stripe + Wallet)',
                     )
                 except Wallet.DoesNotExist:
-                    print(f'[payment_success] Wallet not found')
+                    pass
 
             if cart:
                 cart.items.all().delete()
@@ -905,6 +901,11 @@ def place_order(request):
         if coupon_code:
             try:
                 coupon_obj = Coupon.objects.get(code=coupon_code, is_active=True)
+                valid, coupon_discount, reason = coupon_obj.validate_all(
+                    subtotal, list(items), request.user
+                )
+                if not valid:
+                    return JsonResponse({'error': reason}, status=400)
             except Coupon.DoesNotExist:
                 coupon_code = ''
                 coupon_discount = Decimal('0')

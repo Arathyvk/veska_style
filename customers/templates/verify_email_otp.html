@@ -156,7 +156,7 @@
     </div>
 
     <div class="timer-row">
-      <span>Expires in <span class="timer" id="timerEl">00:50</span></span>
+      <span>Expires in <span class="timer" id="timerEl">02:00</span></span>
       <button type="button" class="resend-btn" id="resendBtn" disabled>Resend code</button>
     </div>
 
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function () {
     verifyBtn.disabled = true;
   });
 
-  const DURATION  = 50;
+  const DURATION  = 120;
   const startTime = Date.now();
 
   function getRemaining() {

@@ -297,7 +297,6 @@ def admin_return_action(request, pk):
                 )
 
         except Exception as e:
-            print(f"ERROR in refund: {str(e)}")
             traceback.print_exc()
             messages.error(request, f'Return approved but refund failed: {str(e)}')
             

@@ -4,6 +4,7 @@ import cloudinary.uploader
 import cloudinary.api
 import random
 import string
+import uuid as _uuid
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -12,12 +13,15 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.core.mail import send_mail
 
 from customers.models import Address
+from users.models import ReferralCode
+from offer_admin.models import BaseOffer
 
 User = get_user_model()
 
@@ -37,11 +41,18 @@ def _generate_otp(length=4):
 
 def _send_email_otp(new_email, otp):
     send_mail(
-        subject='Your Email Verification Code',
+        subject="Your Email Verification Code",
         message=(
-            f'Your verification code is: {otp}\n\n'
-            'This code expires in 10 minutes.\n'
-            'If you did not request this, please ignore this email.'
+            "Dear Customer,\n\n"
+            "Thank you for updating your email address.\n\n"
+            f"Your email verification code is: {otp}\n\n"
+            "This verification code is valid for 2 minutes. "
+            "Please do not share this code with anyone for security reasons.\n\n"
+            "If you did not request this email address change, "
+            "please ignore this message or contact our support team "
+            "if you believe your account may be at risk.\n\n"
+            "Best regards,\n"
+            "VESKA Team"
         ),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[new_email],
@@ -54,15 +65,11 @@ def _delete_cloudinary_image(public_id):
             cloudinary.uploader.destroy(public_id)
             return True
         except Exception as e:
-            print(f"Error deleting Cloudinary image {public_id}: {e}")
             return False
     return False
 
 def _upload_profile_photo(user, image_data):
     try:
-        if user.profile_pic:
-            _delete_cloudinary_image(user.profile_pic)
-        
         result = cloudinary.uploader.upload(
             image_data,
             folder="profile_photos",
@@ -77,99 +84,136 @@ def _upload_profile_photo(user, image_data):
     except Exception as e:
         return None, str(e)
 
+
+def _profile_referral_context(request, user):
+    referral_code, _ = ReferralCode.objects.get_or_create(
+        user=user,
+        is_active=True,
+        defaults={'code': f'REF{_uuid.uuid4().hex[:8].upper()}'},
+    )
+    referral_offer = BaseOffer.objects.filter(
+        offer_type='REFERRAL', is_active=True,
+        start_date__lte=timezone.now(), end_date__gte=timezone.now(),
+    ).order_by('-created_at').first()
+    return {
+        'referral_code': referral_code,
+        'referral_offer': referral_offer,
+        'referral_link': request.build_absolute_uri(
+            f'{reverse("signup")}?ref={referral_code.code}'
+        ),
+    }
+
+
 @login_required
 @never_cache
 def account_profile(request):
     user = request.user
-    
+
     if request.method == "POST":
         first_name = request.POST.get("first_name", "").strip()
         last_name = request.POST.get("last_name", "").strip()
         phone = request.POST.get("phone_number", "").strip()
+
+     
         cropped_photo = request.POST.get("cropped_photo", "").strip()
         remove_photo = request.POST.get("remove_photo", "").strip()
-        
+
         errors = []
-        
+
+        # =========================
+        # PERSONAL INFORMATION VALIDATION
+        # =========================
+
         if not first_name:
             errors.append("First name is required.")
         elif not re.fullmatch(r"[A-Za-z]+", first_name):
             errors.append("First name must contain only letters.")
-        
+
         if last_name and not re.fullmatch(NAME_REGEX, last_name):
             errors.append("Last name must contain only letters and spaces.")
-        
+
         if phone:
             if not re.fullmatch(r"[6-9]\d{9}", phone):
                 errors.append("Enter a valid 10-digit mobile number.")
             elif len(set(phone)) == 1:
-                errors.append("Mobile number cannot contain all identical digits.")
-        
-        has_existing_photo = bool(user.profile_pic)
-        is_uploading_new = bool(cropped_photo and cropped_photo.startswith("data:image"))
-        is_removing = (remove_photo == "true")
-        
-        if not has_existing_photo and not is_uploading_new and not is_removing:
-            errors.append("Please upload a profile photo before saving your profile.")
-        
+                errors.append(
+                    "Mobile number cannot contain all identical digits."
+                )
+
         if errors:
             for err in errors:
                 messages.error(request, err)
-            return render(request, "account_profile.html")
-        
+
+            return render(request, "account_profile.html", _profile_referral_context(request, user))
+
+
+
         user.first_name = first_name.capitalize()
         user.last_name = last_name
         user.phone_number = phone
-        
+
         photo_updated = False
-        
+        previous_profile_pic = user.profile_pic
+
+
         if remove_photo == "true":
+
             if user.profile_pic:
-                _delete_cloudinary_image(user.profile_pic)
                 user.profile_pic = None
                 photo_updated = True
-                messages.error(request, "Profile photo removed successfully.")
+
             else:
-                messages.warning(request, "No profile photo to remove.")
-        
+                messages.warning(request,"No profile photo to remove.")
+
         elif cropped_photo and cropped_photo.startswith("data:image"):
+
             try:
-                image_data = cropped_photo.split(",")[1]
+                image_data = cropped_photo.split(",", 1)[1]
                 image_bytes = base64.b64decode(image_data)
-                
-                public_id, error = _upload_profile_photo(user, image_bytes)
-                
+
+                public_id, error = _upload_profile_photo(
+                    user,
+                    image_bytes
+                )
+
                 if error:
-                    messages.error(request, f"Failed to upload photo: {error}")
-                    return render(request, "account_profile.html")
-                else:
-                    if user.profile_pic:
-                        _delete_cloudinary_image(user.profile_pic)
-                    
-                    user.profile_pic = public_id
-                    photo_updated = True
-                    messages.success(request, "Profile photo uploaded successfully.")
-                    
-            except Exception as e:
-                messages.error(request, f"Failed to process photo: {str(e)}")
-                return render(request, "account_profile.html")
-        
+                    messages.error(request,"Failed to upload profile photo. Please try again.")
+
+                    return render(request, "account_profile.html", _profile_referral_context(request, user))
+
+                user.profile_pic = public_id
+                photo_updated = True
+
+            except Exception:
+                messages.error(request,"Invalid profile photo. Please select a valid image and try again.")
+                return render(request,"account_profile.html")
+
         try:
             user.save()
-            user.refresh_from_db() 
-            
-            if not photo_updated and not remove_photo == "true":
-                messages.success(request, "Profile updated successfully.")
-            elif photo_updated:
-                messages.success(request, "Profile updated with new photo.")    
-                
+            user.refresh_from_db()
+
+            if remove_photo == "true" and previous_profile_pic:
+                _delete_cloudinary_image(previous_profile_pic)
+
         except Exception as e:
-            messages.error(request, f"Failed to save profile: {str(e)}")
-            return render(request, "account_profile.html")
-        
+            messages.error(request,"Failed to save profile. Please try again.")
+            return render(request,"account_profile.html")
+
+        if remove_photo == "true" and photo_updated:
+            messages.success(request,"Profile photo removed successfully.")
+        elif photo_updated:
+            messages.success(request,"Profile photo updated successfully.")
+        else:
+
+            messages.success(request,"Profile updated successfully.")
         return redirect("account_profile")
-    
-    return render(request, "account_profile.html")
+    referral_code = ReferralCode.objects.filter(user=user, is_active=True).order_by('-created_at').first()
+    if referral_code is None:
+        referral_code = ReferralCode.objects.create(
+            user=user, code=f"REF{_uuid.uuid4().hex[:8].upper()}"
+        )
+    return render(request,"account_profile.html", {"referral_code": referral_code})
+
 
 @login_required
 @never_cache

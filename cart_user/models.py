@@ -87,13 +87,13 @@ class CartItem(models.Model):
 
     @property
     def active_offer(self):
-        return self.product.get_best_offer()   
+        return self.product.get_best_offer(self.line_total)
 
     @property
     def discounted_unit_price(self):
         offer = self.active_offer
         if offer:
-            return self.unit_price - (offer.calculate_discount(self.unit_price * self.quantity) / self.quantity)
+            return self.discounted_line_total / min(self.quantity, self.available_stock)
         return self.unit_price
 
     @property

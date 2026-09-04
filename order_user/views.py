@@ -120,10 +120,7 @@ def order_detail(request, uuid):
     prorated_coupon_discount = (Decimal(str(subtotal)) * (coupon_discount / original_subtotal)).quantize(Decimal('0.01')) if original_subtotal > 0 and coupon_discount > 0 else Decimal('0.00')
     prorated_total_discount  = prorated_offer_discount + prorated_coupon_discount
 
-    final_total = max(
-        Decimal(str(subtotal)) - prorated_total_discount + shipping - wallet_used,
-        Decimal('0'),
-    )
+    final_total = Decimal(order.total or 0)
 
     product_ids = items.values_list('product_id', flat=True)
 
@@ -255,10 +252,7 @@ def order_success(request, uuid):
     offer_details   = order.offer_details or ''
     wallet_used     = Decimal(order.wallet_amount_used or 0)
 
-    final_total = max(
-        subtotal - offer_discount - coupon_discount + shipping - wallet_used,
-        Decimal('0'),
-    )
+    final_total = Decimal(order.total or 0)
 
     session_key = f"order_confirmed_{uuid}"
     if not request.session.get(session_key):
@@ -284,15 +278,7 @@ def order_success(request, uuid):
 def cancel_order(request, uuid):
 
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
-
-    print("Order:", order.uuid)
-    print("Status:", order.status)
-    print("Payment:", order.payment_method)
-    print("Payment Status:", order.payment_status)
-    print("Method:", request.method)
-
     if not order.can_cancel:
-        print("FAILED can_cancel")
         messages.error(request, "Cannot cancel")
         return redirect("order_detail", uuid=order.uuid)
 
@@ -846,7 +832,6 @@ def download_invoice(request, uuid):
         return response
 
     except ImportError as e:
-        print(f"ReportLab import error: {e}")
         return _html_invoice_fallback(request, order, items)
 
 

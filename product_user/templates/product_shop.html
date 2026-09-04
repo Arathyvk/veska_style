@@ -203,6 +203,7 @@ a{text-decoration:none;color:inherit}
 
 .card-price{margin-bottom:4px}
 .card-price .now{font-size:16px;font-weight:700;color:var(--charcoal);font-family:var(--head);letter-spacing:-.3px}
+.card-price .original{font-size:12px;color:var(--muted-lt);text-decoration:line-through;margin-left:6px}
 
 .stock-label{
   display:inline-flex;align-items:center;gap:5px;
@@ -470,7 +471,11 @@ a{text-decoration:none;color:inherit}
           {% for product in page_obj %}
           <article class="product-card {% if product.total_stock == 0 %}oos{% endif %}" 
                    data-product-id="{{ product.uuid }}" 
-                   data-product-name="{{ product.name|escapejs }}">
+                   data-product-name="{{ product.name|escapejs }}"
+                   data-offer-type="{% if product.offer %}{{ product.offer.discount_type }}{% endif %}"
+                   data-offer-value="{% if product.offer %}{{ product.offer.discount_value }}{% endif %}"
+                   data-offer-min="{% if product.offer %}{{ product.offer.min_purchase_amount }}{% endif %}"
+                   data-offer-max="{% if product.offer %}{{ product.offer.max_discount_amount|default:'' }}{% endif %}">
 
             <a href="{% url 'product_detail' product.slug %}">
               <div class="card-img">
@@ -554,8 +559,16 @@ a{text-decoration:none;color:inherit}
               
               <!-- 💰 PRICE (Dynamic) -->
               <div class="card-price" id="price-{{ product.uuid }}">
-                <span class="now">₹{{ product.variants.first.price|floatformat:2 }}</span>
+                {% if product.offer and product.offer_price < product.price %}
+                  <span class="now">₹{{ product.offer_price|floatformat:2 }}</span>
+                  <span class="original">₹{{ product.price|floatformat:2 }}</span>
+                {% else %}
+                  <span class="now">₹{{ product.price|floatformat:2 }}</span>
+                {% endif %}
               </div>
+              {% if product.offer and product.offer_price < product.price %}
+                <div style="font-size:11px;color:var(--success);font-weight:600;margin-bottom:4px">{{ product.offer.name }}</div>
+              {% endif %}
 
               <!-- Stock Label -->
               <div class="stock-label" id="stock-{{ product.uuid }}">
@@ -914,6 +927,31 @@ function toggleWishlistShop(button, slug, productUuid) {
 // COLOR AND SIZE SELECTION FUNCTIONS
 // ============================================
 
+function updateCardPrice(productCard, originalPrice) {
+  const priceElement = productCard.querySelector('.card-price');
+  if (!priceElement) return;
+
+  const offerType = productCard.dataset.offerType;
+  const offerValue = parseFloat(productCard.dataset.offerValue);
+  const minimum = parseFloat(productCard.dataset.offerMin) || 0;
+  const maximum = parseFloat(productCard.dataset.offerMax);
+  let discount = 0;
+
+  if (offerType && Number.isFinite(offerValue) && originalPrice >= minimum) {
+    discount = offerType === 'PERCENTAGE'
+      ? originalPrice * offerValue / 100
+      : offerValue;
+    if (Number.isFinite(maximum)) discount = Math.min(discount, maximum);
+    discount = Math.min(discount, originalPrice);
+  }
+
+  const finalPrice = originalPrice - discount;
+  priceElement.innerHTML = discount > 0
+    ? '<span class="now">₹' + finalPrice.toFixed(2) + '</span>'
+      + '<span class="original">₹' + originalPrice.toFixed(2) + '</span>'
+    : '<span class="now">₹' + originalPrice.toFixed(2) + '</span>';
+}
+
 function selectColor(button, productUuid, color) {
     // Update active state
     const parent = button.closest('.color-options');
@@ -925,7 +963,6 @@ function selectColor(button, productUuid, color) {
     // Get all elements for this product
     const productCard  = button.closest('.product-card');
     const sizeBadges   = productCard.querySelectorAll('.size-badge');
-    const priceElement = productCard.querySelector('.card-price .now');
     const stockElement = productCard.querySelector('.stock-label');
     const addToCartBtn = productCard.querySelector('.card-add');
 
@@ -953,9 +990,7 @@ function selectColor(button, productUuid, color) {
     // Update price and stock based on first available size
     if (firstVariant) {
         const price = parseFloat(firstVariant.dataset.price);
-        if (priceElement) {
-            priceElement.textContent = '₹' + price.toFixed(2);
-        }
+        updateCardPrice(productCard, price);
 
         const stock = parseInt(firstVariant.dataset.stock);
         if (stock > 5) {
@@ -990,8 +1025,7 @@ function selectSize(element, productUuid, size, price) {
     element.classList.add('selected-size');
 
     if (price) {
-        const priceElement = element.closest('.product-card').querySelector('.card-price .now');
-        if (priceElement) priceElement.textContent = '₹' + parseFloat(price).toFixed(2);
+      updateCardPrice(element.closest('.product-card'), parseFloat(price));
     }
 
     const newImageUrl = element.dataset.image;

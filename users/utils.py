@@ -16,7 +16,7 @@ def get_active_referral_settings():
 
 
 @transaction.atomic
-def credit_referral_bonus(referrer, referred_user):
+def credit_referral_bonus(referrer, referred_user, referral_code=None):
     if referrer.uuid == referred_user.uuid:
         return
 
@@ -31,7 +31,9 @@ def credit_referral_bonus(referrer, referred_user):
     if already_credited:
         return
 
-    referral_code_obj = ReferralCode.objects.filter(user=referrer, is_active=True).first()
+    referral_code_obj = referral_code or ReferralCode.objects.filter(
+        user=referrer, is_active=True
+    ).first()
 
     txn = ReferralTransaction.objects.create(
         referrer=referrer,

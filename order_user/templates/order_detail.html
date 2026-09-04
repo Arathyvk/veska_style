@@ -460,7 +460,7 @@ a{text-decoration:none;color:inherit}
           </div>
           <div class="item-price">
             <div class="item-unit">₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}</div>
-            <div class="item-total">₹{{ item.unit_price|floatformat:2 }}</div>
+              <div class="item-total">₹{{ item.line_total|floatformat:2 }}</div>
           </div>
         </div>
         <div class="item-actions" style="flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
@@ -505,7 +505,7 @@ a{text-decoration:none;color:inherit}
 
     <div class="price-row">
       <span>Subtotal ({{ items.count }} item{{ items.count|pluralize }})</span>
-      <span class="val">₹{{ subtotal|floatformat:2 }}</span>
+            <span class="val">₹{{ subtotal|floatformat:2 }}</span>
     </div>
 
     {% if offer_discount > 0 %}

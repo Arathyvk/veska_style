@@ -9,22 +9,23 @@
   .profile-grid {
     display: grid;
     grid-template-columns: 200px 1fr;
-    gap: 40px;
+    gap: 167px;
     align-items: start;
   }
 
   /* ===== AVATAR SECTION ===== */
-  .avatar-section { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    gap: 14px; 
-  }
+.avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
 
   .avatar-wrap {
     position: relative;
     width: 140px; 
     height: 140px;
+    margin-left: 9pc;
   }
 
   .avatar-img {
@@ -36,41 +37,47 @@
     display: block;
   }
 
-  .avatar-actions {
+.avatar-actions {
     display: flex;
     gap: 8px;
     margin-top: 4px;
-  }
+    margin-left: 9pc;
+}
 
-  .avatar-edit-btn, .avatar-remove-btn {
-    width: 32px; 
-    height: 32px;
-    border: 2px solid #fff; 
+.avatar-edit-btn,
+.avatar-remove-btn {
+    width: 36px;
+    height: 36px;
+    border: 2px solid #fff;
     border-radius: 50%;
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
     justify-content: center;
-    cursor: pointer; 
-    transition: all 0.2s;
-    position: relative;
-  }
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 18px;
+    padding: 0;
+}
 
-  .avatar-edit-btn {
-    background: var(--bark); 
+.avatar-edit-btn {
+    background: var(--bark);
     color: #fff;
-  }
-  .avatar-edit-btn:hover { 
-    background: var(--espresso); 
-  }
+}
 
-  .avatar-remove-btn {
-    background: #dc3545; 
-    color: #fff;
-  }
-  .avatar-remove-btn:hover { 
-    background: #c82333; 
+.avatar-edit-btn:hover {
+    background: var(--espresso);
     transform: scale(1.05);
-  }
+}
+
+.avatar-remove-btn {
+    background: #dc3545;
+    color: #fff;
+}
+
+.avatar-remove-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
 
   .avatar-edit-btn svg, .avatar-remove-btn svg {
     width: 14px; 
@@ -83,13 +90,15 @@
     font-weight: 500;
     color: var(--espresso); 
     text-align: center;
+    margin-left: 9pc;
   }
 
   .avatar-email {
-    font-size: 0.72rem; 
-    color: var(--stone);
+    font-size: 18px; 
+    color: #000;
     text-align: center; 
     word-break: break-all;
+    margin-left: 9pc;
   }
 
   /* ===== MESSAGES ===== */
@@ -141,6 +150,7 @@
     border: 1px solid var(--sand);
     border-radius: 4px;
     padding: 32px 36px;
+    margin-left: 4pc;
   }
 
   .form-row { 
@@ -291,6 +301,21 @@
     margin-bottom: 16px;
   }
 
+  .avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--espresso);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: Arial, sans-serif;
+}
+
   .crop-container {
     width: 100%; 
     height: 300px;
@@ -353,36 +378,152 @@
 
 <div class="profile-grid">
 
-  <!-- ===== AVATAR SECTION ===== -->
-  <div class="avatar-section">
-    <div class="avatar-wrap">
+
+<!-- ===== AVATAR SECTION ===== -->
+<div class="avatar-section">
+
+  <div class="avatar-wrap">
+
+    {% if user.profile_pic %}
       <img
-        src="{% if user.profile_pic %}{{ user.profile_pic.url }}{% else %}{% static 'images/default_avatar.png' %}{% endif %}"
+        id="avatarPreview"
         class="avatar-img"
-        id="avatarPreview">
-    </div>
+        src="{{ user.profile_pic.url }}"
+        alt="Profile Photo">
+    {% else %}
+      <div id="avatarPlaceholder" class="avatar-placeholder">
+        {{ user.first_name|default:user.email|first|upper }}
+      </div>
 
-    <div class="avatar-actions">
-      <button class="avatar-edit-btn" id="avatarEditBtn" type="button" title="Change photo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
-        </svg>
-      </button>
+      <img
+        id="avatarPreview"
+        class="avatar-img"
+        src=""
+        alt="Profile Photo"
+        style="display:none;">
+    {% endif %}
 
-      <button class="avatar-remove-btn" id="avatarRemoveBtn" type="button" title="Remove photo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    </div>
-
-    <div>
-      <div class="avatar-name">{{ user.first_name }} {{ user.last_name }}</div>
-      <div class="avatar-email">{{ user.email }}</div>
-    </div>
   </div>
+
+  <!-- PHOTO ACTION BUTTONS -->
+  <div class="avatar-actions" style="display:flex; margin-left:9pc;">
+
+    <!-- Add / Edit -->
+    <button
+      type="button"
+      id="avatarEditBtn"
+      class="avatar-edit-btn"
+      title="Add or change photo">
+      ✎
+    </button>
+
+    <!-- Remove -->
+    <button
+      type="button"
+      id="avatarRemoveBtn"
+      class="avatar-remove-btn"
+      title="Remove photo">
+      ×
+    </button>
+
+  </div>
+
+  <!-- Hidden file input -->
+  <input
+    type="file"
+    id="photoFileInput"
+    accept="image/jpeg,image/png,image/webp"
+    style="display:none;">
+
+  <div>
+    <div class="avatar-name">
+      {{ user.first_name }} {{ user.last_name }}
+    </div>
+
+    <div class="avatar-email">
+      {{ user.email }}
+    </div>
+
+    {% if referral_code %}
+      <div style="margin-top:12px; text-align:center; margin-left:9pc;">
+
+        <div style="font-size:15px; font-weight:700;">
+          Refer &amp; Earn
+        </div>
+
+        <div style="
+          margin-top:6px;
+          display:flex;
+          gap:8px;
+          justify-content:center;
+          align-items:center;
+        ">
+          <input
+            id="referralCodeInput"
+            type="text"
+            value="{{ referral_code.code }}"
+            readonly
+            style="
+              width:180px;
+              padding:6px;
+              border:1px solid #ddd;
+              border-radius:4px;
+              background:#fafafa;
+              text-align:center;
+              font-weight:600;
+              letter-spacing:.08em;
+            ">
+
+          <button
+            class="btn-secondary"
+            type="button"
+            onclick="copyReferralCode()">
+            Copy Code
+          </button>
+        </div>
+
+        <div style="
+          margin-top:8px;
+          font-size:15px;
+          color:var(--muted);
+        ">
+          <span style="font-weight:600;">Code:</span>
+          {{ referral_code.code }}
+
+          &nbsp;•&nbsp;
+
+          <span style="font-weight:600;">Referrals:</span>
+          {{ referral_code.total_referrals }}
+
+          &nbsp;•&nbsp;
+
+          <span style="font-weight:600;">Earned:</span>
+          ₹{{ referral_code.total_earnings|floatformat:2 }}
+        </div>
+
+        <div style="
+          margin-top:6px;
+          font-size:15px;
+          color:#000;
+        ">
+          {% if referral_offer %}
+            Referral bonus:
+            ₹{{ referral_offer.referral_reward_amount|floatformat:2 }}
+            ·
+            New user bonus:
+            ₹{{ referral_offer.referred_user_reward|floatformat:2 }}
+          {% else %}
+            Referral rewards are currently unavailable.
+          {% endif %}
+        </div>
+
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
 
   <!-- ===== PROFILE FORM ===== -->
   <div class="form-card">
@@ -421,7 +562,7 @@
         <div class="field">
           <label class="field-label" for="phone_number">Phone Number</label>
           <input class="field-input" type="tel" id="phone_number" name="phone_number"
-            value="{{ user.phone_number|default:'' }}" placeholder="+91 9876543210">
+            value="{{ user.phone_number|default:'' }}" placeholder="+91 1234567890">
         </div>
       </div>
 
@@ -434,26 +575,50 @@
 
 <!-- ===== CROP MODAL ===== -->
 <div class="modal-backdrop" id="cropModal">
+
   <div class="crop-modal">
-    <div class="crop-modal-title">Crop Profile Photo</div>
+
+    <div class="crop-modal-title">
+      Adjust Profile Photo
+    </div>
+
     <div class="crop-container">
-      <img id="cropImage" src="" alt="Crop preview">
+      <img
+        id="cropImage"
+        src=""
+        alt="Crop Preview">
     </div>
+
     <div class="crop-actions">
-      <button class="btn-secondary" id="cropCancel" type="button">Cancel</button>
-      <button class="btn-primary" id="cropApply" type="button">Save</button>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        id="cropCancel">
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="btn-primary"
+        id="cropApply">
+        Apply
+      </button>
+
     </div>
+
   </div>
+
 </div>
 
-<!-- Hidden file input -->
-<input type="file" id="photoFileInput" accept="image/*" style="display:none">
 
 <!-- ===== SCRIPTS ===== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
   // ===== DOM REFERENCES =====
   const avatarEditBtn    = document.getElementById("avatarEditBtn");
   const avatarRemoveBtn  = document.getElementById("avatarRemoveBtn");
@@ -463,139 +628,370 @@ document.addEventListener('DOMContentLoaded', function() {
   const cropCancel       = document.getElementById("cropCancel");
   const cropApply        = document.getElementById("cropApply");
   const avatarPreview    = document.getElementById("avatarPreview");
+  const avatarPlaceholder = document.getElementById("avatarPlaceholder");
   const croppedInput     = document.getElementById("croppedPhotoInput");
   const removePhotoInput = document.getElementById("removePhotoInput");
   const profileForm      = document.getElementById("profileForm");
 
   let cropper = null;
+
+  // ===== CHECK REQUIRED ELEMENTS =====
+  if (
+    !avatarEditBtn ||
+    !avatarRemoveBtn ||
+    !photoFileInput ||
+    !cropModal ||
+    !cropImage ||
+    !cropCancel ||
+    !cropApply ||
+    !avatarPreview ||
+    !croppedInput ||
+    !removePhotoInput ||
+    !profileForm
+  ) {
+    console.error("Profile photo elements are missing from the HTML.");
+    return;
+  }
+
   const defaultAvatar = "{% static 'images/default_avatar.png' %}";
+
+  // Store existing avatar
   const currentAvatar = avatarPreview.src;
 
-  // ===== OPEN FILE PICKER =====
+
+  // =========================================================
+  // OPEN FILE PICKER
+  // =========================================================
+
   avatarEditBtn.addEventListener("click", function() {
     photoFileInput.click();
   });
 
-  // ===== HANDLE FILE SELECTION =====
-  photoFileInput.addEventListener("change", function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
 
-    // Clear any remove flag
+  // =========================================================
+  // HANDLE FILE SELECTION
+  // =========================================================
+
+  photoFileInput.addEventListener("change", function(e) {
+
+    const file = e.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image.");
+      photoFileInput.value = "";
+      return;
+    }
+
+    // Check file size - 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB.");
+      photoFileInput.value = "";
+      return;
+    }
+
+    // Clear remove flag
     removePhotoInput.value = "";
 
     const reader = new FileReader();
+
     reader.onload = function(event) {
+
       cropImage.src = event.target.result;
+
       cropModal.classList.add("open");
 
+      // Destroy previous cropper
       if (cropper) {
         cropper.destroy();
+        cropper = null;
       }
 
-      cropper = new Cropper(cropImage, {
-        aspectRatio: 1,
-        viewMode: 1,
-        movable: true,
-        zoomable: true,
-        scalable: false,
-        rotatable: false,
-        autoCropArea: 0.9,
-        background: false
-      });
+      // Wait until image loads
+      cropImage.onload = function() {
+
+        cropper = new Cropper(cropImage, {
+          aspectRatio: 1,
+          viewMode: 1,
+          movable: true,
+          zoomable: true,
+          scalable: false,
+          rotatable: false,
+          autoCropArea: 0.9,
+          background: false,
+          responsive: true
+        });
+
+      };
+
     };
+
     reader.readAsDataURL(file);
+
   });
 
-  // ===== APPLY CROP =====
+
+  // =========================================================
+  // APPLY CROP
+  // =========================================================
+
   cropApply.addEventListener("click", function() {
-    if (!cropper) return;
+
+    if (!cropper) {
+      return;
+    }
 
     const canvas = cropper.getCroppedCanvas({
       width: 400,
-      height: 400
+      height: 400,
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: "high"
     });
+
+    if (!canvas) {
+      alert("Unable to crop the image.");
+      return;
+    }
 
     const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
 
-    // Update preview
+
+    // ===== UPDATE PREVIEW =====
+
     avatarPreview.src = dataUrl;
 
-    // Set hidden input
+    // Show image
+    avatarPreview.style.display = "block";
+
+    // Hide placeholder
+    if (avatarPlaceholder) {
+      avatarPlaceholder.style.display = "none";
+    }
+
+
+    // ===== STORE CROPPED IMAGE =====
+
     croppedInput.value = dataUrl;
 
     // Clear remove flag
     removePhotoInput.value = "";
 
-    // Clean up
+
+    // ===== CLEANUP =====
+
     cropper.destroy();
     cropper = null;
+
     cropModal.classList.remove("open");
+
     photoFileInput.value = "";
+
   });
 
-  // ===== CANCEL CROP =====
+
+  // =========================================================
+  // CANCEL CROP
+  // =========================================================
+
   cropCancel.addEventListener("click", function() {
+
     if (cropper) {
       cropper.destroy();
       cropper = null;
     }
 
     cropModal.classList.remove("open");
+
     photoFileInput.value = "";
+
     croppedInput.value = "";
 
-    // Restore previous image
-    avatarPreview.src = currentAvatar;
+
+    // Restore previous avatar
+
+    if (
+      currentAvatar &&
+      currentAvatar !== window.location.href &&
+      currentAvatar !== ""
+    ) {
+
+      avatarPreview.src = currentAvatar;
+
+      avatarPreview.style.display = "block";
+
+      if (avatarPlaceholder) {
+        avatarPlaceholder.style.display = "none";
+      }
+
+    } else {
+
+      avatarPreview.style.display = "none";
+
+      if (avatarPlaceholder) {
+        avatarPlaceholder.style.display = "flex";
+      }
+
+    }
+
   });
 
-  // ===== REMOVE PHOTO =====
+
+  // =========================================================
+  // REMOVE PHOTO
+  // =========================================================
+
   avatarRemoveBtn.addEventListener("click", function(e) {
+
     e.preventDefault();
-    
+
     if (!confirm("Are you sure you want to remove your profile photo?")) {
       return;
     }
 
+
     // Set remove flag
     removePhotoInput.value = "true";
-    
-    // Clear cropped input
+
+    // Clear cropped image
     croppedInput.value = "";
-    
-    // Update preview to default avatar
+
+
+    // Show default avatar
     avatarPreview.src = defaultAvatar;
-    
-    // Submit the form
+
+    avatarPreview.style.display = "block";
+
+
+    // Hide placeholder
+    if (avatarPlaceholder) {
+      avatarPlaceholder.style.display = "none";
+    }
+
+
+    // Submit form
     profileForm.submit();
+
   });
 
-  // ===== CLICK OUTSIDE MODAL =====
+
+  // =========================================================
+  // CLICK OUTSIDE MODAL
+  // =========================================================
+
   cropModal.addEventListener("click", function(e) {
+
     if (e.target === cropModal) {
       cropCancel.click();
     }
+
   });
 
-  // ===== FORM SUBMIT VALIDATION =====
-  profileForm.addEventListener("submit", function(e) {
-    // If remove_photo is set, ensure cropped_photo is cleared
+
+  // =========================================================
+  // ESC KEY CLOSE MODAL
+  // =========================================================
+
+  document.addEventListener("keydown", function(e) {
+
+    if (e.key === "Escape" && cropModal.classList.contains("open")) {
+      cropCancel.click();
+    }
+
+  });
+
+
+  // =========================================================
+  // FORM SUBMIT VALIDATION
+  // =========================================================
+
+  profileForm.addEventListener("submit", function() {
+
     if (removePhotoInput.value === "true") {
       croppedInput.value = "";
     }
+
   });
 
-  // ===== AUTO-HIDE SUCCESS MESSAGE AFTER 5 SECONDS =====
-  const successAlert = document.querySelector('.alert-success');
+
+  // =========================================================
+  // AUTO-HIDE SUCCESS MESSAGE
+  // =========================================================
+
+  const successAlert = document.querySelector(".alert-success");
+
   if (successAlert) {
+
     setTimeout(function() {
-      successAlert.style.transition = 'opacity 0.5s ease';
-      successAlert.style.opacity = '0';
+
+      successAlert.style.transition = "opacity 0.5s ease";
+
+      successAlert.style.opacity = "0";
+
       setTimeout(function() {
-        successAlert.style.display = 'none';
+        successAlert.style.display = "none";
       }, 500);
+
     }, 5000);
+
   }
+
 });
+
+
+// =========================================================
+// COPY REFERRAL CODE
+// =========================================================
+
+function copyReferralCode() {
+
+  const input = document.getElementById("referralCodeInput");
+
+  if (!input) {
+    return;
+  }
+
+  input.select();
+  input.setSelectionRange(0, 99999);
+
+  if (navigator.clipboard && window.isSecureContext) {
+
+    navigator.clipboard.writeText(input.value)
+      .then(function() {
+        alert("Referral code copied to clipboard.");
+      })
+      .catch(function() {
+        fallbackCopy(input);
+      });
+
+  } else {
+
+    fallbackCopy(input);
+
+  }
+
+}
+
+
+function fallbackCopy(input) {
+
+  try {
+
+    document.execCommand("copy");
+
+    alert("Referral code copied to clipboard.");
+
+  } catch (e) {
+
+    alert("Unable to copy referral code.");
+
+  }
+
+}
 </script>
+
+
 {% endblock %}

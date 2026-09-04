@@ -41,6 +41,9 @@ def home_view(request):
         .prefetch_related('variants__images')
         .order_by('-created_at')[:8]
     )
+    for product in featured_products:
+        product.offer = product.get_best_offer(product.price)
+        product.offer_price = product.discounted_price
 
     referral_code_obj = None
     referral_link     = None
@@ -170,12 +173,15 @@ def signup_view(request):
         password         = request.POST.get("password",   "")
         confirm_password = request.POST.get("confirm_password", "")
 
-        posted_ref = request.POST.get("ref_code", "").strip()
-        if posted_ref and not  request.session.get("pending_referral_code"):
+        posted_ref = request.POST.get("ref_code", "").strip().upper()
+        if posted_ref:
             request.session["pending_referral_code"] = posted_ref
             request.session.modified = True
 
-        form_data = {"first_name": first_name, "last_name": last_name, "email": email}
+        form_data = {
+            "first_name": first_name, "last_name": last_name, "email": email,
+            "ref_code": posted_ref or request.session.get("pending_referral_code", ""),
+        }
 
         if not first_name:
             errors["first_name"] = "First name is required."
@@ -347,7 +353,11 @@ def verify_signup_otp(request):
                     referral = ReferralCode.objects.get(code=ref_code, is_active=True)
                     user.referred_by = referral
                     user.save(update_fields=["referred_by"])
-                    credit_referral_bonus(referrer=referral.user, referred_user=user)
+                    credit_referral_bonus(
+                        referrer=referral.user,
+                        referred_user=user,
+                        referral_code=referral,
+                    )
                 except ReferralCode.DoesNotExist:
                     logger.info(
                         "Signup for %s used invalid/expired referral code: %s",
@@ -587,3 +597,19 @@ def debug_social(request):
     apps = SocialApp.objects.filter(sites=site)
 
     return HttpResponse(f"Apps: {apps}")
+
+
+def error_400(request, exception=None):
+    return render(request, 'errors/400.html', status=400)
+
+
+def error_403(request, exception=None):
+    return render(request, 'errors/403.html', status=403)
+
+
+def error_404(request, exception=None):
+    return render(request, 'errors/404.html', status=404)
+
+
+def error_500(request):
+    return render(request, 'errors/500.html', status=500)

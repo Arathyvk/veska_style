@@ -93,7 +93,6 @@ def _wishlist_ids(request):
         
         return wishlist_ids
     except Exception as e:
-        print(f"❌ Error in _wishlist_ids: {e}")
         return []
 
 
@@ -169,6 +168,10 @@ def product_shop(request):
 
     paginator = Paginator(qs, ITEMS_PER_PAGE)
     page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    for product in page_obj:
+        product.offer = product.get_best_offer(product.price)
+        product.offer_price = product.discounted_price
 
     current = page_obj.number
     num_pages = paginator.num_pages
@@ -254,6 +257,10 @@ def product_detail(request, slug):
 
     first_variant = product.variants.order_by("price").first()
     product_price = first_variant.price if first_variant else 0
+    offer = product.get_best_offer(product_price)
+    offer_price = product_price
+    if offer:
+        offer_price -= offer.calculate_discount(product_price)
 
     total_stock = product.total_stock
     size_stock_map = {v.size: v.stock for v in variants}
@@ -264,22 +271,7 @@ def product_detail(request, slug):
         stock_status, stock_label = 'low', f'Only {total_stock} left!'
     else:
         stock_status, stock_label = 'in_stock', 'In Stock'
-
-    print("Current Product:", product.id, product.name)
-
     reviews_qs = ProductReview.objects.filter(product=product)
-
-    print("Review Count:", reviews_qs.count())
-    print("Product Price:", product_price)
-
-    for review in reviews_qs:
-        print(
-            review.id,
-            review.product_id,
-            review.author_name,
-            review.rating,
-            review.is_approved
-        )    
     review_count     = reviews_qs.count()
     avg_rating       = 0
     rating_breakdown = [0, 0, 0, 0, 0]
@@ -292,11 +284,7 @@ def product_detail(request, slug):
 
     original_price   = getattr(product, 'original_price', None)
     discount_percent = getattr(product, 'discount_percent', 0)
-    savings = (
-        (original_price - product_price)
-        if (original_price and original_price > product.price)
-        else None
-    )
+    savings = (product_price - offer_price) if offer and offer_price < product_price else None
     highlights = getattr(product, 'highlight_list', None) or [
         'Premium quality materials',
         'Handcrafted with care',
@@ -337,6 +325,8 @@ def product_detail(request, slug):
         'in_wishlist':      in_wishlist,
         'category_display': category_display,
         "product_price": product_price,
+        'offer':            offer,
+        'offer_price':      offer_price,
         'variant_gallery_json': json.dumps(variant_gallery),
     })
 

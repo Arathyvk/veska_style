@@ -124,29 +124,7 @@ def admin_dashboard(request):
     this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     last_month_end = this_month_start - datetime.timedelta(seconds=1)
     last_month_start = last_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-
     
-    print("\n" + "="*60)
-    print("TODAY'S REVENUE DEBUG")
-    print("="*60)
-    print(f"Current time (now): {now}")
-    print(f"Today's date: {today_date}")
-    print(f"Total orders today: {today_orders_qs.count()}")
-    
-    if today_orders_qs.exists():
-        print("\n--- All Orders Today ---")
-        for order in today_orders_qs:
-            print(f"Order: {order.order_number}")
-            print(f"  Total: ₹{order.total}")
-            print(f"  Status: {order.status}")
-            print(f"  Payment Status: {order.payment_status}")
-            print(f"  Payment Method: {order.payment_method}")
-            print(f"  Created: {order.created_at}")
-            print("---")
-    
-    
-
-
     return_stats = get_return_value_stats()
     total_return_value = return_stats['total_value']
     total_return_items = return_stats['total_items']

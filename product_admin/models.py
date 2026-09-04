@@ -86,11 +86,12 @@ class Product(models.Model):
         return sorted(set(v.color for v in self.variants.all() if v.color))
 
 
-    def get_best_offer(self):
+    def get_best_offer(self, amount=None):
         from offer_admin.models import BaseOffer  
         from django.db.models import Q
         from django.utils import timezone
 
+        amount = self.price if amount is None else amount
         now = timezone.now()
         offers = BaseOffer.objects.filter(
             is_active=True, start_date__lte=now, end_date__gte=now,
@@ -100,7 +101,7 @@ class Product(models.Model):
         best_offer, best_disc = None, 0
         for o in offers:
             if o.is_valid:
-                disc = o.calculate_discount(self.price)
+                disc = o.calculate_discount(amount)
                 if disc > best_disc:
                     best_offer, best_disc = o, disc
         return best_offer
@@ -108,7 +109,7 @@ class Product(models.Model):
 
     @property
     def discounted_price(self):
-        offer = self.get_best_offer()
+        offer = self.get_best_offer(self.price)
         if offer:
             return self.price - offer.calculate_discount(self.price)
         return self.price

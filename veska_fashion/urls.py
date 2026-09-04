@@ -2,6 +2,12 @@ from django.contrib import admin
 from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import re_path
+from django.views.static import serve
+handler400 = 'users.views.error_400'
+handler403 = 'users.views.error_403'
+handler404 = 'users.views.error_404'
+handler500 = 'users.views.error_500'
 
 
 urlpatterns = [
@@ -26,4 +32,13 @@ urlpatterns = [
     path('dashboard/',include('dashboard.urls')),
     path('offer_admin/',include('offer_admin.urls')),
 
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Serve uploaded product images with the local Django server.
+urlpatterns += [
+    re_path(
+        r'^media/(?P<path>.*)$',
+        serve,
+        {'document_root': settings.MEDIA_ROOT},
+    ),
+]

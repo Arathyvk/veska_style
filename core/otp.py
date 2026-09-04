@@ -10,10 +10,21 @@ MAX_OTP_ATTEMPTS = 3
 def gen_otp():
     return str(random.randint(1000, 9999))
 
-def send_otp_email(email, otp, subject="Veska — Verify your email"):
+def send_otp_email(email, otp, subject="VESKA — Email Verification"):
     send_mail(
         subject=subject,
-        message=f"Your OTP is {otp}. Valid for {OTP_EXPIRY_MINUTES} minutes.",
+        message=(
+            "Hello,\n\n"
+            "Thank you for choosing VESKA.\n\n"
+            f"Your One-Time Password (OTP) for email verification is:\n\n"
+            f"{otp}\n\n"
+            f"This OTP is valid for {OTP_EXPIRY_MINUTES} minutes.\n\n"
+            "For your security, please do not share this OTP with anyone. "
+            "If you did not request this verification code, you can safely ignore this email.\n\n"
+            "Thank you for choosing VESKA.\n\n"
+            "Regards,\n"
+            "Team VESKA"
+        ),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
@@ -33,7 +44,7 @@ def is_otp_expired(otp_time_str):
 def save_otp_to_session(request, purpose, otp):
     request.session[f"{purpose}_otp"] = otp
     request.session[f"{purpose}_otp_time"] = timezone.now().isoformat()
-    request.session[f"{purpose}_otp_attempts"] = 0  # Reset attempts on new OTP
+    request.session[f"{purpose}_otp_attempts"] = 0  
     request.session.modified = True
     request.session.save()
 
