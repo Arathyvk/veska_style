@@ -138,7 +138,25 @@ def order_detail(request, uuid):
     offer_details = order.offer_details or ''
     coupon_code = order.coupon_code or ''
 
+<<<<<<< HEAD
     product_ids = all_items.values_list('product_id', flat=True)
+=======
+    original_subtotal = Decimal(str(order.subtotal or 0))
+    total_discount = offer_discount + coupon_discount
+
+    if original_subtotal > 0:
+        discount_rate = total_discount / original_subtotal
+    else:
+        discount_rate = Decimal('0')
+
+    prorated_offer_discount  = (Decimal(str(subtotal)) * (offer_discount / original_subtotal)).quantize(Decimal('0.01')) if original_subtotal > 0 and offer_discount > 0 else Decimal('0.00')
+    prorated_coupon_discount = (Decimal(str(subtotal)) * (coupon_discount / original_subtotal)).quantize(Decimal('0.01')) if original_subtotal > 0 and coupon_discount > 0 else Decimal('0.00')
+    prorated_total_discount  = prorated_offer_discount + prorated_coupon_discount
+
+    final_total = Decimal(order.total or 0)
+
+    product_ids = items.values_list('product_id', flat=True)
+>>>>>>> 7fb673f (Update cart checkout order and product features)
 
     reviews_qs = ProductReview.objects.filter(
         product_id__in=product_ids,
@@ -269,10 +287,7 @@ def order_success(request, uuid):
     offer_details   = order.offer_details or ''
     wallet_used     = Decimal(order.wallet_amount_used or 0)
 
-    final_total = max(
-        subtotal - offer_discount - coupon_discount + shipping - wallet_used,
-        Decimal('0'),
-    )
+    final_total = Decimal(order.total or 0)
 
     session_key = f"order_confirmed_{uuid}"
     if not request.session.get(session_key):
@@ -298,7 +313,10 @@ def order_success(request, uuid):
 def cancel_order(request, uuid):
 
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7fb673f (Update cart checkout order and product features)
     if not order.can_cancel:
         messages.error(request, "Cannot cancel")
         return redirect("order_detail", uuid=order.uuid)

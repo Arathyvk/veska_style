@@ -393,7 +393,13 @@ main {
       {% endwith %}
     </div>
     <h3>{{ product.name }}</h3>
-    <p class="price">₹{{ product.price }}</p>
+    <p class="price">
+      {% if product.offer and product.offer_price < product.price %}
+        ₹{{ product.offer_price|floatformat:2 }} <del>₹{{ product.price|floatformat:2 }}</del>
+      {% else %}
+        ₹{{ product.price|floatformat:2 }}
+      {% endif %}
+    </p>
     <a class="add-btn" href="{% url 'product_detail' product.slug %}">
       View Details →
     </a>

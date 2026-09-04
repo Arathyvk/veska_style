@@ -121,7 +121,11 @@ def admin_dashboard(request):
     this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     last_month_end = this_month_start - datetime.timedelta(seconds=1)
     last_month_start = last_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+<<<<<<< HEAD
  
+=======
+    
+>>>>>>> 7fb673f (Update cart checkout order and product features)
     return_stats = get_return_value_stats()
     total_return_value = return_stats['total_value']
     total_return_items = return_stats['total_items']

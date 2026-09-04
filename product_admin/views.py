@@ -124,7 +124,12 @@ def delete_unused_variant_images(product):
             img.delete()
             deleted_count += 1
         except Exception as e:
+<<<<<<< HEAD
             continue
+=======
+            continue 
+    
+>>>>>>> 7fb673f (Update cart checkout order and product features)
     return deleted_count
 
 

@@ -47,6 +47,10 @@ class BaseOfferForm(forms.ModelForm):
         offer_type = cleaned_data.get('offer_type')
         products = cleaned_data.get('products')
         categories = cleaned_data.get('categories')
+        discount_type = cleaned_data.get('discount_type')
+        discount_value = cleaned_data.get('discount_value')
+        min_purchase_amount = cleaned_data.get('min_purchase_amount')
+        max_discount_amount = cleaned_data.get('max_discount_amount')
 
         if start_date and end_date and start_date >= end_date:
             raise forms.ValidationError('End date must be after start date')
@@ -60,6 +64,18 @@ class BaseOfferForm(forms.ModelForm):
             raise forms.ValidationError(
                 'Please select at least one category for Category Offer'
             )
+
+        if discount_value is not None and discount_value <= 0:
+            self.add_error('discount_value', 'Discount value must be greater than zero.')
+        if discount_type == 'PERCENTAGE' and discount_value is not None and discount_value > 100:
+            self.add_error('discount_value', 'Percentage discount cannot exceed 100%.')
+        if min_purchase_amount is not None and min_purchase_amount < 0:
+            self.add_error('min_purchase_amount', 'Minimum purchase amount cannot be negative.')
+        if max_discount_amount is not None and max_discount_amount <= 0:
+            self.add_error('max_discount_amount', 'Maximum discount must be greater than zero.')
+        if (max_discount_amount is not None and discount_type == 'FIXED'
+                and discount_value is not None and max_discount_amount > discount_value):
+            self.add_error('max_discount_amount', 'A fixed discount cap cannot exceed the discount value.')
 
         return cleaned_data
 
@@ -84,3 +100,24 @@ class ReferralOfferForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.instance.offer_type = 'REFERRAL'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        discount_type = cleaned_data.get('discount_type')
+        discount_value = cleaned_data.get('discount_value')
+        min_purchase_amount = cleaned_data.get('min_purchase_amount')
+        max_discount_amount = cleaned_data.get('max_discount_amount')
+
+        if discount_value is not None and discount_value <= 0:
+            self.add_error('discount_value', 'Discount value must be greater than zero.')
+        if discount_type == 'PERCENTAGE' and discount_value is not None and discount_value > 100:
+            self.add_error('discount_value', 'Percentage discount cannot exceed 100%.')
+        if min_purchase_amount is not None and min_purchase_amount < 0:
+            self.add_error('min_purchase_amount', 'Minimum purchase amount cannot be negative.')
+        if max_discount_amount is not None and max_discount_amount <= 0:
+            self.add_error('max_discount_amount', 'Maximum discount must be greater than zero.')
+        if (max_discount_amount is not None and discount_type == 'FIXED'
+                and discount_value is not None and max_discount_amount > discount_value):
+            self.add_error('max_discount_amount', 'A fixed discount cap cannot exceed the discount value.')
+
+        return cleaned_data

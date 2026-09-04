@@ -88,7 +88,7 @@ class Coupon(models.Model):
         if self.apply_to == 'all':
             return cart_items
         if self.apply_to == 'category':
-            return [i for i in cart_items if i.product.category in self.categories]
+            return [i for i in cart_items if i.product.category.name in self.categories or i.product.category.slug in self.categories]
         if self.apply_to == 'product':
             ids = list(self.products.values_list('id', flat=True))
             return [i for i in cart_items if i.product_id in ids]
@@ -97,7 +97,7 @@ class Coupon(models.Model):
     def calculate_discount(self, subtotal: Decimal, cart_items=None) -> Decimal:
         if cart_items and self.apply_to != 'all':
             eligible = self._eligible_items(cart_items)
-            base = Decimal(str(sum(float(i.line_total) for i in eligible)))
+            base = sum((Decimal(str(i.line_total)) for i in eligible), Decimal('0'))
         else:
             base = subtotal
         if base <= 0:
@@ -111,6 +111,8 @@ class Coupon(models.Model):
         return min(discount, subtotal)
 
     def validate_all(self, subtotal: Decimal, cart_items, user):
+        if self.discount_type == 'flat' and self.min_order_value and self.value >= self.min_order_value:
+            return False, Decimal('0'), 'Flat coupon amount must be less than the minimum purchase amount.'
         for fn, args in [
             (self.check_valid,          []),
             (self.check_min_order,      [subtotal]),

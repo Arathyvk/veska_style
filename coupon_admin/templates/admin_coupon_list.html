@@ -45,12 +45,54 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
 .expired-tag{display:inline-block;padding:1px 7px;background:var(--red-pale);color:var(--red);border-radius:8px;font-size:14px;font-weight:700}
 .valid-tag{display:inline-block;padding:1px 7px;background:var(--green-pale);color:var(--green);border-radius:8px;font-size:14px;font-weight:700}
 .coming-tag{display:inline-block;padding:1px 7px;background:var(--orange-pale);color:var(--orange);border-radius:8px;font-size:14px;font-weight:700}
-.tgl{position:relative;width:36px;height:20px;flex-shrink:0;cursor:pointer}
-.tgl input{opacity:0;width:0;height:0;position:absolute}
-.tgl-track{position:absolute;inset:0;background:var(--border2);border-radius:10px;transition:.2s;cursor:pointer}
-.tgl-track::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-.tgl input:checked + .tgl-track{background:var(--green)}
-.tgl input:checked + .tgl-track::after{transform:translateX(16px)}
+.tgl {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tgl input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.tgl-track {
+    position: absolute;
+    inset: 0;
+    background: #514b46;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+/* White circle */
+.tgl-track::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    left: 2px;
+    top: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+
+/* ON */
+.tgl input:checked + .tgl-track {
+    background: #4caf7d;
+}
+
+/* Move circle to right */
+.tgl input:checked + .tgl-track::after {
+    transform: translateX(14px);
+}
 .act-row{display:flex;gap:6px;align-items:center}
 .btn-edit{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;background:var(--card2);border:1px solid var(--border2);color:var(--muted2);border-radius:var(--radius);font-size:11.5px;font-weight:600;transition:.15s;text-decoration:none}
 .btn-edit:hover{border-color:var(--terra);color:var(--terra2)}
@@ -139,9 +181,16 @@ a{text-decoration:none;color:inherit}button,input,select{font-family:var(--body)
             {% else %}<div style="font-size:15px;color:var(--muted)">No expiry</div>{% endif %}
           </td>
           <td>
-            <label class="tgl" title="Toggle active" onclick="toggleCoupon('{{ c.pk }}', this)">
-              <input type="checkbox" {% if c.is_active %}checked{% endif %} onchange="event.preventDefault()">
-              <span class="tgl-track"></span>
+           <label class="tgl"
+                  title="Toggle active"
+                  onclick="toggleCoupon('{{ c.pk }}', this)">
+
+                <input type="checkbox"
+                      {% if c.is_active %}checked{% endif %}
+                      onchange="event.preventDefault()">
+
+                <span class="tgl-track"></span>
+
             </label>
           </td>
           <td>

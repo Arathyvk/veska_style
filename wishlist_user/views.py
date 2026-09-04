@@ -68,6 +68,7 @@ def wishlist_toggle(request, slug):
     selected_size = payload.get('size') or None
     selected_color = payload.get('color') or None
 
+<<<<<<< HEAD
     color_variants_exist = product.variants.filter(color__isnull=False).exclude(color='').exists()
     if product.variants.exists():
         if not selected_size or (color_variants_exist and not selected_color):
@@ -83,6 +84,19 @@ def wishlist_toggle(request, slug):
                 'success': False,
                 'error': 'The selected color and size combination is not available.',
             }, status=400)
+=======
+    if product.variants.exists() and (not selected_size or not selected_color):
+        return JsonResponse({
+            'success': False,
+            'error': 'Please select an available color and size first.',
+        }, status=400)
+
+    if product.variants.filter(size=selected_size, color=selected_color, stock__gt=0).exists() is False:
+        return JsonResponse({
+            'success': False,
+            'error': 'That color and size combination is unavailable.',
+        }, status=400)
+>>>>>>> 7fb673f (Update cart checkout order and product features)
 
     existing = WishlistProduct.objects.filter(
         wishlist=wl, 
@@ -136,6 +150,7 @@ def wishlist_detail(request):
             size=item.selected_size,
             color=item.color
         ).first()
+<<<<<<< HEAD
         variant_price = item.matched_variant.price if item.matched_variant else item.product.price
         item.best_offer = item.product.get_best_offer(amount=variant_price)
         if item.best_offer:
@@ -144,6 +159,15 @@ def wishlist_detail(request):
         else:
             item.offer_discount = Decimal('0')
             item.discounted_price = variant_price
+=======
+        item.offer = item.product.get_best_offer(
+            item.matched_variant.price if item.matched_variant else item.product.price
+        )
+        item.original_price = item.matched_variant.price if item.matched_variant else item.product.price
+        item.offer_price = item.original_price
+        if item.offer:
+            item.offer_price -= item.offer.calculate_discount(item.original_price)
+>>>>>>> 7fb673f (Update cart checkout order and product features)
 
     cart = _get_cart(request)
     cart_product_uuids = set(

@@ -290,17 +290,21 @@ button,input{font-family:var(--body)}
 
               <div class="item-price-col">
                   {% if item.active_offer %}
+                      <div class="item-offer-name" style="font-size:12px;color:var(--success);font-weight:600;margin-bottom:4px">
+                        {{ item.active_offer.name }}
+                      </div>
+                      <div class="item-total">
+                        <br>₹{{ item.discounted_line_total|floatformat:2 }} total
+                      </div>
+
                       <div class="item-unit">
-                          ₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}
+                        <del>₹{{ item.unit_price|floatformat:2 }}</del> × {{ item.quantity }}
                       </div>
 
                       <span class="status-badge badge-low">
                           {{ item.active_offer.discount_display }}
                       </span>
 
-                      <div class="item-total">
-                          ₹{{ item.discounted_line_total|floatformat:2 }}
-                      </div>
                   {% else %}
                       <div class="item-unit">
                           ₹{{ item.unit_price|floatformat:2 }} × {{ item.quantity }}
@@ -346,7 +350,7 @@ button,input{font-family:var(--body)}
 
           <div class="sum-row">
             <span>Subtotal ({{ available_items|length }} item{{ available_items|length|pluralize }})</span>
-            <span class="val">₹{{ subtotal|floatformat:2 }}</span>
+            <span class="val">₹{{ discounted_subtotal|floatformat:2 }}</span>
           </div>
 
           {% if offer_discount > 0 %}
@@ -370,7 +374,11 @@ button,input{font-family:var(--body)}
           <div class="sum-row total-row">
             <span>Total</span>
             <span class="val">
+<<<<<<< HEAD
                 ₹{{ order_total|floatformat:2 }}
+=======
+              ₹{{ order_total|floatformat:2 }}
+>>>>>>> 7fb673f (Update cart checkout order and product features)
             </span>
           </div>
 
