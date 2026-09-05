@@ -364,13 +364,8 @@ button,input,textarea{font-family:var(--body)}
           <span class="discount-badge">{{ offer.discount_display }}</span>
         {% endif %}
       </div>
-<<<<<<< HEAD
-      {% if best_offer %}
-        <div class="offer-line">Offer: {{ best_offer.name }} · {{ best_offer.discount_display }}{% if offer_discount > 0 %} · Save ₹{{ offer_discount|floatformat:2 }}{% endif %}</div>
-=======
       {% if offer and offer_price < product_price %}
         <div class="savings-line">{{ offer.name }} · {{ offer.discount_display }}</div>
->>>>>>> 7fb673f (Update cart checkout order and product features)
       {% endif %}
       {% if savings %}
         <div class="savings-line">You save ₹{{ savings|floatformat:2 }}</div>
@@ -404,28 +399,6 @@ button,input,textarea{font-family:var(--body)}
     <input type="hidden" name="next" value="{{ request.path }}">
     <input type="hidden" name="size" id="sizeInput" value="">
     <input type="hidden" name="color" id="colorInput" value="">
-<<<<<<< HEAD
-
-      {% if product.variants.all %}
-      <div class="card-colors">
-        <label class="color-label">Color:</label>
-        <div class="color-options">
-          {% for variant in product.variants.all|dictsort:"color" %}
-            {% ifchanged variant.color %}
-            <button type="button" class="color-btn {% if forloop.first %}active{% endif %}"
-              data-color="{{ variant.color }}"
-              data-image="{% color_image product variant.color %}"
-              data-product-uuid="{{ product.uuid }}"
-              onclick="selectColor(this)">
-              <span class="color-dot" style="background-color: {{ variant.color_hex|default:'#CCCCCC' }};"></span>
-              <span class="color-name">{{ variant.color }}</span>
-            </button>
-            {% endifchanged %}
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-=======
     
     <div class="selector-label">SELECT COLOR</div>
     <div class="color-grid">
@@ -436,21 +409,11 @@ button,input,textarea{font-family:var(--body)}
       </button>
       {% endfor %}
     </div>
->>>>>>> 7fb673f (Update cart checkout order and product features)
 
     <!-- Size selector -->
     <div class="selector-label">SELECT SIZE</div>
     <div class="size-grid" id="sizeGrid">
-<<<<<<< HEAD
-        {% for option in size_options %}
-        <button type="button" 
-                class="size-btn{% if option.stock == 0 %} oos-size{% endif %}"
-                data-size="{{ option.size }}"
-                data-colors="{{ option.colors|join:',' }}"
-                data-stock="{{ option.stock }}"
-                {% if option.stock == 0 %}disabled{% endif %}
-=======
-      {% for variant in variants %}
+  {% for variant in variants %}
         <button type="button" 
                 class="size-btn {% if variant.stock == 0 %}oos-size{% endif %}"
                 data-size="{{ variant.size }}"
@@ -458,9 +421,8 @@ button,input,textarea{font-family:var(--body)}
                 data-stock="{{ variant.stock }}"
                 data-variant-id="{{ variant.id }}"
           style="display:none"
->>>>>>> 7fb673f (Update cart checkout order and product features)
                 onclick="selectSize(this)">
-            {{ option.size }}
+            {{ variant.size }}
         </button>
         {% endfor %}
     </div>
@@ -495,9 +457,10 @@ button,input,textarea{font-family:var(--body)}
 <form method="POST" action="{% url 'wishlist_toggle' product.slug %}" id="wishlistForm" style="display: inline;">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ request.path }}">
-   <button type="button" 
+    <button type="button" 
         class="btn-wishlist {% if in_wishlist %}wishlisted{% endif %}" 
         data-slug="{{ product.slug }}"
+        data-url="{% url 'wishlist_toggle' product.slug %}"
         onclick="toggleWishlist(this, '{{ product.slug }}')">
     <svg viewBox="0 0 24 24" 
          fill="{% if in_wishlist %}var(--terra){% else %}none{% endif %}"
@@ -673,21 +636,11 @@ button,input,textarea{font-family:var(--body)}
       {% for rel in related %}
       <a href="{% url 'product_detail' rel.slug %}" class="rel-card">
         <div class="rel-img">
-<<<<<<< HEAD
-        {% with rvariant=rel.variants.first %}
-          {% with rimg=rvariant.images.first %}
-            {% if rimg %}
-              <img src="{{ rimg.image.url }}" alt="{{ rel.name }}" loading="lazy">
-            {% else %}
-              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt);font-size:11px">No image</div>
-=======
           {% with rimg=rel.primary_image %}
             {% if rimg %}<img src="{{ rimg.image.url }}" alt="{{ rel.name }}" loading="lazy">
             {% else %}<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted-lt);font-size:11px">No image</div>
->>>>>>> 7fb673f (Update cart checkout order and product features)
             {% endif %}
           {% endwith %}
-        {% endwith %}
         </div>
         <div class="rel-body">
           <div class="rel-cat">{{ rel.category }}</div>
@@ -753,8 +706,26 @@ function getCsrfToken() {
 }
 
 const variantGallery = {{ variant_gallery_json|safe }};
-<<<<<<< HEAD
 const sizeColorMap = JSON.parse('{{ size_color_map_json|escapejs }}');
+const productOfferType = '{{ offer.discount_type|default:"" }}';
+const productOfferValue = parseFloat('{{ offer.discount_value|default:"0" }}') || 0;
+const productOfferMinimum = parseFloat('{{ offer.min_purchase_amount|default:"0" }}') || 0;
+const productOfferMaximum = parseFloat('{{ offer.max_discount_amount|default:"0" }}') || 0;
+
+function displayProductPrice(price) {
+  let discount = 0;
+  if (productOfferType && price >= productOfferMinimum) {
+    discount = productOfferType === 'PERCENTAGE' ? price * productOfferValue / 100 : productOfferValue;
+    if (productOfferMaximum > 0) discount = Math.min(discount, productOfferMaximum);
+    discount = Math.min(discount, price);
+  }
+  const finalPrice = price - discount;
+  const block = document.querySelector('.price-block');
+  if (!block) return;
+  block.innerHTML = discount > 0
+    ? '<span class="price-now">₹' + finalPrice.toFixed(2) + '</span><span class="price-original">₹' + price.toFixed(2) + '</span><span class="discount-badge">Offer applied</span>'
+    : '<span class="price-now">₹' + price.toFixed(2) + '</span>';
+}
 
 function selectColor(btn) {
   document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
@@ -788,10 +759,10 @@ function selectColor(btn) {
 
 function filterSizesByColor(color) {
   document.querySelectorAll('.size-btn').forEach(btn => {
-    const btnColors = btn.dataset.colors ? btn.dataset.colors.split(',').map(s=>s.trim()).filter(Boolean) : [];
-    const available = !color || btnColors.includes((color||'').trim());
+    const available = !color || btn.dataset.color === color;
+    btn.style.display = available ? 'inline-flex' : 'none';
     btn.classList.toggle('oos-size', !available);
-    btn.disabled = !available;
+    btn.disabled = !available || Number(btn.dataset.stock) <= 0;
   });
 }
 
@@ -802,40 +773,6 @@ function filterColorsBySize(size) {
     const available = !allowedColors.length || allowedColors.includes(color);
     btn.disabled = !available;
     btn.classList.toggle('oos-size', !available);
-=======
-const productOfferType = '{{ offer.discount_type|default:"" }}';
-const productOfferValue = parseFloat('{{ offer.discount_value|default:"0" }}') || 0;
-const productOfferMinimum = parseFloat('{{ offer.min_purchase_amount|default:"0" }}') || 0;
-const productOfferMaximum = parseFloat('{{ offer.max_discount_amount|default:"0" }}') || 0;
-
-function displayProductPrice(price) {
-  let discount = 0;
-  if (productOfferType && price >= productOfferMinimum) {
-    discount = productOfferType === 'PERCENTAGE' ? price * productOfferValue / 100 : productOfferValue;
-    if (productOfferMaximum > 0) discount = Math.min(discount, productOfferMaximum);
-    discount = Math.min(discount, price);
-  }
-  const finalPrice = price - discount;
-  const block = document.querySelector('.price-block');
-  if (!block) return;
-  block.innerHTML = discount > 0
-    ? '<span class="price-now">₹' + finalPrice.toFixed(2) + '</span><span class="price-original">₹' + price.toFixed(2) + '</span><span class="discount-badge">Offer applied</span>'
-    : '<span class="price-now">₹' + price.toFixed(2) + '</span>';
-}
-
-function selectColor(btn) {
-  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedColor = btn.dataset.color;
-  document.getElementById('colorInput').value = selectedColor;
-  selectedSize = '';
-  selectedVariantId = null;
-  document.getElementById('sizeInput').value = '';
-  document.querySelectorAll('.size-btn').forEach(sizeBtn => {
-    const matches = sizeBtn.dataset.color === selectedColor;
-    sizeBtn.style.display = matches ? 'inline-flex' : 'none';
-    sizeBtn.classList.remove('selected');
->>>>>>> 7fb673f (Update cart checkout order and product features)
   });
 }
 
@@ -872,12 +809,9 @@ function selectSize(btn) {
       currentSlide = 0;
       document.getElementById('mainImg').src = imageUrls[0];
     }
-<<<<<<< HEAD
     const priceEl = document.querySelector('.price-now');
     if (priceEl) priceEl.textContent = '₹' + parseFloat(vdata.price).toFixed(2);
-=======
-    displayProductPrice(parseFloat(vdata.price));
->>>>>>> 7fb673f (Update cart checkout order and product features)
+  displayProductPrice(parseFloat(vdata.price));
   }
 
   const stock  = parseInt(btn.dataset.stock) || 1;
@@ -928,18 +862,6 @@ function adjustQty(dir) {
   inp.value = v;
 }
 
-<<<<<<< HEAD
-=======
-function validateSize() {
-  if (hasVariants && (!selectedSize || !selectedColor)) {
-    document.getElementById('sizeError').textContent = 'Please select an available color and size';
-    document.getElementById('sizeError').style.display = 'block';
-    return false;
-  }
-  return true;
-}
-
->>>>>>> 7fb673f (Update cart checkout order and product features)
 function validateSizeBuyNow() {
   return validateSelection();
 }
@@ -975,20 +897,10 @@ document.addEventListener('keydown', e => {
 });
 
 function toggleWishlist(button, slug) {
-<<<<<<< HEAD
   const csrfToken = getCsrfToken();
   if (!csrfToken) { window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname); return; }
-=======
-  if (hasVariants && (!selectedColor || !selectedSize)) {
-    const error = document.getElementById('sizeError');
-    error.textContent = 'Select an available color and size before adding to wishlist.';
-    error.style.display = 'block';
-    return;
-  }
-
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
->>>>>>> 7fb673f (Update cart checkout order and product features)
-
+  const url = button.dataset.url;
+  
   fetch(`/wishlist/toggle/${slug}/`, {
     method: 'POST',
     headers: {
@@ -1000,39 +912,12 @@ function toggleWishlist(button, slug) {
       size:  selectedSize  || null,   
       color: selectedColor || null    
     })
-<<<<<<< HEAD
   })
     .then(response => response.json().then(data => ({ response, data })))
     .then(({ response, data }) => {
         if (!response.ok || !data.success) {
           showToast(data.error || 'Unable to update wishlist', 'error');
           return;
-=======
-    .then(async response => {
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Unable to update wishlist.');
-      return data;
-    })
-    .then(data => {
-        if (data.success) {
-            if (data.is_wishlisted) {
-                button.classList.add('wishlisted');
-                button.querySelector('svg').setAttribute('fill', 'var(--terra)');
-                showToast('Added to wishlist!', 'success');
-            } else {
-                button.classList.remove('wishlisted');
-                button.querySelector('svg').setAttribute('fill', 'none');
-                showToast('Removed from wishlist', 'info');
-            }
-            const navCount = document.getElementById('wishlistCount');
-            if (navCount && data.wishlist_count !== undefined) {
-              navCount.textContent = data.wishlist_count > 99 ? '99+' : String(data.wishlist_count);
-              navCount.style.display = data.wishlist_count ? 'inline-flex' : 'none';
-            }
-            if (typeof window.triggerWishlistUpdate === 'function') {
-                window.triggerWishlistUpdate();
-            }
->>>>>>> 7fb673f (Update cart checkout order and product features)
         }
         // sync all buttons for this product (cards, detail page, etc.)
         document.querySelectorAll(`[data-slug="${slug}"]`).forEach(b => {

@@ -88,7 +88,7 @@ class CartItem(models.Model):
 
     @property
     def active_offer(self):
-<<<<<<< HEAD
+
         from offer_admin.views import get_applicable_offers
 
         user = None
@@ -106,9 +106,8 @@ class CartItem(models.Model):
                 best_discount = discount
 
         return best_offer
-=======
+
         return self.product.get_best_offer(self.line_total)
->>>>>>> 7fb673f (Update cart checkout order and product features)
 
     @property
     def discounted_unit_price(self):

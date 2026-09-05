@@ -347,24 +347,19 @@ def apply_coupon(request):
     cart = _get_cart(request)
     cart_items = list(cart.items.select_related('variant', 'product').all())
     subtotal = sum(_item_price(i) * i.quantity for i in cart_items)
-
-<<<<<<< HEAD
     valid, discount, valid_message = coupon.validate_all(subtotal, cart_items, request.user)
-=======
     cart_items = list(cart.items.select_related('product', 'variant').all())
     valid, discount, msg = coupon.validate_all(subtotal, cart_items, request.user)
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
     if not valid:
         if is_ajax:
             return JsonResponse({'success': False, 'error': valid_message})
         messages.error(request, valid_message)
         return redirect('checkout')
 
-<<<<<<< HEAD
+
     request.session['coupon_code'] = coupon.code
-=======
     request.session['coupon_code']     = coupon.code
->>>>>>> 7fb673f (Update cart checkout order and product features)
     request.session['coupon_discount'] = str(discount)
 
     if is_ajax:
@@ -403,15 +398,10 @@ def checkout(request):
     if coupon_code:
         try:
             coupon = Coupon.objects.get(code=coupon_code, is_active=True)
-<<<<<<< HEAD
             valid, discount, _ = coupon.validate_all(subtotal, list(cart_items), request.user)
             if valid:
                 coupon_discount = discount
-            else:
-=======
-            valid, coupon_discount, _ = coupon.validate_all(subtotal, list(cart_items), request.user)
             if not valid:
->>>>>>> 7fb673f (Update cart checkout order and product features)
                 coupon_code = ''
                 coupon_discount = Decimal('0')
                 request.session.pop('coupon_code', None)
@@ -452,16 +442,13 @@ def checkout(request):
             'variant': item.variant,
             'quantity': item.quantity,
             'unit_price': _item_price(item),
-<<<<<<< HEAD
             'line_total': _item_price(item) * item.quantity,
             'active_offer': item.active_offer,
             'discounted_unit_price': item.discounted_unit_price,
             'discounted_line_total': item.discounted_line_total,
             'item_offer_discount': (_item_price(item) * item.quantity) - item.discounted_line_total,
-=======
             'line_total': line_total - offer_discount,
             'original_line_total': line_total,
->>>>>>> 7fb673f (Update cart checkout order and product features)
         })
 
     raw_coupons = Coupon.objects.filter(

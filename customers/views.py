@@ -19,15 +19,12 @@ from django.http import JsonResponse
 from django.core.mail import send_mail
 
 from customers.models import Address
-<<<<<<< HEAD
 from django.urls import reverse
 from users.models import ReferralCode
 from users.utils import get_active_referral_settings
 from core.otp import OTP_EXPIRY_MINUTES
-=======
 from users.models import ReferralCode
 from offer_admin.models import BaseOffer
->>>>>>> 7fb673f (Update cart checkout order and product features)
 
 User = get_user_model()
 
@@ -49,35 +46,24 @@ def _send_email_otp(new_email, otp):
     send_mail(
         subject="Your Email Verification Code",
         message=(
-<<<<<<< HEAD
-                    "Hello,\n\n"
-                    "Welcome to Veska!\n\n"
-                    "Thank you for choosing Veska. To complete your email verification, "
-                    "please use the One-Time Password (OTP) below:\n\n"
-                    f"Verification Code: {otp}\n\n"
-                    f"This code is valid for {OTP_EXPIRY_MINUTES} minutes.\n\n"
-                    "If you did not request this verification, you can safely ignore this email.\n"
-                    "Please do not share this OTP with anyone for security reasons.\n\n"
-                    "If you need any assistance, feel free to contact our support team.\n\n"
-                    "Warm regards,\n"
-                    "support@veska.in"
-                ),
-=======
-            "Dear Customer,\n\n"
-            "Thank you for updating your email address.\n\n"
-            f"Your email verification code is: {otp}\n\n"
-            "This verification code is valid for 2 minutes. "
-            "Please do not share this code with anyone for security reasons.\n\n"
-            "If you did not request this email address change, "
-            "please ignore this message or contact our support team "
-            "if you believe your account may be at risk.\n\n"
+            "Hello,\n\n"
+            "Welcome to Veska!\n\n"
+            "Thank you for updating your email address. "
+            "To complete your email verification, please use the "
+            "One-Time Password (OTP) below:\n\n"
+            f"Verification Code: {otp}\n\n"
+            f"This code is valid for {OTP_EXPIRY_MINUTES} minutes.\n\n"
+            "For your security, please do not share this OTP with anyone. "
+            "If you did not request this email address change, you can safely "
+            "ignore this message or contact our support team if you believe "
+            "your account may be at risk.\n\n"
+            "If you need any assistance, feel free to contact our support team.\n\n"
             "Best regards,\n"
-            "VESKA Team"
+            "Team VESKA"
         ),
->>>>>>> 7fb673f (Update cart checkout order and product features)
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[new_email],
-        fail_silently=False
+        fail_silently=False,
     )
 
 def _delete_cloudinary_image(public_id):
@@ -157,18 +143,10 @@ def account_profile(request):
             if not re.fullmatch(r"[6-9]\d{9}", phone):
                 errors.append("Enter a valid 10-digit mobile number.")
             elif len(set(phone)) == 1:
-<<<<<<< HEAD
-                errors.append("Mobile number cannot contain all identical digits.")
-        
-        if not phone:
-            errors.append("Please update the mobile number before saving your profile.")
-        
-=======
                 errors.append(
                     "Mobile number cannot contain all identical digits."
                 )
 
->>>>>>> 7fb673f (Update cart checkout order and product features)
         if errors:
             for err in errors:
                 messages.error(request, err)
@@ -188,7 +166,6 @@ def account_profile(request):
         if remove_photo == "true":
 
             if user.profile_pic:
-<<<<<<< HEAD
                 try:
                     cloudinary.uploader.destroy(user.profile_pic.public_id)
                 except Exception as e:
@@ -197,11 +174,9 @@ def account_profile(request):
                 user.profile_pic = None
                 photo_updated = True
                 messages.success(request, "Profile photo removed successfully.")
-=======
                 user.profile_pic = None
                 photo_updated = True
 
->>>>>>> 7fb673f (Update cart checkout order and product features)
             else:
                 messages.warning(request,"No profile photo to remove.")
 
@@ -230,7 +205,7 @@ def account_profile(request):
 
         try:
             user.save()
-<<<<<<< HEAD
+
             user.refresh_from_db() 
             
             if not photo_updated and not remove_photo == "true":
@@ -238,13 +213,12 @@ def account_profile(request):
             elif not photo_updated:
                 messages.success(request, "Profile updated with new photo.")    
                 
-=======
+
             user.refresh_from_db()
 
             if remove_photo == "true" and previous_profile_pic:
                 _delete_cloudinary_image(previous_profile_pic)
 
->>>>>>> 7fb673f (Update cart checkout order and product features)
         except Exception as e:
             messages.error(request,"Failed to save profile. Please try again.")
             return render(request,"account_profile.html")
@@ -257,7 +231,7 @@ def account_profile(request):
 
             messages.success(request,"Profile updated successfully.")
         return redirect("account_profile")
-<<<<<<< HEAD
+
     
     # prepare referral info for profile display
     referral_code_obj = None
@@ -293,7 +267,6 @@ def account_profile(request):
         'referral_reward_amount': referral_reward_amount,
         'referred_user_reward': referred_user_reward,
     })
-=======
     referral_code = ReferralCode.objects.filter(user=user, is_active=True).order_by('-created_at').first()
     if referral_code is None:
         referral_code = ReferralCode.objects.create(
@@ -301,7 +274,7 @@ def account_profile(request):
         )
     return render(request,"account_profile.html", {"referral_code": referral_code})
 
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
 
 @login_required
 @never_cache

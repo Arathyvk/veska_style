@@ -11,7 +11,7 @@ from allauth.socialaccount.models import SocialApp
 from django.contrib.sites.models import Site
 import uuid as _uuid
 from django.urls import reverse
-from users.utils import apply_referral_for_new_user
+from users.utils import apply_referral_for_new_user, credit_referral_bonus
 from users.models import User, ReferralCode
 from product_admin.models import Product
 from cart_user.models import Cart
@@ -343,11 +343,9 @@ def verify_signup_otp(request):
                 is_superuser=False,
             )
 
-<<<<<<< HEAD
             ref_code = signup_data.get("ref_code") or request.session.pop("pending_referral_code", None)
             request.session.pop("pending_referral_code", None)
             apply_referral_for_new_user(user, ref_code)
-=======
             ref_code = request.session.pop("pending_referral_code", None)
             if ref_code:
                 try:
@@ -364,7 +362,6 @@ def verify_signup_otp(request):
                         "Signup for %s used invalid/expired referral code: %s",
                         user.email, ref_code,
                     )    
->>>>>>> 7fb673f (Update cart checkout order and product features)
 
             request.session.pop("signup_data", None)
             clear_otp_from_session(request, "signup")

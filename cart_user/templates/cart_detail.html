@@ -350,7 +350,7 @@ button,input{font-family:var(--body)}
 
           <div class="sum-row">
             <span>Subtotal ({{ available_items|length }} item{{ available_items|length|pluralize }})</span>
-            <span class="val">₹{{ discounted_subtotal|floatformat:2 }}</span>
+            <span class="val">₹{{subtotal|floatformat:2 }}</span>
           </div>
 
           {% if offer_discount > 0 %}
@@ -374,11 +374,9 @@ button,input{font-family:var(--body)}
           <div class="sum-row total-row">
             <span>Total</span>
             <span class="val">
-<<<<<<< HEAD
                 ₹{{ order_total|floatformat:2 }}
-=======
-              ₹{{ order_total|floatformat:2 }}
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
+
             </span>
           </div>
 

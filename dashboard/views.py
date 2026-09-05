@@ -121,11 +121,6 @@ def admin_dashboard(request):
     this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     last_month_end = this_month_start - datetime.timedelta(seconds=1)
     last_month_start = last_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-<<<<<<< HEAD
- 
-=======
-    
->>>>>>> 7fb673f (Update cart checkout order and product features)
     return_stats = get_return_value_stats()
     total_return_value = return_stats['total_value']
     total_return_items = return_stats['total_items']
@@ -215,15 +210,8 @@ def admin_dashboard(request):
     )
 
     customers_total = User.objects.filter(is_staff=False).count()
-    customers_this = User.objects.filter(
-        is_staff=False,
-        date_joined__gte=this_month_start
-    ).count()
-    customers_last = User.objects.filter(
-        is_staff=False,
-        date_joined__gte=last_month_start,
-        date_joined__lte=last_month_end,
-    ).count()
+    customers_this = 0
+    customers_last = 0
 
     status_counts = {
         "pending": Order.objects.filter(status="pending").count(),
@@ -262,11 +250,13 @@ def admin_dashboard(request):
             OrderItem.objects
             .exclude(order__status='returned')
             .exclude(order__status__in=EXCLUDED_STATUSES)
-            .exclude(cancel_status='cancelled')
             .exclude(**{f"{group_field}__isnull": True})
             .exclude(**{group_field: ''})
             .values(group_field)
-            .annotate(sold=Sum("quantity"), revenue=Sum("line_total"))
+            .annotate(
+                sold=Sum("quantity"),
+                revenue=Sum("line_total")
+            )
             .order_by("-sold")[:limit]
         )
 

@@ -1,33 +1,13 @@
 
-from django.conf import settings
-from django.db import migrations, models
-import django.db.models.deletion
+from django.db import migrations
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("wallet_user", "0001_initial"),
+        ("wallet_user", "0002_alter_wallet_options_and_more"),
     ]
 
-    operations = [
-        migrations.AddField(
-            model_name="wallettransaction",
-            name="user",
-            field=models.ForeignKey(
-                blank=True,
-                null=True,
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name="transaction",
-                to=settings.AUTH_USER_MODEL,
-            ),
-        ),
-        migrations.AddField(
-            model_name="wallettransaction",
-            name="reference",
-            field=models.CharField(
-                blank=True,
-                max_length=50,
-            ),
-        ),
-    ]
+    # The live model does not contain these legacy fields. Keep this migration
+    # as a compatibility node so existing migration histories can converge.
+    operations = []

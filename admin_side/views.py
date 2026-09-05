@@ -17,7 +17,7 @@ def is_admin_user(user):
 @never_cache
 def admin_login(request):
     if request.user.is_authenticated and request.user.is_staff:
-        return redirect('user_list')
+        return redirect('admin_dashboard')
 
     error = {}
 

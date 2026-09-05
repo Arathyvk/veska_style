@@ -168,7 +168,7 @@
           {% for product in top_products %}
           <tr>
             <td class="text-center text-muted">{{ forloop.counter }}</td>
-            <td>{{product__name }}</td>
+            <td>{{product.product__name }}</td>
             <td class="text-end">{{ product.sold }}</td>
             <td class="text-end pe-3 fw-semibold">₹{{ product.revenue|floatformat:2 }}</td>
           </tr>

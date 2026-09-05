@@ -94,12 +94,12 @@ def cart_add(request, slug):
             )
 
         variant_qs = ProductVariant.objects.filter(product=product, size=size)
-<<<<<<< HEAD
+
         if color:
             variant_qs = variant_qs.filter(color=color)
-=======
+
         variant_qs = variant_qs.filter(color=color)
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
         variant = variant_qs.first()
 
         if variant is None:
@@ -184,18 +184,17 @@ def cart_detail(request):
     ok_items      = [i for i in items if i.is_available]
     can_checkout  = bool(ok_items) and not blocked_items
 
-<<<<<<< HEAD
+
     subtotal = cart.subtotal
-    # Calculate offer discounts based on each available item's line totals
     offer_discount = sum(
         (item.line_total - item.discounted_line_total) for item in ok_items if item.discounted_line_total is not None
     )
     discounted_subtotal = subtotal - offer_discount
     shipping = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
     order_total = discounted_subtotal + shipping
-=======
+
     subtotal, offer_discount, discounted_subtotal, shipping, order_total = _cart_totals(cart)
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
     remaining_free = max(0, FREE_SHIPPING - discounted_subtotal)
 
     return render(request, 'cart_detail.html', {
@@ -227,26 +226,23 @@ def cart_update(request, item_id):
     elif action == 'remove':
         item.delete()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-<<<<<<< HEAD
+
             subtotal = cart.subtotal
             ok_items = [i for i in cart.items.select_related('product', 'variant').all() if i.is_available]
             offer_discount = sum((i.line_total - i.discounted_line_total) for i in ok_items if i.discounted_line_total is not None)
             discounted_subtotal = subtotal - offer_discount
             shipping = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
             grand_total = discounted_subtotal + shipping
-=======
             subtotal, offer_discount, discounted_subtotal, shipping, grand_total = _cart_totals(cart)
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
             return JsonResponse({
+
                 'success': True,
                 'message': 'Item removed from cart',
                 'cart_count': cart.total_items,
-<<<<<<< HEAD
                 'cart_subtotal': f"{subtotal:.2f}",
                 'offer_discount': f"{offer_discount:.2f}",
-=======
                 'cart_subtotal': f"{discounted_subtotal:.2f}",
->>>>>>> 7fb673f (Update cart checkout order and product features)
                 'grand_total': f"{grand_total:.2f}",
                 'shipping_fee': shipping
             })
@@ -285,7 +281,6 @@ def cart_update(request, item_id):
         new_quantity = capped
         item_total = item.discounted_line_total
     
-<<<<<<< HEAD
     subtotal = cart.subtotal
     # Recalculate offer discounts and totals after the update
     ok_items = [i for i in cart.items.select_related('product', 'variant').all() if i.is_available]
@@ -293,9 +288,8 @@ def cart_update(request, item_id):
     discounted_subtotal = subtotal - offer_discount
     shipping = 0 if discounted_subtotal >= FREE_SHIPPING else SHIPPING_FEE
     grand_total = discounted_subtotal + shipping
-=======
     subtotal, offer_discount, discounted_subtotal, shipping, grand_total = _cart_totals(cart)
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
@@ -305,12 +299,9 @@ def cart_update(request, item_id):
             'item_total': f"{item_total:.2f}" if new_quantity > 0 else "0.00",
             'message': message,
             'cart_count': cart.total_items,
-<<<<<<< HEAD
             'cart_subtotal': f"{subtotal:.2f}",
             'offer_discount': f"{offer_discount:.2f}",
-=======
             'cart_subtotal': f"{discounted_subtotal:.2f}",
->>>>>>> 7fb673f (Update cart checkout order and product features)
             'grand_total': f"{grand_total:.2f}",
             'shipping_fee': shipping,
             'shipping_free': shipping == 0

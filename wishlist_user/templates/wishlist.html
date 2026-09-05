@@ -207,21 +207,13 @@
 
           <div class="item-footer">
             <span class="item-price">
-<<<<<<< HEAD
+
               {% if item.best_offer and item.offer_discount > 0 %}
                 <span style="font-size:14px;font-weight:600;color:var(--ink);">₹{{ item.discounted_price|floatformat:2 }}</span>
                 <span style="font-size:12px;color:var(--muted);text-decoration:line-through;margin-left:6px;">₹{{ item.matched_variant.price|default:item.product.price|floatformat:2 }}</span>
                 <span style="display:block;font-size:11px;color:var(--terra);margin-top:3px;">{{ item.best_offer.discount_display }}</span>
               {% else %}
                 ₹{{ item.matched_variant.price|default:item.product.price|floatformat:2 }}
-=======
-              {% if item.offer and item.offer_price < item.original_price %}
-                ₹{{ item.offer_price|floatformat:2 }}
-                <del style="font-size:13px;color:var(--muted-lt);font-weight:400;margin-left:6px">₹{{ item.original_price|floatformat:2 }}</del>
-                <small style="display:block;color:var(--success);font-size:11px;margin-top:3px">{{ item.offer.name }}</small>
-              {% else %}
-                ₹{{ item.original_price|floatformat:2 }}
->>>>>>> 7fb673f (Update cart checkout order and product features)
               {% endif %}
             </span>
 

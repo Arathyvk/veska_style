@@ -265,6 +265,59 @@
     cursor: pointer; 
     transition: background 0.2s;
   }
+  /* ===== REFERRAL ===== */
+
+.referral-box {
+    width: 100%;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--sand);
+    text-align: center;
+}
+
+.referral-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--espresso);
+    margin-bottom: 10px;
+}
+
+.referral-code-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.referral-code-row input {
+    width: 180px;
+    height: 42px;
+    padding: 0 10px;
+    border: 1px solid var(--sand);
+    border-radius: 4px;
+    background: var(--cream);
+    color: var(--espresso);
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: .08em;
+}
+
+.referral-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--bark);
+}
+
+.referral-rewards {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--espresso);
+}
   .btn-danger:hover { 
     background: #c82333; 
   }
@@ -378,206 +431,142 @@
 
 <div class="profile-grid">
 
-<<<<<<< HEAD
-  <!-- ===== AVATAR SECTION ===== -->
-  <div class="avatar-section">
-    <div class="avatar-wrap">
-        {% if user.profile_pic %}
-            <img
-                id="avatarPreview"
-                class="avatar-img"
-                src="{{ user.profile_pic.url }}"
-                alt="Profile Photo">
-        {% else %}
-            <div id="avatarPlaceholder" class="avatar-placeholder">
-                {{ user.first_name|default:user.email|first|upper }}
-            </div>
-
-            <img
-                id="avatarPreview"
-                class="avatar-img"
-                src=""
-                alt="Profile Photo"
-                style="display:none;">
-        {% endif %}
-    </div>
-=======
 
 <!-- ===== AVATAR SECTION ===== -->
+
 <div class="avatar-section">
 
   <div class="avatar-wrap">
 
-    {% if user.profile_pic %}
-      <img
-        id="avatarPreview"
-        class="avatar-img"
-        src="{{ user.profile_pic.url }}"
-        alt="Profile Photo">
-    {% else %}
-      <div id="avatarPlaceholder" class="avatar-placeholder">
-        {{ user.first_name|default:user.email|first|upper }}
-      </div>
->>>>>>> 7fb673f (Update cart checkout order and product features)
+{% if user.profile_pic %}
+  <img
+    id="avatarPreview"
+    class="avatar-img"
+    src="{{ user.profile_pic.url }}"
+    alt="Profile Photo">
+{% else %}
+  <div id="avatarPlaceholder" class="avatar-placeholder">
+    {{ user.first_name|default:user.email|first|upper }}
+  </div>
 
-      <img
-        id="avatarPreview"
-        class="avatar-img"
-        src=""
-        alt="Profile Photo"
-        style="display:none;">
-    {% endif %}
+  <img
+    id="avatarPreview"
+    class="avatar-img"
+    src=""
+    alt="Profile Photo"
+    style="display:none;">
+{% endif %}
 
-<<<<<<< HEAD
-      <button class="avatar-remove-btn" id="avatarRemoveBtn" type="button" title="Remove photo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    </div>
 
-    <div>
-      <div class="avatar-name">{{ user.first_name }} {{ user.last_name }}</div>
-      <div class="avatar-email">{{ user.email }}</div>
-
-      {% if referral_code_obj %}
-      <div style="margin-top:12px; text-align:center;">
-        <div style="font-size:15px; font-weight:700;">Your referral code</div>
-        <div style="margin-top:6px; display:flex; gap:8px; justify-content:center; align-items:center;">
-          <input id="referralLinkInput" type="text" value="{{ referral_link }}" readonly style="width:312px; padding:6px; border:1px solid #ddd; border-radius:4px; background:#fafafa;">
-          <button class="btn-secondary" type="button" onclick="copyReferralLink()">Copy</button>
-        </div>
-        <div style="margin-top:8px; font-size:15px; color:var(--muted);">
-          <span style="font-weight:600;">Code:</span> {{ referral_code_obj.code }} &nbsp;•&nbsp;
-          <span style="font-weight:600;">Referrals:</span> {{ referral_code_obj.total_referrals }} &nbsp;•&nbsp;
-          <span style="font-weight:600;">Earned:</span> ₹{{ referral_code_obj.total_earnings|floatformat:2 }}
-        </div>
-        <div style="margin-top:6px; font-size:15px; color:#000;">
-          Referral bonus: ₹{{ referral_reward_amount }} · New user bonus: ₹{{ referred_user_reward }}
-        </div>
-      </div>
-      {% endif %}
-
-    </div>
-=======
->>>>>>> 7fb673f (Update cart checkout order and product features)
   </div>
 
   <!-- PHOTO ACTION BUTTONS -->
-  <div class="avatar-actions" style="display:flex; margin-left:9pc;">
 
-    <!-- Add / Edit -->
-    <button
-      type="button"
-      id="avatarEditBtn"
-      class="avatar-edit-btn"
-      title="Add or change photo">
-      ✎
-    </button>
+  <div class="avatar-actions">
 
-    <!-- Remove -->
-    <button
-      type="button"
-      id="avatarRemoveBtn"
-      class="avatar-remove-btn"
-      title="Remove photo">
-      ×
-    </button>
+
+<button
+  type="button"
+  id="avatarEditBtn"
+  class="avatar-edit-btn"
+  title="Add or change photo">
+  ✎
+</button>
+
+<button
+  type="button"
+  id="avatarRemoveBtn"
+  class="avatar-remove-btn"
+  title="Remove photo">
+  ×
+</button>
+
 
   </div>
 
   <!-- Hidden file input -->
-  <input
-    type="file"
-    id="photoFileInput"
-    accept="image/jpeg,image/png,image/webp"
-    style="display:none;">
+
+<input
+ type="file"
+ id="photoFileInput"
+ accept="image/jpeg,image/png,image/webp"
+ style="display:none;">
+
+  <!-- USER INFORMATION -->
 
   <div>
     <div class="avatar-name">
       {{ user.first_name }} {{ user.last_name }}
     </div>
 
-    <div class="avatar-email">
-      {{ user.email }}
+
+<div class="avatar-email">
+  {{ user.email }}
+</div>
+
+<!-- REFERRAL INFORMATION -->
+{% if referral_code_obj %}
+
+<div class="referral-box">
+
+    <div class="referral-title">
+        Refer &amp; Earn
     </div>
 
-    {% if referral_code %}
-      <div style="margin-top:12px; text-align:center; margin-left:9pc;">
+    <div class="referral-code-row">
 
-        <div style="font-size:15px; font-weight:700;">
-          Refer &amp; Earn
-        </div>
-
-        <div style="
-          margin-top:6px;
-          display:flex;
-          gap:8px;
-          justify-content:center;
-          align-items:center;
-        ">
-          <input
+        <input
             id="referralCodeInput"
             type="text"
-            value="{{ referral_code.code }}"
+            value="{{ referral_code_obj.code }}"
             readonly
-            style="
-              width:180px;
-              padding:6px;
-              border:1px solid #ddd;
-              border-radius:4px;
-              background:#fafafa;
-              text-align:center;
-              font-weight:600;
-              letter-spacing:.08em;
-            ">
+        >
 
-          <button
-            class="btn-secondary"
+        <button
             type="button"
+            class="btn-secondary"
             onclick="copyReferralCode()">
             Copy Code
-          </button>
+        </button>
+
+    </div>
+
+    <div class="referral-stats">
+
+        <span>
+            <strong>Code:</strong>
+            {{ referral_code_obj.code }}
+        </span>
+
+        <span>
+            <strong>Referrals:</strong>
+            {{ referral_code_obj.total_referrals|default:"0" }}
+        </span>
+
+        <span>
+            <strong>Earned:</strong>
+            ₹{{ referral_code_obj.total_earnings|default:"0.00"|floatformat:2 }}
+        </span>
+
+    </div>
+
+    <div class="referral-rewards">
+
+        <div>
+            <strong>Referral Bonus:</strong>
+            ₹{{ referral_reward_amount|default:"0"|floatformat:2 }}
         </div>
 
-        <div style="
-          margin-top:8px;
-          font-size:15px;
-          color:var(--muted);
-        ">
-          <span style="font-weight:600;">Code:</span>
-          {{ referral_code.code }}
-
-          &nbsp;•&nbsp;
-
-          <span style="font-weight:600;">Referrals:</span>
-          {{ referral_code.total_referrals }}
-
-          &nbsp;•&nbsp;
-
-          <span style="font-weight:600;">Earned:</span>
-          ₹{{ referral_code.total_earnings|floatformat:2 }}
+        <div>
+            <strong>New User Bonus:</strong>
+            ₹{{ referred_user_reward|default:"0"|floatformat:2 }}
         </div>
 
-        <div style="
-          margin-top:6px;
-          font-size:15px;
-          color:#000;
-        ">
-          {% if referral_offer %}
-            Referral bonus:
-            ₹{{ referral_offer.referral_reward_amount|floatformat:2 }}
-            ·
-            New user bonus:
-            ₹{{ referral_offer.referred_user_reward|floatformat:2 }}
-          {% else %}
-            Referral rewards are currently unavailable.
-          {% endif %}
-        </div>
+    </div>
 
-      </div>
-    {% endif %}
+</div>
+
+{% endif %}
 
   </div>
 
@@ -1000,7 +989,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
-<<<<<<< HEAD
 function copyReferralLink() {
   const input = document.getElementById('referralLinkInput');
   if (!input) return;
@@ -1013,7 +1001,7 @@ function copyReferralLink() {
     document.execCommand('copy');
     alert('Referral link copied to clipboard.');
   }
-=======
+
 
 // =========================================================
 // COPY REFERRAL CODE
@@ -1063,7 +1051,7 @@ function fallbackCopy(input) {
 
   }
 
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
 }
 </script>
 

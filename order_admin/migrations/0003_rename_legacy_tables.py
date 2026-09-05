@@ -3,7 +3,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("return_admin", "0002_initial"),
+        ("order_admin", "0001_initial"),
     ]
 
     operations = [

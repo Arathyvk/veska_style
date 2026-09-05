@@ -15,33 +15,22 @@ def send_otp_email(email, otp, subject="VESKA — Email Verification"):
         subject=subject,
         message=(
             "Hello,\n\n"
-<<<<<<< HEAD
-            "Welcome to Veska!\n\n"
-            "Thank you for choosing Veska. To complete your email verification, "
+            "Welcome to VESKA!\n\n"
+            "Thank you for choosing VESKA. To complete your email verification, "
             "please use the One-Time Password (OTP) below:\n\n"
             f"Verification Code: {otp}\n\n"
             f"This code is valid for {OTP_EXPIRY_MINUTES} minutes.\n\n"
-            "If you did not request this verification, you can safely ignore this email.\n"
-            "Please do not share this OTP with anyone for security reasons.\n\n"
+            "For your security, please do not share this OTP with anyone.\n"
+            "If you did not request this verification code, you can safely ignore this email.\n\n"
             "If you need any assistance, feel free to contact our support team.\n\n"
             "Warm regards,\n"
-            "support@veska.in"
-=======
-            "Thank you for choosing VESKA.\n\n"
-            f"Your One-Time Password (OTP) for email verification is:\n\n"
-            f"{otp}\n\n"
-            f"This OTP is valid for {OTP_EXPIRY_MINUTES} minutes.\n\n"
-            "For your security, please do not share this OTP with anyone. "
-            "If you did not request this verification code, you can safely ignore this email.\n\n"
-            "Thank you for choosing VESKA.\n\n"
-            "Regards,\n"
             "Team VESKA"
->>>>>>> 7fb673f (Update cart checkout order and product features)
         ),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
     )
+    
 def is_otp_expired(otp_time_str):
     if not otp_time_str:
         return True

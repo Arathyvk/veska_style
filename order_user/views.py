@@ -65,7 +65,14 @@ def _recalculate_order_summary(order, active_items=None):
     if active_items is None:
         active_items = order.items.filter(cancel_status='none')
 
-    subtotal = sum((item.line_total or Decimal('0.00')) for item in active_items)
+    subtotal = sum(
+    (
+        item.line_total
+        if item.line_total and item.line_total > 0
+        else item.unit_price * item.quantity
+    )
+    for item in active_items
+)
     shipping = Decimal(order.shipping_charge or 0)
     coupon_discount = Decimal(order.discount_amount or 0)
     offer_discount = Decimal(order.offer_discount or 0)
@@ -100,30 +107,34 @@ def _recalculate_order_summary(order, active_items=None):
     )
 
 
-@login_required
+@login_required(login_url='login')
 def order_list(request):
-    qs = Order.objects.filter(user=request.user).prefetch_related('items', 'return_requests')
+    qs = Order.objects.filter(
+        user=request.user
+    ).prefetch_related('items')
 
     search_query = request.GET.get('q', '').strip()
+
     if search_query:
         qs = qs.filter(
             Q(items__product_name__icontains=search_query) |
-            Q(status__icontains=search_query)              |
+            Q(status__icontains=search_query) |
             Q(city__icontains=search_query)
         ).distinct()
 
     status_filter = request.GET.get('status', '').strip()
+
     if status_filter:
         qs = qs.filter(status=status_filter)
 
     orders = qs.order_by('-created_at')
 
     return render(request, 'order_list.html', {
-        'orders':         orders,
-        'search_query':   search_query,
-        'status_filter':  status_filter,
+        'orders': orders,
+        'search_query': search_query,
+        'status_filter': status_filter,
         'status_choices': Order.STATUS_CHOICES,
-        'total_orders':   orders.count(),
+        'total_orders': orders.count(),
     })
 
 
@@ -138,9 +149,9 @@ def order_detail(request, uuid):
     offer_details = order.offer_details or ''
     coupon_code = order.coupon_code or ''
 
-<<<<<<< HEAD
+
     product_ids = all_items.values_list('product_id', flat=True)
-=======
+
     original_subtotal = Decimal(str(order.subtotal or 0))
     total_discount = offer_discount + coupon_discount
 
@@ -155,8 +166,7 @@ def order_detail(request, uuid):
 
     final_total = Decimal(order.total or 0)
 
-    product_ids = items.values_list('product_id', flat=True)
->>>>>>> 7fb673f (Update cart checkout order and product features)
+    product_ids = all_items.values_list('product_id', flat=True)
 
     reviews_qs = ProductReview.objects.filter(
         product_id__in=product_ids,
@@ -313,10 +323,6 @@ def order_success(request, uuid):
 def cancel_order(request, uuid):
 
     order = get_object_or_404(Order, uuid=uuid, user=request.user)
-<<<<<<< HEAD
-
-=======
->>>>>>> 7fb673f (Update cart checkout order and product features)
     if not order.can_cancel:
         messages.error(request, "Cannot cancel")
         return redirect("order_detail", uuid=order.uuid)

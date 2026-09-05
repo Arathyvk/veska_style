@@ -168,7 +168,7 @@ def product_shop(request):
     paginator = Paginator(qs, ITEMS_PER_PAGE)
     page_obj = paginator.get_page(request.GET.get('page', 1))
 
-<<<<<<< HEAD
+
     for product in page_obj.object_list:
         best_offer = product.get_best_offer(amount=product.min_price)
         if best_offer:
@@ -179,11 +179,10 @@ def product_shop(request):
             setattr(product, 'best_offer', None)
             setattr(product, 'offer_discount', Decimal('0'))
             setattr(product, 'offer_price', product.min_price)
-=======
     for product in page_obj:
         product.offer = product.get_best_offer(product.price)
         product.offer_price = product.discounted_price
->>>>>>> 7fb673f (Update cart checkout order and product features)
+
 
     current = page_obj.number
     num_pages = paginator.num_pages
@@ -320,7 +319,6 @@ def product_detail(request, slug):
         stock_status, stock_label = 'low', f'Only {total_stock} left!'
     else:
         stock_status, stock_label = 'in_stock', 'In Stock'
-<<<<<<< HEAD
 
     reviews_qs = ProductReview.objects.filter(product=product)
 
@@ -332,9 +330,8 @@ def product_detail(request, slug):
             review.rating,
             review.is_approved
         )    
-=======
+
     reviews_qs = ProductReview.objects.filter(product=product)
->>>>>>> 7fb673f (Update cart checkout order and product features)
     review_count     = reviews_qs.count()
     avg_rating       = 0
     rating_breakdown = [0, 0, 0, 0, 0]
@@ -347,7 +344,7 @@ def product_detail(request, slug):
 
     original_price   = getattr(product, 'original_price', None)
     discount_percent = getattr(product, 'discount_percent', 0)
-<<<<<<< HEAD
+
     savings = (
         (original_price - product_price)
         if (original_price and original_price > product.price)
@@ -356,9 +353,8 @@ def product_detail(request, slug):
     best_offer = product.get_best_offer(amount=product_price)
     offer_discount = best_offer.calculate_discount(product_price) if best_offer else Decimal('0')
     discounted_price = product_price - offer_discount if best_offer else product_price
-=======
+
     savings = (product_price - offer_price) if offer and offer_price < product_price else None
->>>>>>> 7fb673f (Update cart checkout order and product features)
     highlights = getattr(product, 'highlight_list', None) or [
         'Premium quality materials',
         'Handcrafted with care',
@@ -401,16 +397,13 @@ def product_detail(request, slug):
         'highlights':       highlights,
         'in_wishlist':      in_wishlist,
         'category_display': category_display,
-<<<<<<< HEAD
         'product_price':   product_price,
         'best_offer':      best_offer,
         'offer_discount':  offer_discount,
         'discounted_price': discounted_price,
-=======
         "product_price": product_price,
         'offer':            offer,
         'offer_price':      offer_price,
->>>>>>> 7fb673f (Update cart checkout order and product features)
         'variant_gallery_json': json.dumps(variant_gallery),
         'size_color_map_json': json.dumps(size_color_map),
         'size_color_map': size_color_map,
