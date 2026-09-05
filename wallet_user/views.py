@@ -12,6 +12,12 @@ from wallet_user.utils import get_or_create_wallet
 @login_required
 def wallet_dashboard(request):
     wallet = get_or_create_wallet(request.user)
+
+    
+    all_txns = wallet.transactions.all()
+    for txn in all_txns[:5]:
+        print(f"  - {txn.transaction_type}: ₹{txn.amount} ({txn.reason}) - {txn.description}")
+    
     transactions = wallet.transactions.select_related('order').all()
     txn_filter = request.GET.get('filter', 'all')
     if txn_filter == 'credit':

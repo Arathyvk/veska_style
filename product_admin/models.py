@@ -87,13 +87,12 @@ class Product(models.Model):
 
 
     def get_best_offer(self, amount=None):
+
         from offer_admin.models import BaseOffer
         from django.db.models import Q
         from django.utils import timezone
 
-        if amount is None:
-            amount = self.price
-
+        amount = self.price if amount is None else amount
         now = timezone.now()
         offers = BaseOffer.objects.filter(
             is_active=True, start_date__lte=now, end_date__gte=now,
@@ -111,7 +110,7 @@ class Product(models.Model):
 
     @property
     def discounted_price(self):
-        offer = self.get_best_offer()
+        offer = self.get_best_offer(self.price)
         if offer:
             return self.price - offer.calculate_discount(self.price)
         return self.price

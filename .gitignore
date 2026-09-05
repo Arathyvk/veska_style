@@ -1,64 +1,21 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
 
-# Environment
 .env
 env/
 venv/
 .venv/
-
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
 .Python
-*.pyc
 
-# Django
 *.log
 db.sqlite3
 media/
 staticfiles/
 
-# VS Code
 .vscode/
 
-# OS
-.DS_Store
-Thumbs.db<<<<<<< HEAD
-__pycache__/
-*.pyc
-=======
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-
-# Environment
-.env
-env/
-venv/
-.venv/
-
-# Python
-.Python
-*.pyc
-
-# Django
-*.log
-db.sqlite3
-media/
-staticfiles/
-
-# VS Code
-.vscode/
-
-# OS
 .DS_Store
 Thumbs.db
-
->>>>>>> origin/develop

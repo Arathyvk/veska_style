@@ -346,6 +346,7 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
 <script>
 (function () {
   const CART_COUNT_URL = "{% url 'cart_count' %}";
+  const WISHLIST_COUNT_URL = "{% url 'wishlist_count' %}";
 
   function updateBadge(el, count, bump) {
     if (!el) return;
@@ -364,23 +365,26 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
     }
   }
 
-  function applyCountData(data, bumpCart) {
-    updateBadge(document.getElementById('cartCount'), data.total_items || 0, bumpCart);
-    if (data.wishlist_count !== undefined) {
-      updateBadge(document.getElementById('wishlistCount'), data.wishlist_count || 0, false);
-    }
-  }
-
   function refreshNavCounts(bumpCart) {
-    return fetch(CART_COUNT_URL, {
+    const cartFetch = fetch(CART_COUNT_URL, {
       credentials: 'same-origin',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
     })
       .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then(data => {
-        applyCountData(data, bumpCart);
-        return data;
-      });
+      .catch(() => ({ total_items: 0 }));
+
+    const wishlistFetch = fetch(WISHLIST_COUNT_URL, {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .catch(() => ({ count: 0 }));
+
+    return Promise.all([cartFetch, wishlistFetch]).then(([cartData, wishlistData]) => {
+      updateBadge(document.getElementById('cartCount'), cartData.total_items || 0, bumpCart);
+      updateBadge(document.getElementById('wishlistCount'), wishlistData.count || 0, false);
+      return { ...cartData, wishlist_count: wishlistData.count };
+    });
   }
 
   window.updateNavbarCartCount = function (count) {
@@ -428,7 +432,7 @@ footer{background-color:var(--veska-beige);padding:0 5% 40px;color:var(--black);
       .then(r => r.json().then(data => ({ ok: r.ok, data })))
       .then(({ ok, data }) => {
         if (data.total_items !== undefined) {
-          applyCountData(data, true);
+          updateBadge(document.getElementById('cartCount'), data.total_items || 0, true);
         }
         if (data.reload && window.location.pathname.includes('/cart_user')) {
           window.location.reload();

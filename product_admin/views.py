@@ -124,7 +124,10 @@ def delete_unused_variant_images(product):
             img.delete()
             deleted_count += 1
         except Exception as e:
-            continue
+
+            continue 
+    
+
     return deleted_count
 
 

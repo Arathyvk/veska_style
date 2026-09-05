@@ -556,7 +556,7 @@ a{text-decoration:none;color:inherit}
                   {% endif %}
                 {% endwith %}
               </div>
-              <div class="oi-body">
+              <div class="oi-body" data-product-id="{{ item.product.id }}">
                 <div class="oi-cat">{{ item.product.category }}</div>
                 <div class="oi-name">{{ item.product.name }}</div>
                 <div class="oi-meta">
@@ -793,6 +793,7 @@ const ALL_COUPONS = [
     value:         parseFloat("{{ item.coupon.value }}"),
     max_discount:  {% if item.coupon.max_discount %}parseFloat("{{ item.coupon.max_discount }}"){% else %}null{% endif %},
     min_order:     parseFloat("{{ item.coupon.min_order_value|default:'0' }}"),
+    product_ids:   [{% for product in item.coupon.products.all %}{{ product.id }}{% if not forloop.last %},{% endif %}{% endfor %}],
     is_valid:      {{ item.is_valid|yesno:"true,false" }},
     saved_amount:  parseFloat("{{ item.saved_amount|default:'0' }}"),
     valid_message: "{{ item.valid_message|default:''|escapejs }}",
@@ -901,6 +902,23 @@ function nextCouponPage() {
 ══════════════════════════════════════════════════ */
 async function _doApplyCoupon(code) {
   if (!code) { showToast('Please enter a coupon code.', 'warning'); return null; }
+
+  const coupon = ALL_COUPONS.find(item => item.code === code.toUpperCase());
+  if (coupon) {
+    if (!coupon.is_valid) {
+      showToast(coupon.valid_message || 'This coupon cannot be applied.', 'warning');
+      return null;
+    }
+    if (coupon.discount_type === 'flat' && coupon.min_order > 0 && coupon.value >= coupon.min_order) {
+      showToast('Flat coupon amount must be less than the minimum purchase amount.', 'warning');
+      return null;
+    }
+    if (coupon.product_ids.length && ![...document.querySelectorAll('[data-product-id]')]
+        .some(element => coupon.product_ids.includes(Number(element.dataset.productId)))) {
+      showToast('This coupon does not apply to products in your cart.', 'warning');
+      return null;
+    }
+  }
 
   const res = await fetch(APPLY_COUPON_URL, {
     method: 'POST',

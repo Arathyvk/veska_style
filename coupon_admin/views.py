@@ -143,6 +143,14 @@ def _coupon_form(request, coupon):
         valid_until_dt = parse_dt(valid_until_s)
 
         if not errors:
+            if discount_type == 'flat' and min_order_value and value >= min_order_value:
+                errors['value'] = 'Flat coupon amount must be less than the minimum purchase amount.'
+            if apply_to == 'product' and not product_ids:
+                errors['products'] = 'Select at least one product for a product coupon.'
+            if apply_to == 'category' and not categories:
+                errors['categories'] = 'Select at least one category for a category coupon.'
+
+        if not errors:
             kwargs = dict(
                 code=code, description=description, discount_type=discount_type,
                 value=value, max_discount=max_discount, min_order_value=min_order_value,

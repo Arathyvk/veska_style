@@ -84,6 +84,18 @@ def wishlist_toggle(request, slug):
                 'error': 'The selected color and size combination is not available.',
             }, status=400)
 
+    if product.variants.exists() and (not selected_size or not selected_color):
+        return JsonResponse({
+            'success': False,
+            'error': 'Please select an available color and size first.',
+        }, status=400)
+
+    if product.variants.filter(size=selected_size, color=selected_color, stock__gt=0).exists() is False:
+        return JsonResponse({
+            'success': False,
+            'error': 'That color and size combination is unavailable.',
+        }, status=400)
+
     existing = WishlistProduct.objects.filter(
         wishlist=wl, 
         product=product, 
@@ -136,6 +148,7 @@ def wishlist_detail(request):
             size=item.selected_size,
             color=item.color
         ).first()
+
         variant_price = item.matched_variant.price if item.matched_variant else item.product.price
         item.best_offer = item.product.get_best_offer(amount=variant_price)
         if item.best_offer:
@@ -144,6 +157,14 @@ def wishlist_detail(request):
         else:
             item.offer_discount = Decimal('0')
             item.discounted_price = variant_price
+        item.offer = item.product.get_best_offer(
+            item.matched_variant.price if item.matched_variant else item.product.price
+        )
+        item.original_price = item.matched_variant.price if item.matched_variant else item.product.price
+        item.offer_price = item.original_price
+        if item.offer:
+            item.offer_price -= item.offer.calculate_discount(item.original_price)
+
 
     cart = _get_cart(request)
     cart_product_uuids = set(
@@ -204,10 +225,8 @@ def move_to_cart(request, product_id):
     return redirect('cart_detail')
 
 
-@login_required
 def wishlist_count(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': True, 'count': 0})
     wl, _ = Wishlist.objects.get_or_create(user=request.user)
-    return JsonResponse({
-        'success': True, 
-        'count': wl.items.count()
-    })
+    return JsonResponse({'success': True, 'count': wl.items.count()})

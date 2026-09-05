@@ -323,7 +323,7 @@ button,input,select,textarea{font-family:var(--body)}
 
     <div class="order-item">
       <div class="order-item-img">
-        {% with img=item.product.images.first %}
+        {% with img=item.variant.images.first|default:item.product.primary_image %}
           {% if img %}
             <img src="{{ img.image.url }}">
           {% endif %}
@@ -344,7 +344,7 @@ button,input,select,textarea{font-family:var(--body)}
       <div class="order-item">
         
         <div class="order-item-img">
-          {% with img=item.product.images.first %}
+          {% with img=item.variant.images.first|default:item.product.primary_image %}
             {% if img %}
               <img src="{{ img.image.url }}">
             {% endif %}

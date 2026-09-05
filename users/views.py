@@ -11,7 +11,7 @@ from allauth.socialaccount.models import SocialApp
 from django.contrib.sites.models import Site
 import uuid as _uuid
 from django.urls import reverse
-from users.utils import apply_referral_for_new_user
+from users.utils import apply_referral_for_new_user, credit_referral_bonus
 from users.models import User, ReferralCode
 from product_admin.models import Product
 from cart_user.models import Cart
@@ -41,6 +41,9 @@ def home_view(request):
         .prefetch_related('variants__images')
         .order_by('-created_at')[:8]
     )
+    for product in featured_products:
+        product.offer = product.get_best_offer(product.price)
+        product.offer_price = product.discounted_price
 
     referral_code_obj = None
     referral_link     = None
@@ -175,7 +178,10 @@ def signup_view(request):
             request.session["pending_referral_code"] = posted_ref
             request.session.modified = True
 
-        form_data = {"first_name": first_name, "last_name": last_name, "email": email}
+        form_data = {
+            "first_name": first_name, "last_name": last_name, "email": email,
+            "ref_code": posted_ref or request.session.get("pending_referral_code", ""),
+        }
 
         if not first_name:
             errors["first_name"] = "First name is required."
@@ -340,6 +346,22 @@ def verify_signup_otp(request):
             ref_code = signup_data.get("ref_code") or request.session.pop("pending_referral_code", None)
             request.session.pop("pending_referral_code", None)
             apply_referral_for_new_user(user, ref_code)
+            ref_code = request.session.pop("pending_referral_code", None)
+            if ref_code:
+                try:
+                    referral = ReferralCode.objects.get(code=ref_code, is_active=True)
+                    user.referred_by = referral
+                    user.save(update_fields=["referred_by"])
+                    credit_referral_bonus(
+                        referrer=referral.user,
+                        referred_user=user,
+                        referral_code=referral,
+                    )
+                except ReferralCode.DoesNotExist:
+                    logger.info(
+                        "Signup for %s used invalid/expired referral code: %s",
+                        user.email, ref_code,
+                    )    
 
             request.session.pop("signup_data", None)
             clear_otp_from_session(request, "signup")
@@ -565,3 +587,19 @@ def debug_social(request):
     apps = SocialApp.objects.filter(sites=site)
 
     return HttpResponse(f"Apps: {apps}")
+
+
+def error_400(request, exception=None):
+    return render(request, 'errors/400.html', status=400)
+
+
+def error_403(request, exception=None):
+    return render(request, 'errors/403.html', status=403)
+
+
+def error_404(request, exception=None):
+    return render(request, 'errors/404.html', status=404)
+
+
+def error_500(request):
+    return render(request, 'errors/500.html', status=500)

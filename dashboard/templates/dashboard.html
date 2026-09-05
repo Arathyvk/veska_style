@@ -312,7 +312,472 @@ body { font-family: var(--body); background: var(--bg); color: var(--text); }
   gap: 18px;
 }
 @media(max-width:900px) { .bottom-grid { grid-template-columns: 1fr; } }
+/* =========================================================
+   RESPONSIVE DASHBOARD
+   Phone → Tablet → Laptop → Desktop → Large Monitor
+   ========================================================= */
 
+/* Large monitors */
+@media (min-width: 1600px) {
+    .dash-page {
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 32px 40px 70px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+    .dash-grid {
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 22px;
+    }
+
+    .bottom-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 22px;
+    }
+
+    .chart-wrap {
+        height: 300px;
+    }
+}
+
+
+/* Desktop / Computer */
+@media (min-width: 1201px) and (max-width: 1599px) {
+    .dash-page {
+        padding: 28px 30px 60px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .dash-grid {
+        grid-template-columns: minmax(0, 1fr) 320px;
+    }
+
+    .bottom-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+}
+
+
+/* Laptop / smaller desktop */
+@media (min-width: 769px) and (max-width: 1200px) {
+
+    .dash-page {
+        padding: 24px 20px 50px;
+    }
+
+    .dash-heading {
+        align-items: flex-start;
+    }
+
+    .dash-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .dash-actions > * {
+        flex: 0 1 auto;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dash-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bottom-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .chart-wrap {
+        height: 260px;
+    }
+
+    .tbl-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+
+/* Tablet */
+@media (min-width: 521px) and (max-width: 768px) {
+
+    .dash-page {
+        padding: 22px 16px 45px;
+    }
+
+    .dash-heading {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .dash-heading h1 {
+        font-size: 25px;
+    }
+
+    .dash-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .year-select,
+    .btn-orders,
+    .dash-actions .qa-btn,
+    .dash-actions .btn-download {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .today-strip {
+        gap: 8px;
+    }
+
+    .today-chip {
+        flex: 1 1 200px;
+        justify-content: center;
+        min-width: 0;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .kpi-card {
+        padding: 15px;
+    }
+
+    .kpi-value {
+        font-size: 25px;
+    }
+
+    .dash-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card,
+    .status-card {
+        width: 100%;
+    }
+
+    .chart-wrap {
+        height: 240px;
+    }
+
+    .bottom-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tbl-scroll {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    .right-col {
+        width: 100%;
+    }
+}
+
+
+/* Phone */
+@media (max-width: 520px) {
+
+    .dash-page {
+        padding: 16px 10px 35px;
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .dash-heading {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        margin-bottom: 18px;
+        gap: 14px;
+    }
+
+    .dash-heading h1 {
+        font-size: 23px;
+    }
+
+    .dash-meta {
+        font-size: 12px;
+    }
+
+    /* Header buttons */
+    .dash-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .year-select,
+    .btn-orders,
+    .dash-actions .qa-btn,
+    .dash-actions .btn-download {
+        width: 100%;
+        min-height: 40px;
+        justify-content: center;
+        text-align: center;
+    }
+
+    /* Today statistics */
+    .today-strip {
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 18px;
+    }
+
+    .today-chip {
+        width: 100%;
+        justify-content: space-between;
+        padding: 8px 13px;
+    }
+
+    /* Section title */
+    .section-label {
+        font-size: 11px;
+        letter-spacing: .8px;
+        margin-bottom: 9px;
+    }
+
+    /* KPI */
+    .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .kpi-card {
+        padding: 12px;
+        min-width: 0;
+    }
+
+    .kpi-top {
+        margin-bottom: 8px;
+    }
+
+    .kpi-icon {
+        width: 27px;
+        height: 27px;
+        font-size: 14px;
+    }
+
+    .kpi-badge {
+        font-size: 10px;
+        padding: 2px 5px;
+    }
+
+    .kpi-label {
+        font-size: 9px;
+        letter-spacing: .4px;
+    }
+
+    .kpi-value {
+        font-size: 20px;
+        margin-top: 3px;
+    }
+
+    .kpi-sub {
+        font-size: 10px;
+        margin-top: 4px;
+    }
+
+    /* Chart + status */
+    .dash-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .chart-card,
+    .status-card {
+        padding: 14px;
+    }
+
+    .chart-card-head {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .chart-card-head h3 {
+        font-size: 13px;
+    }
+
+    .view-details-btn {
+        font-size: 10px;
+        padding: 4px 8px;
+        white-space: nowrap;
+    }
+
+    .chart-wrap {
+        height: 190px;
+    }
+
+    .status-card h3 {
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+
+    .status-row-top {
+        font-size: 11px;
+    }
+
+    .status-rows {
+        gap: 8px;
+    }
+
+    /* Bottom section */
+    .bottom-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .tbl-card {
+        width: 100%;
+    }
+
+    .tbl-card-head {
+        padding: 11px 13px;
+    }
+
+    .tbl-card-head h3 {
+        font-size: 13px;
+    }
+
+    .tbl-card-head a {
+        font-size: 11px;
+    }
+
+    /* Tables become horizontally scrollable */
+    .tbl-scroll {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 620px;
+        font-size: 11px;
+    }
+
+    th {
+        font-size: 10px;
+        padding: 8px 10px;
+    }
+
+    td {
+        font-size: 11px;
+        padding: 8px 10px;
+    }
+
+    .pill {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+
+    /* Quick actions */
+    .quick-actions {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        padding: 10px 12px;
+    }
+
+    .qa-btn {
+        font-size: 10px;
+        padding: 9px 7px;
+        justify-content: center;
+    }
+
+    /* Stock */
+    .stock-item {
+        padding: 9px 12px;
+    }
+
+    .stock-name {
+        font-size: 11px;
+        max-width: 150px;
+    }
+
+    .stock-qty,
+    .stock-edit {
+        font-size: 10px;
+    }
+
+    .out-badge {
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+
+    /* Top products */
+    .top-prod-row {
+        padding: 7px 10px;
+    }
+
+    .top-prod-name,
+    .top-prod-sold {
+        font-size: 11px;
+    }
+
+    .top-rank {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+    }
+
+    .dash-footer {
+        font-size: 10px;
+        margin-top: 22px;
+        padding-top: 16px;
+    }
+}
+
+
+/* Very small phones */
+@media (max-width: 360px) {
+
+    .dash-page {
+        padding: 12px 7px 30px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kpi-card {
+        padding: 13px;
+    }
+
+    .today-chip {
+        font-size: 11px;
+    }
+
+    .chart-wrap {
+        height: 170px;
+    }
+
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
 .tbl-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -454,7 +919,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 18px;
+  padding: 7px 14px;
   border-bottom: 1px solid rgba(58,52,44,.4);
 }
 .top-prod-row:last-child { border-bottom: none; }
@@ -463,7 +928,7 @@ td a:hover { color: var(--rose2); text-decoration: underline; }
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;

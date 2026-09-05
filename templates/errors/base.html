@@ -1,0 +1,40 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Veska{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --cream:#f7f2ed; --paper:#fffdfa; --ink:#2e251f; --muted:#897970; --sand:#dfd1c5; --terra:#9b5d47; --espresso:#3b2a22; }
+    * { box-sizing:border-box; }
+    body { min-height:100vh; margin:0; display:grid; place-items:center; padding:24px; background:var(--cream); color:var(--ink); font-family:'Jost',sans-serif; }
+    .error-page { width:min(100%,620px); padding:clamp(36px,8vw,72px) clamp(24px,8vw,68px); background:var(--paper); border:1px solid var(--sand); text-align:center; box-shadow:0 18px 50px rgba(59,42,34,.08); }
+    .brand { color:var(--espresso); font-size:13px; font-weight:600; letter-spacing:.28em; }
+    .rule { width:54px; height:1px; margin:24px auto; background:var(--terra); }
+    .code { margin:0; color:var(--terra); font-family:'Cormorant Garamond',serif; font-size:clamp(86px,18vw,142px); font-weight:600; line-height:.8; }
+    h1 { margin:28px 0 10px; font-family:'Cormorant Garamond',serif; font-size:clamp(27px,5vw,40px); font-weight:600; line-height:1.05; }
+    p { margin:0 auto 28px; max-width:390px; color:var(--muted); font-size:14px; line-height:1.7; }
+    .actions { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+    a { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 22px; border:1px solid var(--espresso); color:var(--paper); background:var(--espresso); font-size:12px; font-weight:500; letter-spacing:.08em; text-decoration:none; text-transform:uppercase; }
+    a.secondary { color:var(--espresso); background:transparent; border-color:var(--sand); }
+    a:hover { background:var(--terra); border-color:var(--terra); color:#fff; }
+  </style>
+</head>
+<body>
+  <main class="error-page">
+    <div class="brand">VESKA</div>
+    <div class="rule"></div>
+    <div class="code">{% block code %}404{% endblock %}</div>
+    <h1>{% block heading %}Something went wrong.{% endblock %}</h1>
+    <p>{% block message %}Please return to the store and try again.{% endblock %}</p>
+    <div class="actions">
+      <a href="{% url 'home' %}">Back home</a>
+      <a class="secondary" href="{% url 'product_shop' %}">Shop Veska</a>
+    </div>
+  </main>
+</body>
+</html>
